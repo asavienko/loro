@@ -93,6 +93,8 @@ export const bankPhraseSchema = z.object({
   targetLang: LANGUAGE_CODE,
   target: z.string().min(1).max(120),
   translations: byLanguage,
+  image: imageSchema,
+  notes: notesSchema,
 });
 
 export const bankSchema = z.object({ themes: z.array(bankThemeSchema).min(1), phrases: z.array(bankPhraseSchema).min(1) });
@@ -137,7 +139,7 @@ const textKey = (text: string) =>
  * The bank's rules: known themes and course languages, every native translation but the phrase's
  * own, one breath long, and never a phrase the course or the bank already has.
  */
-export function bankProblems(bank: BankJson, phrases: PhraseJson[], sets: SetJson[], languages: Language[]): string[] {
+export function bankProblems(bank: BankJson, phrases: PhraseJson[], sets: SetJson[], languages: Language[], noteTranslations?: NoteTranslations): string[] {
   const problems: string[] = [];
   const themeIds = bank.themes.map((t) => t.id);
   for (const id of themeIds.filter((t, i) => themeIds.indexOf(t) !== i)) problems.push(`bank: duplicate theme ${id}`);
@@ -173,6 +175,19 @@ export function bankProblems(bank: BankJson, phrases: PhraseJson[], sets: SetJso
     const twin = seen.get(key);
     if (twin) problems.push(`${phrase.id}: the same phrase as ${twin}`);
     seen.set(key, phrase.id);
+    // Every note in every UI language but English (the original) and the phrase's own.
+    if (noteTranslations) {
+      for (const kind of Object.keys(phrase.notes)) {
+        for (const native of natives) {
+          if (native === 'en-GB' || native === phrase.targetLang) continue;
+          if (!noteTranslations[`${phrase.id}.${kind}`]?.[native]) problems.push(`${phrase.id}.${kind}: missing ${native} note`);
+        }
+      }
+    }
+  }
+  if (noteTranslations) {
+    const kinds = new Set(bank.phrases.flatMap((p) => Object.keys(p.notes).map((kind) => `${p.id}.${kind}`)));
+    for (const key of Object.keys(noteTranslations)) if (!kinds.has(key)) problems.push(`bank: note translation for unknown note ${key}`);
   }
   return problems;
 }

@@ -6,6 +6,7 @@ import topicsJson from './topics.json';
 import languagesJson from './languages.json';
 import noteTranslationsJson from './note-translations.json';
 import bankJson from './bank.json';
+import bankNoteTranslationsJson from './bank-note-translations.json';
 import { BANK_PHRASES, BANK_THEMES, CONTENT_PHRASES, coursesFor, LANGUAGES, SETS, TARGET_LANGUAGES, TOPICS } from './index';
 import { z } from 'zod';
 import { BankJson, bankProblems, contentProblems, PhraseJson, phraseSchema, SetJson } from './schema';
@@ -84,7 +85,8 @@ describe('content', () => {
 
 describe('phrase bank', () => {
   const bank = () => structuredClone(bankJson) as unknown as BankJson;
-  const problems = (b: BankJson) => bankProblems(b, phrasesJson as unknown as PhraseJson[], setsJson as unknown as SetJson[], LANGUAGES).join('\n');
+  const problems = (b: BankJson, notes?: typeof bankNoteTranslationsJson) =>
+    bankProblems(b, phrasesJson as unknown as PhraseJson[], setsJson as unknown as SetJson[], LANGUAGES, notes).join('\n');
 
   it('every theme has phrases in every course language', () => {
     for (const theme of BANK_THEMES) {
@@ -105,6 +107,22 @@ describe('phrase bank', () => {
     assert.match(found, /bank-health-es-03: 13 words, at most 12/);
     assert.match(found, /bank-health-es-04: the course already has it as cafe-03/);
     assert.match(found, /bank-health-es-99: the same phrase as bank-health-es-05/);
+  });
+
+  it('every bank phrase has an image, its sounds, a memory hint and a grammar rule, in every UI language', () => {
+    assert.equal(problems(bank(), bankNoteTranslationsJson), '');
+    for (const p of BANK_PHRASES) {
+      assert.ok(p.image.length > 0, p.id);
+      assert.deepEqual(Object.keys(p.notes).sort(), ['grammar', 'mnemonic', 'pronunciation'], p.id);
+      const langs = p.targetLang === 'bg-BG' ? ['ru-RU'] : ['bg-BG', 'ru-RU'];
+      for (const kind of ['mnemonic', 'grammar', 'pronunciation'] as const) assert.deepEqual(Object.keys(p.noteTranslations[kind] ?? {}).sort(), langs, `${p.id}.${kind}`);
+    }
+    const missing = structuredClone(bankNoteTranslationsJson) as Record<string, Record<string, unknown>>;
+    delete missing['bank-hotel-es-02.grammar']['bg-BG'];
+    missing['bank-nowhere-es-01.mnemonic'] = {};
+    const found = problems(bank(), missing as typeof bankNoteTranslationsJson);
+    assert.match(found, /bank-hotel-es-02.grammar: missing bg-BG note/);
+    assert.match(found, /bank: note translation for unknown note bank-nowhere-es-01.mnemonic/);
   });
 
   it('a Bulgarian phrase has no Bulgarian translation', () => {

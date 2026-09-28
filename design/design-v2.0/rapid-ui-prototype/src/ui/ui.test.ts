@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { describe, it } from 'node:test';
-import { CONTENT_PHRASES, SETS, TOPICS } from '../content';
+import { BANK_PHRASES, CONTENT_PHRASES, SETS, TOPICS } from '../content';
 import { formatRoute, parseRoute, Route } from '../nav/routes';
 import { ICON_NAMES } from './icons';
 
@@ -20,7 +20,7 @@ describe('icons', () => {
     const names: readonly string[] = ICON_NAMES;
     for (const s of SETS) assert.ok(names.includes(s.coverIcon), s.coverIcon);
     for (const t of TOPICS) assert.ok(names.includes(t.icon), t.icon);
-    for (const p of CONTENT_PHRASES) for (const icon of p.image ?? []) assert.ok(names.includes(icon), `${p.id}: ${icon}`);
+    for (const p of [...CONTENT_PHRASES, ...BANK_PHRASES]) for (const icon of p.image ?? []) assert.ok(names.includes(icon), `${p.id}: ${icon}`);
   });
 });
 
