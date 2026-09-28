@@ -358,7 +358,11 @@ test.describe('the loop', () => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Play 5 phrases' }).click();
     await page.getByRole('button', { name: 'Notes' }).click();
-    await expect(page.getByRole('dialog', { name: 'Notes' }).getByRole('heading', { name: '«Me pone…»' })).toBeVisible();
+    // Every phrase has all three notes now: the memory tip first, the grammar one tab along.
+    const notes = page.getByRole('dialog', { name: 'Notes' });
+    await expect(notes.getByRole('heading', { name: 'Cortado: a cut coffee' })).toBeVisible();
+    await notes.getByRole('tab', { name: 'Grammar' }).click();
+    await expect(notes.getByRole('heading', { name: '«Me pone…»' })).toBeVisible();
   });
 });
 

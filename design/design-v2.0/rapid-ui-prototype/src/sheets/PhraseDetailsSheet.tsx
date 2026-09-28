@@ -1,5 +1,5 @@
 import { languageLabel } from '../copy';
-import { getLanguage } from '../content';
+import { getLanguage, getTopic } from '../content';
 import { useNav } from '../nav/NavContext';
 import { findPhrase, findSetView, promptOf } from '../state/catalog';
 import { currentPhraseId, displayLearner, isLiked, phraseProgress } from '../state/selectors';
@@ -7,6 +7,7 @@ import { useCopy, useNow, useStore } from '../state/store';
 import { PhraseNotesView } from '../ui/Notes';
 import { progressLabel } from '../ui/progressLabel';
 import { Icon } from '../ui/Icon';
+import { PhraseImage } from '../ui/PhraseImage';
 import { Sheet, SheetAction, SheetActionGrid, SheetOption } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
 import { btnPrimary } from '../ui/button';
@@ -49,8 +50,32 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <p lang={phrase.targetLang} className="font-serif italic text-display-sm font-semibold text-on-surface leading-snug">{phrase.target}</p>
-        <p lang={prompt.lang} className="text-body text-secondary mt-1">{prompt.text}</p>
+        {/* The picture beside the phrase; under 16rem of sheet (large text) it goes above it. */}
+        <div className="@container">
+          <div className="flex items-start gap-3 @max-[16rem]:flex-col">
+            {phrase.image && (
+              <PhraseImage
+                icons={phrase.image}
+                tone={(findSetView(state.learner, phrase.setId)?.topicId && getTopic(findSetView(state.learner, phrase.setId)!.topicId!)?.tone) || 'secondary'}
+                size="lg"
+                className="w-20 h-20 shrink-0 rounded-2xl"
+              />
+            )}
+            <div className="min-w-0 flex-1">
+              <p lang={phrase.targetLang} className="font-serif italic text-display-sm font-semibold text-on-surface leading-snug">{phrase.target}</p>
+              <p lang={prompt.lang} className="text-body text-secondary mt-1">{prompt.text}</p>
+            </div>
+          </div>
+        </div>
+        {/* Its sounds at a glance: IPA for those who read it, the respelling for everyone. */}
+        {phrase.notes?.pronunciation && (
+          <p data-sounds className="text-label text-on-surface-variant mt-2 [overflow-wrap:anywhere]">
+            <span className="font-semibold">{c.phrase.sounds}</span>{' '}
+            <span className="font-mono tracking-tight">{phrase.notes.pronunciation.ipa}</span>
+            <span aria-hidden="true"> · </span>
+            <span lang="en">{phrase.notes.pronunciation.respelling}</span>
+          </p>
+        )}
         <p className="text-label text-on-surface-variant mt-2 flex flex-wrap items-center gap-1.5">
           <span role="img" aria-label={languageLabel(phrase.targetLang, c.locale)}>{getLanguage(phrase.targetLang).flag}</span>
           {/* The separator ends each item, so a wrapped line never starts with "·". */}
