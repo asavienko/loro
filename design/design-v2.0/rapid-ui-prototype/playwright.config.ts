@@ -29,5 +29,8 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !preview,
     timeout: 120_000,
+    // No suggestions from Claude in tests: a key in the shell would make runs slow, costly and
+    // unrepeatable. The live path is tested against a stand-in (e2e/make-set.spec.ts).
+    env: { ANTHROPIC_API_KEY: '' },
   },
 });
