@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { languageLabel } from '../copy';
 import { getLanguage, getTopic } from '../content';
 import { useNav } from '../nav/NavContext';
@@ -10,7 +11,8 @@ import { Icon } from '../ui/Icon';
 import { PhraseImage } from '../ui/PhraseImage';
 import { Sheet, SheetAction, SheetActionGrid, SheetOption } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
-import { btnPrimary } from '../ui/button';
+import { btnPrimary, btnTonal } from '../ui/button';
+import { liveAvailable, writeNotes } from '../generate/remote';
 
 interface Props {
   details: { phraseId: string; ownSetId?: string } | null;
@@ -45,7 +47,8 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
   const isCurrent = currentPhraseId(state.player) === phrase.id;
   const ownSet = ownSetId ? findSetView(state.learner, ownSetId) : undefined;
   // A phrase the learner added from suggestions says where its text came from.
-  const origin = state.learner.ownPhrases[phrase.id]?.origin;
+  const own = state.learner.ownPhrases[phrase.id];
+  const origin = own?.origin;
 
   return (
     <div className="flex flex-col gap-4">
@@ -96,6 +99,12 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
           <p className="text-label text-on-surface-variant mt-2 flex items-start gap-1.5">
             <Icon name={origin === 'ai' ? 'auto_awesome' : 'library_music'} className="text-icon-sm shrink-0" />
             {origin === 'ai' ? c.make.originAi : c.make.originBank}
+          </p>
+        )}
+        {own?.notes && origin !== 'ai' && (
+          <p className="text-label text-on-surface-variant mt-2 flex items-start gap-1.5">
+            <Icon name="auto_awesome" className="text-icon-sm shrink-0" />
+            {c.phrase.notesByAi}
           </p>
         )}
         {phrase.tags.length > 0 && (
@@ -155,7 +164,7 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
         </SheetActionGrid>
       </div>
 
-      <PhraseNotesView phrase={phrase} prefix="details-notes" />
+      {phrase.notes ? <PhraseNotesView phrase={phrase} prefix="details-notes" /> : own && <WriteNotes phraseId={phrase.id} />}
 
       {/* Rarer: arranging your own set, and correcting or deleting your own phrase. */}
       {(ownSet || phrase.own) && (
@@ -215,5 +224,55 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * One of the learner's own phrases without notes (typed, and not in the phrase bank): the writer
+ * can write them where the server has one; otherwise the sheet says where notes come from.
+ */
+function WriteNotes({ phraseId }: { phraseId: string }) {
+  const c = useCopy();
+  const { state, actions } = useStore();
+  const own = state.learner.ownPhrases[phraseId];
+  const [live, setLive] = useState<boolean | null>(null);
+  const [status, setStatus] = useState<'idle' | 'writing' | 'failed'>('idle');
+  useEffect(() => {
+    let on = true;
+    void liveAvailable().then((value) => on && setLive(value));
+    return () => {
+      on = false;
+    };
+  }, []);
+  if (!own) return null;
+  const write = () => {
+    setStatus('writing');
+    const asked = { target: own.target, native: own.native, targetLang: own.targetLang, nativeLang: own.nativeLang };
+    writeNotes(asked).then(
+      (written) => {
+        actions.setOwnNotes(own.id, asked.target, written.notes, written.image);
+        setStatus('idle');
+      },
+      () => setStatus('failed'),
+    );
+  };
+  return (
+    <section aria-labelledby="own-notes" className="rounded-2xl bg-surface-container-low p-4 flex flex-col items-start gap-2">
+      <h3 id="own-notes" className="text-body font-semibold">
+        {c.phrase.noNotes}
+      </h3>
+      {live === false && <p className="text-body text-secondary">{c.phrase.notesOffline}</p>}
+      {status === 'failed' && (
+        <p role="status" className="text-body text-secondary">
+          {c.phrase.notesFailed}
+        </p>
+      )}
+      {live && (
+        <button type="button" onClick={write} disabled={status === 'writing'} className={btnTonal}>
+          <Icon name={status === 'writing' ? 'hourglass_empty' : 'auto_awesome'} className={`text-icon-md ${status === 'writing' ? 'motion-safe:animate-pulse' : ''}`} />
+          {status === 'writing' ? c.phrase.writingNotes : c.phrase.writeNotes}
+        </button>
+      )}
+    </section>
   );
 }
