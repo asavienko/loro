@@ -5,8 +5,8 @@
 // The app runs the web prototype's own modules (content, state machine, copy, generator), imported
 // through the `@shared/*` path. Two things make that work:
 //
-//  1. ONE COPY OF EACH PACKAGE. Shared files resolve `react` and friends from this app's
-//     node_modules, never the web prototype's, so there is one React.
+//  1. ONE COPY OF EACH PACKAGE. Shared files resolve `react` and friends as if this app imported
+//     them, never from the web prototype's node_modules, so there is one React.
 //
 //  2. THE PLATFORM EDGE. On iOS and Android four leaf modules are swapped for native ones; on the
 //     web the originals run (NATIVE below).
@@ -22,7 +22,6 @@ const config = getDefaultConfig(projectRoot);
 
 config.watchFolders = [path.join(prototypeRoot, 'src'), path.dirname(coreBrowser)];
 config.resolver.nodeModulesPaths = [path.join(projectRoot, 'node_modules')];
-config.resolver.disableHierarchicalLookup = true;
 // The prototype's tests and Node-only content validation never reach the app.
 config.resolver.blockList = [/rapid-ui-prototype[/\\](?:node_modules|dist|e2e|server)[/\\]/, /\.test\.[cm]?[jt]sx?$/];
 
@@ -40,10 +39,17 @@ const NATIVE = {
 
 const SHARED = '@shared/';
 
+const isBare = (name) => !name.startsWith('.') && !path.isAbsolute(name);
+
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   // `@shared/…` is the web prototype's src (tsconfig.json says the same to the type checker).
   const name = moduleName.startsWith(SHARED) ? path.join(prototypeRoot, 'src', moduleName.slice(SHARED.length)) : moduleName;
-  const resolved = context.resolveRequest(context, name, platform);
+  // A package imported by a shared file comes from this app, as if the app imported it: never
+  // the web prototype's own node_modules (a second React). Packages nested inside this app's
+  // node_modules (react-native's own) still resolve the usual way.
+  const outside = !context.originModulePath.startsWith(projectRoot + path.sep);
+  const from = outside && isBare(name) ? { ...context, originModulePath: path.join(projectRoot, 'package.json') } : context;
+  const resolved = context.resolveRequest(from, name, platform);
   if (platform !== 'web' && resolved.type === 'sourceFile' && NATIVE[resolved.filePath]) {
     return { type: 'sourceFile', filePath: NATIVE[resolved.filePath] };
   }

@@ -14,5 +14,5 @@
       "react/*": ["./node_modules/@types/react/*"]
     }
   },
-  "include": ["app/**/*", "src/**/*", "app.config.ts", "expo-env.d.ts", ".expo/types/**/*.ts"]
+  "include": ["app/**/*", "src/**/*", "app.config.ts"]
 }
