@@ -46,9 +46,10 @@ export function fromWritten(learner: LearnerState, written: readonly WrittenPhra
         native: promptOf(known, learner.profile.nativeLang).text,
         phraseId: known.id,
         ...(set ? { setTitle: set.title } : {}),
+        ...(known.image ? { image: known.image } : {}),
       });
     } else {
-      out.push({ key: `ai:${key}`, source: 'ai', target: phrase.target, native: phrase.native });
+      out.push({ key: `ai:${key}`, source: 'ai', target: phrase.target, native: phrase.native, image: phrase.image, notes: phrase.notes });
     }
     if (out.length >= DECK_SIZE) break;
   }
