@@ -199,7 +199,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [102](102-prototype-stress-fixture.md) | v2.0 prototype at 20× content and a year of history: generator, dev switch, measured budgets | Design | — Ready; nothing built yet (prototype review round 3, item 65) | None in the app; v2.0 prototype only |
 | [103](103-prototype-phrase-generator.md) | v2.0 prototype: make a set from a topic, keywords or a text, swiping suggestions to add or skip | Design | 🟡 Implemented and tested; one live-key run left (blocked on a key) | None in the app; v2.0 prototype only; plan 97 boundary |
 | [104](104-prototype-react-native.md) | v2.0 prototype as an Expo (React Native) app sharing the prototype's state, content and copy | Design | 🟡 Onboarding, Home and the player run on the Android emulator; the other screens and sheets are stand-ins | 103; `apps/mobile/modules/loro-core` for the native core |
-| [105](105-prototype-phrase-notes.md) | v2.0 prototype: every phrase has an image, IPA and respelling, a memory hint and a grammar rule | Design | 🟡 Implemented and tested; one run against the real writer left (with 103) | 103 bank and writer |
+| [105](105-prototype-phrase-notes.md) | v2.0 prototype: every phrase has an image, IPA and respelling, a memory hint and a grammar rule | Design | 🟡 Implemented and tested, typed phrases too (device rules); one run against the real writer left (with 103) | 103 bank and writer |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
