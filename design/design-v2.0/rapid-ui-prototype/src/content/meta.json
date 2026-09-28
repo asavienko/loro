@@ -1,10 +1,11 @@
 {
-  "version": "2026-09-24.4",
+  "version": "2026-09-28.1",
   "review": {
     "es-ES": "Phrases and notes revised in round 3; awaiting native Spanish review.",
     "bg-BG": "New in round 3; awaiting native Bulgarian review.",
     "translations": "bg-BG and ru-RU prompts and word glosses await native review.",
-    "notes": "bg-BG and ru-RU versions of the notes (note-translations.json) await native review."
+    "notes": "bg-BG and ru-RU versions of the notes (note-translations.json) await native review.",
+    "bank": "The phrase bank (bank.json) is new for Make a set; its Spanish, Bulgarian and every translation await native review."
   },
   "renamedPhraseIds": {
     "phrase-1": "cafe-01",

@@ -8,7 +8,8 @@ import topicsJson from './topics.json';
 import languagesJson from './languages.json';
 import metaJson from './meta.json';
 import noteTranslationsJson from './note-translations.json';
-import { contentProblems, languageSchema, metaSchema, noteTranslationsSchema, phraseSchema, setSchema, topicSchema } from './schema';
+import bankJson from './bank.json';
+import { bankProblems, bankSchema, contentProblems, languageSchema, metaSchema, noteTranslationsSchema, phraseSchema, setSchema, topicSchema } from './schema';
 
 /** Every problem with the content; empty when it is valid. */
 export function validateContent(): string[] {
@@ -28,5 +29,7 @@ export function validateContent(): string[] {
   if (phrases && sets && topics && languages && meta && noteTranslations) {
     problems.push(...contentProblems({ phrases, sets, topics, languages, renamed: meta.renamedPhraseIds, noteTranslations }));
   }
+  const bank = check(bankSchema, bankJson, 'bank.json');
+  if (bank && phrases && sets && languages) problems.push(...bankProblems(bank, phrases, sets, languages));
   return problems;
 }

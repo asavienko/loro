@@ -5,8 +5,9 @@ import setsJson from './sets.json';
 import topicsJson from './topics.json';
 import languagesJson from './languages.json';
 import noteTranslationsJson from './note-translations.json';
-import { CONTENT_PHRASES, coursesFor, LANGUAGES, SETS, TOPICS } from './index';
-import { contentProblems, PhraseJson, SetJson } from './schema';
+import bankJson from './bank.json';
+import { BANK_PHRASES, BANK_THEMES, CONTENT_PHRASES, coursesFor, LANGUAGES, SETS, TARGET_LANGUAGES, TOPICS } from './index';
+import { BankJson, bankProblems, contentProblems, PhraseJson, SetJson } from './schema';
 import { validateContent } from './validate';
 
 const base = () => ({
@@ -61,5 +62,38 @@ describe('content', () => {
     assert.match(problems, /unknown phrase nowhere-01/);
     assert.match(problems, /cafe-02: missing ru-RU translation/);
     assert.match(problems, /glossed word "zzz" is not in the phrase/);
+  });
+});
+
+describe('phrase bank', () => {
+  const bank = () => structuredClone(bankJson) as unknown as BankJson;
+  const problems = (b: BankJson) => bankProblems(b, phrasesJson as unknown as PhraseJson[], setsJson as unknown as SetJson[], LANGUAGES).join('\n');
+
+  it('every theme has phrases in every course language', () => {
+    for (const theme of BANK_THEMES) {
+      for (const lang of TARGET_LANGUAGES) assert.ok(BANK_PHRASES.some((p) => p.theme === theme.id && p.targetLang === lang), `${theme.id} ${lang}`);
+    }
+  });
+
+  it('catches unknown themes, missing translations, long phrases and phrases the course already has', () => {
+    const b = bank();
+    b.phrases[0].theme = 'nowhere';
+    delete b.phrases[1].translations['ru-RU'];
+    b.phrases[2].target = 'uno dos tres cuatro cinco seis siete ocho nueve diez once doce trece';
+    b.phrases[3].target = 'la cuenta, por favor.';
+    b.phrases.push({ ...b.phrases[4], id: 'bank-health-es-99' });
+    const found = problems(b);
+    assert.match(found, /bank-health-es-01: unknown theme nowhere/);
+    assert.match(found, /bank-health-es-02: missing ru-RU translation/);
+    assert.match(found, /bank-health-es-03: 13 words, at most 12/);
+    assert.match(found, /bank-health-es-04: the course already has it as cafe-03/);
+    assert.match(found, /bank-health-es-99: the same phrase as bank-health-es-05/);
+  });
+
+  it('a Bulgarian phrase has no Bulgarian translation', () => {
+    const b = bank();
+    const bg = b.phrases.find((p) => p.targetLang === 'bg-BG')!;
+    bg.translations['bg-BG'] = 'x';
+    assert.match(problems(b), new RegExp(`${bg.id}: translation into its own language`));
   });
 });
