@@ -30,13 +30,17 @@ npm run dev                                       # cards now say "Written by AI
 ```
 
 The key stays in the server process (`server/suggest.ts`); the browser never sees it, and a static
-build has no writer. `LORO_SUGGEST_MODEL` overrides the model (`claude-opus-5`). The Playwright
+build has no writer. The writer also gives each phrase its picture and notes, and writes them for a
+phrase you type that the bank doesn't have. `LORO_SUGGEST_MODEL` overrides the model (`claude-opus-5`). The Playwright
 server runs with the key blanked, so tests never call Claude.
 
 ## How it is built
 
 - `src/content/` — vocabulary as JSON (phrases, sets, topics, languages, and the phrase bank
   that Make a set suggests from), validated with zod at start-up. No learner progress lives here.
+  Every phrase, in the course and in the bank, has a picture (one to three Material Symbols on its
+  topic's colour), a memory hint, a grammar rule and its sounds (IPA and a respelling), in English
+  with Bulgarian and Russian versions; the build refuses a phrase missing any of them.
 - `src/core/fsrs.ts` — FSRS through `core_call` (Rust, WASM). No scheduling maths of its own.
 - `src/state/` — `transition(state, event)` is pure, and `chart.ts` holds the allowed events. The
   learner's history is an append-only log; memory and points are derived from it (`memory.ts`).
