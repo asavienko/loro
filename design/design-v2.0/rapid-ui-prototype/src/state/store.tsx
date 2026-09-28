@@ -8,7 +8,7 @@ import { AppEvent, transition } from './machine';
 import { mergeLearner, mergePending, mergePrefs } from './merge';
 import { flushState, loadState, parseState, saveState } from './persistence';
 import { onOtherTabSave, readRaw, Stored } from './storage';
-import type { AppState, AudioFailure, Grade, LearnerState, PendingRating, Prefs, Profile, QueueSource } from './types';
+import type { AppState, AudioFailure, Grade, LearnerState, PendingRating, PhrasePick, Prefs, Profile, QueueSource } from './types';
 
 const newSeed = () => Math.floor(Math.random() * 2 ** 32);
 /** Saves wait this long for more changes; a hidden page saves at once. */
@@ -62,6 +62,24 @@ function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppS
       const { device } = latest.current;
       const id = `${OWN_SET_PREFIX}${device.id}.${device.instance}-${(device.seq + 1).toString(36)}`;
       dispatch({ type: 'CREATE_SET', title, phraseIds, now: now(), id });
+      return id;
+    },
+    /**
+     * Saves what the learner kept in "Make a set" in one event: new phrases become their own, and
+     * all of them a new set (`into.title`) or join their set (`into.setId`). Returns the set's id.
+     * Ids are promised from the device counter as last rendered, in the order the event takes them.
+     */
+    savePicks: (picks: PhrasePick[], into: { title: string } | { setId: string }): string => {
+      const { device } = latest.current;
+      let seq = device.seq;
+      const nextId = (prefix: string) => `${prefix}${device.id}.${device.instance}-${(++seq).toString(36)}`;
+      const withIds = picks.map((p) => ('phraseId' in p ? p : { ...p, id: nextId(OWN_PHRASE_PREFIX) }));
+      if ('setId' in into) {
+        dispatch({ type: 'ADD_PICKS', picks: withIds, setId: into.setId, now: now() });
+        return into.setId;
+      }
+      const id = nextId(OWN_SET_PREFIX);
+      dispatch({ type: 'ADD_PICKS', picks: withIds, title: into.title, id, now: now() });
       return id;
     },
     addToSet: (setId: string, phraseIds: string[], at?: number) => dispatch({ type: 'ADD_TO_SET', setId, phraseIds, at, now: now() }),
