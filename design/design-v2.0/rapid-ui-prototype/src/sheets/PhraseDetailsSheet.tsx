@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { languageLabel } from '../copy';
+import { languageLabel, languageName } from '../copy';
 import { getLanguage, getTopic } from '../content';
 import { useNav } from '../nav/NavContext';
 import { findPhrase, findSetView, promptOf } from '../state/catalog';
@@ -56,14 +56,12 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
         {/* The picture beside the phrase; under 16rem of sheet (large text) it goes above it. */}
         <div className="@container">
           <div className="flex items-start gap-3 @max-[16rem]:flex-col">
-            {phrase.image && (
-              <PhraseImage
-                icons={phrase.image}
-                tone={(findSetView(state.learner, phrase.setId)?.topicId && getTopic(findSetView(state.learner, phrase.setId)!.topicId!)?.tone) || 'secondary'}
-                size="lg"
-                className="w-20 h-20 shrink-0 rounded-2xl"
-              />
-            )}
+            <PhraseImage
+              icons={phrase.image}
+              tone={(findSetView(state.learner, phrase.setId)?.topicId && getTopic(findSetView(state.learner, phrase.setId)!.topicId!)?.tone) || 'secondary'}
+              size="lg"
+              className="w-20 h-20 shrink-0 rounded-2xl"
+            />
             <div className="min-w-0 flex-1">
               <p lang={phrase.targetLang} className="font-serif italic text-display-sm font-semibold text-on-surface leading-snug">{phrase.target}</p>
               <p lang={prompt.lang} className="text-body text-secondary mt-1">{prompt.text}</p>
@@ -71,14 +69,12 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
           </div>
         </div>
         {/* Its sounds at a glance: IPA for those who read it, the respelling for everyone. */}
-        {phrase.notes?.pronunciation && (
-          <p data-sounds className="text-label text-on-surface-variant mt-2 [overflow-wrap:anywhere]">
-            <span className="font-semibold">{c.phrase.sounds}</span>{' '}
-            <span className="font-mono tracking-tight">{phrase.notes.pronunciation.ipa}</span>
-            <span aria-hidden="true"> · </span>
-            <span lang="en">{phrase.notes.pronunciation.respelling}</span>
-          </p>
-        )}
+        <p data-sounds className="text-label text-on-surface-variant mt-2 [overflow-wrap:anywhere]">
+          <span className="font-semibold">{c.phrase.sounds}</span>{' '}
+          <span className="font-mono tracking-tight">{phrase.notes.pronunciation.ipa}</span>
+          <span aria-hidden="true"> · </span>
+          <span lang="en">{phrase.notes.pronunciation.respelling}</span>
+        </p>
         <p className="text-label text-on-surface-variant mt-2 flex flex-wrap items-center gap-1.5">
           <span role="img" aria-label={languageLabel(phrase.targetLang, c.locale)}>{getLanguage(phrase.targetLang).flag}</span>
           {/* The separator ends each item, so a wrapped line never starts with "·". */}
@@ -101,7 +97,7 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
             {origin === 'ai' ? c.make.originAi : c.make.originBank}
           </p>
         )}
-        {own?.notes && origin !== 'ai' && (
+        {phrase.notesBy === 'ai' && origin !== 'ai' && (
           <p className="text-label text-on-surface-variant mt-2 flex items-start gap-1.5">
             <Icon name="auto_awesome" className="text-icon-sm shrink-0" />
             {c.phrase.notesByAi}
@@ -164,7 +160,8 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
         </SheetActionGrid>
       </div>
 
-      {phrase.notes ? <PhraseNotesView phrase={phrase} prefix="details-notes" /> : own && <WriteNotes phraseId={phrase.id} />}
+      <PhraseNotesView phrase={phrase} prefix="details-notes" />
+      {phrase.notesBy === 'device' && <DeviceNotes phraseId={phrase.id} />}
 
       {/* Rarer: arranging your own set, and correcting or deleting your own phrase. */}
       {(ownSet || phrase.own) && (
@@ -228,14 +225,14 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
 }
 
 /**
- * One of the learner's own phrases without notes (typed, and not in the phrase bank): the writer
- * can write them where the server has one; otherwise the sheet says where notes come from.
+ * One of the learner's own phrases whose notes the device worked out (typed, and not in the phrase
+ * bank): says so, and where the server has a writer, offers to ask it for its notes instead.
  */
-function WriteNotes({ phraseId }: { phraseId: string }) {
+function DeviceNotes({ phraseId }: { phraseId: string }) {
   const c = useCopy();
   const { state, actions } = useStore();
   const own = state.learner.ownPhrases[phraseId];
-  const [live, setLive] = useState<boolean | null>(null);
+  const [live, setLive] = useState(false);
   const [status, setStatus] = useState<'idle' | 'writing' | 'failed'>('idle');
   useEffect(() => {
     let on = true;
@@ -257,11 +254,11 @@ function WriteNotes({ phraseId }: { phraseId: string }) {
     );
   };
   return (
-    <section aria-labelledby="own-notes" className="rounded-2xl bg-surface-container-low p-4 flex flex-col items-start gap-2">
-      <h3 id="own-notes" className="text-body font-semibold">
-        {c.phrase.noNotes}
-      </h3>
-      {live === false && <p className="text-body text-secondary">{c.phrase.notesOffline}</p>}
+    <section aria-label={c.phrase.notesTitle} className="flex flex-col items-start gap-2 px-1">
+      <p className="text-label text-on-surface-variant flex items-start gap-1.5">
+        <Icon name="smartphone" className="text-icon-sm shrink-0" />
+        {c.phrase.notesByDevice(languageName(own.targetLang, c.locale))}
+      </p>
       {status === 'failed' && (
         <p role="status" className="text-body text-secondary">
           {c.phrase.notesFailed}

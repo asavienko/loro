@@ -7,6 +7,9 @@ export const NOTE_LIMITS = { title: 60, text: 300 } as const;
 /** Whitespace folded as it's stored: pasted lines and tabs become single spaces. */
 export const tidy = (text: string) => text.trim().replace(/\s+/g, ' ');
 
+/** A phrase has something to say aloud: a letter or a digit, so it has sounds and notes (plan 105). */
+export const sayable = (text: string) => /[\p{L}\p{N}]/u.test(text);
+
 /**
  * At most `max` UTF-16 units (what maxLength counts), never cut inside a surrogate pair,
  * so a clipped emoji doesn't leave half a character behind.

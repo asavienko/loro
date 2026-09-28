@@ -12,18 +12,18 @@ export const NOTE_TABS: { id: NoteTab; icon: IconName }[] = [
   { id: 'pronunciation', icon: 'record_voice_over' },
 ];
 
-/** The phrase's notes as tabs. Notes are in English for now, and say so in other UIs. */
+/** The phrase's notes as tabs, in the learner's language where they have it (in English otherwise, and say so). */
 export function PhraseNotesView({ phrase, prefix }: { phrase: Phrase; prefix: string }) {
   const c = useCopy();
   const { state } = useStore();
   const native = state.learner.profile.nativeLang;
   const notes = phrase.notes;
-  const available = notes ? NOTE_TABS.filter((t) => notes[t.id]) : [];
+  const available = NOTE_TABS.filter((t) => notes[t.id]);
   const [chosen, setTab] = useState<NoteTab | null>(available[0]?.id ?? null);
   // The phrase can change under an open sheet (the player moves on): a tab it lacks falls
   // back to its first, rather than an empty panel with no tab selected.
   const tab = chosen && available.some((t) => t.id === chosen) ? chosen : (available[0]?.id ?? null);
-  if (!notes || !tab || available.length === 0) return null;
+  if (!tab) return null;
   const translated = native === 'en-GB' ? undefined : phrase.noteTranslations[tab]?.[native];
   return (
     <div className="flex flex-col gap-3">

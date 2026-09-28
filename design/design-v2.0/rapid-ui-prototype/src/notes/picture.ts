@@ -61,7 +61,7 @@ let index: Map<string, Scores> | null = null;
  */
 function wordIndex(): Map<string, Scores> {
   if (index) return index;
-  const phrasesWith = new Map<string, { image: readonly string[] | null }[]>();
+  const phrasesWith = new Map<string, { image: readonly string[] }[]>();
   for (const phrase of [...CONTENT_PHRASES, ...BANK_PHRASES]) {
     const words = new Set([phrase.target, ...Object.values(phrase.translations)].flatMap((text) => contentWords(text ?? '')));
     for (const word of words) phrasesWith.set(word, [...(phrasesWith.get(word) ?? []), phrase]);
@@ -69,7 +69,7 @@ function wordIndex(): Map<string, Scores> {
   index = new Map();
   for (const [word, phrases] of phrasesWith) {
     const scores = new Map<string, number>();
-    for (const { image } of phrases) (image ?? []).forEach((icon, i) => scores.set(icon, (scores.get(icon) ?? 0) + (i === 0 ? 2 : 1) / phrases.length));
+    for (const { image } of phrases) image.forEach((icon, i) => scores.set(icon, (scores.get(icon) ?? 0) + (i === 0 ? 2 : 1) / phrases.length));
     index.set(word, scores);
   }
   return index;

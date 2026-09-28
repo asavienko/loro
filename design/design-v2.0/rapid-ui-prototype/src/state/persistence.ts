@@ -19,7 +19,7 @@ import { OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { clock, isLocalDayOf } from './clock';
 // The same limits the forms apply, for data that arrives by sync or migration.
 import { ICON_NAMES } from '../ui/icons';
-import { clip, LIMITS, NOTE_LIMITS } from './limits';
+import { clip, LIMITS, NOTE_LIMITS, sayable } from './limits';
 import { decodeLog, encodeLog } from './compactLog';
 import { initialLearner, initialPlayer, initialPrefs, initialProfile } from './initial';
 import { derive, memoryKey } from './memory';
@@ -142,7 +142,7 @@ function sanitizeOwnPhrases(value: unknown): Record<string, OwnPhrase> {
   const out: Record<string, OwnPhrase> = {};
   if (!isObject(value)) return out;
   for (const [id, p] of Object.entries(value)) {
-    if (!id.startsWith(OWN_PHRASE_PREFIX) || !isObject(p) || !str(p.target) || !str(p.native)) continue;
+    if (!id.startsWith(OWN_PHRASE_PREFIX) || !isObject(p) || !str(p.target) || !sayable(p.target) || !str(p.native)) continue;
     if (!str(p.targetLang) || !str(p.nativeLang)) continue;
     out[id] = {
       id,

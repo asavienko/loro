@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { BANK_PHRASES, CONTENT_PHRASES, NATIVE_LANGUAGES, TARGET_LANGUAGES } from '../content';
 import { imageSchema, notesSchema } from '../content/schema';
+import { findPhrase } from '../state/catalog';
+import { fresh, run, T0 } from '../state/testing';
 import { ICON_NAMES } from '../ui/icons';
 import { knownStress, transcribeBulgarian } from './bg';
 import { transcribeSpanish } from './es';
@@ -49,7 +51,7 @@ const REVIEWED: Record<string, string> = {
 
 describe('the device’s sound rules', () => {
   it('transcribe Loro’s own phrases as the course does, but for reviewed differences', () => {
-    const differ = LORO.filter((p) => (p.targetLang === 'es-ES' ? transcribeSpanish(p.target) : transcribeBulgarian(p.target)).ipa !== p.notes!.pronunciation.ipa);
+    const differ = LORO.filter((p) => (p.targetLang === 'es-ES' ? transcribeSpanish(p.target) : transcribeBulgarian(p.target)).ipa !== p.notes.pronunciation.ipa);
     assert.deepEqual(differ.map((p) => p.id).sort(), Object.keys(REVIEWED).sort());
     assert.ok(LORO.length - differ.length >= 140, 'most phrases match exactly');
   });
@@ -103,7 +105,7 @@ describe('notes worked out on the device', () => {
     }
   });
 
-  it('whatever is typed, numbers said as words', () => {
+  it('whatever is typed, numbers said as words; a text with nothing to say isn’t a phrase', () => {
     const odd = ['OK', '123 abc', 'Hola 👋', 'x-y-z', 'Здравей, ok?', 'ññññ', 'яяя', 'щ', '10:30', '2', '1000000', '007'];
     for (const target of odd) {
       for (const targetLang of TARGET_LANGUAGES) {
@@ -119,8 +121,20 @@ describe('notes worked out on the device', () => {
     assert.equal(bulgarianNumber(21000), 'двадесет и една хиляди');
     assert.equal(spanishNumber(1999), 'mil novecientos noventa y nueve');
     for (const text of ['?', '¡¡¡!!!', '👋', '  ']) {
-      assert.ok(notesSchema.safeParse(deviceNotes({ target: text, native: 'x', targetLang: 'es-ES', nativeLang: 'en-GB' }).notes).success, 'nothing to say never breaks it');
+      const s = run(fresh(), { type: 'ADD_OWN_PHRASE', target: text, native: 'x', now: T0 });
+      assert.equal(Object.keys(s.learner.ownPhrases).length, 0, `«${text}» isn’t a phrase`);
+      assert.ok(notesSchema.safeParse(deviceNotes({ target: text, native: 'x', targetLang: 'es-ES', nativeLang: 'en-GB' }).notes).success, 'and still never breaks');
     }
+  });
+
+  it('are what a phrase the learner typed shows, until the bank or the writer has better', () => {
+    const s = run(fresh(), { type: 'ADD_OWN_PHRASE', target: 'Quiero un zumo de naranja', native: 'I’d like an orange juice', now: T0 });
+    const own = Object.values(s.learner.ownPhrases)[0];
+    const shown = findPhrase(s.learner, own.id)!;
+    assert.equal(shown.notesBy, 'device');
+    assert.equal(shown.notes.grammar.title, '«Quiero»: asking for something');
+    assert.equal(shown.notes.pronunciation.ipa, '[ˈkje.ɾo un ˈθu.mo ðe naˈɾaŋ.xa]');
+    assert.deepEqual(shown.image.slice(0, 2), ['local_drink', 'nutrition']);
   });
 });
 

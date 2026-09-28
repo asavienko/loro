@@ -5,7 +5,7 @@ import { useNav } from '../nav/NavContext';
 import type { LanguageCode } from '../content';
 import { bankMatch, findSamePhrase, promptOf } from '../state/catalog';
 import { liveAvailable, writeNotes } from '../generate/remote';
-import { LIMITS, tidy } from '../state/limits';
+import { LIMITS, sayable, tidy } from '../state/limits';
 import { useCopy, useStore } from '../state/store';
 import { CharCount } from '../ui/CharCount';
 import { Sheet } from '../ui/Sheet';
@@ -63,7 +63,8 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
 
   // An edit that changes nothing (spacing aside) has nothing to save.
   const unchanged = Boolean(editId) && tidy(target) === tidy(initialTarget) && tidy(native) === tidy(initialNative);
-  const ready = Boolean(target.trim() && native.trim()) && !unchanged;
+  // A phrase needs something to say aloud: a letter or a digit.
+  const ready = sayable(target) && Boolean(native.trim()) && !unchanged;
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
