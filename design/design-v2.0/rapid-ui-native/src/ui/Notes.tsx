@@ -1,0 +1,81 @@
+// A phrase's notes as tabs (the web prototype's src/ui/Notes.tsx): the memory hint, the grammar
+// rule and its sounds, in the learner's language where there is a version in it.
+import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import type { Phrase, PhraseNotes } from '@shared/content';
+import { useCopy, useStore } from '../state/store';
+import { Icon, IconName } from './Icon';
+import { Txt } from './Txt';
+import { colors, radius, shadow, TARGET } from './theme';
+
+type NoteTab = keyof PhraseNotes;
+const NOTE_TABS: { id: NoteTab; icon: IconName }[] = [
+  { id: 'mnemonic', icon: 'lightbulb' },
+  { id: 'grammar', icon: 'menu_book' },
+  { id: 'pronunciation', icon: 'record_voice_over' },
+];
+
+export function PhraseNotesView({ phrase }: { phrase: Phrase }) {
+  const c = useCopy();
+  const { state } = useStore();
+  const native = state.learner.profile.nativeLang;
+  const notes = phrase.notes;
+  const [tab, setTab] = useState<NoteTab>('mnemonic');
+  if (!notes) return null;
+  const translated = native === 'en-GB' ? undefined : phrase.noteTranslations[tab]?.[native];
+  const note = notes[tab];
+  const { title, text } = translated ?? note;
+  return (
+    <View style={styles.view}>
+      <View accessibilityRole="tablist" accessibilityLabel={c.phrase.notesTitle} style={styles.tabs}>
+        {NOTE_TABS.map((t) => {
+          const on = t.id === tab;
+          return (
+            <Pressable key={t.id} accessibilityRole="tab" accessibilityState={{ selected: on }} onPress={() => setTab(t.id)} style={[styles.tab, on && styles.tabOn]}>
+              <Icon name={t.icon} size="sm" color={on ? 'onSurface' : 'secondary'} />
+              <Txt variant="label" weight={on ? 700 : 500} color={on ? 'onSurface' : 'secondary'} numberOfLines={1}>
+                {c.phrase.notes[t.id]}
+              </Txt>
+            </Pressable>
+          );
+        })}
+      </View>
+      <View style={styles.panel} {...({ role: 'tabpanel' } as object)}>
+        <Txt weight={700} accessibilityRole="header" lang={translated ? native : 'en'}>
+          {title}
+        </Txt>
+        {tab === 'pronunciation' && (
+          <>
+            <Txt color="primaryContainer" style={styles.mono}>
+              {notes.pronunciation.ipa}
+            </Txt>
+            {/* The respelling uses English spelling, so it helps most in the English UI. */}
+            {!translated && (
+              <Txt variant="label" color="secondary" style={styles.mono}>
+                {notes.pronunciation.respelling}
+              </Txt>
+            )}
+          </>
+        )}
+        <Txt color="onSurfaceVariant" style={styles.text} lang={translated ? native : 'en'}>
+          {text}
+        </Txt>
+      </View>
+      {!c.locale.startsWith('en') && !translated && (
+        <Txt variant="label" color="secondary">
+          {c.phrase.notesInEnglish}
+        </Txt>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  view: { gap: 12 },
+  tabs: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: radius['2xl'], backgroundColor: colors.surfaceContainerLow },
+  tab: { flex: 1, minHeight: TARGET, borderRadius: radius.xl, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 4 },
+  tabOn: { backgroundColor: colors.surfaceContainerLowest, ...shadow.card },
+  panel: { gap: 6, paddingHorizontal: 4 },
+  mono: { fontFamily: 'monospace' },
+  text: { lineHeight: 22 },
+});
