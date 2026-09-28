@@ -10,6 +10,7 @@ import languagesJson from './languages.json';
 import metaJson from './meta.json';
 import noteTranslationsJson from './note-translations.json';
 import bankJson from './bank.json';
+import bankNoteTranslationsJson from './bank-note-translations.json';
 import type { BankJson, BankTheme, Language, LanguageCode, Meta, NoteTranslations, PhraseJson, SetJson, Topic, UiLocale } from './schema';
 
 export type { LanguageCode, UiLocale, Topic, Language, Localized, Tag, Level, Register, PhraseNotes, PhraseImage, BankTheme } from './schema';
@@ -144,7 +145,22 @@ export interface BankPhrase {
   targetLang: LanguageCode;
   target: string;
   translations: Partial<Record<LanguageCode, string>>;
+  image: PhraseJson['image'];
+  notes: PhraseJson['notes'];
+  /** Note titles and texts in other native languages, by note kind. */
+  noteTranslations: Partial<Record<keyof PhraseJson['notes'], NoteTranslations[string]>>;
 }
 
-export const BANK_PHRASES: BankPhrase[] = bank.phrases;
+const bankNoteTranslations = bankNoteTranslationsJson as unknown as NoteTranslations;
+
+export const BANK_PHRASES: BankPhrase[] = bank.phrases.map((p) => ({
+  ...p,
+  noteTranslations: Object.fromEntries(Object.keys(p.notes).map((kind) => [kind, bankNoteTranslations[`${p.id}.${kind}`] ?? {}])),
+}));
+
+const bankById = new Map(BANK_PHRASES.map((p) => [p.id, p]));
+
+export function findBankPhrase(id: string | null | undefined): BankPhrase | undefined {
+  return id ? bankById.get(id) : undefined;
+}
 

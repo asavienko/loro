@@ -1,0 +1,1406 @@
+{
+  "bank-health-es-01.mnemonic": {
+    "bg-BG": { "title": "Farmacia като фармация", "text": "«Farmacia» прилича на „фармация“ и на английското „pharmacy“: испанският пише ph като f, както в «foto» и «teléfono»." },
+    "ru-RU": { "title": "Farmacia — как фармация", "text": "«Farmacia» похоже на «фармация» и английское «pharmacy»: в испанском ph пишется как f, как в «foto» и «teléfono»." }
+  },
+  "bank-health-es-01.grammar": {
+    "bg-BG": { "title": "«Hay» за коя да е", "text": "«Hay» („има“) върви с «una»: коя да е аптека. За конкретна използвайте «está»: «¿Dónde está la farmacia?»." },
+    "ru-RU": { "title": "«Hay» — любая", "text": "«Hay» («есть, имеется») идёт с «una»: любая аптека. Если речь о конкретной, говорят «está»: «¿Dónde está la farmacia?»." }
+  },
+  "bank-health-es-01.pronunciation": {
+    "bg-BG": { "title": "«Hay» звучи като „ай“", "text": "«Hay» се чете точно като „ай“: h не се произнася." },
+    "ru-RU": { "title": "«Hay» звучит как «ай»", "text": "«Hay» произносится просто «ай»: буква h в испанском не читается." }
+  },
+  "bank-health-es-02.mnemonic": {
+    "bg-BG": { "title": "Dolor de + част на тялото", "text": "«Dolor de» + част на тялото назовава болка: «dolor de cabeza» (главоболие), «dolor de muelas» (зъбобол), «dolor de espalda» (болки в гърба)." },
+    "ru-RU": { "title": "Dolor de + часть тела", "text": "«Dolor de» + часть тела — это боль: «dolor de cabeza» (головная боль), «dolor de muelas» (зубная боль), «dolor de espalda» (боль в спине)." }
+  },
+  "bank-health-es-02.grammar": {
+    "bg-BG": { "title": "«Para» — за какво е", "text": "«Para» казва за какво служи нещо: «algo para el dolor», нещо против болката. «Tiene» е учтивата форма (usted)." },
+    "ru-RU": { "title": "«Para» — для чего", "text": "«Para» указывает, для чего предмет: «algo para el dolor», что-нибудь от боли. «Tiene» — вежливая форма (usted)." }
+  },
+  "bank-health-es-02.pronunciation": {
+    "bg-BG": { "title": "Кастилското z в cabeza", "text": "В Испания z в «cabeza» звучи като английското th в „think“: върхът на езика е между зъбите." },
+    "ru-RU": { "title": "Кастильская z в cabeza", "text": "В Испании z в «cabeza» звучит как английское th в «think»: кончик языка между зубами." }
+  },
+  "bank-health-es-03.mnemonic": {
+    "bg-BG": { "title": "Garganta и гаргара", "text": "«Garganta» (гърло) започва като „гаргара“, а точно това правите, когато ви боли гърлото." },
+    "ru-RU": { "title": "Garganta и gargle", "text": "«Garganta» (горло) начинается как английское «gargle» — «полоскать горло», а именно это и делают, когда оно болит." }
+  },
+  "bank-health-es-03.grammar": {
+    "bg-BG": { "title": "Гърлото боли", "text": "Подлогът е гърлото: «me duele la garganta», буквално „гърлото ме боли“. В множествено число: «me duelen los pies». Пред части на тялото стои «la», не «mi»." },
+    "ru-RU": { "title": "Болит само горло", "text": "Подлежащее — горло: «me duele la garganta», дословно «горло болит мне». Во множественном числе: «me duelen los pies». С частями тела — «la», а не «mi»." }
+  },
+  "bank-health-es-03.pronunciation": {
+    "bg-BG": { "title": "Една сричка: due", "text": "«Due» в «duele» е една сричка, „дуе“, и ударението пада върху нея." },
+    "ru-RU": { "title": "Один слог: due", "text": "«Due» в «duele» — один слог, «дуэ», и на него падает ударение." }
+  },
+  "bank-health-es-04.mnemonic": {
+    "bg-BG": { "title": "Médico като медик", "text": "«Médico» е обичайната дума за лекар, като „медик“. Чува се и «doctor», често като титла: «el doctor García»." },
+    "ru-RU": { "title": "Médico — как медик", "text": "«Médico» — обычное слово для врача, как «медик». «Doctor» тоже встречается, чаще как обращение: «el doctor García»." }
+  },
+  "bank-health-es-04.grammar": {
+    "bg-BG": { "title": "Личното «a»", "text": "Когато допълнението е човек, пред него стои «a»: «ver a un médico». Пред предмет не стои: «ver la catedral»." },
+    "ru-RU": { "title": "Личное «a»", "text": "Если дополнение — человек, перед ним ставится «a»: «ver a un médico». Перед предметом — нет: «ver la catedral»." }
+  },
+  "bank-health-es-04.pronunciation": {
+    "bg-BG": { "title": "MÉ-di-co", "text": "Знакът за ударение показва първата сричка: «MÉ-di-co», а не „ме-ДИ-ко“." },
+    "ru-RU": { "title": "MÉ-di-co", "text": "Знак ударения ставит его на первый слог: «MÉ-di-co», а не «ме-ДИ-ко»." }
+  },
+  "bank-health-es-05.mnemonic": {
+    "bg-BG": { "title": "Две лесни думи", "text": "И двете думи са познати, само с испански правопис: «alergia» (алергия), «penicilina» (пеницилин)." },
+    "ru-RU": { "title": "Два лёгких слова", "text": "Оба слова узнаются сразу, только пишутся по-испански: «alergia» — аллергия, «penicilina» — пенициллин." }
+  },
+  "bank-health-es-05.grammar": {
+    "bg-BG": { "title": "„Имам алергия“", "text": "Както в българския, алергията се „има“: «tengo alergia a…», с «a» пред причината. Или: «soy alérgico a…» («alérgica» за жена)." },
+    "ru-RU": { "title": "«Иметь» аллергию", "text": "По-испански аллергию «имеют»: «tengo alergia a…», с «a» перед причиной. Или: «soy alérgico a…» («alérgica» о женщине)." }
+  },
+  "bank-health-es-05.pronunciation": {
+    "bg-BG": { "title": "ci с английско th", "text": "В Испания «ci» в «penicilina» се чете с th като в английското „think“: пе-ни-thi-ЛИ-на." },
+    "ru-RU": { "title": "ci — межзубный звук", "text": "В Испании «ci» в «penicilina» читается с межзубным звуком, как th в английском «think»." }
+  },
+  "bank-health-es-06.mnemonic": {
+    "bg-BG": { "title": "Cada значи „всеки“", "text": "«Cada» значи „всеки“: отговорът ще бъде нещо като «cada ocho horas», на всеки осем часа." },
+    "ru-RU": { "title": "Cada — «каждый»", "text": "«Cada» значит «каждый»: ответ прозвучит примерно так — «cada ocho horas», каждые восемь часов." }
+  },
+  "bank-health-es-06.grammar": {
+    "bg-BG": { "title": "«Cuánto» се съгласува", "text": "«Cuánto» се съгласува със съществителното: «cuántas horas» (ж. р., мн. ч.), «cuántos días». «Lo» замества лекарството." },
+    "ru-RU": { "title": "«Cuánto» согласуется", "text": "«Cuánto» согласуется с существительным: «cuántas horas» (ж. р., мн. ч.), «cuántos días». «Lo» заменяет лекарство." }
+  },
+  "bank-health-es-06.pronunciation": {
+    "bg-BG": { "title": "„Куан“ в cuántas", "text": "«Cuán» звучи като „куан“, а знакът над á показва къде пада ударението." },
+    "ru-RU": { "title": "«Куан» в cuántas", "text": "«Cuán» звучит как «куан», а знак над á показывает ударение." }
+  },
+  "bank-hotel-es-01.mnemonic": {
+    "bg-BG": { "title": "Reserva, не reservación", "text": "В Испания резервацията е «reserva»; «reservación» се чува главно в Латинска Америка." },
+    "ru-RU": { "title": "Reserva, а не reservación", "text": "В Испании бронь — это «reserva»; «reservación» говорят в основном в Латинской Америке." }
+  },
+  "bank-hotel-es-01.grammar": {
+    "bg-BG": { "title": "«A nombre de»", "text": "«A nombre de» значи „на името на“. Фамилията идва без член: «a nombre de García»." },
+    "ru-RU": { "title": "«A nombre de»", "text": "«A nombre de» значит «на имя». Фамилия идёт без артикля: «a nombre de García»." }
+  },
+  "bank-hotel-es-01.pronunciation": {
+    "bg-BG": { "title": "Силно r в началото", "text": "В началото на думата r е силно, трептящо, като rr: «reserva». В средата на думата е едно кратко докосване." },
+    "ru-RU": { "title": "Начальное r — раскатистое", "text": "В начале слова r раскатистое, как rr: «reserva». В середине слова — один короткий удар." }
+  },
+  "bank-hotel-es-02.mnemonic": {
+    "bg-BG": { "title": "Край на поста", "text": "«Ayuno» е пост, а «des-» го прекратява: «desayuno» буквално е „прекъсване на поста“, точно като английското „breakfast“." },
+    "ru-RU": { "title": "Конец поста", "text": "«Ayuno» — пост, а «des-» его отменяет: «desayuno» — буквально «прерывание поста», как и английское «breakfast»." }
+  },
+  "bank-hotel-es-02.grammar": {
+    "bg-BG": { "title": "«A» с часовете", "text": "«¿A qué hora…?» пита в колко часа. Отговорът запазва «a»: «a las ocho», в осем." },
+    "ru-RU": { "title": "«A» со временем", "text": "«¿A qué hora…?» спрашивает, во сколько. В ответе «a» остаётся: «a las ocho», в восемь." }
+  },
+  "bank-hotel-es-02.pronunciation": {
+    "bg-BG": { "title": "Qu се чете „к“", "text": "В «qué» u не се чете: звучи като „ке“." },
+    "ru-RU": { "title": "Qu читается как «к»", "text": "В «qué» u не читается: звучит как «ке»." }
+  },
+  "bank-hotel-es-03.mnemonic": {
+    "bg-BG": { "title": "Toalla като towel", "text": "«Toalla» звучи почти като английското „towel“: то-А-я. Кърпата за баня е «toalla de baño»." },
+    "ru-RU": { "title": "Toalla — как towel", "text": "«Toalla» похоже на английское «towel»: то-А-я. Банное полотенце — «toalla de baño»." }
+  },
+  "bank-hotel-es-03.grammar": {
+    "bg-BG": { "title": "Учтивото «puede»", "text": "«¿Me puede…?» + инфинитив е учтива молба (към usted). «Me» може и да се прикрепи отзад: «¿Puede darme otra toalla?»." },
+    "ru-RU": { "title": "Вежливое «puede»", "text": "«¿Me puede…?» + инфинитив — вежливая просьба (на usted). «Me» можно присоединить и в конце: «¿Puede darme otra toalla?»." }
+  },
+  "bank-hotel-es-03.pronunciation": {
+    "bg-BG": { "title": "Три срички: to-a-lla", "text": "Изговаряйте всяка гласна: «toalla» е «to-A-lla», три срички, с ударение на a." },
+    "ru-RU": { "title": "Три слога: to-a-lla", "text": "Произносите каждую гласную: «toalla» — «to-A-lla», три слога, ударение на a." }
+  },
+  "bank-hotel-es-04.mnemonic": {
+    "bg-BG": { "title": "За всичко, което не работи", "text": "«No funciona» („не функционира“) става за всичко повредено: асансьора, интернета, душа." },
+    "ru-RU": { "title": "Для всего, что сломалось", "text": "«No funciona» («не функционирует») подходит для всего сломанного: лифта, вай-фая, душа." }
+  },
+  "bank-hotel-es-04.grammar": {
+    "bg-BG": { "title": "«No» пред глагола", "text": "Отрицанието е просто «no» пред глагола, както „не“ в българския: «funciona» → «no funciona»." },
+    "ru-RU": { "title": "«No» перед глаголом", "text": "Отрицание — просто «no» перед глаголом, как русское «не»: «funciona» → «no funciona»." }
+  },
+  "bank-hotel-es-04.pronunciation": {
+    "bg-BG": { "title": "Ai звучи като „ай“", "text": "«Ai» в «aire» звучи като „ай“, а r след него е едно кратко докосване." },
+    "ru-RU": { "title": "Ai звучит как «ай»", "text": "«Ai» в «aire» звучит как «ай», а r после него — один короткий удар." }
+  },
+  "bank-hotel-es-05.mnemonic": {
+    "bg-BG": { "title": "Maleta, maletero", "text": "«Maleta» е куфар, а багажникът на колата, където пътува, е «maletero»." },
+    "ru-RU": { "title": "Maleta, maletero", "text": "«Maleta» — чемодан, а багажник машины, где он едет, — «maletero»." }
+  },
+  "bank-hotel-es-05.grammar": {
+    "bg-BG": { "title": "Puedo + инфинитив", "text": "След «puedo» („мога“) идва направо инфинитив, без „да“ между тях: «puedo dejar», «puedo pagar»." },
+    "ru-RU": { "title": "Puedo + инфинитив", "text": "После «puedo» («могу») сразу идёт инфинитив: «puedo dejar», «puedo pagar»." }
+  },
+  "bank-hotel-es-05.pronunciation": {
+    "bg-BG": { "title": "Ударение накрая: a-QUÍ", "text": "Знакът поставя ударението в края на «aquí»: а-КИ. Qu се чете като обикновено к." },
+    "ru-RU": { "title": "Ударение в конце: a-QUÍ", "text": "Знак ставит ударение в конец «aquí»: а-КИ. Qu читается как простое к." }
+  },
+  "bank-hotel-es-06.mnemonic": {
+    "bg-BG": { "title": "Habitación и inhabit", "text": "«Habitación» има общ корен с английското „inhabit“ (обитавам): стаята, в която живеете. «Dejar la habitación» значи да освободите стаята." },
+    "ru-RU": { "title": "Habitación и inhabit", "text": "«Habitación» одного корня с английским «inhabit» (обитать): комната, где живут. «Dejar la habitación» — освободить номер." }
+  },
+  "bank-hotel-es-06.grammar": {
+    "bg-BG": { "title": "Безличното «hay que»", "text": "«Hay que» + инфинитив значи „трябва да се“, без да се казва кой: «hay que dejar la habitación a las doce»." },
+    "ru-RU": { "title": "Безличное «hay que»", "text": "«Hay que» + инфинитив значит «нужно», без указания, кому: «hay que dejar la habitación a las doce»." }
+  },
+  "bank-hotel-es-06.pronunciation": {
+    "bg-BG": { "title": "Три неми h", "text": "Всяко h тук е нямо: «hora» е „ора“, «hay» е „ай“, а «habitación» започва с „а-“." },
+    "ru-RU": { "title": "Три немых h", "text": "Все h здесь немые: «hora» — «ора», «hay» — «ай», а «habitación» начинается с «а-»." }
+  },
+  "bank-clothes-es-01.mnemonic": {
+    "bg-BG": { "title": "Talla, не tamaño", "text": "Дрехите имат «talla»; «tamaño» е размер изобщо, а обувките имат «número» (номер)." },
+    "ru-RU": { "title": "Talla, а не tamaño", "text": "У одежды — «talla»; «tamaño» — размер вообще, а у обуви — «número» (номер)." }
+  },
+  "bank-clothes-es-01.grammar": {
+    "bg-BG": { "title": "Este или esta", "text": "„Този“ се съгласува със съществителното: «esta camisa» (ж. р.), «este jersey» (м. р.)." },
+    "ru-RU": { "title": "Este или esta", "text": "«Этот» согласуется с существительным: «esta camisa» (ж. р.), «este jersey» (м. р.)." }
+  },
+  "bank-clothes-es-01.pronunciation": {
+    "bg-BG": { "title": "ll звучи като „й“", "text": "В Испания «ll» звучи като „й“: «talla» е „тая“." },
+    "ru-RU": { "title": "ll звучит как «й»", "text": "В Испании «ll» звучит как «й»: «talla» — «тайя»." }
+  },
+  "bank-clothes-es-02.mnemonic": {
+    "bg-BG": { "title": "Probar и пробвам", "text": "«Probar» прилича на „пробвам“ и значи същото: да пробвате риза или да опитате ястие." },
+    "ru-RU": { "title": "Probar и пробовать", "text": "«Probar» похоже на «пробовать» и значит то же: примерить рубашку или попробовать тапас." }
+  },
+  "bank-clothes-es-02.grammar": {
+    "bg-BG": { "title": "Probarse — пробвам си", "text": "«Probar» е да опитате; «probarse» — да пробвате на себе си, затова идва «me». «Lo» е дрехата; за «la camisa» кажете «me la…»." },
+    "ru-RU": { "title": "Probarse — примерить", "text": "«Probar» — пробовать; «probarse» — примерять на себя, поэтому есть «me». «Lo» — это вещь; для «la camisa» скажите «me la…»." }
+  },
+  "bank-clothes-es-02.pronunciation": {
+    "bg-BG": { "title": "Меко b в probar", "text": "B в «probar» е между гласни и затова е меко: устните се доближават, но не се допират." },
+    "ru-RU": { "title": "Мягкое b в probar", "text": "B в «probar» стоит между гласными, поэтому мягкое: губы сближаются, но не смыкаются." }
+  },
+  "bank-clothes-es-03.mnemonic": {
+    "bg-BG": { "title": "Probar → probador", "text": "«Probador» е мястото, където «probar» (пробвате). Наставката «-dor» може да означава място, както в «comedor», трапезария." },
+    "ru-RU": { "title": "Probar → probador", "text": "«Probador» — место, где «probar» (примеряют). Суффикс «-dor» может обозначать место, как в «comedor», столовая." }
+  },
+  "bank-clothes-es-03.grammar": {
+    "bg-BG": { "title": "Está или están", "text": "За местоположение се използва «estar». «Probadores» е в множествено число, затова «están»; за една — «¿Dónde está el probador?»." },
+    "ru-RU": { "title": "Está или están", "text": "Местонахождение — это «estar». «Probadores» во множественном числе, поэтому «están»; для одной — «¿Dónde está el probador?»." }
+  },
+  "bank-clothes-es-03.pronunciation": {
+    "bg-BG": { "title": "Меко d в probadores", "text": "D в «probadores» е между гласни и звучи близо до английското th в „this“." },
+    "ru-RU": { "title": "Мягкое d в probadores", "text": "D в «probadores» между гласными звучит близко к английскому th в «this»." }
+  },
+  "bank-clothes-es-04.mnemonic": {
+    "bg-BG": { "title": "Queda bien, queda grande", "text": "Представете си огледалото в пробната: «me queda bien» (става ми), «me queda grande» (голямо е), «me queda pequeño» (малко е)." },
+    "ru-RU": { "title": "Queda bien, queda grande", "text": "Представьте зеркало в примерочной: «me queda bien» (сидит хорошо), «me queda grande» (велико), «me queda pequeño» (мало)." }
+  },
+  "bank-clothes-es-04.grammar": {
+    "bg-BG": { "title": "Дрехата е подлог", "text": "«Quedar» работи като «gustar»: дрехата е подлог, а «me» е този, който я носи. В мн. ч.: «me quedan grandes»." },
+    "ru-RU": { "title": "Одежда — подлежащее", "text": "«Quedar» работает как «gustar»: подлежащее — вещь, а «me» — тот, кто её носит. Во мн. ч.: «me quedan grandes»." }
+  },
+  "bank-clothes-es-04.pronunciation": {
+    "bg-BG": { "title": "n става m", "text": "Пред p n в «un» се превръща в m: «un poco» звучи като „ум поко“." },
+    "ru-RU": { "title": "n становится m", "text": "Перед p n в «un» переходит в m: «un poco» звучит как «ум поко»." }
+  },
+  "bank-clothes-es-05.mnemonic": {
+    "bg-BG": { "title": "Всякакви карти", "text": "«Tarjeta» е всяка малка карта: банкова, визитка («tarjeta de visita»), бордна карта («tarjeta de embarque»)." },
+    "ru-RU": { "title": "Любая карточка", "text": "«Tarjeta» — любая небольшая карточка: банковская, визитка («tarjeta de visita»), посадочный талон («tarjeta de embarque»)." }
+  },
+  "bank-clothes-es-05.grammar": {
+    "bg-BG": { "title": "Con tarjeta, en efectivo", "text": "Плаща се «con tarjeta» (с карта), но «en efectivo» (в брой). Без член: не «con una tarjeta»." },
+    "ru-RU": { "title": "Con tarjeta, en efectivo", "text": "Платят «con tarjeta» (картой), но «en efectivo» (наличными). Без артикля: не «con una tarjeta»." }
+  },
+  "bank-clothes-es-05.pronunciation": {
+    "bg-BG": { "title": "J в tarjeta", "text": "J в «tarjeta» е като българското „х“, само по-дрезгаво." },
+    "ru-RU": { "title": "J в tarjeta", "text": "J в «tarjeta» — как русское «х», только чуть более хриплое." }
+  },
+  "bank-clothes-es-06.mnemonic": {
+    "bg-BG": { "title": "Mirar и mirror", "text": "«Mirar» (гледам) звучи като английското „mirror“, огледало: нещото, в което гледате." },
+    "ru-RU": { "title": "Mirar и mirror", "text": "«Mirar» (смотреть) похоже на английское «mirror» — зеркало, в которое смотрят." }
+  },
+  "bank-clothes-es-06.grammar": {
+    "bg-BG": { "title": "Estar + -ando", "text": "«Estar» + глагол на «-ando» или «-iendo» казва какво правите в момента: «estoy mirando», разглеждам." },
+    "ru-RU": { "title": "Estar + -ando", "text": "«Estar» + глагол на «-ando» или «-iendo» — то, что вы делаете прямо сейчас: «estoy mirando», я смотрю." }
+  },
+  "bank-clothes-es-06.pronunciation": {
+    "bg-BG": { "title": "Gracias с th", "text": "В Испания «gracias» се казва с th като в английското „think“, а не „грасиас“." },
+    "ru-RU": { "title": "Gracias с th", "text": "В Испании в «gracias» звучит межзубное th, как в «think», а не «грасиас»." }
+  },
+  "bank-meeting-es-01.mnemonic": {
+    "bg-BG": { "title": "Откъде и накъде", "text": "«¿De dónde?» е „откъде?“, а «¿adónde?» е „накъде?“: «¿Adónde vas?» (Накъде отиваш?)." },
+    "ru-RU": { "title": "Откуда и куда", "text": "«¿De dónde?» — «откуда?», а «¿adónde?» — «куда?»: «¿Adónde vas?» (Куда ты идёшь?)." }
+  },
+  "bank-meeting-es-01.grammar": {
+    "bg-BG": { "title": "Ser за произход", "text": "«Eres» е формата за tú на ser — глаголът, с който казваме откъде е някой. Отговорът е «Soy de…» (Аз съм от…)." },
+    "ru-RU": { "title": "Ser для происхождения", "text": "«Eres» — форма tú глагола ser, которым говорят, откуда человек. Ответ: «Soy de…» (Я из…)." }
+  },
+  "bank-meeting-es-01.pronunciation": {
+    "bg-BG": { "title": "Меко d в dónde", "text": "След de звукът d в dónde омеква, почти като английското th в this. D след n остава твърдо." },
+    "ru-RU": { "title": "Мягкое d в dónde", "text": "После de звук d в dónde смягчается, почти как английское th в this. D после n остаётся твёрдым." }
+  },
+  "bank-meeting-es-02.mnemonic": {
+    "bg-BG": { "title": "Gusto е „вкус“", "text": "«Gusto» значи „удоволствие, вкус“ (сравнете английското with gusto). Буквално «mucho gusto» е „голямо удоволствие“." },
+    "ru-RU": { "title": "Gusto — вкус", "text": "«Gusto» — «удовольствие, вкус» (ср. английское with gusto, «со смаком»). Буквально «mucho gusto» — «большое удовольствие»." }
+  },
+  "bank-meeting-es-02.grammar": {
+    "bg-BG": { "title": "«Mucho» се съгласува", "text": "«Mucho» се съгласува със съществителното. «Gusto» е от мъжки род, затова «mucho»; с женски род е «mucha»: «mucha suerte» (успех)." },
+    "ru-RU": { "title": "«Mucho» согласуется", "text": "«Mucho» согласуется с существительным. «Gusto» мужского рода, поэтому «mucho»; с женским родом — «mucha»: «mucha suerte» (удачи)." }
+  },
+  "bank-meeting-es-02.pronunciation": {
+    "bg-BG": { "title": "Меко g", "text": "След гласна g в gusto омеква: задната част на езика се доближава до небцето, без да го допира." },
+    "ru-RU": { "title": "Мягкое g", "text": "После гласной g в gusto смягчается: спинка языка приближается к нёбу, но не смыкается с ним." }
+  },
+  "bank-meeting-es-03.mnemonic": {
+    "bg-BG": { "title": "Носиш времето", "text": "«Llevar» значи „нося“: буквално „колко време носиш тук?“. Представете си седмиците, натрупани в ръцете ви." },
+    "ru-RU": { "title": "Несёшь время", "text": "«Llevar» значит «нести»: буквально «сколько времени ты несёшь здесь?». Представьте недели, сложенные у вас в руках." }
+  },
+  "bank-meeting-es-03.grammar": {
+    "bg-BG": { "title": "Сегашно време", "text": "Както в „Откога си тук?“, испанският използва сегашно време: «llevas». Отговорът е в същата форма: «Llevo dos semanas» (От две седмици)." },
+    "ru-RU": { "title": "Настоящее время", "text": "Как и в «Давно ты здесь?», в испанском здесь настоящее время: «llevas». Ответ в той же форме: «Llevo dos semanas» (Две недели)." }
+  },
+  "bank-meeting-es-03.pronunciation": {
+    "bg-BG": { "title": "Ll в llevas", "text": "В по-голямата част от Испания ll звучи почти като й в „йод“." },
+    "ru-RU": { "title": "Ll в llevas", "text": "Почти во всей Испании ll звучит почти как й в слове «йод»." }
+  },
+  "bank-meeting-es-04.mnemonic": {
+    "bg-BG": { "title": "Чиракът учи", "text": "«Aprender» (уча) има общ латински корен с английското apprentice — „чирак“, човек, който учи занаят." },
+    "ru-RU": { "title": "Подмастерье учится", "text": "«Aprender» (учиться) имеет общий латинский корень с английским apprentice — «подмастерье», тот, кто учится ремеслу." }
+  },
+  "bank-meeting-es-04.grammar": {
+    "bg-BG": { "title": "Estar + -ndo", "text": "«Estoy aprendiendo» е estar плюс формата на -ndo за действие, което тече сега: aprender → aprendiendo, hablar → hablando." },
+    "ru-RU": { "title": "Estar + -ndo", "text": "«Estoy aprendiendo» — это estar плюс форма на -ndo для действия, которое идёт сейчас: aprender → aprendiendo, hablar → hablando." }
+  },
+  "bank-meeting-es-04.pronunciation": {
+    "bg-BG": { "title": "Кратко r", "text": "R в aprendiendo е един бърз удар на езика, без търкаляне." },
+    "ru-RU": { "title": "Одноударное r", "text": "R в aprendiendo — один быстрый удар языка, без раската." }
+  },
+  "bank-meeting-es-05.mnemonic": {
+    "bg-BG": { "title": "Оставете място", "text": "«Despacio» (бавно) идва от «de espacio», „с простор“: представете си място между думите." },
+    "ru-RU": { "title": "Оставьте место", "text": "«Despacio» (медленно) происходит от «de espacio», «с простором»: представьте место между словами." }
+  },
+  "bank-meeting-es-05.grammar": {
+    "bg-BG": { "title": "Poder + инфинитив", "text": "«Puedes» е poder с o → ue. Следващият глагол остава в инфинитив, без „да“: «¿Puedes repetir?» (Можеш ли да повториш?)." },
+    "ru-RU": { "title": "Poder + инфинитив", "text": "«Puedes» — глагол poder с o → ue. Следующий глагол стоит в инфинитиве: «¿Puedes repetir?» (Можешь повторить?)." }
+  },
+  "bank-meeting-es-05.pronunciation": {
+    "bg-BG": { "title": "C в despacio", "text": "В Испания c в despacio звучи като английското th в think." },
+    "ru-RU": { "title": "C в despacio", "text": "В Испании c в despacio звучит как английское th в think." }
+  },
+  "bank-meeting-es-06.mnemonic": {
+    "bg-BG": { "title": "Inglés и Inglaterra", "text": "«Inglés» (английски) върви с «Inglaterra» (Англия), както «español» върви с «España»." },
+    "ru-RU": { "title": "Inglés и Inglaterra", "text": "«Inglés» (английский) идёт в паре с «Inglaterra» (Англия), как «español» — с «España»." }
+  },
+  "bank-meeting-es-06.grammar": {
+    "bg-BG": { "title": "Въпрос с интонация", "text": "Испанският няма частица като „ли“: «Hablas inglés» (говориш английски) става въпрос само с повишаване на тона накрая." },
+    "ru-RU": { "title": "Вопрос интонацией", "text": "Как и в русском, вопрос задаётся интонацией: «Hablas inglés» (ты говоришь по-английски) с подъёмом тона в конце становится вопросом." }
+  },
+  "bank-meeting-es-06.pronunciation": {
+    "bg-BG": { "title": "Нямо h", "text": "H в hablas не се чете: започнете направо с a." },
+    "ru-RU": { "title": "Немое h", "text": "H в hablas не произносится: начинайте сразу с a." }
+  },
+  "bank-weather-es-01.mnemonic": {
+    "bg-BG": { "title": "Calor и калория", "text": "«Calor» (топлина, жега) е латинският корен на „калория“ — единица за топлина." },
+    "ru-RU": { "title": "Calor и калория", "text": "«Calor» (жара, тепло) — латинский корень слова «калория», единицы тепла." }
+  },
+  "bank-weather-es-01.grammar": {
+    "bg-BG": { "title": "Времето с hacer", "text": "За голяма част от времето испанският използва «hacer»: «hace calor», «hace frío», «hace sol». С «¡Qué…!» става възклицание." },
+    "ru-RU": { "title": "Погода с hacer", "text": "О погоде испанский часто говорит через «hacer»: «hace calor», «hace frío», «hace sol». «¡Qué…!» превращает фразу в восклицание." }
+  },
+  "bank-weather-es-01.pronunciation": {
+    "bg-BG": { "title": "C в hace", "text": "В Испания c в hace звучи като английското th в think." },
+    "ru-RU": { "title": "C в hace", "text": "В Испании c в hace звучит как английское th в think." }
+  },
+  "bank-weather-es-02.mnemonic": {
+    "bg-BG": { "title": "Frío и refrigerator", "text": "«Frío» (студен) идва от латинското frigidus; от същия корен е и английското refrigerator (хладилник)." },
+    "ru-RU": { "title": "Frío и рефрижератор", "text": "«Frío» (холодный) восходит к латинскому frigidus; от того же корня и слово «рефрижератор»." }
+  },
+  "bank-weather-es-02.grammar": {
+    "bg-BG": { "title": "Mucho, не muy", "text": "Тук «frío» е съществително („студът“), затова е «mucho», а не «muy». За предмет е прилагателно: «el café está muy frío»." },
+    "ru-RU": { "title": "Mucho, а не muy", "text": "Здесь «frío» — существительное («холод»), поэтому «mucho», а не «muy». О предмете это прилагательное: «el café está muy frío»." }
+  },
+  "bank-weather-es-02.pronunciation": {
+    "bg-BG": { "title": "Frío е две срички", "text": "Frío има две срички, ФРИ-о: ударението върху í разделя i и o." },
+    "ru-RU": { "title": "Frío — два слога", "text": "В frío два слога, ФРИ-о: ударение на í разделяет i и o." }
+  },
+  "bank-weather-es-03.mnemonic": {
+    "bg-BG": { "title": "Две mañana", "text": "«Mañana» е „утре“, а «la mañana» е „сутринта“. Така «mañana por la mañana» е утре сутринта." },
+    "ru-RU": { "title": "Две mañana", "text": "«Mañana» — «завтра», а «la mañana» — «утро». Так что «mañana por la mañana» — завтра утром." }
+  },
+  "bank-weather-es-03.grammar": {
+    "bg-BG": { "title": "Ir a + инфинитив", "text": "«Va a llover» е ir a + инфинитив — най-обичайният начин да кажете какво ще стане: «voy a salir» (ще изляза)." },
+    "ru-RU": { "title": "Ir a + инфинитив", "text": "«Va a llover» — ir a + инфинитив, самый обычный способ сказать, что произойдёт: «voy a salir» (я собираюсь выйти)." }
+  },
+  "bank-weather-es-03.pronunciation": {
+    "bg-BG": { "title": "V в va", "text": "Испанското v е звук b: пълно b в началото на va и меко вътре в llover." },
+    "ru-RU": { "title": "V в va", "text": "Испанское v — это звук b: полное b в начале va и мягкое внутри llover." }
+  },
+  "bank-weather-es-04.mnemonic": {
+    "bg-BG": { "title": "Семейството на nube", "text": "«Nublado» е от едно семейство с «nube» (облак): небето се е заоблачило. Nube, nublarse, nublado." },
+    "ru-RU": { "title": "Семья слова nube", "text": "«Nublado» одного корня с «nube» (облако): небо затянуло облаками. Nube, nublarse, nublado." }
+  },
+  "bank-weather-es-04.grammar": {
+    "bg-BG": { "title": "Está за небето сега", "text": "Как изглежда небето в момента се казва с «está»: «está nublado», «está lloviendo». Жегата и студът са с «hace»." },
+    "ru-RU": { "title": "Está для неба сейчас", "text": "То, как выглядит небо сейчас, выражают через «está»: «está nublado», «está lloviendo». Жару и холод — через «hace»." }
+  },
+  "bank-weather-es-04.pronunciation": {
+    "bg-BG": { "title": "Мекото -ado", "text": "D в -ado е меко, като английското th в this; в разговорната реч в Испания почти изчезва." },
+    "ru-RU": { "title": "Мягкое -ado", "text": "D в -ado мягкое, как английское th в this; в беглой речи в Испании оно почти пропадает." }
+  },
+  "bank-weather-es-05.mnemonic": {
+    "bg-BG": { "title": "Pasear и paseo", "text": "«Pasear» е „разхождам се“, а разходката е «un paseo». «Paseo» е и булевард за разходки, като Paseo del Prado в Мадрид." },
+    "ru-RU": { "title": "Pasear и paseo", "text": "«Pasear» — «гулять», а прогулка — «un paseo». «Paseo» — это ещё и бульвар для прогулок, как Paseo del Prado в Мадриде." }
+  },
+  "bank-weather-es-05.grammar": {
+    "bg-BG": { "title": "Bueno става buen", "text": "«Bueno» губи -o пред съществително от мъжки род, единствено число: «buen tiempo», «buen día». След него остава: «el tiempo es bueno»." },
+    "ru-RU": { "title": "Bueno становится buen", "text": "«Bueno» теряет -o перед существительным мужского рода в единственном числе: «buen tiempo», «buen día». После него остаётся: «el tiempo es bueno»." }
+  },
+  "bank-weather-es-05.pronunciation": {
+    "bg-BG": { "title": "Pasear е три срички", "text": "Pasear има три срички, па-се-АР: не сливайте e и a." },
+    "ru-RU": { "title": "Pasear — три слога", "text": "В pasear три слога, па-се-АР: не сливайте e и a." }
+  },
+  "bank-weather-es-06.mnemonic": {
+    "bg-BG": { "title": "Спира водата", "text": "«Paraguas» съчетава «para» (от parar, „спирам“) и «aguas» („води“). «Parasol» по същия начин спира слънцето." },
+    "ru-RU": { "title": "Останавливает воду", "text": "«Paraguas» — это «para» (от parar, «останавливать») и «aguas» («воды»). «Parasol» так же останавливает солнце." }
+  },
+  "bank-weather-es-06.grammar": {
+    "bg-BG": { "title": "Te накрая", "text": "В заповед към tú местоимението се прикрепя накрая: «lleva» + «te» → «llévate». Писаното ударение пази ударената сричка." },
+    "ru-RU": { "title": "Te в конце", "text": "В повелительной форме для tú местоимение присоединяется в конце: «lleva» + «te» → «llévate». Знак ударения сохраняет прежний ударный слог." }
+  },
+  "bank-weather-es-06.pronunciation": {
+    "bg-BG": { "title": "Gua в paraguas", "text": "Gua звучи като „гуа“ с меко g: задната част на езика не се затваря напълно." },
+    "ru-RU": { "title": "Gua в paraguas", "text": "Gua звучит как «гуа» с мягким g: спинка языка не смыкается полностью." }
+  },
+  "bank-plans-es-01.mnemonic": {
+    "bg-BG": { "title": "Quedar или quedarse", "text": "«Quedar» е „уговарям среща“, а «quedarse», със «se», е „оставам“: «me quedo en casa» (оставам си вкъщи)." },
+    "ru-RU": { "title": "Quedar или quedarse", "text": "«Quedar» — «договориться о встрече», а «quedarse», с «se», — «остаться»: «me quedo en casa» (я останусь дома)." }
+  },
+  "bank-plans-es-01.grammar": {
+    "bg-BG": { "title": "Сегашно за предложение", "text": "Испанският предлага план със сегашно време, «¿quedamos?», докато българският казва „ще се видим ли?“. Окончанието -amos е „ние“." },
+    "ru-RU": { "title": "Настоящее для плана", "text": "План предлагают в настоящем времени: «¿quedamos?», как русское «встречаемся?». Окончание -amos означает «мы»." }
+  },
+  "bank-plans-es-01.pronunciation": {
+    "bg-BG": { "title": "Qu е просто k", "text": "Qu е чисто к, без у след него: ке-ДА-мос." },
+    "ru-RU": { "title": "Qu — просто k", "text": "Qu — чистое к, без у после него: ке-ДА-мос." }
+  },
+  "bank-plans-es-02.mnemonic": {
+    "bg-BG": { "title": "Идва ли ти добре?", "text": "Буквално „идва ли ти добре в седем?“. Час, който не е удобен, «viene mal» — „идва зле“." },
+    "ru-RU": { "title": "Хорошо ли приходится?", "text": "Буквально «хорошо ли тебе приходится в семь?». Неудобное время «viene mal» — «приходится плохо»." }
+  },
+  "bank-plans-es-02.grammar": {
+    "bg-BG": { "title": "«A las» за часове", "text": "Часовете са с «a las»: «a las siete» (в седем). Един часа е в единствено число: «a la una»." },
+    "ru-RU": { "title": "«A las» для времени", "text": "Время по часам — с «a las»: «a las siete» (в семь). Час дня — в единственном числе: «a la una»." }
+  },
+  "bank-plans-es-02.pronunciation": {
+    "bg-BG": { "title": "V и b еднакво", "text": "В испанския v и b звучат еднакво: viene и bien започват с меко b." },
+    "ru-RU": { "title": "V и b одинаковы", "text": "В испанском v и b звучат одинаково: viene и bien начинаются с мягкого b." }
+  },
+  "bank-plans-es-03.mnemonic": {
+    "bg-BG": { "title": "Plaza и piazza", "text": "«Plaza» има общ латински корен с английското place и италианското piazza. Главният площад в много градове е «la Plaza Mayor»." },
+    "ru-RU": { "title": "Plaza и piazza", "text": "«Plaza» имеет общий латинский корень с английским place и итальянским piazza. Главная площадь многих городов — «la Plaza Mayor»." }
+  },
+  "bank-plans-es-03.grammar": {
+    "bg-BG": { "title": "Nos: един друг", "text": "«Nos vemos» буквално е „виждаме се“: «nos» прави действието взаимно, като „се“. Само «¡Nos vemos!» значи „до скоро!“." },
+    "ru-RU": { "title": "Nos: друг друга", "text": "«Nos vemos» — буквально «видим друг друга»: «nos» делает действие взаимным, как «-ся» в «увидимся». Само «¡Nos vemos!» значит «увидимся!»." }
+  },
+  "bank-plans-es-03.pronunciation": {
+    "bg-BG": { "title": "Z в plaza", "text": "В Испания z в plaza звучи като английското th в think." },
+    "ru-RU": { "title": "Z в plaza", "text": "В Испании z в plaza звучит как английское th в think." }
+  },
+  "bank-plans-es-04.mnemonic": {
+    "bg-BG": { "title": "Tarde и tardy", "text": "«Tarde» (късно) има общ латински корен с английското tardy („закъснял“). Като съществително «la tarde» е следобедът." },
+    "ru-RU": { "title": "Tarde и tardy", "text": "«Tarde» (поздно) имеет общий латинский корень с английским tardy («опоздавший»). Как существительное «la tarde» — вторая половина дня." }
+  },
+  "bank-plans-es-04.grammar": {
+    "bg-BG": { "title": "Сегашно за закъснение", "text": "Испанският използва сегашното «llego» (пристигам) за закъснение, което тече сега: «Llego tarde» е „ще закъснея“." },
+    "ru-RU": { "title": "Настоящее для опоздания", "text": "Испанский использует настоящее «llego» («прихожу») для опоздания, которое происходит сейчас: «Llego tarde» — «я опаздываю»." }
+  },
+  "bank-plans-es-04.pronunciation": {
+    "bg-BG": { "title": "Меко g в llego", "text": "Между гласни g в llego е меко: задната част на езика се доближава до небцето, без да го допира." },
+    "ru-RU": { "title": "Мягкое g в llego", "text": "Между гласными g в llego мягкое: спинка языка приближается к нёбу, не смыкаясь с ним." }
+  },
+  "bank-plans-es-05.mnemonic": {
+    "bg-BG": { "title": "Apetece и апетит", "text": "«Apetecer» (иска ми се) има общ латински корен с „апетит“: за какво имаш апетит?" },
+    "ru-RU": { "title": "Apetece и аппетит", "text": "«Apetecer» (хотеться) имеет общий латинский корень со словом «аппетит»: к чему у тебя аппетит?" }
+  },
+  "bank-plans-es-05.grammar": {
+    "bg-BG": { "title": "Като gustar", "text": "«Apetecer» работи като «gustar»: нещото е подлогът, а «te» е този, на когото му се иска — точно като „какво ти се прави?“." },
+    "ru-RU": { "title": "Как gustar", "text": "«Apetecer» устроен как «gustar»: желаемое — подлежащее, а «te» — тот, кому хочется, как в русском «тебе хочется»." }
+  },
+  "bank-plans-es-05.pronunciation": {
+    "bg-BG": { "title": "Два звука th", "text": "В Испания c в apetece и в hacer звучи като английското th в think; h не се чете." },
+    "ru-RU": { "title": "Два звука th", "text": "В Испании c в apetece и в hacer звучит как английское th в think; h не произносится." }
+  },
+  "bank-plans-es-06.mnemonic": {
+    "bg-BG": { "title": "Otro звучи като other", "text": "«Otro» звучи като английското other и значи същото: «otro día» е „друг ден“." },
+    "ru-RU": { "title": "Otro звучит как other", "text": "«Otro» звучит как английское other и значит то же: «otro día» — «другой день»." }
+  },
+  "bank-plans-es-06.grammar": {
+    "bg-BG": { "title": "No е отпред", "text": "«No» стои точно пред глагола: «no puedo» (не мога). «Puedo» е poder с o → ue." },
+    "ru-RU": { "title": "No впереди", "text": "«No» стоит прямо перед глаголом: «no puedo» (не могу). «Puedo» — это poder с o → ue." }
+  },
+  "bank-plans-es-06.pronunciation": {
+    "bg-BG": { "title": "Меко d в día", "text": "След otro d в día е меко, като английското th в this." },
+    "ru-RU": { "title": "Мягкое d в día", "text": "После otro d в día мягкое, как английское th в this." }
+  },
+  "bank-airport-es-01.mnemonic": {
+    "bg-BG": { "title": "«Facturar» — „фактурирам“", "text": "«Facturar» значи и „фактурирам“: предавате куфара и получавате разписка. «Equipaje» е от един корен с английското „equip“." },
+    "ru-RU": { "title": "«Facturar» — «выставить счёт»", "text": "«Facturar» значит ещё и «выставить счёт»: вы сдаёте чемодан и получаете квитанцию. «Equipaje» одного корня с английским «equip»." }
+  },
+  "bank-airport-es-01.grammar": {
+    "bg-BG": { "title": "Безлично «se»", "text": "«Se» + глагол прави израза безличен: „къде се чекира?“. Глаголът се съгласува с предмета: «¿Dónde se facturan las maletas?»." },
+    "ru-RU": { "title": "Безличное «se»", "text": "«Se» + глагол делает фразу безличной: «где сдаётся?». Глагол согласуется с предметом: «¿Dónde se facturan las maletas?»." }
+  },
+  "bank-airport-es-01.pronunciation": {
+    "bg-BG": { "title": "Гърлено j", "text": "J в «equipaje» е гърлен звук, като българското „х“, но по-дрезгаво." },
+    "ru-RU": { "title": "Гортанное j", "text": "J в «equipaje» — гортанный звук, как русское «х», только жёстче." }
+  },
+  "bank-airport-es-02.mnemonic": {
+    "bg-BG": { "title": "«Sale» не е разпродажба", "text": "«Sale» е от «salir», „тръгвам“, както «salida»: изходът, а на летището — таблото за заминаващи." },
+    "ru-RU": { "title": "«Sale» — не распродажа", "text": "«Sale» — от «salir», «уходить, отправляться», как и «salida»: выход, а в аэропорту — табло вылетов." }
+  },
+  "bank-airport-es-02.grammar": {
+    "bg-BG": { "title": "«A las» за часа", "text": "Часът се казва с «a las» + числото: «a las diez». Един часът е единствено число: «a la una»." },
+    "ru-RU": { "title": "«A las» для времени", "text": "Время называют через «a las» + число: «a las diez». Час дня — единственное число: «a la una»." }
+  },
+  "bank-airport-es-02.pronunciation": {
+    "bg-BG": { "title": "Кастилско z", "text": "В Испания z в «diez» звучи като английското th в „think“." },
+    "ru-RU": { "title": "Кастильское z", "text": "В Испании z в «diez» звучит как английское th в «think»." }
+  },
+  "bank-airport-es-03.mnemonic": {
+    "bg-BG": { "title": "Лодка в «embarque»", "text": "В «embarque» се крие «barca», „лодка“, точно както в английското „embark“. Качването на самолет е запазило старата корабна дума." },
+    "ru-RU": { "title": "Лодка в «embarque»", "text": "В «embarque» прячется «barca», «лодка», как и в английском «embark». Посадка на самолёт сохранила старое морское слово." }
+  },
+  "bank-airport-es-03.grammar": {
+    "bg-BG": { "title": "«Cuál» пред «es»", "text": "Пред «es» питайте с «¿cuál?», а не с «¿qué?»: «¿Cuál es la puerta?». «¿Qué es?» пита за определение." },
+    "ru-RU": { "title": "«Cuál» перед «es»", "text": "Перед «es» спрашивают «¿cuál?», а не «¿qué?»: «¿Cuál es la puerta?». «¿Qué es?» просит дать определение." }
+  },
+  "bank-airport-es-03.pronunciation": {
+    "bg-BG": { "title": "Сливането «ue»", "text": "«Ue» в «puerta» се слива в една сричка: „пуе“." },
+    "ru-RU": { "title": "Слияние «ue»", "text": "«Ue» в «puerta» сливается в один слог: «пуэ»." }
+  },
+  "bank-airport-es-04.mnemonic": {
+    "bg-BG": { "title": "Maleta, maletero", "text": "«Maleta» е куфар, а багажникът на колата, в който го слагате, е «maletero»." },
+    "ru-RU": { "title": "Maleta, maletero", "text": "«Maleta» — чемодан, а багажник машины, куда его кладут, — «maletero»." }
+  },
+  "bank-airport-es-04.grammar": {
+    "bg-BG": { "title": "«He» + причастие", "text": "«He perdido» е «haber» + причастие, като английското „I have lost“. В Испания така се казва току-що случилото се." },
+    "ru-RU": { "title": "«He» + причастие", "text": "«He perdido» — это «haber» + причастие, как английское «I have lost». В Испании так говорят о том, что только что случилось." }
+  },
+  "bank-airport-es-04.pronunciation": {
+    "bg-BG": { "title": "Нямо h", "text": "H в «he» не се чете: казвайте просто „е“." },
+    "ru-RU": { "title": "Немое h", "text": "H в «he» не читается: говорите просто «э»." }
+  },
+  "bank-airport-es-05.mnemonic": {
+    "bg-BG": { "title": "Изостава", "text": "«Retraso» съдържа «tras», „отзад“, както в «atrás»: полетът изостава." },
+    "ru-RU": { "title": "Отстаёт", "text": "В «retraso» есть «tras», «позади», как в «atrás»: рейс отстаёт от расписания." }
+  },
+  "bank-airport-es-05.grammar": {
+    "bg-BG": { "title": "«Ir con retraso»", "text": "На испански полетът „върви със закъснение“: «va con retraso», от «ir». Казва се и за влакове, и за автобуси." },
+    "ru-RU": { "title": "«Ir con retraso»", "text": "По-испански рейс «идёт с опозданием»: «va con retraso», от «ir». Так говорят и о поездах, и об автобусах." }
+  },
+  "bank-airport-es-05.pronunciation": {
+    "bg-BG": { "title": "Вибриращо r", "text": "R в началото на «retraso» е вибриращо, като rr; r след t е едно кратко докосване." },
+    "ru-RU": { "title": "Раскатистое r", "text": "R в начале «retraso» раскатистое, как rr; r после t — один короткий удар языка." }
+  },
+  "bank-airport-es-06.mnemonic": {
+    "bg-BG": { "title": "Като «para llevar»", "text": "«Llevar» е „нося със себе си“ — същият глагол като в «para llevar», кафе за вкъщи. «En cabina» е „в кабината“." },
+    "ru-RU": { "title": "Как «para llevar»", "text": "«Llevar» — «брать с собой», тот же глагол, что в «para llevar», кофе навынос. «En cabina» — «в салоне»." }
+  },
+  "bank-airport-es-06.grammar": {
+    "bg-BG": { "title": "«Poder» + инфинитив", "text": "«Puedo» е «poder» с o → ue, а следващият глагол остава в инфинитив: «puedo llevar», без нищо между тях." },
+    "ru-RU": { "title": "«Poder» + инфинитив", "text": "«Puedo» — это «poder» с чередованием o → ue, а следующий глагол стоит в инфинитиве: «puedo llevar», без предлогов." }
+  },
+  "bank-airport-es-06.pronunciation": {
+    "bg-BG": { "title": "Звукът ll", "text": "В Испания «ll» звучи почти като „й“ в „йод“." },
+    "ru-RU": { "title": "Звук ll", "text": "В Испании «ll» звучит почти как «й» в слове «йод»." }
+  },
+  "bank-help-es-01.mnemonic": {
+    "bg-BG": { "title": "Като „aid“", "text": "Помислете за английското „aid“: «ayuda» и „aid“ идват от един и същ латински глагол." },
+    "ru-RU": { "title": "Как «aid»", "text": "Вспомните английское «aid»: у «ayuda» и «aid» один и тот же латинский корень." }
+  },
+  "bank-help-es-01.grammar": {
+    "bg-BG": { "title": "Добавете «me»", "text": "«¡Ayuda!» се вика като „Помощ!“. За да помолите някого пряко, добавете «me»: «¡Ayúdeme!» (usted), «¡Ayúdame!» (tú)." },
+    "ru-RU": { "title": "Добавьте «me»", "text": "«¡Ayuda!» кричат, как «Помогите!». Чтобы обратиться к человеку напрямую, добавьте «me»: «¡Ayúdeme!» (usted), «¡Ayúdame!» (tú)." }
+  },
+  "bank-help-es-01.pronunciation": {
+    "bg-BG": { "title": "Меко d", "text": "D между гласни е меко, почти като английското th в „this“." },
+    "ru-RU": { "title": "Мягкое d", "text": "D между гласными мягкое, почти как английское th в «this»." }
+  },
+  "bank-help-es-02.mnemonic": {
+    "bg-BG": { "title": "«Llamar» и «me llamo»", "text": "«Llamar» значи „викам, обаждам се“ — същият глагол като в «me llamo…», „казвам се…“." },
+    "ru-RU": { "title": "«Llamar» и «me llamo»", "text": "«Llamar» — «звать, звонить», тот же глагол, что в «me llamo…», «меня зовут…»." }
+  },
+  "bank-help-es-02.grammar": {
+    "bg-BG": { "title": "Учтива заповед", "text": "«Llame» е учтивата повелителна форма (usted) на «llamar»: при глаголите на -ar a става e. На приятел: «Llama a una ambulancia»." },
+    "ru-RU": { "title": "Вежливая просьба", "text": "«Llame» — вежливая повелительная форма (usted) от «llamar»: у глаголов на -ar a меняется на e. Другу: «Llama a una ambulancia»." }
+  },
+  "bank-help-es-02.pronunciation": {
+    "bg-BG": { "title": "Кастилско c", "text": "C пред i в «ambulancia» звучи като английското th в „think“." },
+    "ru-RU": { "title": "Кастильское c", "text": "C перед i в «ambulancia» звучит как английское th в «think»." }
+  },
+  "bank-help-es-03.mnemonic": {
+    "bg-BG": { "title": "Robar е „rob“", "text": "«Robar» е английското „rob“: «me han robado», „ограбиха ме“. «Cartera» е портфейл." },
+    "ru-RU": { "title": "Robar — это «rob»", "text": "«Robar» — английское «rob»: «me han robado» — «меня обокрали». «Cartera» — кошелёк." }
+  },
+  "bank-help-es-03.grammar": {
+    "bg-BG": { "title": "Безлично „те“", "text": "Испанският не назовава крадеца, а казва „те“: «me han robado», „обраха ме“. «Me» е пострадалият." },
+    "ru-RU": { "title": "Неопределённые «они»", "text": "Вора не называют, говорят «они»: «me han robado» — «меня обокрали». «Me» — пострадавший." }
+  },
+  "bank-help-es-03.pronunciation": {
+    "bg-BG": { "title": "Вибриращо и кратко r", "text": "R в «robado» е вибриращо, а r в «cartera» са едно кратко докосване на езика." },
+    "ru-RU": { "title": "Раскатистое и краткое r", "text": "R в «robado» раскатистое, а r в «cartera» — один короткий удар языка." }
+  },
+  "bank-help-es-04.mnemonic": {
+    "bg-BG": { "title": "Кабинетът на комисаря", "text": "«Comisaría» е мястото, където работи «comisario», полицейският комисар." },
+    "ru-RU": { "title": "Кабинет комиссара", "text": "«Comisaría» — место, где работает «comisario», комиссар полиции." }
+  },
+  "bank-help-es-04.grammar": {
+    "bg-BG": { "title": "«Estar» за места", "text": "Къде се намира нещо, се казва с «estar»: «¿Dónde está…?». «Ser» казва какво е нещо." },
+    "ru-RU": { "title": "«Estar» для мест", "text": "Где что находится, говорят через «estar»: «¿Dónde está…?». «Ser» — о том, что это такое." }
+  },
+  "bank-help-es-04.pronunciation": {
+    "bg-BG": { "title": "Две срички в «ía»", "text": "Ударението върху «í» разделя «ía» на две срички: ри-а, с ударение на ри." },
+    "ru-RU": { "title": "Два слога в «ía»", "text": "Знак ударения на «í» делит «ía» на два слога: ри-а, ударение на ри." }
+  },
+  "bank-help-es-05.mnemonic": {
+    "bg-BG": { "title": "Да изгубиш себе си", "text": "Само «he perdido» иска предмет: «he perdido la maleta». Добавете «me» и изгубеният сте вие." },
+    "ru-RU": { "title": "Потерять себя", "text": "Одно «he perdido» требует предмета: «he perdido la maleta». Добавьте «me» — и потерялись вы сами." }
+  },
+  "bank-help-es-05.grammar": {
+    "bg-BG": { "title": "Възвратно «perderse»", "text": "«Perderse» е „изгубвам се“, а «me» стои пред «he». Също: «te has perdido», «nos hemos perdido»." },
+    "ru-RU": { "title": "Возвратное «perderse»", "text": "«Perderse» — «заблудиться», и «me» стоит перед «he». Так же: «te has perdido», «nos hemos perdido»." }
+  },
+  "bank-help-es-05.pronunciation": {
+    "bg-BG": { "title": "Меки d", "text": "И двете d в «perdido» са меки, почти като английското th в „this“." },
+    "ru-RU": { "title": "Мягкие d", "text": "Оба d в «perdido» мягкие, почти как английское th в «this»." }
+  },
+  "bank-help-es-06.mnemonic": {
+    "bg-BG": { "title": "Alguien, algo, nadie", "text": "«Alguien» е „някой“, от семейството на «algo» (нещо) и «alguno» (някакъв). Обратното е «nadie»." },
+    "ru-RU": { "title": "Alguien, algo, nadie", "text": "«Alguien» — «кто-то», из одной семьи с «algo» (что-то) и «alguno» (какой-то). Противоположное — «nadie»." }
+  },
+  "bank-help-es-06.grammar": {
+    "bg-BG": { "title": "Въпрос с интонация", "text": "Въпросът с да или не запазва реда на думите: отличават го само повишаващата се интонация и «¿…?»." },
+    "ru-RU": { "title": "Вопрос интонацией", "text": "В вопросе «да или нет» порядок слов тот же, что в утверждении: его выдают лишь восходящая интонация и «¿…?»." }
+  },
+  "bank-help-es-06.pronunciation": {
+    "bg-BG": { "title": "Нямо u", "text": "U в «alguien» не се чете, а само пази g твърдо: АЛ-гиен." },
+    "ru-RU": { "title": "Немое u", "text": "U в «alguien» не читается, а лишь сохраняет g твёрдым: АЛЬ-гьен." }
+  },
+  "bank-work-es-01.mnemonic": {
+    "bg-BG": { "title": "Всяка среща", "text": "На испански «reunión» е всяка среща — от кратък разговор с екипа до заседание, а не само събиране на стари приятели." },
+    "ru-RU": { "title": "Любая встреча", "text": "«Reunión» — любая встреча, от короткого созвона с командой до заседания, а не только встреча старых друзей." }
+  },
+  "bank-work-es-01.grammar": {
+    "bg-BG": { "title": "Tener → tengo", "text": "«Tener» получава g във формата за „аз“: «tengo», но «tienes» и «tiene» за „ти“ и „той“ или „тя“." },
+    "ru-RU": { "title": "Tener → tengo", "text": "«Tener» в форме «я» получает g: «tengo», но «tienes» и «tiene» для «ты» и «он» или «она»." }
+  },
+  "bank-work-es-01.pronunciation": {
+    "bg-BG": { "title": "„Нг“ в «tengo»", "text": "N в «tengo» звучи като „нг“ в английското „finger“." },
+    "ru-RU": { "title": "«Нг» в «tengo»", "text": "N в «tengo» звучит как «нг» в английском «finger»." }
+  },
+  "bank-work-es-02.mnemonic": {
+    "bg-BG": { "title": "Mandar: пращам и нареждам", "text": "«Mandar» значи и „пращам“, и „нареждам“ — от един корен с „мандат“. «Informe» е това, което ви информира: доклад." },
+    "ru-RU": { "title": "Mandar: слать и велеть", "text": "«Mandar» значит и «посылать», и «приказывать» — тот же корень, что в слове «мандат». «Informe» — то, что информирует: отчёт." }
+  },
+  "bank-work-es-02.grammar": {
+    "bg-BG": { "title": "Къде отива «me»", "text": "«Me» може да стои пред «puedes» или накрая: «¿Puedes mandarme el informe?» означава същото." },
+    "ru-RU": { "title": "Где стоит «me»", "text": "«Me» может стоять перед «puedes» или в конце: «¿Puedes mandarme el informe?» значит то же самое." }
+  },
+  "bank-work-es-02.pronunciation": {
+    "bg-BG": { "title": "Меко и твърдо d", "text": "D в «puedes» е меко, като английското th в „this“; след n, в «mandar», то е твърдо." },
+    "ru-RU": { "title": "Мягкое и твёрдое d", "text": "D в «puedes» мягкое, как английское th в «this»; после n, в «mandar», оно твёрдое." }
+  },
+  "bank-work-es-03.mnemonic": {
+    "bg-BG": { "title": "Денят на Венера", "text": "«Viernes» е денят на Венера, от латински; «martes» е денят на Марс, а «lunes» — на Луната." },
+    "ru-RU": { "title": "День Венеры", "text": "«Viernes» — день Венеры, от латыни; «martes» — день Марса, а «lunes» — Луны." }
+  },
+  "bank-work-es-03.grammar": {
+    "bg-BG": { "title": "«Los viernes» за навик", "text": "«Los viernes» значи „в петък“, всяка седмица; «el viernes» е един конкретен петък. Предлог не се слага." },
+    "ru-RU": { "title": "«Los viernes» — по пятницам", "text": "«Los viernes» — «по пятницам», каждую неделю; «el viernes» — одна конкретная пятница. Предлог не нужен." }
+  },
+  "bank-work-es-03.pronunciation": {
+    "bg-BG": { "title": "Гърлено j", "text": "J в «trabajo» е гърлен звук, като българското „х“, но по-дрезгаво." },
+    "ru-RU": { "title": "Гортанное j", "text": "J в «trabajo» — гортанный звук, как русское «х», только жёстче." }
+  },
+  "bank-work-es-04.mnemonic": {
+    "bg-BG": { "title": "«Un momentito»", "text": "«Momento» е „момент“. Умалителното звучи по-леко: «¿Tienes un momentito?»." },
+    "ru-RU": { "title": "«Un momentito»", "text": "«Momento» — это «момент». Уменьшительная форма звучит мягче: «¿Tienes un momentito?»." }
+  },
+  "bank-work-es-04.grammar": {
+    "bg-BG": { "title": "Tú или usted", "text": "«Tienes» е формата за tú, нормална с колеги в Испания. На непознат или важен клиент: «¿Tiene un momento?»." },
+    "ru-RU": { "title": "Tú или usted", "text": "«Tienes» — форма на tú, обычная между коллегами в Испании. Незнакомцу или важному клиенту: «¿Tiene un momento?»." }
+  },
+  "bank-work-es-04.pronunciation": {
+    "bg-BG": { "title": "n става m", "text": "Пред m в «momento» n в «un» се чете като m: „ум-мо-МЕН-то“." },
+    "ru-RU": { "title": "n становится m", "text": "Перед m в «momento» n в «un» звучит как m: «ум-мо-МЕН-то»." }
+  },
+  "bank-work-es-05.mnemonic": {
+    "bg-BG": { "title": "Краят на линията", "text": "«Terminar» е „свършвам“: помислете за „терминал“, края на линията." },
+    "ru-RU": { "title": "Конечная", "text": "«Terminar» — «заканчивать»: вспомните «терминал», конец пути." }
+  },
+  "bank-work-es-05.grammar": {
+    "bg-BG": { "title": "Сегашно за обещание", "text": "Сегашното време може да обещава близко бъдеще: «lo termino hoy», „ще го довърша днес“. «Lo» (го) стои пред глагола." },
+    "ru-RU": { "title": "Настоящее для обещания", "text": "Настоящее время может обещать ближайшее будущее: «lo termino hoy» — «закончу сегодня». «Lo» (это) стоит перед глаголом." }
+  },
+  "bank-work-es-05.pronunciation": {
+    "bg-BG": { "title": "Ударение на «mi»", "text": "Ударението е на «mi»: «termino» е „свършвам“, а «terminó» значи „свърши“." },
+    "ru-RU": { "title": "Ударение на «mi»", "text": "Ударение на «mi»: «termino» — «заканчиваю», а «terminó» — «закончил»." }
+  },
+  "bank-work-es-06.mnemonic": {
+    "bg-BG": { "title": "Hora, hour", "text": "«Hora» е английското „hour“, „час“, и както в „hour“, h не се чете." },
+    "ru-RU": { "title": "Hora, hour", "text": "«Hora» — это английское «hour», «час», и, как в «hour», h не читается." }
+  },
+  "bank-work-es-06.grammar": {
+    "bg-BG": { "title": "De + el = del", "text": "«De» + «el» винаги се сливат в «del»: «sales del trabajo». Също и «a» + «el» → «al»." },
+    "ru-RU": { "title": "De + el = del", "text": "«De» + «el» всегда сливаются в «del»: «sales del trabajo». Так же «a» + «el» → «al»." }
+  },
+  "bank-work-es-06.pronunciation": {
+    "bg-BG": { "title": "Кратко r", "text": "R в «hora» е едно кратко докосване на езика, като „р“ в „гора“." },
+    "ru-RU": { "title": "Краткое r", "text": "R в «hora» — один короткий удар языка, как «р» в слове «гора»." }
+  },
+  "bank-phone-es-01.mnemonic": {
+    "bg-BG": { "title": "Контра + знак", "text": "«Contraseña» е «contra» + «seña» („знак“), като английското „countersign“: думата, която казваш в отговор, за да те пуснат." },
+    "ru-RU": { "title": "Контра + знак", "text": "«Contraseña» — это «contra» + «seña» («знак»), как английское «countersign»: слово, которое говоришь в ответ, чтобы тебя впустили." }
+  },
+  "bank-phone-es-01.grammar": {
+    "bg-BG": { "title": "«¿Cuál es…?» за конкретното", "text": "За конкретна информация питай с «¿Cuál es…?». «¿Qué es la contraseña?» би означавало „какво е парола“." },
+    "ru-RU": { "title": "«¿Cuál es…?» для конкретного", "text": "Чтобы узнать что-то конкретное, спрашивают «¿Cuál es…?». «¿Qué es la contraseña?» значило бы «что такое пароль»." }
+  },
+  "bank-phone-es-01.pronunciation": {
+    "bg-BG": { "title": "Буквата ñ в contraseña", "text": "ñ звучи като „ня“ в „няма“: con-tra-SE-ña." },
+    "ru-RU": { "title": "Буква ñ в contraseña", "text": "ñ звучит как мягкое «н» в слове «няня»: con-tra-SE-ña." }
+  },
+  "bank-phone-es-02.mnemonic": {
+    "bg-BG": { "title": "Оставам без", "text": "«Quedarse sin» е „оставам без“, тоест „свършва ми“: «me he quedado sin dinero», «sin gasolina», «sin batería»." },
+    "ru-RU": { "title": "Остаться без", "text": "«Quedarse sin» — «остаться без», то есть «закончилось»: «me he quedado sin dinero», «sin gasolina», «sin batería»." }
+  },
+  "bank-phone-es-02.grammar": {
+    "bg-BG": { "title": "Току-що: перфект", "text": "В Испания току-що случилото се е в перфект: «he» + причастие, както в «me he quedado». «Me» стои пред «he»." },
+    "ru-RU": { "title": "Только что: перфект", "text": "В Испании о том, что только что случилось, говорят в перфекте: «he» + причастие, как в «me he quedado». «Me» стоит перед «he»." }
+  },
+  "bank-phone-es-02.pronunciation": {
+    "bg-BG": { "title": "Меко d в quedado", "text": "И двете d в «quedado» са меки, близки до английското th в „this“." },
+    "ru-RU": { "title": "Мягкое d в quedado", "text": "Оба d в «quedado» мягкие, близкие к английскому th в «this»." }
+  },
+  "bank-phone-es-03.mnemonic": {
+    "bg-BG": { "title": "Móvil, не celular", "text": "В Испания мобилният телефон е «el móvil», като британското „mobile“; «celular» се казва в Латинска Америка." },
+    "ru-RU": { "title": "Móvil, а не celular", "text": "В Испании мобильный телефон — «el móvil», как британское «mobile»; «celular» говорят в Латинской Америке." }
+  },
+  "bank-phone-es-03.grammar": {
+    "bg-BG": { "title": "o става ue", "text": "Под ударение o в «poder» става ue: «puedo», «puedes», но «podemos». Глаголът след него остава в инфинитив: «cargar»." },
+    "ru-RU": { "title": "o превращается в ue", "text": "Под ударением o в «poder» превращается в ue: «puedo», «puedes», но «podemos». Следующий глагол остаётся в инфинитиве: «cargar»." }
+  },
+  "bank-phone-es-03.pronunciation": {
+    "bg-BG": { "title": "Меко v в móvil", "text": "v в «móvil» е меко b: устните се доближават, но не се допират." },
+    "ru-RU": { "title": "Мягкое v в móvil", "text": "v в «móvil» — мягкое b: губы сближаются, но не смыкаются." }
+  },
+  "bank-phone-es-04.mnemonic": {
+    "bg-BG": { "title": "Глаголът от «me llamo»", "text": "Това е глаголът от «me llamo…» („казвам се…“, буквално „наричам себе си“). «Te llamo» е „обаждам ти се“." },
+    "ru-RU": { "title": "Глагол из «me llamo»", "text": "Это глагол из «me llamo…» («меня зовут…», буквально «я зову себя»). «Te llamo» — «я тебе звоню»." }
+  },
+  "bank-phone-es-04.grammar": {
+    "bg-BG": { "title": "Сегашно време за план", "text": "Испанският често ползва сегашно време за близък план: «te llamo luego», „ще ти се обадя после“. «Te» стои пред глагола." },
+    "ru-RU": { "title": "Настоящее время для планов", "text": "О ближайших планах по-испански часто говорят в настоящем времени: «te llamo luego», «позвоню позже». «Te» стоит перед глаголом." }
+  },
+  "bank-phone-es-04.pronunciation": {
+    "bg-BG": { "title": "ll звучи като й", "text": "В Испания «ll» звучи като „й“ в „йод“: YAH-moh." },
+    "ru-RU": { "title": "ll звучит как й", "text": "В Испании «ll» звучит как «й» в слове «йод»: YAH-moh." }
+  },
+  "bank-phone-es-05.mnemonic": {
+    "bg-BG": { "title": "Покритие, от «cubrir»", "text": "«Cobertura» е „покритие“, роднина на «cubrir» („покривам“): няма покритие, няма сигнал." },
+    "ru-RU": { "title": "Покрытие, от «cubrir»", "text": "«Cobertura» — «покрытие», родственник «cubrir» («покрывать»): нет покрытия — нет связи." }
+  },
+  "bank-phone-es-05.grammar": {
+    "bg-BG": { "title": "Само «no» пред глагола", "text": "Отрицанието е просто «no» точно пред глагола: «tengo» („имам“) → «no tengo» („нямам“)." },
+    "ru-RU": { "title": "Просто «no» перед глаголом", "text": "Отрицание — это просто «no» прямо перед глаголом: «tengo» («у меня есть») → «no tengo» («у меня нет»)." }
+  },
+  "bank-phone-es-05.pronunciation": {
+    "bg-BG": { "title": "ng в tengo", "text": "Пред g буквата n в «tengo» звучи като ng в английското „finger“." },
+    "ru-RU": { "title": "ng в tengo", "text": "Перед g буква n в «tengo» звучит как ng в английском «finger»." }
+  },
+  "bank-phone-es-06.mnemonic": {
+    "bg-BG": { "title": "«Dar», като „data“", "text": "«Das» е от «dar», „давам“. Английското „data“, буквално „даденото“, идва от същия латински глагол." },
+    "ru-RU": { "title": "«Dar», как в «data»", "text": "«Das» — от «dar», «давать». Английское «data», буквально «данное», происходит от того же латинского глагола." }
+  },
+  "bank-phone-es-06.grammar": {
+    "bg-BG": { "title": "Tu или tú", "text": "«Tu» без ударение е „твой“; «tú» с ударение е „ти“: «tú tienes tu número»." },
+    "ru-RU": { "title": "Tu или tú", "text": "«Tu» без ударения — «твой»; «tú» с ударением — «ты»: «tú tienes tu número»." }
+  },
+  "bank-phone-es-06.pronunciation": {
+    "bg-BG": { "title": "NU-me-ro", "text": "Ударението в «número» е на първата сричка, както показва знакът." },
+    "ru-RU": { "title": "NU-me-ro", "text": "Ударение в «número» на первом слоге, как показывает знак." }
+  },
+  "bank-family-es-01.mnemonic": {
+    "bg-BG": { "title": "Hermano, hermana, hermanos", "text": "«Hermano» е брат, «hermana» – сестра, а «hermanos» – братя и сестри заедно." },
+    "ru-RU": { "title": "Hermano, hermana, hermanos", "text": "«Hermano» — брат, «hermana» — сестра, а «hermanos» — братья и сёстры вместе." }
+  },
+  "bank-family-es-01.grammar": {
+    "bg-BG": { "title": "Un hermano, una hermana", "text": "„Един“ се съгласува със съществителното: «un» за мъжки род, «una» за женски. Повечето думи на -o са от мъжки род, а на -a – от женски." },
+    "ru-RU": { "title": "Un hermano, una hermana", "text": "Артикль согласуется с существительным: «un» для мужского рода, «una» для женского. Большинство слов на -o мужского рода, на -a — женского." }
+  },
+  "bank-family-es-01.pronunciation": {
+    "bg-BG": { "title": "Нямо h", "text": "h в «hermana» не се чете: er-MAH-nah." },
+    "ru-RU": { "title": "Немая h", "text": "h в «hermana» не произносится: er-MAH-nah." }
+  },
+  "bank-family-es-02.mnemonic": {
+    "bg-BG": { "title": "Hijo, като в «hidalgo»", "text": "«Hijo» („син“) се крие в «hidalgo», благородник: от «hijo de algo», „син на нещо“." },
+    "ru-RU": { "title": "Hijo, как в «hidalgo»", "text": "«Hijo» («сын») прячется в «hidalgo», дворянин: от «hijo de algo», буквально «сын чего-то»." }
+  },
+  "bank-family-es-02.grammar": {
+    "bg-BG": { "title": "Hijos: синове и дъщери", "text": "Мъжкият род в множествено число покрива смесена група: «hijos» са деца от двата пола, както «padres» са „родители“." },
+    "ru-RU": { "title": "Hijos: сыновья и дочери", "text": "Мужской род во множественном числе охватывает смешанную группу: «hijos» — дети обоих полов, как «padres» — «родители»." }
+  },
+  "bank-family-es-02.pronunciation": {
+    "bg-BG": { "title": "j в hijos", "text": "j е хрипливо „х“, като ch в шотландското „loch“. Началното h не се чете." },
+    "ru-RU": { "title": "j в hijos", "text": "j — это хриплое «х», как ch в шотландском «loch». Начальная h не произносится." }
+  },
+  "bank-family-es-03.mnemonic": {
+    "bg-BG": { "title": "Campo, като „кампус“", "text": "«Campo» има същия латински корен като „кампус“ и „къмпинг“: поле. «El campo» е провинцията, селото." },
+    "ru-RU": { "title": "Campo, как «кампус»", "text": "У «campo» тот же латинский корень, что у «кампус» и «кемпинг»: поле. «El campo» — это сельская местность." }
+  },
+  "bank-family-es-03.grammar": {
+    "bg-BG": { "title": "Mi, mis", "text": "«Mi» („моят“) става «mis» пред множествено число: «mi padre», «mis padres». По род не се променя." },
+    "ru-RU": { "title": "Mi, mis", "text": "«Mi» («мой») перед множественным числом становится «mis»: «mi padre», «mis padres». По роду не меняется." }
+  },
+  "bank-family-es-03.pronunciation": {
+    "bg-BG": { "title": "V звучи като b", "text": "В испанския b и v звучат еднакво: и двете v във «viven» са меко b, устните почти се допират." },
+    "ru-RU": { "title": "V звучит как b", "text": "В испанском b и v звучат одинаково: оба v в «viven» — мягкое b, губы почти смыкаются." }
+  },
+  "bank-family-es-04.mnemonic": {
+    "bg-BG": { "title": "Año и латинското annus", "text": "ñ в «año» някога е било двойно n, както в латинското annus; английското „annual“ („годишен“) го пази." },
+    "ru-RU": { "title": "Año и латинское annus", "text": "ñ в «año» когда-то было двойным n, как в латинском annus; английское «annual» («ежегодный») его сохраняет." }
+  },
+  "bank-family-es-04.grammar": {
+    "bg-BG": { "title": "Възрастта е с «tener»", "text": "На испански годините се „имат“: «tiene cinco años», буквално „има пет години“." },
+    "ru-RU": { "title": "Возраст — с «tener»", "text": "По-испански годы «имеют»: «tiene cinco años», буквально «имеет пять лет»." }
+  },
+  "bank-family-es-04.pronunciation": {
+    "bg-BG": { "title": "Кастилско th в cinco", "text": "В Испания първото c в «cinco» звучи като th в английското „think“; второто е обикновено к." },
+    "ru-RU": { "title": "Кастильское th в cinco", "text": "В Испании первое c в «cinco» звучит как th в английском «think»; второе — обычное к." }
+  },
+  "bank-family-es-05.mnemonic": {
+    "bg-BG": { "title": "Край на седмицата, «el finde»", "text": "«Fin de semana» е дума по дума „край на седмицата“. В Испания между приятели го съкращават на «el finde»." },
+    "ru-RU": { "title": "Конец недели, «el finde»", "text": "«Fin de semana» — дословно «конец недели». В Испании в разговоре его сокращают до «el finde»." }
+  },
+  "bank-family-es-05.grammar": {
+    "bg-BG": { "title": "Личното «a»", "text": "Когато допълнението е човек, испанският слага «a» пред него: «ver a mis abuelos», но «ver la tele»." },
+    "ru-RU": { "title": "Личное «a»", "text": "Если дополнение — человек, по-испански перед ним ставят «a»: «ver a mis abuelos», но «ver la tele»." }
+  },
+  "bank-family-es-05.pronunciation": {
+    "bg-BG": { "title": "BWE в abuelos", "text": "«Bue» в «abuelos» е една сричка, „буе“, с меко b." },
+    "ru-RU": { "title": "BWE в abuelos", "text": "«Bue» в «abuelos» — один слог, «буэ», с мягким b." }
+  },
+  "bank-family-es-06.mnemonic": {
+    "bg-BG": { "title": "-y става «-ia»", "text": "Английски думи на -y често завършват на «-ia» в испанския: family → «familia», pharmacy → «farmacia», history → «historia»." },
+    "ru-RU": { "title": "-y превращается в «-ia»", "text": "Английские слова на -y по-испански часто кончаются на «-ia»: family → «familia», pharmacy → «farmacia», history → «historia»." }
+  },
+  "bank-family-es-06.grammar": {
+    "bg-BG": { "title": "«Estar» за състояние", "text": "Как е някой се пита с «estar»: «¿Cómo está…?». Със «ser» – «¿Cómo es…?» – питаш какъв е по характер." },
+    "ru-RU": { "title": "«Estar» для состояния", "text": "Как у кого дела, спрашивают с «estar»: «¿Cómo está…?». С «ser» — «¿Cómo es…?» — спрашивают, какой человек по характеру." }
+  },
+  "bank-family-es-06.pronunciation": {
+    "bg-BG": { "title": "fa-MI-lia", "text": "«Lia» в края на «familia» е една сричка, „ля“." },
+    "ru-RU": { "title": "fa-MI-lia", "text": "«Lia» в конце «familia» — один слог, «ля»." }
+  },
+  "bank-booking-es-01.mnemonic": {
+    "bg-BG": { "title": "Mesa, като плоския хълм", "text": "«Mesa» е маса. Английският е заел думата за хълм с плосък връх, който прилича на маса." },
+    "ru-RU": { "title": "Mesa, как плоский холм", "text": "«Mesa» — это стол. Английский заимствовал это слово для холма с плоской, как стол, вершиной." }
+  },
+  "bank-booking-es-01.grammar": {
+    "bg-BG": { "title": "Учтиво «quería»", "text": "«Quería» („исках“) е учтивият начин да помолиш за нещо в Испания, по-мек от «quiero» („искам“)." },
+    "ru-RU": { "title": "Вежливое «quería»", "text": "«Quería» («я хотел») — вежливый способ о чём-то попросить в Испании, мягче, чем «quiero» («я хочу»)." }
+  },
+  "bank-booking-es-01.pronunciation": {
+    "bg-BG": { "title": "Вибриращо r в reservar", "text": "r в началото на «reservar» е вибриращо; всички други r тук са с едно докосване на езика." },
+    "ru-RU": { "title": "Раскатистое r в reservar", "text": "r в начале «reservar» раскатистое; все остальные r здесь — с одним ударом языка." }
+  },
+  "bank-booking-es-02.mnemonic": {
+    "bg-BG": { "title": "Noche, като „ноктюрно“", "text": "«Esta noche» е „довечера“, буквално „тази нощ“. «Noche» има общ латински корен с „ноктюрно“." },
+    "ru-RU": { "title": "Noche, как «ноктюрн»", "text": "«Esta noche» — «сегодня вечером», буквально «эта ночь». У «noche» тот же латинский корень, что у «ноктюрн»." }
+  },
+  "bank-booking-es-02.grammar": {
+    "bg-BG": { "title": "Без «una»", "text": "Когато питаш дали има нещо свободно, испанският често изпуска «una»: «¿Tienen mesa?», «¿Tienes coche?»." },
+    "ru-RU": { "title": "«Una» не нужно", "text": "Спрашивая, есть ли что-то в наличии, испанцы часто опускают «una»: «¿Tienen mesa?», «¿Tienes coche?»." }
+  },
+  "bank-booking-es-02.pronunciation": {
+    "bg-BG": { "title": "Ch като „ч“", "text": "ch в «noche» звучи като „ч“, а крайното e е кратко и ясно." },
+    "ru-RU": { "title": "Ch как «ч»", "text": "ch в «noche» звучит как «ч», а конечное e — короткое и чёткое." }
+  },
+  "bank-booking-es-03.mnemonic": {
+    "bg-BG": { "title": "Nombre, като „номинация“", "text": "«Nombre» идва от латинското nomen, корена на „номинация“. «A nombre de» е „на името на“." },
+    "ru-RU": { "title": "Nombre, как «номинация»", "text": "«Nombre» происходит от латинского nomen, корня слова «номинация». «A nombre de» — «на имя»." }
+  },
+  "bank-booking-es-03.grammar": {
+    "bg-BG": { "title": "Предлогът е отпред", "text": "Както в българския, предлогът е в началото: «¿A nombre de quién?», буквално „на името на кого?“. На английски той би отишъл в края." },
+    "ru-RU": { "title": "Предлог — в начале", "text": "Как и в русском, предлог стоит в начале вопроса: «¿A nombre de quién?», буквально «на имя кого?». В английском он ушёл бы в конец." }
+  },
+  "bank-booking-es-03.pronunciation": {
+    "bg-BG": { "title": "Нямо u в quién", "text": "u в «quién» не се чете: това е една сричка, „кйен“." },
+    "ru-RU": { "title": "Немая u в quién", "text": "u в «quién» не произносится: это один слог, «кьен»." }
+  },
+  "bank-booking-es-04.mnemonic": {
+    "bg-BG": { "title": "Hay звучи като „ай“", "text": "«Hay» звучи като английското „eye“ („ай“) и значи „има“. «Hay que…» е „трябва да…“." },
+    "ru-RU": { "title": "Hay звучит как «ай»", "text": "«Hay» звучит как английское «eye» («ай») и значит «есть, имеется». «Hay que…» — «нужно…»." }
+  },
+  "bank-booking-es-04.grammar": {
+    "bg-BG": { "title": "«Hay que» + инфинитив", "text": "«Hay que» + инфинитив значи „трябва“ по принцип, без да се казва кой: «hay que reservar», „трябва да се резервира“." },
+    "ru-RU": { "title": "«Hay que» + инфинитив", "text": "«Hay que» + инфинитив значит «нужно» вообще, без указания, кому: «hay que reservar», «нужно бронировать»." }
+  },
+  "bank-booking-es-04.pronunciation": {
+    "bg-BG": { "title": "Меко v в reservar", "text": "След r буквата v в «reservar» е меко b: устните се доближават, но не се допират." },
+    "ru-RU": { "title": "Мягкое v в reservar", "text": "После r буква v в «reservar» — мягкое b: губы сближаются, но не смыкаются." }
+  },
+  "bank-booking-es-05.mnemonic": {
+    "bg-BG": { "title": "Nueve, не nuevo", "text": "«Nueve» („девет“) и «nuevo» („нов“) се различават само по последната буква. Представи си нов часовник, който бие девет." },
+    "ru-RU": { "title": "Nueve, а не nuevo", "text": "«Nueve» («девять») и «nuevo» («новый») различаются только последней буквой. Представьте новые часы, которые бьют девять." }
+  },
+  "bank-booking-es-05.grammar": {
+    "bg-BG": { "title": "«A las» за часа", "text": "Часовете вземат «las», защото «horas» („часове“) е в женски род, множествено число: «a las nueve», но «a la una» за един часа." },
+    "ru-RU": { "title": "«A las» для времени", "text": "Со временем ставится «las», ведь «horas» («часы») — женского рода и во множественном числе: «a las nueve», но «a la una» — в час." }
+  },
+  "bank-booking-es-05.pronunciation": {
+    "bg-BG": { "title": "NWE-ve", "text": "«Nue» е една сричка, „нуе“, а v е меко b." },
+    "ru-RU": { "title": "NWE-ve", "text": "«Nue» — один слог, «нуэ», а v — мягкое b." }
+  },
+  "bank-booking-es-06.mnemonic": {
+    "bg-BG": { "title": "Две лесни думи", "text": "«Cancelar» е „отменям“ (английското „cancel“), а «reserva» – „резервация“. В Испания казват «una reserva»; «reservación» е латиноамериканско." },
+    "ru-RU": { "title": "Два знакомых слова", "text": "«Cancelar» — «отменять» (англ. «cancel»), а «reserva» — «бронь». В Испании говорят «una reserva»; «reservación» — латиноамериканское." }
+  },
+  "bank-booking-es-06.grammar": {
+    "bg-BG": { "title": "«Tener que» + инфинитив", "text": "«Tener que» + инфинитив е „трябва да“ за конкретно лице: «tenemos que cancelar». «Hay que» го казва по принцип." },
+    "ru-RU": { "title": "«Tener que» + инфинитив", "text": "«Tener que» + инфинитив — «должен» для конкретного лица: «tenemos que cancelar». «Hay que» говорит об этом вообще." }
+  },
+  "bank-booking-es-06.pronunciation": {
+    "bg-BG": { "title": "Th в cancelar", "text": "В Испания c пред e в «cancelar» звучи като th в английското „think“." },
+    "ru-RU": { "title": "Th в cancelar", "text": "В Испании c перед e в «cancelar» звучит как th в английском «think»." }
+  },
+  "bank-health-bg-01.mnemonic": {
+    "ru-RU": { "title": "Аптека и apothecary", "text": "«Аптека» — как в русском; у неё тот же греческий корень, что у английского «apothecary», старого слова для аптекаря." }
+  },
+  "bank-health-bg-01.grammar": {
+    "ru-RU": { "title": "«Има» — «есть»", "text": "«Има» значит «есть, имеется» и для одной, и для многих: «има аптека», «има аптеки». «Къде има…?» спрашивает о любой поблизости." }
+  },
+  "bank-health-bg-01.pronunciation": {
+    "ru-RU": { "title": "Ъ в «къде»", "text": "«Ъ» в «къде» — короткий нейтральный звук, как безударное «а» в слове «вода»." }
+  },
+  "bank-health-bg-02.mnemonic": {
+    "ru-RU": { "title": "Голова + боль", "text": "«Главоболие» складывается из «глава» (голова) и «бол-», как в «болка» (боль): головная боль одним словом." }
+  },
+  "bank-health-bg-02.grammar": {
+    "ru-RU": { "title": "Лекарство «против»", "text": "«Против» называет то, с чем борется средство: «нещо против главоболие», что-нибудь от головной боли." }
+  },
+  "bank-health-bg-02.pronunciation": {
+    "ru-RU": { "title": "Ударение на «бо»", "text": "В «главоболие» ударение на «бо»: гла-во-БО-ли-е, а окончание «-ие» произносится полностью." }
+  },
+  "bank-health-bg-03.mnemonic": {
+    "ru-RU": { "title": "Гърло — горло", "text": "«Гърло» — родня русского «горло» и начинается как английское «gurgle»; с артиклем — «гърлото»." }
+  },
+  "bank-health-bg-03.grammar": {
+    "ru-RU": { "title": "«Ме» после глагола", "text": "Подлежащее — горло: «боли ме гърлото», «болит у меня горло». «Ме» не может стоять в начале фразы, поэтому идёт после «боли»." }
+  },
+  "bank-health-bg-03.pronunciation": {
+    "ru-RU": { "title": "Ударный ъ", "text": "Ударный «ъ» — звук между «ы» и «а», примерно как u в английском «fur»: ГЪР-ло-то." }
+  },
+  "bank-health-bg-04.mnemonic": {
+    "ru-RU": { "title": "Лекар и лекарство", "text": "«Лекар» (врач) и «лекарство» — одного корня «лек», лечение, как русское «лекарь»." }
+  },
+  "bank-health-bg-04.grammar": {
+    "ru-RU": { "title": "Нет инфинитива", "text": "В болгарском нет инфинитива: после «трябва да» идёт личная форма глагола — «трябва да отида», мне надо пойти." }
+  },
+  "bank-health-bg-04.pronunciation": {
+    "ru-RU": { "title": "«Ря» в «трябва»", "text": "«Ря» в «трябва» — мягкое «р», как в русском «ряд»: ТРЯБ-ва." }
+  },
+  "bank-health-bg-05.mnemonic": {
+    "ru-RU": { "title": "Почти как по-русски", "text": "«Алергия» и «пеницилин» — знакомые слова, только в болгарском в них одна «л»." }
+  },
+  "bank-health-bg-05.grammar": {
+    "ru-RU": { "title": "Аллергия «към»", "text": "Аллергия бывает «към» (к) чему-то: «алергия към пеницилин», «алергия към ядки», а не «на», как в русском." }
+  },
+  "bank-health-bg-05.pronunciation": {
+    "ru-RU": { "title": "Ударение в «пеницилин»", "text": "«Ц» — как русское «ц», а ударение падает на последний слог: пе-ни-ци-ЛИН." }
+  },
+  "bank-hotel-bg-01.mnemonic": {
+    "ru-RU": { "title": "-ция — это -tion", "text": "«Резервация» — английское «reservation» кириллицей: «-ция» соответствует «-tion», как в «информация». Здесь это просто бронь." }
+  },
+  "bank-hotel-bg-01.grammar": {
+    "ru-RU": { "title": "«На» вместо падежа", "text": "Падежей нет, и «на» заменяет родительный: «името на Петров», имя Петрова. «Име» + «-то» — «имя» с артиклем." }
+  },
+  "bank-hotel-bg-01.pronunciation": {
+    "ru-RU": { "title": "Конечное «в» — это «ф»", "text": "Как и в русском, «в» на конце звучит как «ф»: ПЕТ-роф. Но ударение — на первом слоге." }
+  },
+  "bank-hotel-bg-02.mnemonic": {
+    "ru-RU": { "title": "Не русская закуска", "text": "«Закуска» по-болгарски — это завтрак; в русском то же слово значит лёгкое блюдо к столу." }
+  },
+  "bank-hotel-bg-02.grammar": {
+    "ru-RU": { "title": "Счётная форма", "text": "После «колко» и числительных «час» принимает счётную форму «часа»: «в колко часа», «в осем часа»." }
+  },
+  "bank-hotel-bg-02.pronunciation": {
+    "ru-RU": { "title": "«В» перед «к» — это «ф»", "text": "Как и в русском, «в» перед «колко» звучит как «ф» и сливается со словом: ф-КОЛ-ко." }
+  },
+  "bank-hotel-bg-03.mnemonic": {
+    "ru-RU": { "title": "Кърпа за баня", "text": "«Кърпа» — полотенце или вообще кусок ткани; банное полотенце — «кърпа за баня»." }
+  },
+  "bank-hotel-bg-03.grammar": {
+    "ru-RU": { "title": "«Може ли» + вещь", "text": "«Може ли…?» плюс существительное — вежливая просьба без глагола, как русское «можно…?»: «може ли още една кърпа?»." }
+  },
+  "bank-hotel-bg-03.pronunciation": {
+    "ru-RU": { "title": "«Щ» — это «шт»", "text": "Болгарское «щ» — это «шт», а не русское «щ»: «още» звучит как «ОШ-те»." }
+  },
+  "bank-hotel-bg-04.mnemonic": {
+    "ru-RU": { "title": "Климатик и климат", "text": "«Климатик» образован от «климат»: это прибор, который задаёт климат в комнате, — кондиционер." }
+  },
+  "bank-hotel-bg-04.grammar": {
+    "ru-RU": { "title": "Полный артикль «-ът»", "text": "Мужской род в роли подлежащего получает полный артикль «-ът»: «климатикът не работи». В роли дополнения — «-а»: «оправете климатика»." }
+  },
+  "bank-hotel-bg-04.pronunciation": {
+    "ru-RU": { "title": "Окончание «-ът»", "text": "Безударное «-ът» — короткий нейтральный звук: кли-ма-ТИ-кът, ударение на «ти»." }
+  },
+  "bank-hotel-bg-05.mnemonic": {
+    "ru-RU": { "title": "Багаж и baggage", "text": "«Багаж» звучит как английское «baggage» и, как и оно, означает все ваши вещи сразу." }
+  },
+  "bank-hotel-bg-05.grammar": {
+    "ru-RU": { "title": "Возвратное «си»", "text": "«Си» значит «свой» и отсылает к тому, кто действует: «багажа си», свой багаж. Ставится после существительного с артиклем." }
+  },
+  "bank-hotel-bg-05.pronunciation": {
+    "ru-RU": { "title": "«Вя» в «оставя»", "text": "«Вя» — мягкое «в», как в русском «вяз», а ударение на «ста»: ос-ТА-вя." }
+  },
+  "bank-clothes-bg-01.mnemonic": {
+    "ru-RU": { "title": "Голям — как Голиаф", "text": "«Голям» (большой) начинается как «Голиаф», имя великана. Противоположность — «малък», маленький." }
+  },
+  "bank-clothes-bg-01.grammar": {
+    "ru-RU": { "title": "«По-» для сравнения", "text": "«По-» перед прилагательным даёт сравнительную степень: «голям» → «по-голям» (больше), «малък» → «по-малък»." }
+  },
+  "bank-clothes-bg-01.pronunciation": {
+    "ru-RU": { "title": "Два ударения", "text": "«По-» получает собственное ударение, поэтому в «по-голям» их два: ПО-го-ЛЯМ." }
+  },
+  "bank-clothes-bg-02.mnemonic": {
+    "ru-RU": { "title": "Пробвам и пробна", "text": "«Пробвам» (примерять, пробовать) похоже на английское «probe»; комната, где примеряют, — «пробна»." }
+  },
+  "bank-clothes-bg-02.grammar": {
+    "ru-RU": { "title": "«Го» перед глаголом", "text": "«Го» (его) стоит прямо перед глаголом, после «да»: «да го пробвам». Для вещи женского рода — «я»: «да я пробвам»." }
+  },
+  "bank-clothes-bg-02.pronunciation": {
+    "ru-RU": { "title": "И «б», и «в»", "text": "В «пробвам» произносятся оба согласных: ПРОБ-вам, с чётким «б» перед «в»." }
+  },
+  "bank-clothes-bg-03.mnemonic": {
+    "ru-RU": { "title": "От «пробвам»", "text": "«Пробна» — комната, где «пробвам» (примеряют). Во множественном числе с артиклем — «пробните»." }
+  },
+  "bank-clothes-bg-03.grammar": {
+    "ru-RU": { "title": "Артикль «-те»", "text": "Множественное число на «-и» получает артикль «-те»: «пробни» → «пробните». «Са» — связка «есть» для множественного числа." }
+  },
+  "bank-clothes-bg-03.pronunciation": {
+    "ru-RU": { "title": "ПРОБ-ни-те", "text": "Ударение на первый слог «пробните», а «б» перед «н» звучит чётко: ПРОБ-ни-те." }
+  },
+  "bank-clothes-bg-04.mnemonic": {
+    "ru-RU": { "title": "Раз- + гледам", "text": "«Гледам» — смотреть (как русское «глядеть»); «раз-» разводит взгляд по сторонам: «разглеждам» — рассматривать." }
+  },
+  "bank-clothes-bg-04.grammar": {
+    "ru-RU": { "title": "Окончание вместо «я»", "text": "Окончание «-м» уже указывает на «я», поэтому местоимение опускают: «разглеждам» — я смотрю." }
+  },
+  "bank-clothes-bg-04.pronunciation": {
+    "ru-RU": { "title": "Ударение в «благодаря»", "text": "«Благодаря» ударно на последнем слоге, как русское «благодаря»: бла-го-да-РЯ." }
+  },
+  "bank-clothes-bg-05.mnemonic": {
+    "ru-RU": { "title": "Карта — и карта, и карточка", "text": "Как и в русском, «карта» — и банковская, и карта местности: «карта на града», карта города." }
+  },
+  "bank-clothes-bg-05.grammar": {
+    "ru-RU": { "title": "«Мога» + «да»", "text": "«Мога» — «могу». После него идёт «да» и личная форма глагола, а не инфинитив: «мога ли да платя» — могу ли я заплатить." }
+  },
+  "bank-clothes-bg-05.pronunciation": {
+    "ru-RU": { "title": "«Тя» в «платя»", "text": "«Тя» — мягкое «т», как в русском «тянуть», и на него падает ударение: пла-ТЯ." }
+  },
+  "bank-meeting-bg-01.mnemonic": {
+    "ru-RU": { "title": "От + къде", "text": "«Откъде» — это «от» + «къде» («где»), как русское «откуда». «Къде си?» без «от» — «где ты сейчас?»." }
+  },
+  "bank-meeting-bg-01.grammar": {
+    "ru-RU": { "title": "«Си» — ты есть", "text": "«Си» — форма «ты» глагола «съм» (быть). Как и «съм», она не начинает фразу: «От Лондон съм» (Я из Лондона)." }
+  },
+  "bank-meeting-bg-01.pronunciation": {
+    "ru-RU": { "title": "от-къ-ДЕ", "text": "Ударение на последний слог, «де»; безударное «ъ» — краткий нейтральный звук, как безударный звук в «молоко»." }
+  },
+  "bank-meeting-bg-02.mnemonic": {
+    "ru-RU": { "title": "Почти по-русски", "text": "Это почти русское «Чем ты занимаешься?», только «чем» здесь «с какво» («с чем»), а «-ся» — отдельное слово «се»." }
+  },
+  "bank-meeting-bg-02.grammar": {
+    "ru-RU": { "title": "Где стоит «се»", "text": "«Се» стоит перед глаголом («С какво се занимаваш?»), но если глагол первый, то после него: «Занимавам се с музика» (Я занимаюсь музыкой)." }
+  },
+  "bank-meeting-bg-02.pronunciation": {
+    "ru-RU": { "title": "как-ФО", "text": "После «к» звук «в» в «какво» оглушается и звучит как «ф»: как-ФО." }
+  },
+  "bank-meeting-bg-03.mnemonic": {
+    "ru-RU": { "title": "Корень зна-", "text": "«Запознаем» того же корня, что «знам» (знаю) и русское «познакомиться»: познакомиться — значит узнать друг друга." }
+  },
+  "bank-meeting-bg-03.grammar": {
+    "ru-RU": { "title": "Без инфинитива: «да»", "text": "В болгарском нет инфинитива: «познакомиться» — это «да» + форма настоящего времени, «да се запознаем», буквально «чтобы мы познакомились»." }
+  },
+  "bank-meeting-bg-03.pronunciation": {
+    "ru-RU": { "title": "за-поз-НА-ем", "text": "Ударение на «на» в «запознаем»; «а» и «е» — два отдельных слога: НА-ем." }
+  },
+  "bank-meeting-bg-04.mnemonic": {
+    "ru-RU": { "title": "Уча, учител, ученик", "text": "«Уча» (учу, изучаю) даёт «учител» (учитель) и «ученик» (ученик): одна семья слов, как в русском." }
+  },
+  "bank-meeting-bg-04.grammar": {
+    "ru-RU": { "title": "Без «аз»", "text": "Местоимение «аз» (я) обычно опускают: окончание глагола уже показывает, кто. «Уча» — «я учу»." }
+  },
+  "bank-meeting-bg-04.pronunciation": {
+    "ru-RU": { "title": "Ъ в «български»", "text": "Ударное «ъ» — задний гласный, средний между «а» и «ы»: БЪЛ-гар-ски, а не «болгарски»." }
+  },
+  "bank-meeting-bg-05.mnemonic": {
+    "ru-RU": { "title": "Бавно или бързо", "text": "«Бавно» (медленно) и «бързо» (быстро) оба начинаются на «б»: запомните их парой противоположностей." }
+  },
+  "bank-meeting-bg-05.grammar": {
+    "ru-RU": { "title": "«По-» — сравнение", "text": "«По-» через дефис образует сравнительную степень: бавно → по-бавно (медленнее), добре → по-добре (лучше)." }
+  },
+  "bank-meeting-bg-05.pronunciation": {
+    "ru-RU": { "title": "го-ВО-риш", "text": "Ударение на втором слоге: го-ВО-риш, а не как в русском «говори́шь»." }
+  },
+  "bank-weather-bg-01.mnemonic": {
+    "ru-RU": { "title": "Горещо и горя", "text": "«Горещо» (жарко) того же корня, что «горя» (горю) и русское «горячо»." }
+  },
+  "bank-weather-bg-01.grammar": {
+    "ru-RU": { "title": "«Колко» в восклицаниях", "text": "«Колко» (сколько) начинает и восклицания: «Колко е хубаво!» (Как хорошо!). Краткое «е» идёт сразу за ним." }
+  },
+  "bank-weather-bg-01.pronunciation": {
+    "ru-RU": { "title": "Щ — это «шт»", "text": "Болгарское «щ» — это «шт», а не русское «щ»: го-РЕШ-то." }
+  },
+  "bank-weather-bg-02.mnemonic": {
+    "ru-RU": { "title": "Студ — холод", "text": "Существительное — «студ» (холод, ср. русское «студёный»); «студено» — как он ощущается. Противоположность — «топло» (тепло)." }
+  },
+  "bank-weather-bg-02.grammar": {
+    "ru-RU": { "title": "Погода на -о", "text": "Слова о погоде оканчиваются на -о: студено, топло, горещо. «Оно» не нужно, только «е» (есть) после первого слова." }
+  },
+  "bank-weather-bg-02.pronunciation": {
+    "ru-RU": { "title": "МНО-го, не МНО-га", "text": "Как в русском, «мн» без гласной между ними, но безударное «о» в конце остаётся «о»: МНО-го." }
+  },
+  "bank-weather-bg-03.mnemonic": {
+    "ru-RU": { "title": "Вали — идёт", "text": "«Вали» говорят и о дожде, и о снеге: «вали сняг» (идёт снег), как русское «валит снег». Просто «вали» — идёт дождь." }
+  },
+  "bank-weather-bg-03.grammar": {
+    "ru-RU": { "title": "«Ще» — будущее", "text": "«Ще» + настоящее время дают будущее: «вали» (идёт) → «ще вали» (пойдёт). «Ли» после глагола делает вопрос." }
+  },
+  "bank-weather-bg-03.pronunciation": {
+    "ru-RU": { "title": "Ще — это «ште»", "text": "«Ще» — один быстрый слог «ште», а не русское «ще»." }
+  },
+  "bank-weather-bg-04.mnemonic": {
+    "ru-RU": { "title": "Ходя, разходка", "text": "«Разходка» (прогулка) того же корня, что «ходя» (хожу); «раз-» — как в русском «расхаживать»." }
+  },
+  "bank-weather-bg-04.grammar": {
+    "ru-RU": { "title": "Време, времето", "text": "«Време» — и «погода», и «время». С артиклем «времето» — «погода» (эта, сегодняшняя)." }
+  },
+  "bank-weather-bg-04.pronunciation": {
+    "ru-RU": { "title": "рас-ХОТ-ка", "text": "Звонкие перед глухими оглушаются, как в русском: «разходка» звучит рас-ХОТ-ка." }
+  },
+  "bank-weather-bg-05.mnemonic": {
+    "ru-RU": { "title": "Дождь стрекочет", "text": "«Чадър» (зонтик) созвучен английскому chatter («стрекотать»): представьте, как по нему стрекочет дождь." }
+  },
+  "bank-weather-bg-05.grammar": {
+    "ru-RU": { "title": "«Си» — себе", "text": "«Си» здесь значит «себе»: «вземи си чадър» — «возьми себе зонтик». «Вземи» — повелительная форма для друга." }
+  },
+  "bank-weather-bg-05.pronunciation": {
+    "ru-RU": { "title": "Вз в «вземи»", "text": "«Вз» в начале без гласной, как в русском «взять»; ударение на последнем слоге: взе-МИ." }
+  },
+  "bank-plans-bg-01.mnemonic": {
+    "ru-RU": { "title": "Видим и видео", "text": "«Видим» того же древнего корня, что латинское video («вижу»), откуда и слово «видео»." }
+  },
+  "bank-plans-bg-01.grammar": {
+    "ru-RU": { "title": "«Се» — друг друга", "text": "«Се» делает действие взаимным: «ще се видим» — «увидимся», обычный способ договориться о встрече." }
+  },
+  "bank-plans-bg-01.pronunciation": {
+    "ru-RU": { "title": "У-тре, не У-три", "text": "Безударное «е» в «утре» не сводится к «и», как в русском: У-тре." }
+  },
+  "bank-plans-bg-02.mnemonic": {
+    "ru-RU": { "title": "Удобно, и «стол» — стул", "text": "«Удобно» — как в русском. Но «удобен стол» — это удобный стул: по-болгарски «стол» значит «стул»." }
+  },
+  "bank-plans-bg-02.grammar": {
+    "ru-RU": { "title": "Ли, ти, е", "text": "Краткие слова стоят в строгом порядке после «удобно»: «ли», затем «ти» (тебе), затем «е» (есть)." }
+  },
+  "bank-plans-bg-02.pronunciation": {
+    "ru-RU": { "title": "В звучит как ф", "text": "Перед «с» предлог «в» оглушается и звучит как «ф», как в русском: ф-СЕ-дем." }
+  },
+  "bank-plans-bg-03.mnemonic": {
+    "ru-RU": { "title": "Театър — театр", "text": "«Театър» — это «театр» с «ъ» в последнем слоге: те-а-тър." }
+  },
+  "bank-plans-bg-03.grammar": {
+    "ru-RU": { "title": "Краткое -а после «пред»", "text": "Мужской род получает полный артикль «-ът» в роли подлежащего и краткий «-а» в остальных случаях: «Театърът е голям», но «пред театъра»." }
+  },
+  "bank-plans-bg-03.pronunciation": {
+    "ru-RU": { "title": "те-А-тъ-ра", "text": "Ударение на «а» после «е»; «е» и «а» — два разных слога: те-А-тъ-ра." }
+  },
+  "bank-plans-bg-04.mnemonic": {
+    "ru-RU": { "title": "От «късно»", "text": "«Закъснея» (опоздаю) построено на «късно» (поздно): буквально «запоздаю»." }
+  },
+  "bank-plans-bg-04.grammar": {
+    "ru-RU": { "title": "Извинявай или извинете", "text": "«Извинявай» — «извини» другу. Незнакомому человеку или нескольким людям говорят «извинете»." }
+  },
+  "bank-plans-bg-04.pronunciation": {
+    "ru-RU": { "title": "за-къс-НЕ-я", "text": "Ударение на «не»: за-къс-НЕ-я; безударное «ъ» — краткий нейтральный звук." }
+  },
+  "bank-plans-bg-05.mnemonic": {
+    "ru-RU": { "title": "Мога и може би", "text": "«Може би» (может быть) построено на «може» — том же глаголе, что в «не мога» (не могу)." }
+  },
+  "bank-plans-bg-05.grammar": {
+    "ru-RU": { "title": "«Не» впереди", "text": "«Не» стоит прямо перед глаголом: «не мога» (не могу). В большинстве форм «г» меняется на «ж»: можеш, може, как в русском." }
+  },
+  "bank-plans-bg-05.pronunciation": {
+    "ru-RU": { "title": "Дн в «днес»", "text": "«Днес» (сегодня) — один слог, «дн» без гласной, как в русском «дно»." }
+  },
+  "bank-airport-bg-01.mnemonic": {
+    "ru-RU": { "title": "«Check in» по-болгарски", "text": "«Чекирам» — это английское «check» с глагольным окончанием «-ирам», как в «паркирам», «парковать»." }
+  },
+  "bank-airport-bg-01.grammar": {
+    "ru-RU": { "title": "Полный артикль «-ът»", "text": "Существительное мужского рода в роли подлежащего получает «-ът»: «багажът». В остальных случаях — «-а»: «чекирам багажа»." }
+  },
+  "bank-airport-bg-01.pronunciation": {
+    "ru-RU": { "title": "Окончание «-ът»", "text": "В конечном «-ът» краткий нейтральный гласный, как безударный звук в слове «молоко»." }
+  },
+  "bank-airport-bg-02.mnemonic": {
+    "ru-RU": { "title": "Семья «лет»", "text": "«Полет» построено на «лет-», «летать»: аэропорт — «летище», а самолёт — «самолет»." }
+  },
+  "bank-airport-bg-02.grammar": {
+    "ru-RU": { "title": "«Ми» после слова", "text": "Краткое «ми» (мой) стоит после существительного с артиклем: «полетът ми», буквально «рейс-этот мой»." }
+  },
+  "bank-airport-bg-02.pronunciation": {
+    "ru-RU": { "title": "ПО-лет", "text": "Ударение на первый слог «полет»: ПО-лет, не как в русском «полёт»." }
+  },
+  "bank-airport-bg-03.mnemonic": {
+    "ru-RU": { "title": "Из + ход", "text": "«Изход» — это «из» + «ход»: путь наружу. В аэропорту так называют и выход на посадку." }
+  },
+  "bank-airport-bg-03.grammar": {
+    "ru-RU": { "title": "Артикль на «моя»", "text": "Определённое окончание ставят на первое слово: «мой» → «моя полет», а не «моя полетът». «Полетът ми» значит то же самое." }
+  },
+  "bank-airport-bg-03.pronunciation": {
+    "ru-RU": { "title": "«З» становится с", "text": "Перед «х» «з» в «изход» оглушается и звучит как с: ИС-ход." }
+  },
+  "bank-airport-bg-04.mnemonic": {
+    "ru-RU": { "title": "«Късно» — поздно", "text": "«Закъснява» построено на «късно», «поздно»: рейс запаздывает." }
+  },
+  "bank-airport-bg-04.grammar": {
+    "ru-RU": { "title": "Длится: «закъснява»", "text": "«Закъснява» — несовершенный вид: задержка ещё длится. Совершенный вид в прошедшем говорит, что рейс опоздал: «полетът закъсня»." }
+  },
+  "bank-airport-bg-04.pronunciation": {
+    "ru-RU": { "title": "Ударение на «ня»", "text": "Ударение на «ня» в «закъснява», с мягким н: за-къс-НЯ-ва." }
+  },
+  "bank-airport-bg-05.mnemonic": {
+    "ru-RU": { "title": "Прибыть — достичь", "text": "«Пристигна» построено на «стигам», «достигать»: «при-» + достигать — «прибыть». На табло прилёта — «Пристигащи»." }
+  },
+  "bank-airport-bg-05.grammar": {
+    "ru-RU": { "title": "Прошедшее: «пристигна»", "text": "«Пристигна» — аорист, обычное прошедшее для завершённого события. «Не» стоит прямо перед глаголом." }
+  },
+  "bank-airport-bg-05.pronunciation": {
+    "ru-RU": { "title": "КУ-фар", "text": "Ударение на первый слог «куфар», а безударное «а» краткое и нейтральное." }
+  },
+  "bank-help-bg-01.mnemonic": {
+    "ru-RU": { "title": "Своя «мощ»", "text": "В «помощ» есть «мощ», «сила», того же корня, что «мога», «могу»: помочь — значит одолжить свою силу." }
+  },
+  "bank-help-bg-01.grammar": {
+    "ru-RU": { "title": "Существительное или просьба", "text": "«Помощ!» — существительное, обычный крик. Обратиться прямо: «Помогнете ми!» (вежливо или многим), «Помогни ми!» (другу)." }
+  },
+  "bank-help-bg-01.pronunciation": {
+    "ru-RU": { "title": "«Щ» — это «шт»", "text": "Болгарское «щ» звучит как «шт»: ПО-мошт." }
+  },
+  "bank-help-bg-02.mnemonic": {
+    "ru-RU": { "title": "«Вик» — это крик", "text": "«Извикайте» построено на «вик», «крик»: «викам» — звать, кричать, а «извикам» — вызвать." }
+  },
+  "bank-help-bg-02.grammar": {
+    "ru-RU": { "title": "Вежливое «-йте»", "text": "«Извикайте» — вежливая повелительная форма (вие): к основе добавляется «-йте». Другу: «Извикай линейка!»." }
+  },
+  "bank-help-bg-02.pronunciation": {
+    "ru-RU": { "title": "Мягкое «ля»", "text": "«Ля» в «моля» с мягким л, как в русском «воля»." }
+  },
+  "bank-help-bg-03.mnemonic": {
+    "ru-RU": { "title": "«Носить листы»", "text": "«Портфейл» — от французского «portefeuille», «носить листы», та же идея, что в словах «портфель» и «портфолио»." }
+  },
+  "bank-help-bg-03.grammar": {
+    "ru-RU": { "title": "Неопределённые «они»", "text": "«Откраднаха» («украли») не называет вора. «Ми» (мне) указывает, кто пострадал: «у меня украли кошелёк»." }
+  },
+  "bank-help-bg-03.pronunciation": {
+    "ru-RU": { "title": "Звук «х»", "text": "«Х» — как русское «х» в слове «хор»: чёткий звук, а не немое английское h." }
+  },
+  "bank-help-bg-04.mnemonic": {
+    "ru-RU": { "title": "Близо, близнак", "text": "«Близко» — от «близо», «рядом»; близнец — «близнак», самый близкий вам человек." }
+  },
+  "bank-help-bg-04.grammar": {
+    "ru-RU": { "title": "«Най-» — «самый»", "text": "Для «самый» добавляют «най-» через дефис: «близко» → «най-близкото», «ближайшее». Артикль ставят на это первое слово." }
+  },
+  "bank-help-bg-04.pronunciation": {
+    "ru-RU": { "title": "Два ударения", "text": "У «най-» своё ударение, и у слова после него тоже: НАЙ-БЛИС-ко-то." }
+  },
+  "bank-help-bg-05.mnemonic": {
+    "ru-RU": { "title": "Потерять себя", "text": "Без «се» «изгубих» требует предмета: «изгубих портфейла». С «се» потерялись вы сами." }
+  },
+  "bank-help-bg-05.grammar": {
+    "ru-RU": { "title": "Где стоит «се»", "text": "«Се» не может начинать предложение, поэтому идёт после глагола: «изгубих се». После другого слова — перед глаголом: «Май се изгубих»." }
+  },
+  "bank-help-bg-05.pronunciation": {
+    "ru-RU": { "title": "Ударение на «гу»", "text": "Ударение на «гу», и не глотайте конечное «х»." }
+  },
+  "bank-work-bg-01.mnemonic": {
+    "ru-RU": { "title": "Лицом к лицу", "text": "«Среща» одного корня со «срещу», «напротив»: на встрече люди оказываются лицом к лицу." }
+  },
+  "bank-work-bg-01.grammar": {
+    "ru-RU": { "title": "«В» для часов", "text": "Время по часам — с «в»: «в десет», «в пет и половина»." }
+  },
+  "bank-work-bg-01.pronunciation": {
+    "ru-RU": { "title": "Однобуквенное «в»", "text": "«В» — слово без гласной: произносите его слитно со следующим, «вДЕ-сет»." }
+  },
+  "bank-work-bg-02.mnemonic": {
+    "ru-RU": { "title": "«Пратка» — посылка", "text": "«Изпратиш» построено на «пратя», «отправить»: «пратка» — посылка, то, что отправили." }
+  },
+  "bank-work-bg-02.grammar": {
+    "ru-RU": { "title": "Без инфинитива: «да»", "text": "В болгарском нет инфинитива: «можешь прислать» — это «може ли да» + глагол в настоящем времени: «да ми изпратиш»." }
+  },
+  "bank-work-bg-02.pronunciation": {
+    "ru-RU": { "title": "Звук «ж»", "text": "«Ж» в «може» — как русское «ж» в слове «можно»." }
+  },
+  "bank-work-bg-03.mnemonic": {
+    "ru-RU": { "title": "Пятый день", "text": "«Петък» — от «пет», «пять»: пятница — пятый день, если считать с понедельника." }
+  },
+  "bank-work-bg-03.grammar": {
+    "ru-RU": { "title": "«Вкъщи» и «от вкъщи»", "text": "«Вкъщи» значит и «дома», и «домой». «Из дома» — с «от»: «от вкъщи»." }
+  },
+  "bank-work-bg-03.pronunciation": {
+    "ru-RU": { "title": "«В» звучит как ф", "text": "Перед глухим согласным «в» звучит как ф, как и в русском: «в петък» — «ф ПЕ-тък», «вкъщи» — «ФКЪ-щи»." }
+  },
+  "bank-work-bg-04.mnemonic": {
+    "ru-RU": { "title": "Маленькая минута", "text": "«Минутка» — это «минута» с ласковым уменьшительным «-ка», как и в русском." }
+  },
+  "bank-work-bg-04.grammar": {
+    "ru-RU": { "title": "Ти или вие", "text": "«Имаш» — форма на «ти», для знакомых коллег. Руководителю или незнакомцу: «Имате ли минутка?»." }
+  },
+  "bank-work-bg-04.pronunciation": {
+    "ru-RU": { "title": "Ударение на «ну»", "text": "Ударение на «ну»: ми-НУТ-ка. Конечное «а» короткое и лёгкое." }
+  },
+  "bank-work-bg-05.mnemonic": {
+    "ru-RU": { "title": "До вершины", "text": "«Довърша» одного корня с «връх», «вершина»: закончить дело — довести его до вершины. Сравните «завершить»." }
+  },
+  "bank-work-bg-05.grammar": {
+    "ru-RU": { "title": "Будущее с «ще»", "text": "«Ще» образует будущее время, а краткое «го» (его) стоит между «ще» и глаголом: «ще го довърша»." }
+  },
+  "bank-work-bg-05.pronunciation": {
+    "ru-RU": { "title": "Ударное «ъ»", "text": "Ударное «ъ» в «довърша» — полный гласный, средний между «а» и «ы»." }
+  },
+  "bank-phone-bg-01.mnemonic": {
+    "ru-RU": { "title": "Слово для входа", "text": "«Парола» — от французского parole, «слово»: пароль — это слово, которое тебя впускает." }
+  },
+  "bank-phone-bg-01.grammar": {
+    "ru-RU": { "title": "Краткий артикль после «за»", "text": "После предлога существительное мужского рода получает краткий артикль «-а»: «за интернета». В роли подлежащего — «интернетът»." }
+  },
+  "bank-phone-bg-01.pronunciation": {
+    "ru-RU": { "title": "in-ter-NE-ta", "text": "В болгарском «интернет» ударение на последнем слоге, in-ter-NET, поэтому «интернета» — in-ter-NE-ta." }
+  },
+  "bank-phone-bg-02.mnemonic": {
+    "ru-RU": { "title": "Батарея упала", "text": "По-болгарски батарея «упала»: «падна» значит «упала», как столбик заряда, упавший до нуля." }
+  },
+  "bank-phone-bg-02.grammar": {
+    "ru-RU": { "title": "«Ми» после существительного", "text": "«Ми» («мой») ставится после существительного, которое при этом сохраняет артикль: «батерията ми»." }
+  },
+  "bank-phone-bg-02.pronunciation": {
+    "ru-RU": { "title": "ba-TE-ri-ya-ta", "text": "Ударение в «батерията» на втором слоге, а не в конце: ba-TE-ri-ya-ta." }
+  },
+  "bank-phone-bg-03.mnemonic": {
+    "ru-RU": { "title": "Зарядить, заправить", "text": "«Заредя» значит также «загрузить» и «заправить»: телефон «заправляют», как машину." }
+  },
+  "bank-phone-bg-03.grammar": {
+    "ru-RU": { "title": "Без инфинитива: «да»", "text": "В болгарском нет инфинитива: «могу зарядить» — это «мога да заредя», буквально «могу, чтобы я зарядил»." }
+  },
+  "bank-phone-bg-03.pronunciation": {
+    "ru-RU": { "title": "za-re-DYA", "text": "«Дя» — мягкое «д» с «а», и ударение падает на него: za-re-DYA." }
+  },
+  "bank-phone-bg-04.mnemonic": {
+    "ru-RU": { "title": "«Ще» когда-то значило «хотеть»", "text": "«Ще» происходит от старого глагола «хотеть», как и английское «will». Поставьте его перед глаголом — получится будущее время." }
+  },
+  "bank-phone-bg-04.grammar": {
+    "ru-RU": { "title": "Короткие слова по порядку", "text": "Короткие слова стоят перед глаголом в строгом порядке: «ще» (будущее), «ти» («тебе»), затем «се»: «ще ти се обадя»." }
+  },
+  "bank-phone-bg-04.pronunciation": {
+    "ru-RU": { "title": "Щ — это шт", "text": "Болгарское «щ» звучит как «шт», поэтому «ще» произносится «ште»." }
+  },
+  "bank-phone-bg-05.mnemonic": {
+    "ru-RU": { "title": "Не + имам = нямам", "text": "«Нямам» когда-то было «не» + «имам» («имею»), слитыми в одно слово: «не имею». Так же «няма» значит «нет»." }
+  },
+  "bank-phone-bg-05.grammar": {
+    "ru-RU": { "title": "«Аз» не нужно", "text": "Окончание глагола показывает лицо: «-м» — это «я», поэтому «нямам» само по себе значит «у меня нет», без «аз» («я»)." }
+  },
+  "bank-phone-bg-05.pronunciation": {
+    "ru-RU": { "title": "NYA-mam", "text": "«Ня» — мягкое «н», как в «няня», и на него падает ударение." }
+  },
+  "bank-family-bg-01.mnemonic": {
+    "ru-RU": { "title": "Сестра и «sister»", "text": "«Сестра» и английское «sister» восходят к одному древнему корню: в обоих слышны с, т и р." }
+  },
+  "bank-family-bg-01.grammar": {
+    "ru-RU": { "title": "Обычно без артикля", "text": "Как и в русском, неопределённый артикль обычно не нужен: «имам сестра» — просто «у меня есть сестра»." }
+  },
+  "bank-family-bg-01.pronunciation": {
+    "ru-RU": { "title": "ses-TRA", "text": "Ударение в «сестра» на последнем слоге: ses-TRA." }
+  },
+  "bank-family-bg-02.mnemonic": {
+    "ru-RU": { "title": "Дете, деца", "text": "Один ребёнок — «дете», несколько — «деца», почти как русские «дитя» и «дети»." }
+  },
+  "bank-family-bg-02.grammar": {
+    "ru-RU": { "title": "Ти или вие", "text": "«Имаш» — форма на «ти», для друга. К тому, с кем вы на «вие»: «Имате ли деца?»." }
+  },
+  "bank-family-bg-02.pronunciation": {
+    "ru-RU": { "title": "de-TSA", "text": "Ударение в «деца» на последнем слоге: de-TSA. «Ц» звучит так же, как в русском." }
+  },
+  "bank-family-bg-03.mnemonic": {
+    "ru-RU": { "title": "Родители, рождение", "text": "«Родители» того же корня, что «роден» («рождённый») и «рожден ден» («день рождения»): те, от кого ты родился." }
+  },
+  "bank-family-bg-03.grammar": {
+    "ru-RU": { "title": "Артикль множественного числа «-те»", "text": "Множественное число на «-и» получает артикль «-те»: «родители» → «родителите», а затем идёт «ми»." }
+  },
+  "bank-family-bg-03.pronunciation": {
+    "ru-RU": { "title": "Безударное о остаётся о", "text": "Безударное «о» в «родителите» остаётся чётким «о»: ro-DI-te-li-te, а не «ра-», как в русском." }
+  },
+  "bank-family-bg-04.mnemonic": {
+    "ru-RU": { "title": "Син: сын и синий", "text": "«Син» — дальний родственник английского «son» и русского «сын». Это же слово значит «синий», так что их различает контекст." }
+  },
+  "bank-family-bg-04.grammar": {
+    "ru-RU": { "title": "Возраст с «на»", "text": "Возраст по-болгарски передают через «на»: «е на пет години», буквально «есть на пять лет». «Години» часто опускают: «той е на пет»." }
+  },
+  "bank-family-bg-04.pronunciation": {
+    "ru-RU": { "title": "Ударение сдвигается", "text": "С артиклем ударение переходит на окончание: «син», но «синът» — si-NUHT." }
+  },
+  "bank-family-bg-05.mnemonic": {
+    "ru-RU": { "title": "Семейный человек", "text": "«Семейство» того же корня, что «семеен» («семейный»): «семеен човек» — семейный человек." }
+  },
+  "bank-family-bg-05.grammar": {
+    "ru-RU": { "title": "Средний род: артикль «-то»", "text": "Существительные среднего рода на «-о» получают артикль «-то»: «семейство» → «семейството». Затем идёт «ти» («твой»)." }
+  },
+  "bank-family-bg-05.pronunciation": {
+    "ru-RU": { "title": "se-MEY-stvo-to", "text": "Ударение на «мей»: se-MEY-stvo-to." }
+  },
+  "bank-booking-bg-01.mnemonic": {
+    "ru-RU": { "title": "Приберечь столик", "text": "«Запазя» значит «сохранить, приберечь»: вы просите приберечь для вас столик." }
+  },
+  "bank-booking-bg-01.grammar": {
+    "ru-RU": { "title": "Числа для людей", "text": "Мужчин или смешанные группы считают особыми числительными: «двама», «трима», «четирима», как русское «четверо». Для предметов — «четири»." }
+  },
+  "bank-booking-bg-01.pronunciation": {
+    "ru-RU": { "title": "che-ti-REE-ma", "text": "В «четирима» ударение на «ри»: che-ti-REE-ma, в отличие от «четири» (CHE-ti-ri)." }
+  },
+  "bank-booking-bg-02.mnemonic": {
+    "ru-RU": { "title": "До + вечер", "text": "«Довечера» — это «до» + «вечер»: ближе к вечеру, то есть «сегодня вечером»." }
+  },
+  "bank-booking-bg-02.grammar": {
+    "ru-RU": { "title": "«Свободна» согласуется с «маса»", "text": "Прилагательное согласуется с существительным: «маса» женского рода, поэтому «свободна»; свободное место — «свободно място»." }
+  },
+  "bank-booking-bg-02.pronunciation": {
+    "ru-RU": { "title": "do-VE-che-ra", "text": "В «довечера» ударение на втором слоге: do-VE-che-ra." }
+  },
+  "bank-booking-bg-03.mnemonic": {
+    "ru-RU": { "title": "-tion превращается в «-ция»", "text": "«Резервация» — это «reservation»: английское -tion часто становится болгарским «-ция», как в «информация» и «станция»." }
+  },
+  "bank-booking-bg-03.grammar": {
+    "ru-RU": { "title": "«Чей» согласуется с существительным", "text": "«Чей» согласуется с тем, чем владеют: «чий» (м. р.), «чия» (ж. р.), «чие» (ср. р.). «Име» среднего рода, поэтому «чие име»." }
+  },
+  "bank-booking-bg-03.pronunciation": {
+    "ru-RU": { "title": "Два слога в «чие»", "text": "В «чие» два слога, CHEE-eh, с ударением на первом." }
+  },
+  "bank-booking-bg-04.mnemonic": {
+    "ru-RU": { "title": "Навън и вътре", "text": "«Навън» («снаружи») в паре с «вътре» («внутри»); а «вън!» само по себе значит «вон!»." }
+  },
+  "bank-booking-bg-04.grammar": {
+    "ru-RU": { "title": "Просьба с «може ли»", "text": "«Може ли да…?» («можно ли…?») плюс глагол в любом лице — простая вежливая просьба: «може ли да седнем»." }
+  },
+  "bank-booking-bg-04.pronunciation": {
+    "ru-RU": { "title": "Ударное ъ", "text": "Ударное «ъ» в «навън» — краткий нейтральный гласный, похожий на первый гласный в слове «молоко»." }
+  },
+  "bank-booking-bg-05.mnemonic": {
+    "ru-RU": { "title": "Семья перемен", "text": "«Отменя» («отменить») родственно «сменя» («сменить») и «променя» («изменить»): приставка «от-» убирает план." }
+  },
+  "bank-booking-bg-05.grammar": {
+    "ru-RU": { "title": "«Трябва» не меняется", "text": "«Трябва» («нужно») одинаково для всех: «трябва да отменя», «трябва да отменим». Лицо видно по следующему глаголу." }
+  },
+  "bank-booking-bg-05.pronunciation": {
+    "ru-RU": { "title": "TRYAB-va", "text": "«Ря» в «трябва» — мягкое «р»: TRYAB-va." }
+  }
+}
