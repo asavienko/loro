@@ -1,10 +1,10 @@
 # Active plans
 
-This index lists only the **42 plans with remaining work**. Completed records and historical
+This index lists only the **43 plans with remaining work**. Completed records and historical
 snapshots are kept in [the archive](archive/README.md), without compatibility symlinks or redirect
 files in this directory. Links point directly to each plan's actual location.
 
-The highest assigned ID is **102** and the next new plan is **103**. Recheck concurrent worktrees
+The highest assigned ID is **103** and the next new plan is **104**. Recheck concurrent worktrees
 and untracked `plans/` files before allocating; the "next is N" sentence can lag. Numbers are never
 reused; 49 remains an existing gap. When a plan finishes, archive it in the same change and list it
 only in the archive index.
@@ -197,6 +197,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [100](100-ui-design-system.md)                                             | Shared UI interaction kit: motion adapter, gestures, remaining-screen primitives | M1/M2       | 🟡 Adapter/Pressable/Sheet/`sheetUp`/signature primitives on real routes; composites wait for a second caller; device 60 fps remains 58/72; **ID collides with archived hygiene 100** | ADR-0013 tokens; 57 fonts/haptics/dark; 80 specimens; 93 pull laws; 56/81 lists/chrome |
 | [101](101-phrase-sound-graph.md)                                           | Authored phrase edges; Discover association score; authoring generate queue      | M2/M3       | 🟡 Remaining-work landed; review follow-up wires catalog sound fields, orphan drafts, cloud audio URIs; Q-15/Q-21/Q-22 unchanged                        | 60 maths boundary; 61/97/98/99; 87 for new linguistic edges                            |
 | [102](102-prototype-stress-fixture.md) | v2.0 prototype at 20× content and a year of history: generator, dev switch, measured budgets | Design | — Ready; nothing built yet (prototype review round 3, item 65) | None in the app; v2.0 prototype only |
+| [103](103-prototype-phrase-generator.md) | v2.0 prototype: make a set from a topic, keywords or a text, swiping suggestions to add or skip | Design | 🟡 In progress | None in the app; v2.0 prototype only; plan 97 boundary |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
