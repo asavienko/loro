@@ -13,7 +13,6 @@ import bankJson from './bank.json';
 import type { BankJson, BankTheme, Language, LanguageCode, Meta, NoteTranslations, PhraseJson, SetJson, Topic, UiLocale } from './schema';
 
 export type { LanguageCode, UiLocale, Topic, Language, Localized, Tag, Level, Register, PhraseNotes, BankTheme } from './schema';
-export { MAX_PHRASE_WORDS } from './schema';
 export type TopicTone = Topic['tone'];
 
 // The JSON's inferred types are wider (plain strings); validation has proved the narrow ones.
