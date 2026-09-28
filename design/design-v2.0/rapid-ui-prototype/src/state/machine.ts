@@ -9,7 +9,8 @@
 // next phrases of the course — except a queue with a natural end (a review, the
 // demo, a Library list), which plays once and stops. The allowed events per status
 // are in chart.ts.
-import { findPhrase, keyOf, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
+import { bankMatch, findPhrase, keyOf, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
+import { findBankPhrase } from '../content';
 import { clip, LIMITS, tidy } from './limits';
 import { canHandle } from './chart';
 import { initialPlayer, initialState } from './initial';
@@ -24,6 +25,7 @@ import type {
   Grade,
   LearnerState,
   LogEntry,
+  OwnNotes,
   PendingRating,
   PhraseOrigin,
   PhrasePick,
@@ -90,8 +92,21 @@ export type AppEvent =
    * `id`: the one the store promised its caller (so a toast can play the phrase, or a page open the
    * set, before the next render). Taken unless it's in use; otherwise the counter's next id.
    */
-  | { type: 'ADD_OWN_PHRASE'; target: string; native: string; now: number; id?: string; origin?: PhraseOrigin }
+  | {
+      type: 'ADD_OWN_PHRASE';
+      target: string;
+      native: string;
+      now: number;
+      id?: string;
+      origin?: PhraseOrigin;
+      /** Where its notes come from: the bank's phrase, or notes and a picture AI wrote for it. */
+      bankId?: string;
+      notes?: OwnNotes;
+      image?: string[];
+    }
   | { type: 'EDIT_OWN_PHRASE'; id: string; target: string; native: string; now: number }
+  /** Notes and a picture AI wrote for one of the learner's own phrases, for the text it has as `target`. */
+  | { type: 'SET_OWN_NOTES'; id: string; target: string; notes: OwnNotes; image: string[]; now: number }
   | { type: 'DELETE_OWN_PHRASE'; id: string; now: number }
   | { type: 'RESTORE_OWN_PHRASE'; id: string; now: number }
   | { type: 'CREATE_SET'; title: string; phraseIds: string[]; now: number; id?: string }
@@ -139,6 +154,11 @@ export function shuffled<T>(items: T[], seed: number): T[] {
     [out[i], out[j]] = [out[j], out[i]];
   }
   return out;
+}
+
+/** The bank phrase `id`, if it is one in this course language. */
+function findBankFor(targetLang: string, id: string): string | undefined {
+  return findBankPhrase(id)?.targetLang === targetLang ? id : undefined;
 }
 
 /** A new id from the instance counter: "<device>.<instance>-<n>". */
@@ -562,6 +582,9 @@ function step(state: AppState, event: AppEvent): AppState {
       const [seqId, next] = takeId(state);
       const id = event.id?.startsWith(OWN_PHRASE_PREFIX) && !learner.ownPhrases[event.id] ? event.id : `${OWN_PHRASE_PREFIX}${seqId}`;
       const { nativeLang, targetLang } = learner.profile;
+      // A bank phrase keeps its link; a phrase typed or written by AI that the bank also has takes it
+      // (the bank's notes are reviewed content); otherwise AI's notes, when it wrote some.
+      const bankId = (event.bankId && findBankFor(targetLang, event.bankId)) || (event.notes ? undefined : bankMatch(targetLang, target));
       const phrase = {
         id,
         target,
@@ -572,6 +595,7 @@ function step(state: AppState, event: AppEvent): AppState {
         updatedAt: event.now,
         deleted: false,
         ...(event.origin ? { origin: event.origin } : {}),
+        ...(bankId ? { bankId } : event.notes ? { notes: event.notes, ...(event.image ? { image: event.image } : {}) } : {}),
       };
       return { ...next, learner: { ...next.learner, ownPhrases: { ...next.learner.ownPhrases, [id]: phrase } } };
     }
@@ -586,7 +610,17 @@ function step(state: AppState, event: AppEvent): AppState {
           continue;
         }
         const before = next.learner.ownPhrases;
-        next = step(next, { type: 'ADD_OWN_PHRASE', target: pick.target, native: pick.native, origin: pick.origin, id: pick.id, now: event.now });
+        next = step(next, {
+          type: 'ADD_OWN_PHRASE',
+          target: pick.target,
+          native: pick.native,
+          origin: pick.origin,
+          id: pick.id,
+          bankId: pick.bankId,
+          notes: pick.notes,
+          image: pick.image,
+          now: event.now,
+        });
         const added = Object.keys(next.learner.ownPhrases).find((id) => !before[id]);
         if (added) ids.push(added);
       }
@@ -602,7 +636,19 @@ function step(state: AppState, event: AppEvent): AppState {
       const native = trimmed(event.native, LIMITS.phrase);
       if (!own || own.deleted || !target || !native) return state;
       if (target === own.target && native === own.native) return state;
-      const updated = { ...own, target, native, updatedAt: event.now };
+      // Notes explain the text they were written for: a new text drops them, and takes the bank's
+      // notes if the bank has it.
+      const { bankId: _bankId, notes: _notes, image: _image, ...rest } = own;
+      const bankId = bankMatch(own.targetLang, target);
+      const updated = target === own.target ? { ...own, native, updatedAt: event.now } : { ...rest, target, native, updatedAt: event.now, ...(bankId ? { bankId } : {}) };
+      return { ...state, learner: { ...learner, ownPhrases: { ...learner.ownPhrases, [own.id]: updated } } };
+    }
+
+    case 'SET_OWN_NOTES': {
+      // Written for the text the phrase still has, and only where there are none (the bank's win).
+      const own = learner.ownPhrases[event.id];
+      if (!own || own.deleted || own.target !== event.target || own.bankId || own.notes) return state;
+      const updated = { ...own, notes: event.notes, image: event.image, updatedAt: event.now };
       return { ...state, learner: { ...learner, ownPhrases: { ...learner.ownPhrases, [own.id]: updated } } };
     }
 

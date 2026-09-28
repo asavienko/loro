@@ -5,7 +5,7 @@ import type { RefObject } from 'react';
 import { OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { clock } from './clock';
 import type { AppEvent } from './machine';
-import type { AppState, AudioFailure, Grade, LearnerState, PendingRating, PhrasePick, Prefs, Profile, QueueSource } from './types';
+import type { AppState, AudioFailure, Grade, LearnerState, OwnNotes, PendingRating, PhrasePick, Prefs, Profile, QueueSource } from './types';
 
 const newSeed = () => Math.floor(Math.random() * 2 ** 32);
 
@@ -46,6 +46,8 @@ export function makeActions(dispatch: (event: AppEvent) => void, latest: RefObje
       dispatch({ type: 'ADD_OWN_PHRASE', target, native, now: now(), id });
       return id;
     },
+    /** Notes and a picture AI wrote for one of the learner's own phrases, for the text it had then. */
+    setOwnNotes: (id: string, target: string, notes: OwnNotes, image: string[]) => dispatch({ type: 'SET_OWN_NOTES', id, target, notes, image, now: now() }),
     editOwnPhrase: (id: string, target: string, native: string) =>
       dispatch({ type: 'EDIT_OWN_PHRASE', id, target, native, now: now() }),
     deleteOwnPhrase: (id: string) => dispatch({ type: 'DELETE_OWN_PHRASE', id, now: now() }),

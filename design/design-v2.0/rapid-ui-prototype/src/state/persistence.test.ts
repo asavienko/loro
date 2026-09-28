@@ -107,6 +107,28 @@ describe('persistence', () => {
     assert.deepEqual(s.learner.log.map((e) => (e.kind === 'carryover' ? e.points : null)), [13]);
   });
 
+  it('keeps an own phrase’s notes only when they are whole, its bank link only when the bank has it', () => {
+    const raw = JSON.parse(serializeState(fresh()));
+    const phrase = { native: 'b', targetLang: 'es-ES', nativeLang: 'en-GB', createdAt: 1, updatedAt: 1, deleted: false };
+    const notes = {
+      mnemonic: { title: 'm', text: 'x' },
+      grammar: { title: 'g', text: 'y' },
+      pronunciation: { title: 'p', text: 'z', ipa: '[a]', respelling: 'AH' },
+    };
+    raw.learner.ownPhrases = {
+      'mine-p-bank': { ...phrase, target: 'a', bankId: 'bank-hotel-es-02' },
+      'mine-p-wrongbank': { ...phrase, target: 'b', bankId: 'bank-hotel-bg-02' },
+      'mine-p-ai': { ...phrase, target: 'c', notes, image: ['coffee', 'not_an_icon', 'coffee_maker'] },
+      'mine-p-half': { ...phrase, target: 'd', notes: { mnemonic: notes.mnemonic } },
+    };
+    const own = sanitizeState(raw, device)!.learner.ownPhrases;
+    assert.equal(own['mine-p-bank'].bankId, 'bank-hotel-es-02');
+    assert.equal(own['mine-p-wrongbank'].bankId, undefined, 'a bank phrase of another language');
+    assert.deepEqual(own['mine-p-ai'].notes, notes);
+    assert.deepEqual(own['mine-p-ai'].image, ['coffee'], 'only icons the app can draw');
+    assert.equal(own['mine-p-half'].notes, undefined, 'all three or none');
+  });
+
   it('keeps where a phrase came from, and only the origins it knows', () => {
     const raw = JSON.parse(serializeState(fresh()));
     const phrase = { native: 'b', targetLang: 'es-ES', nativeLang: 'en-GB', createdAt: 1, updatedAt: 1, deleted: false };

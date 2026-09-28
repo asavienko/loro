@@ -7,6 +7,7 @@
 import {
   CONTENT_VERSION,
   coursesFor,
+  findBankPhrase,
   findContentPhrase,
   findSet,
   LANGUAGES,
@@ -17,7 +18,8 @@ import {
 import { OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { clock, isLocalDayOf } from './clock';
 // The same limits the forms apply, for data that arrives by sync or migration.
-import { clip, LIMITS } from './limits';
+import { ICON_NAMES } from '../ui/icons';
+import { clip, LIMITS, NOTE_LIMITS } from './limits';
 import { decodeLog, encodeLog } from './compactLog';
 import { initialLearner, initialPlayer, initialPrefs, initialProfile } from './initial';
 import { derive, memoryKey } from './memory';
@@ -43,6 +45,8 @@ import {
   LibraryListView,
   Like,
   LogEntry,
+  OwnNote,
+  OwnNotes,
   OwnPhrase,
   OwnSet,
   PendingRating,
@@ -150,9 +154,33 @@ function sanitizeOwnPhrases(value: unknown): Record<string, OwnPhrase> {
       updatedAt: num(p.updatedAt) ? p.updatedAt : 0,
       deleted: p.deleted === true,
       ...(p.origin === 'bank' || p.origin === 'ai' ? { origin: p.origin } : {}),
+      ...ownNotesOf(p),
     };
   }
   return out;
+}
+
+const noteOf = (value: unknown, sounds = false): OwnNotes['pronunciation'] | OwnNote | null => {
+  if (!isObject(value) || !str(value.title) || !str(value.text)) return null;
+  const note = { title: clip(value.title, NOTE_LIMITS.title), text: clip(value.text, NOTE_LIMITS.text) };
+  if (!sounds) return note;
+  return str(value.ipa) && str(value.respelling) ? { ...note, ipa: clip(value.ipa, NOTE_LIMITS.text), respelling: clip(value.respelling, NOTE_LIMITS.text) } : null;
+};
+
+/**
+ * Where an own phrase's notes come from: a bank phrase that exists in its language, or AI's
+ * notes when all three are whole, with a picture of known icons. Anything else is dropped.
+ */
+function ownNotesOf(p: Record<string, unknown>): Pick<OwnPhrase, 'bankId' | 'notes' | 'image'> {
+  if (str(p.bankId) && findBankPhrase(p.bankId)?.targetLang === p.targetLang) return { bankId: p.bankId };
+  if (!isObject(p.notes)) return {};
+  const mnemonic = noteOf(p.notes.mnemonic);
+  const grammar = noteOf(p.notes.grammar);
+  const pronunciation = noteOf(p.notes.pronunciation, true) as OwnNotes['pronunciation'] | null;
+  if (!mnemonic || !grammar || !pronunciation) return {};
+  const icons: readonly string[] = ICON_NAMES;
+  const image = strings(p.image).filter((name) => icons.includes(name)).slice(0, 3);
+  return { notes: { mnemonic, grammar, pronunciation }, ...(image.length > 0 ? { image } : {}) };
 }
 
 function sanitizeOwnSets(value: unknown, own: Record<string, OwnPhrase>): Record<string, OwnSet> {
