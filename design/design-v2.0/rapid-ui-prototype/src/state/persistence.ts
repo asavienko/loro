@@ -22,7 +22,19 @@ import { decodeLog, encodeLog } from './compactLog';
 import { initialLearner, initialPlayer, initialPrefs, initialProfile } from './initial';
 import { derive, memoryKey } from './memory';
 import { committedIn, mergeLearner, mergePending, mergePrefs } from './merge';
-import { announceSave, clearOtherPendings, clearPending, clearRaw, clearStray, readRaw, Stored, writePending, writeRaw } from './storage';
+import {
+  announceSave,
+  clearOtherPendings,
+  clearPending,
+  clearRaw,
+  clearStray,
+  readDeviceId,
+  readRaw,
+  Stored,
+  writeDeviceId,
+  writePending,
+  writeRaw,
+} from './storage';
 import {
   AppState,
   Device,
@@ -343,23 +355,17 @@ export function serializeState(state: AppState): string {
 
 // ---------- device storage ----------
 
-const DEVICE_KEY = 'loro.prototype.device';
-
 function randomId(): string {
   return Math.random().toString(36).slice(2, 8);
 }
 
 /** This installation's id, kept apart from progress so Reset keeps it. */
 function deviceId(): string {
-  try {
-    const saved = localStorage.getItem(DEVICE_KEY);
-    if (saved) return saved;
-    const id = randomId();
-    localStorage.setItem(DEVICE_KEY, id);
-    return id;
-  } catch {
-    return randomId();
-  }
+  const saved = readDeviceId();
+  if (saved) return saved;
+  const id = randomId();
+  writeDeviceId(id);
+  return id;
 }
 
 /**
@@ -447,7 +453,8 @@ export function saveState(state: AppState): Promise<SaveResult> {
   const result = queue.then(() => writeState(state));
   queue = result;
   void result.then((r) => {
-    if (r !== 'saved' && typeof window !== 'undefined') {
+    // Said where there is a page to say it to (the native app reads the result instead).
+    if (r !== 'saved' && typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
       window.dispatchEvent(new CustomEvent<SaveResult>(SAVE_FAILED_EVENT, { detail: r }));
     }
   });
@@ -486,7 +493,7 @@ async function writeState(state: AppState): Promise<SaveResult> {
     return 'saved';
   } catch (error) {
     // The session still works; the shell tells the learner that progress isn't being kept.
-    const full = error instanceof DOMException && (error.name === 'QuotaExceededError' || error.code === 22);
+    const full = typeof DOMException !== 'undefined' && error instanceof DOMException && (error.name === 'QuotaExceededError' || error.code === 22);
     return full ? 'full' : 'unavailable';
   }
 }

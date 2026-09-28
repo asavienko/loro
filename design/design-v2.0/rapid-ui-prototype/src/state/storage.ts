@@ -53,6 +53,25 @@ function localGet(): string | null {
   }
 }
 
+const DEVICE_KEY = 'loro.prototype.device';
+
+/** This installation's id (persistence.ts), kept apart from progress so Reset keeps it; null if none yet. */
+export function readDeviceId(): string | null {
+  try {
+    return localStorage.getItem(DEVICE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function writeDeviceId(id: string): void {
+  try {
+    localStorage.setItem(DEVICE_KEY, id);
+  } catch {
+    // Not kept: the next start picks another id, which only splits "this device" in history.
+  }
+}
+
 export interface Stored {
   /** The saved progress (JSON). */
   saved: string | null;
