@@ -2,11 +2,13 @@
 
 - **Requirement IDs:** `P2-04` (phrase detail), `F-03` (offline-first), `AI-06` (suggested phrases)
 - **Milestone:** Design exploration (v2.0 rapid prototype); no app release depends on it
-- **Status:** 🟡 Scope 1–7 implemented and tested on 2026-09-28. **Left:** one run of the writer
-  against the real service (its notes and pictures are verified against a stand-in only), the same
-  run plan 103 waits for. **Blocked by:** a key on the machine that runs it. All new text awaits
-  native review (`meta.json`). Owner request 2026-09-28: "every phrase should have image, phonetic,
-  mnemonic hint, and grammar rules".
+- **Status:** 🟡 Scope 1–8 implemented and tested on 2026-09-28: every phrase has all four,
+  including one the learner types that neither the bank nor the writer covers (scope 8, the device's
+  rules). **Left:** one run of the writer against the real service (its notes and pictures are
+  verified against a stand-in only), the same run plan 103 waits for. **Blocked by:** a key on the
+  machine that runs it. All new text awaits native review (`meta.json`), the device's rule library
+  too. Owner request 2026-09-28: "every phrase should have image, phonetic, mnemonic hint, and
+  grammar rules".
 - **Depends on:** plans [103](103-prototype-phrase-generator.md) (the phrase bank and suggestions)
   and [104](104-prototype-react-native.md) (paused; it will read the same content).
 - **Number allocation:** the highest assigned ID was 104; this plan is **105**. The next new plan
@@ -34,8 +36,10 @@ language), as the existing notes are.
 - **AI suggestions**: the writer returns all four for each phrase, in the learner's language,
   schema-checked like the phrases; an added AI phrase keeps them.
 - **A phrase the learner types**: it takes the bank's notes when the bank has the same phrase, and
-  otherwise asks the writer when the server has one. With neither, its details say where notes come
-  from and offer to ask again. Nothing is invented on the device.
+  otherwise asks the writer when the server has one. Until then, or with no writer at all, the
+  device works its notes out (scope 8), and its details say so. `Phrase.image` and `Phrase.notes`
+  are not nullable, so no phrase can be without them. A text with nothing to say aloud (no letter or
+  digit) is not a phrase: the store refuses it.
 
 ## Scope
 
@@ -48,18 +52,32 @@ language), as the existing notes are.
    rows; the three notes always shown; the respelling under the phrase in its details.
 6. Icons: the image icons join the subset (web woff2 and the native app's TrueType).
 7. Tests: content validation, state, server and client parsing, E2E for the image and the notes.
+8. The device's notes (`src/notes/`), for a typed phrase neither the bank nor the writer covers.
+   Each is derived from the phrase by written rules; nothing is guessed:
+   - **Sounds**: Castilian Spanish from its spelling (glides, syllables, the accent and vowel-n-s
+     stress rule, soft b/d/g, n assimilation); Bulgarian from its letters with voicing and final
+     devoicing. A Bulgarian word's stress only from the course's and bank's own transcriptions (or
+     the word with its article). An unseen word keeps full vowels, no mark, and its note names it.
+     Digits are spelled out.
+   - **Grammar**: a written rule library in English, Bulgarian and Russian, picked by the
+     construction the phrase shows, ending on a rule true of any phrase.
+   - **Memory**: a cognate with the learner's meaning, a word shared with one of Loro's phrases, or
+     its pieces or beats.
+   - **Picture**: icons of Loro's phrases sharing its words (rarer words weigh more) and an everyday
+     word list; speech bubbles when nothing matches.
 
 ## Implementation record (2026-09-28)
 
-| Scope     | Where                                                                                                                                | Evidence                                                                                                          |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| 1 Schema  | `content/schema.ts` (`notesSchema`, `imageSchema`, `bankProblems`)                                                                   | `content.test.ts`: a missing note or image fails; every bank note has its versions                                |
-| 2 Content | `phrases.json`, `note-translations.json`: 60 notes, 34 pictures; `bank.json`, `bank-note-translations.json`: 396 notes, 132 pictures | Written in the existing notes' voice (the bank by four agents from one brief and a checker, then read and merged) |
-| 3 State   | `OwnPhrase.bankId`, `notes`, `image`; `SET_OWN_NOTES`; load sanitising                                                               | `machine.test.ts`, `persistence.test.ts`, `deck.test.ts`                                                          |
-| 4 Writer  | `server/suggest.ts` (notes on every suggestion, `/api/phrases/notes`), `generate/remote.ts`                                          | `server/suggest.test.ts`, `suggest.test.ts`                                                                       |
-| 5 UI      | `ui/PhraseImage.tsx`; the player's cover, the details (picture, sounds, three notes, Write its notes), the Make a set card's band    | `e2e/phrase-notes.spec.ts`, `e2e/make-set.spec.ts`, the a11y suite's details screen                               |
-| 6 Icons   | 203 icons: the web woff2 and the native app's TrueType (a 32-bit map for one past U+FFFF)                                            | `ui.test.ts` holds content icons to the registry                                                                  |
-| 7 Tests   | as above; the full Chromium suite green (355)                                                                                        | 2026-09-28                                                                                                        |
+| Scope     | Where                                                                                                                                  | Evidence                                                                                                                                                                                                                                                                                                         |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 Schema  | `content/schema.ts` (`notesSchema`, `imageSchema`, `bankProblems`)                                                                     | `content.test.ts`: a missing note or image fails; every bank note has its versions                                                                                                                                                                                                                               |
+| 2 Content | `phrases.json`, `note-translations.json`: 60 notes, 34 pictures; `bank.json`, `bank-note-translations.json`: 396 notes, 132 pictures   | Written in the existing notes' voice (the bank by four agents from one brief and a checker, then read and merged)                                                                                                                                                                                                |
+| 3 State   | `OwnPhrase.bankId`, `notes`, `image`; `SET_OWN_NOTES`; load sanitising                                                                 | `machine.test.ts`, `persistence.test.ts`, `deck.test.ts`                                                                                                                                                                                                                                                         |
+| 4 Writer  | `server/suggest.ts` (notes on every suggestion, `/api/phrases/notes`), `generate/remote.ts`                                            | `server/suggest.test.ts`, `suggest.test.ts`                                                                                                                                                                                                                                                                      |
+| 5 UI      | `ui/PhraseImage.tsx`; the player's cover, the details (picture, sounds, three notes, Write its notes), the Make a set card's band      | `e2e/phrase-notes.spec.ts`, `e2e/make-set.spec.ts`, the a11y suite's details screen                                                                                                                                                                                                                              |
+| 6 Icons   | 203 icons: the web woff2 and the native app's TrueType (a 32-bit map for one past U+FFFF)                                              | `ui.test.ts` holds content icons to the registry                                                                                                                                                                                                                                                                 |
+| 7 Tests   | as above; the full Chromium suite green (355)                                                                                          | 2026-09-28                                                                                                                                                                                                                                                                                                       |
+| 8 Device  | `src/notes/` (sounds, grammar, memory, picture, numbers); `state/catalog.ts` fallback; non-null `Phrase` notes/image; `limits.sayable` | `notes.test.ts`: 140 of the 166 course and bank transcriptions match exactly and the 26 others are listed with reasons (the corpus contradicts itself); every course/bank phrase typed in every UI language yields schema-valid notes and registry icons; `e2e/phrase-notes.spec.ts`; the full suite green (359) |
 
 ## Acceptance
 
@@ -69,6 +87,8 @@ language), as the existing notes are.
       grammar rule, in each UI language (English, Bulgarian and Russian checked end to end).
 - [x] A phrase added from the bank or from AI suggestions keeps all four (AI verified with a
       stand-in writer).
+- [x] A phrase the learner types that neither the bank nor the writer covers has all four, worked
+      out on the device and marked as such; the writer's notes replace them when it answers.
 - [x] `npm run check` and the Playwright suite are green.
 
 ## Out of scope
