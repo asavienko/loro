@@ -9,9 +9,11 @@ import topicsJson from './topics.json';
 import languagesJson from './languages.json';
 import metaJson from './meta.json';
 import noteTranslationsJson from './note-translations.json';
-import type { Language, LanguageCode, Meta, NoteTranslations, PhraseJson, SetJson, Topic, UiLocale } from './schema';
+import bankJson from './bank.json';
+import type { BankJson, BankTheme, Language, LanguageCode, Meta, NoteTranslations, PhraseJson, SetJson, Topic, UiLocale } from './schema';
 
-export type { LanguageCode, UiLocale, Topic, Language, Localized, Tag, Level, Register, PhraseNotes } from './schema';
+export type { LanguageCode, UiLocale, Topic, Language, Localized, Tag, Level, Register, PhraseNotes, BankTheme } from './schema';
+export { MAX_PHRASE_WORDS } from './schema';
 export type TopicTone = Topic['tone'];
 
 // The JSON's inferred types are wider (plain strings); validation has proved the narrow ones.
@@ -125,3 +127,22 @@ export function coursesFor(native: LanguageCode): LanguageCode[] {
 }
 
 export const RENAMED_PHRASE_IDS: Record<string, string> = META.renamedPhraseIds;
+
+// ---------- the phrase bank ----------
+
+const bank = bankJson as unknown as BankJson;
+
+/** Themes of the phrase bank, in file order: the topics "Make a set" can offer offline. */
+export const BANK_THEMES: BankTheme[] = bank.themes;
+
+/** A suggestion from the bank: not in any set, and not the learner's until they add it. */
+export interface BankPhrase {
+  id: string;
+  theme: string;
+  targetLang: LanguageCode;
+  target: string;
+  translations: Partial<Record<LanguageCode, string>>;
+}
+
+export const BANK_PHRASES: BankPhrase[] = bank.phrases;
+

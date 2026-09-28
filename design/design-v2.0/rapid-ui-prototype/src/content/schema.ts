@@ -64,6 +64,27 @@ const noteText = z.object({ title: z.string().min(1), text: z.string().min(1) })
 /** "<phraseId>.<note kind>" → the note's title and text per native language. */
 export const noteTranslationsSchema = z.record(z.string(), z.partialRecord(LANGUAGE_CODE, noteText));
 
+/**
+ * The phrase bank: suggestions the "Make a set" flow can offer offline. A bank phrase belongs to no
+ * set; it becomes the learner's own phrase only when they add it.
+ */
+export const bankThemeSchema = z.object({
+  id: z.string().regex(/^[a-z]+(-[a-z]+)*$/),
+  title: localized,
+  /** Lower-case words, in any course or UI language, that bring this theme to mind. */
+  keywords: z.array(z.string().min(2).regex(/^[^A-Z]+$/, 'keywords are lower case')).min(4),
+});
+
+export const bankPhraseSchema = z.object({
+  id: z.string().regex(/^bank-[a-z]+(-[a-z]+)*-[a-z]{2}-\d{2}$/, 'ids look like "bank-hotel-es-01"'),
+  theme: z.string(),
+  targetLang: LANGUAGE_CODE,
+  target: z.string().min(1).max(120),
+  translations: byLanguage,
+});
+
+export const bankSchema = z.object({ themes: z.array(bankThemeSchema).min(1), phrases: z.array(bankPhraseSchema).min(1) });
+
 export const metaSchema = z.object({
   version: z.string().min(1),
   review: z.record(z.string(), z.string()),
@@ -83,6 +104,65 @@ export type Register = PhraseJson['register'];
 export type PhraseNotes = PhraseJson['notes'];
 export type NoteTranslations = z.infer<typeof noteTranslationsSchema>;
 export type Meta = z.infer<typeof metaSchema>;
+export type BankJson = z.infer<typeof bankSchema>;
+export type BankTheme = z.infer<typeof bankThemeSchema>;
+export type BankPhraseJson = z.infer<typeof bankPhraseSchema>;
+
+/** At most this many words to a suggested phrase: something to say in one breath. */
+export const MAX_PHRASE_WORDS = 12;
+
+/** Case, accents and punctuation folded away, to find the same phrase written twice. */
+const textKey = (text: string) =>
+  text
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+
+/**
+ * The bank's rules: known themes and course languages, every native translation but the phrase's
+ * own, one breath long, and never a phrase the course or the bank already has.
+ */
+export function bankProblems(bank: BankJson, phrases: PhraseJson[], sets: SetJson[], languages: Language[]): string[] {
+  const problems: string[] = [];
+  const themeIds = bank.themes.map((t) => t.id);
+  for (const id of themeIds.filter((t, i) => themeIds.indexOf(t) !== i)) problems.push(`bank: duplicate theme ${id}`);
+  const ids = bank.phrases.map((p) => p.id);
+  for (const id of ids.filter((p, i) => ids.indexOf(p) !== i)) problems.push(`bank: duplicate phrase id ${id}`);
+  for (const theme of bank.themes) {
+    if (!bank.phrases.some((p) => p.theme === theme.id)) problems.push(`bank: theme ${theme.id} has no phrases`);
+  }
+
+  const natives = languages.filter((l) => l.uiLocale !== null).map((l) => l.code);
+  const catalog = new Map<string, string>();
+  for (const set of sets) for (const id of set.phraseIds) {
+    const phrase = phrases.find((p) => p.id === id);
+    if (phrase) catalog.set(`${set.targetLang} ${textKey(phrase.target)}`, id);
+  }
+  const seen = new Map<string, string>();
+  for (const phrase of bank.phrases) {
+    if (!themeIds.includes(phrase.theme)) problems.push(`${phrase.id}: unknown theme ${phrase.theme}`);
+    if (!languages.find((l) => l.code === phrase.targetLang)?.canTarget) problems.push(`${phrase.id}: ${phrase.targetLang} is not a course language`);
+    if (!phrase.id.includes(`-${phrase.targetLang.slice(0, 2)}-`)) problems.push(`${phrase.id}: id doesn't name its language ${phrase.targetLang}`);
+    if (!phrase.id.startsWith(`bank-${phrase.theme}-`)) problems.push(`${phrase.id}: id doesn't name its theme ${phrase.theme}`);
+    const words = phrase.target.trim().split(/\s+/).length;
+    if (words > MAX_PHRASE_WORDS) problems.push(`${phrase.id}: ${words} words, at most ${MAX_PHRASE_WORDS}`);
+    for (const native of natives) {
+      if (native === phrase.targetLang) {
+        if (phrase.translations[native]) problems.push(`${phrase.id}: translation into its own language`);
+      } else if (!phrase.translations[native]) problems.push(`${phrase.id}: missing ${native} translation`);
+    }
+    for (const text of Object.values(phrase.translations)) if (text && text.length > 120) problems.push(`${phrase.id}: a translation is over 120 characters`);
+    const key = `${phrase.targetLang} ${textKey(phrase.target)}`;
+    const inCatalog = catalog.get(key);
+    if (inCatalog) problems.push(`${phrase.id}: the course already has it as ${inCatalog}`);
+    const twin = seen.get(key);
+    if (twin) problems.push(`${phrase.id}: the same phrase as ${twin}`);
+    seen.set(key, phrase.id);
+  }
+  return problems;
+}
 
 /** Cross-file rules zod can't express on one file. Returns every problem found. */
 export function contentProblems(input: {
