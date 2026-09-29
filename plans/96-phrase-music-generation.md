@@ -8,6 +8,9 @@
   Live Anthropic lyrics and ElevenLabs Music spend remain gated by proposed **Q-21**, plan-86
   provider controls, and counsel/quality gates (Q-21g). This plan does not silently resolve Q-15,
   Q-08/Q-12, or Q-16–Q-20.
+- **App swap (2026-09-30):** the `/music` More journey, its i18n and E2E were in the first app and
+  were removed with it. The API lyrics/render stack, contracts, validator and style packs remain;
+  the current app (plan [104](104-prototype-react-native.md)) has no music client.
 - **Depends on:** 86 vendor transports and common controls; 76/82 guarded LLM patterns and the
   existing Anthropic text transport; 66 API/security; 67 identity and per-principal budgets; 61
   object storage and checksummed assets; 62 playback/cache (reuse the player, separate namespace);

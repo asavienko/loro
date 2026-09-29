@@ -3,14 +3,21 @@
 - **Requirement IDs:** `AI-06` (guarded phrase suggestions, explicit add), `AI-05` (bounded AI path
   with a bundled fallback), `P2-06` (a scenario builds a coherent set), `P2-07` (add your own)
 - **Milestone:** Design exploration (v2.0 rapid prototype); no app release depends on it
-- **Status:** 🟡 Scope 1–7 implemented and tested on 2026-09-28. **Left:** one run of the live path
-  with a real `ANTHROPIC_API_KEY`. The request shape, reply parsing, refusal handling and the
-  fallback are verified against a stand-in server and a refused (unauthorised) call only. **Blocked
-  by:** a key on the machine that runs it. The bank and its copy await native review, as all
-  prototype content does. Owner request 2026-09-28: "generate my albums/phrases from topic or text
-  or keywords … user input … suggest phrases … a UI similar to Tinder to add and to skip".
+- **Archived 2026-09-30:** the web prototype became the app. The generator logic (`local.ts`,
+  `suggest.ts`, `remote.ts`, `deck.ts`) and its tests now live in
+  `apps/mobile/src/shared/generate/`. The web swipe-deck UI and the dev server's Claude writer
+  (`server/suggest.ts`) were removed with the prototype (Git history at `52a0e3b`). The native Make
+  a set screen is plan [104](../../104-prototype-react-native.md) scope 4; a live writer needs a
+  server route, which plan [97](../../97-generative-discover-and-phrase-reach.md) owns
+  (`/v1/phrases/suggest`, Q-21).
+- **Status (at archive):** 🟡 Scope 1–7 implemented and tested on 2026-09-28. **Left:** one run of
+  the live path with a real `ANTHROPIC_API_KEY`. The request shape, reply parsing, refusal handling
+  and the fallback are verified against a stand-in server and a refused (unauthorised) call only.
+  **Blocked by:** a key on the machine that runs it. The bank and its copy await native review, as
+  all prototype content does. Owner request 2026-09-28: "generate my albums/phrases from topic or
+  text or keywords … user input … suggest phrases … a UI similar to Tinder to add and to skip".
 - **Depends on:** nothing in the app. Works inside `design/design-v2.0/rapid-ui-prototype`. The
-  product boundary is plan [97](97-generative-discover-and-phrase-reach.md) and ADR-0010's
+  product boundary is plan [97](../../97-generative-discover-and-phrase-reach.md) and ADR-0010's
   amendment: runtime suggestions are the learner's own phrases, marked, editable, never auto-added.
 - **Number allocation:** the highest assigned ID was 102 (worktrees and untracked `plans/` files
   checked); this plan is **103**. The next new plan is 104.

@@ -59,14 +59,14 @@ The highest-consequence class of bug in this app, because it's silent.
 
 ### 4 · Design fidelity
 
-For anything visual, **open the blueprint side by side**
-([`../design/screen-catalog.md`](../design/screen-catalog.md)).
+For anything visual, **compare it with the running app** (`pnpm --filter @loro/mobile web`) and
+[`../design/v2-prototype-decisions.md`](../design/v2-prototype-decisions.md).
 
-- Every `sc-if` state implemented, including empty and error
+- Every state implemented, including empty and error
 - Toast copy verbatim — it carries real meaning
 - Tokens, not literals; and the right variant (`accentInk` for text, never `accent`)
 - Press feedback on every interactive element
-- Animation matches [`../design/motion.md`](../design/motion.md), with reduced-motion behaviour
+- Animation has reduced-motion behaviour
 - `lang="es-ES"` on Spanish text
 - Charts have a visible text summary
 
@@ -130,17 +130,17 @@ comment explaining why; mark a review comment resolved without addressing it.
 Some changes need more than one approval, because the failure mode is silent or the cost of being
 wrong is high.
 
-| Change                                         | Required                                                                                       |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `packages/core/src/sync/**`                    | **Tech lead + backend, both.** A merge-class mistake is silent data loss                       |
-| `packages/core-rs/**` (scheduler or DSP)       | Core owner. **Golden-test diffs must be explained in the PR**, never re-baselined silently     |
-| `apps/mobile/modules/**` (native audio/speech) | Mobile lead, tested on a real device                                                           |
-| Anything touching recorded audio               | Tech lead, plus the [threat-model checklist](../architecture/threat-model.md#review-checklist) |
-| A new analytics event                          | Product, plus a PR to [`../product/metrics.md`](../product/metrics.md) in the same change      |
-| `packages/content/**` (Spanish)                | Content lead + a native speaker                                                                |
-| A new dependency                               | Tech lead. Justify it; check the licence and the transitive tree                               |
-| A schema migration                             | Backend + tech lead. Rollback plan in the PR                                                   |
-| A performance-budget change                    | The surface owner. Documented reason                                                           |
+| Change                                      | Required                                                                                       |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `packages/core/src/sync/**`                 | **Tech lead + backend, both.** A merge-class mistake is silent data loss                       |
+| `packages/core-rs/**` (scheduler or DSP)    | Core owner. **Golden-test diffs must be explained in the PR**, never re-baselined silently     |
+| `apps/mobile/modules/**` (native Rust core) | Mobile lead, tested on a real device                                                           |
+| Anything touching recorded audio            | Tech lead, plus the [threat-model checklist](../architecture/threat-model.md#review-checklist) |
+| A new analytics event                       | Product, plus a PR to [`../product/metrics.md`](../product/metrics.md) in the same change      |
+| `packages/content/**` (Spanish)             | Content lead + a native speaker                                                                |
+| A new dependency                            | Tech lead. Justify it; check the licence and the transitive tree                               |
+| A schema migration                          | Backend + tech lead. Rollback plan in the PR                                                   |
+| A performance-budget change                 | The surface owner. Documented reason                                                           |
 
 **The golden-test rule is worth emphasising.** A DSP change that moves a golden score is either a
 real improvement or a regression, and the only way to tell is for the author to say which and why. A
@@ -156,10 +156,10 @@ A reviewer's actual pass, condensed:
 - [ ] The learning behaviour is right, not just the code
 - [ ] No audio egress · no fake numbers · no shame copy
 - [ ] New syncable fields have correct merge classes
-- [ ] I compared visual changes against the blueprint
+- [ ] I compared visual changes against the running app
 - [ ] I ran it — on a device, if it's audio, animation, or native
 - [ ] Tests cover the behaviour, not the implementation
-- [ ] Errors are handled per [`../architecture/mobile-app.md`](../architecture/mobile-app.md#errors)
+- [ ] Errors are handled; a session never dies from a recoverable error
 - [ ] No performance budget quietly regressed
 - [ ] Docs updated if behaviour changed
 - [ ] Every comment is prefixed with what it blocks

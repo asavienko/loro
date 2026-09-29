@@ -1,6 +1,8 @@
 # 0003 · Offline-first SQLite with per-field delta sync
 
-- **Status:** Accepted
+- **Status:** Accepted; implementation removed (2026-09-30) — the client SQLite persistence and
+  outbox left with the first app (Git history at `52a0e3b`). The current app keeps a local learner
+  log and does not sync; the server side of this decision stands.
 - **Date:** 2026-07-28
 - **Deciders:** Tech lead, mobile lead, backend lead
 

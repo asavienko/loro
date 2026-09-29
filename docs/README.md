@@ -57,12 +57,14 @@ and age.
 | [Process](#process)           | How we work                                |
 | [Decisions](#decisions)       | What's still open, and what could go wrong |
 
-**The four-artifact v1.1 design package under `design/Language Learning by Phrases - V1.1/` outranks
-these docs within each artifact's scope.** `Loro.dc.html` owns learner screens 1–21,
-`Loro Chat.dc.html` owns screens 22–23, `Navigation.dc.html` owns shared shell/navigation behaviour,
-and `Design System.dc.html` is the authored visual reference. The navigation shell applies to Chat
-despite Chat's earlier “no chrome” description. These docs interpret and extend the package; they do
-not replace or modify it.
+**The app in [`apps/mobile`](../apps/mobile/README.md) is the reference for learner-visible
+behaviour (2026-09-30).** It is the v2.0 listening-first player that replaced the first app. The
+v1.1 design package (`design/Language Learning by Phrases - V1.1/`), the v1.2/v1.3 explorations and
+the v2.0 web prototype were removed from the tree; they remain in Git history (last present at
+commit `52a0e3b`). Citations such as `Loro.dc.html:1281` in these docs point into that historical
+package and record where a requirement came from; they no longer outrank the app. Product and
+architecture docs below still describe the wider product intent, including screens the current app
+does not have.
 
 ---
 
@@ -73,10 +75,10 @@ current inventory in the root [`README.md`](../README.md), then read the status 
 relevant architecture or product document before treating a diagram, route, or service as live.
 
 For implementation work, follow the dependency-ordered [`plans/README.md`](../plans/README.md), use
-the applicable authored artifact and screen catalog for learner-visible behaviour, and use the
-architecture docs for the contracts that let later screens reuse the same persistence, engine,
-native, and service foundations. When a change makes a current-state statement true or false, update
-that statement and the owning plan in the same change.
+the app and [v2-prototype-decisions.md](design/v2-prototype-decisions.md) for learner-visible
+behaviour, and use the architecture docs for the backend, sync, scheduling and privacy contracts.
+When a change makes a current-state statement true or false, update that statement and the owning
+plan in the same change.
 
 ---
 
@@ -101,7 +103,6 @@ that statement and the owning plan in the same change.
 | Doc                                                               | Contents                                                                             |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | [overview.md](architecture/overview.md)                           | C4 context and containers, cross-cutting concerns, the ten rules                     |
-| [mobile-app.md](architecture/mobile-app.md)                       | Layers, folder structure, navigation, state, rendering strategy                      |
 | [practice-engines.md](architecture/practice-engines.md)           | The contract, current Stream/Refrain engines, and planned engine behavior            |
 | [audio-speech.md](architecture/audio-speech.md)                   | Playback graph, TTS, ASR, background audio, the hands-free stream                    |
 | [prosody-dsp.md](architecture/prosody-dsp.md)                     | Pitch extraction, alignment, per-syllable scoring, rhythm/stress, the cue ladder     |
@@ -128,14 +129,10 @@ specifications.
 
 ## Design
 
-| Doc                                                           | Contents                                                                                                                                                |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [design-system.md](design/design-system.md)                   | Authored visual reference, generated runtime tokens, and implementation status. Remaining interaction kit: [plan 100](../plans/100-ui-design-system.md) |
-| [component-inventory.md](design/component-inventory.md)       | Authored 39-component reference and current React Native component inventory                                                                            |
-| [motion.md](design/motion.md)                                 | All 11 keyframe animations, the easing set, and the touch-feedback layer                                                                                |
-| [screen-catalog.md](design/screen-catalog.md)                 | All 23 learner screens ↔ artifact ranges ↔ screenshots ↔ specs; shell separately                                                                        |
-| [v2-prototype-decisions.md](design/v2-prototype-decisions.md) | What the v2.0 rapid prototype decided, what the app can reuse, and findings for Product. A proposal, not an authored artifact                           |
-| [copy-and-tone.md](design/copy-and-tone.md)                   | Voice, the Spanish/English rules, microcopy patterns, what we never say                                                                                 |
+| Doc                                                           | Contents                                                                                                     |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| [v2-prototype-decisions.md](design/v2-prototype-decisions.md) | The decisions the v2.0 app carries (vocabulary, loop, grades, points, first review) and findings for Product |
+| [copy-and-tone.md](design/copy-and-tone.md)                   | Voice, the Spanish/English rules, microcopy patterns, what we never say                                      |
 
 ## Process
 
@@ -171,7 +168,9 @@ specifications.
 ## Conventions in these docs
 
 - **Requirement IDs** (`P2-04`, `AI-03`) are stable. Reference them in issues, commits, and tests.
-- **Blueprint anchors** look like `Loro.dc.html:1404–1538` and point at exact line ranges.
+- **Blueprint anchors** look like `Loro.dc.html:1404–1538` and point at exact line ranges in the
+  historical v1.1 package
+  (`git show 52a0e3b:"design/Language Learning by Phrases - V1.1/Loro.dc.html"`).
 - **`⚠️ Decision needed`** marks a real fork with no owner yet — mirrored in `open-questions.md`.
 - **`🔒 Promise`** marks something the UI states to the user in writing, which the implementation
   must therefore honour (e.g. "your audio stays on your device").

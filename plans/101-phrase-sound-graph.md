@@ -8,12 +8,15 @@
   caches. Listen export stays the share option. Q-15 still gates production pronunciation audio;
   Q-21 still gates live Discover suggest; Q-22 still gates share-out-of-app. Device 60 fps and
   bilingual review stay their existing owners.
+- **App swap (2026-09-30):** the first app's Discover wiring and E2E were removed with it. The Rust
+  `assoc_score`/`assoc_order`, the content graph and `gap_priority` remain.
 - **Depends on:** 60 for the Rust maths boundary (not the policy); 61 for catalog publication; 97
   for authoring-time drafts; 98 for reference render; 99 for listening-class render; 87 for new
   linguistic edges
 - **Number allocation:** Highest assigned ID across this checkout (including archive) was 100.
-  Active [`100-ui-design-system.md`](100-ui-design-system.md) collides with archived hygiene 100
-  (unresolved; do not reuse or drop either). This plan is **101**. The next new plan is 102.
+  [`100-ui-design-system.md`](archive/2026-09-30/100-ui-design-system.md) (archived 2026-09-30)
+  collides with archived hygiene 100 (unresolved; do not reuse or drop either). This plan is
+  **101**. The next new plan is 102.
 - **Blueprint:** `Loro.dc.html:2303–2310` (association bands and cap), `2325` (custom keeps theme),
   `2369` (context `More like “{anchorEs}”`). Do not edit the authored artifact.
 - **Reviewed:** 2026-09-12 against current `origin/main`. Three review passes corrected the inputs,
@@ -38,9 +41,9 @@ stacks stay the owners they already are.
 | [98](98-voice-and-tts-integration.md) / [99](99-batch-phrase-audio-export.md) | Reference TTS and listening-class cache                  | Consume the queue; do not grow a second client.                                                  |
 | [82](archive/2026-09-09/82-guided-chat-domain-and-service.md)                 | Chat topic/reply graphs                                  | Different graph: conversation nodes, not catalog phrases.                                        |
 
-Today [`useSuggestions.ts`](../apps/mobile/app/_add/useSuggestions.ts) is theme-only after add.
-[`add.tsx`](../apps/mobile/app/add.tsx) holds `draft.difficulty` and `draft.tags` and calls
-`anchorOn(theme)` only. Scenario order already exists as an implicit arc in
+Today `useSuggestions.ts` (removed 2026-09-30) is theme-only after add. `add.tsx` (removed
+2026-09-30) holds `draft.difficulty` and `draft.tags` and calls `anchorOn(theme)` only. Scenario
+order already exists as an implicit arc in
 [`scenarios.json`](../packages/content/es-ES/scenarios.json). Catalog rows have no edges. Most audio
 is missing.
 
@@ -53,9 +56,9 @@ is missing.
 - ADR-0010 still forbids runtime catalog generation. Drafts go through plan 97; human review before
   merge. Runtime Discover may only offer **own-phrase** candidates (Q-21).
 - Association does **not** belong on `LoroCoreFacade`. That interface is “the subset of loro-core an
-  **engine** may use” ([`engines/types.ts`](../packages/core/src/engines/types.ts)). Discover is a
-  route. Call the existing `coreCall` seam. `jsCoreFacade` is already an alias of `rustCoreFacade` —
-  do not grow a second algorithm.
+  **engine** may use” (`engines/types.ts` (removed 2026-09-30)). Discover is a route. Call the
+  existing `coreCall` seam. `jsCoreFacade` is already an alias of `rustCoreFacade` — do not grow a
+  second algorithm.
 - Phase 1 persists no per-learner edge weights. No new sync columns, no `fieldPolicy` change, no
   `INSERT OR REPLACE`.
 - Recorded audio never enters this feature. Telemetry may carry ids, booleans, counts — never phrase
@@ -64,8 +67,8 @@ is missing.
 ## Verified starting point
 
 - Association bands: same-theme first, then the rest, cap 6 (`Loro.dc.html:2306–2310`).
-- Context label in the artifact is `More like “{anchorEs}”` (`2369`). The app and
-  [`add.spec.ts`](../apps/mobile/e2e/add.spec.ts) assert `More like Dining`. Artifact wins.
+- Context label in the artifact is `More like “{anchorEs}”` (`2369`). The app and `add.spec.ts`
+  (removed 2026-09-30) assert `More like Dining`. Artifact wins.
 - Discover `pool` is **unowned** catalog phrases. Candidates have no difficulty, tags, FSRS due,
   mastery, automaticity or reps. Feeding candidate learning state into this score would be a
   constant and would silently do nothing.

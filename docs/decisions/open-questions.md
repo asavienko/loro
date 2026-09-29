@@ -226,9 +226,10 @@ the 13 px subtitle needs 4.5:1, and reaching that means darkening the gradient t
 `#a86737 → #8f4119` — **a muddy brown, which destroys the app's single most important reward
 moment.**
 
-So the constraint is currently _recorded and enforced_ rather than resolved:
-`packages/design-tokens/tokens/color.json` declares `warming.peak.textSizeFloor: "large"`, and
-`checkContrast.ts` fails if that floor is removed while the colours stay as they are.
+So the constraint was _recorded and enforced_ rather than resolved: the first app's
+`packages/design-tokens/tokens/color.json` declared `warming.peak.textSizeFloor: "large"`, and
+`checkContrast.ts` failed if that floor was removed. That package was removed with the first app on
+2026-09-30; the current app has no warming card.
 
 **Options**
 
@@ -443,3 +444,6 @@ artefact has already moved under `design/`, its versioned authored name distingu
 blueprints, and repository citations/tooling now use that location. The inconvenience of quoting a
 path with spaces is smaller than another repo-wide rename and citation migration. This is no longer
 an M1 blocker.
+
+**Update 2026-09-30:** the folder was removed from the tree with the first app. It remains in Git
+history at `52a0e3b`; `apps/mobile` is now the reference for learner-visible behaviour.

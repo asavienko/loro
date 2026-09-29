@@ -1,5 +1,11 @@
 # Practice engines
 
+> **App swap, 2026-09-30.** The first app in `apps/mobile` was replaced by the v2.0 listening-first
+> player, and `packages/core` lost the client engines and SQLite persistence it used; both remain in
+> Git history at `52a0e3b`. Stream, Refrain, Speak and Review, and the `PracticeEngine` contract
+> below, belonged to that app. The current app has one listening loop driven by a pure state machine
+> (`apps/mobile/src/shared/state/`). This doc records the design for future engines.
+
 The abstraction that keeps all three of the blueprint's practice philosophies alive. Rationale:
 [ADR-0006](adr/0006-pluggable-practice-engines.md) and
 [`product/practice-loops.md`](../product/practice-loops.md).

@@ -27,54 +27,22 @@ Spanish fallback.
 
 ## Interface translations
 
-`apps/mobile/src/lib/i18n/` contains bundled `en.json`, `bg.json`, `ru.json` resources and the
-synchronous i18next + react-i18next + i18next-icu runtime. expo-localization supplies the initial
-language. `copy.ts` is the typed adapter: getters and functions resolve messages at access time;
-React consumers subscribe with `useLocale()`. Shared components receive translated props.
+The app's strings are TypeScript modules in `apps/mobile/src/shared/copy/`: `en.ts` defines the
+`Copy` shape, `bg.ts` and `ru.ts` implement it, and `copyFor(locale)` picks one by the learner's
+native language. Plural forms come from `Intl.PluralRules` (`plural.ts`); language names come from
+`Intl.DisplayNames`. Hermes lacks some of that `Intl`, so on iOS and Android
+`src/platform/intl.native.ts` loads the FormatJS polyfills with data for the three UI languages.
+`copy.test.ts` checks that every UI language has the same keys and exercises the Russian and
+Bulgarian plural and time wordings.
 
-`pluralRules.ts` loads FormatJS plural rules and English/Bulgarian/Russian locale data before
-i18next initializes. Hermes can lack `Intl.PluralRules`; without this, ICU returns raw templates on
-every screen with plural messages. The regression test starts without that API and formats every
-bundled message, and the seven language-pair browser flows exercise the same startup case.
-
-- Semantic keys, named parameters, ICU plurals, no concatenated message fragments.
+- Named parameters and per-language plural forms; no concatenated message fragments.
 - `Intl` formatting follows the native/UI language; logical day keys remain language-independent.
-- CI requires identical keys and interpolation arguments. English is the emergency UI fallback.
 - Translations are bundled, so reading them requires no network.
-- Preserve the no-shame tone, structural emoji and the effort progression as a group.
-- Dense rows must accommodate expansion and Cyrillic at 200% and 310% text scale.
-- Target text uses `lang="target"`; the text primitive resolves the active target locale. Native
-  `accessibilityLanguage` and the explicit web `lang` attribute are both set.
+- Preserve the no-shame tone.
+- Dense rows must accommodate expansion and Cyrillic at large text sizes.
 
-## Development pseudo-locale (F-08, plan 72)
-
-`en-XA.json` is an ICU-preserving generated fixture of the English interface. Accented, doubled
-vowels expand literal UI copy and `[!! … !!]` delimiters make missing coverage visible. Named
-arguments, plural/select branches, catalog text and learner-entered values stay unchanged. It is a
-debug UI override, not a supported native language or course; selected native/target language IDs
-continue to govern the learning data. This first fixture does not replace the seven-pair matrix.
-
-Start a fresh development server with the explicit flag (restart after changing it):
-
-```bash
-EXPO_PUBLIC_PSEUDO_LOCALE=1 pnpm --filter @loro/mobile start --web
-```
-
-Production builds ignore this flag. Regenerate after changing English interface resources:
-
-```bash
-pnpm --filter @loro/mobile exec tsx scripts/generatePseudoLocale.ts
-pnpm --filter @loro/mobile exec vitest run src/lib/i18n/pseudoLocale.test.ts
-LORO_E2E_PORT=8192 pnpm test:e2e:pseudo-locale
-```
-
-The normal unit gate fails if the committed fixture drifts or any ICU argument/selector contract
-changes. The local release gate starts a dedicated pseudo-locale server for the browser smoke, which
-completes onboarding with expanded interface labels and checks Today's horizontal fit plus Add's
-three interactive mode controls and horizontal fit. The ordinary browser suite skips this debug-only
-smoke; it continues to assert the real translations. Full pseudo-locale state/text-scale sweeps,
-long personal-content fixtures and native clipping review remain open. Browser geometry is not
-native accessibility acceptance.
+The first app's i18next resources, the `en-XA` pseudo-locale and its browser smoke were removed with
+that app on 2026-09-30 (Git history at `52a0e3b`).
 
 ## Content and service contracts
 

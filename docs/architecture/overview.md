@@ -230,9 +230,9 @@ launch (or every 24 h)
 
 | Concern              | Approach                                                                                                              | Detail                                                        |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| **State management** | Zustand slices for ephemeral UI state; the DB (via live queries) for everything durable. No duplicated truth.         | [mobile-app.md](mobile-app.md#state)                          |
-| **Navigation**       | Expo Router, file-based, typed routes. Deep links for widgets and notifications.                                      | [mobile-app.md](mobile-app.md#navigation)                     |
-| **Error handling**   | Errors are values in the domain layer; boundaries at the screen level; a session never dies from a recoverable error. | [mobile-app.md](mobile-app.md#errors)                         |
+| **State management** | One pure state machine (`src/shared/state/machine.ts`) behind a React store; the learner log is persisted locally.    | [`apps/mobile/README.md`](../../apps/mobile/README.md)        |
+| **Navigation**       | Expo Router, file-based routes over the shared route model (`src/shared/nav/routes.ts`).                              | [`apps/mobile/README.md`](../../apps/mobile/README.md)        |
+| **Error handling**   | Errors are values in the domain layer; boundaries at the screen level; a session never dies from a recoverable error. | [`apps/mobile/README.md`](../../apps/mobile/README.md)        |
 | **Feature flags**    | Local defaults, remote overrides, per-engine gating. Flags resolve offline.                                           | [`process/experimentation.md`](../process/experimentation.md) |
 | **Migrations**       | Forward-only, numbered, tested against a fixture DB from every prior version.                                         | [data-model.md](data-model.md#migrations)                     |
 | **Time**             | HLC for sync ordering; device local date for day boundaries and trip transitions (so they work offline).              | [sync-protocol.md](sync-protocol.md#time)                     |
@@ -280,12 +280,11 @@ Versions are the pins chosen at authoring time — **re-verify at kickoff**
 
 ### Shared
 
-| Package                  | Contents                                                                   |
-| ------------------------ | -------------------------------------------------------------------------- |
-| `packages/core`          | Domain types, engine contracts, validation schemas — shared by app and API |
-| `packages/core-rs`       | The Rust core                                                              |
-| `packages/design-tokens` | Tokens extracted from the blueprint, plus generators                       |
-| `packages/content`       | Catalog schema and data                                                    |
+| Package            | Contents                                                                  |
+| ------------------ | ------------------------------------------------------------------------- |
+| `packages/core`    | Domain types, sync field policy and API contract schemas                  |
+| `packages/core-rs` | The Rust core (FSRS, merge, DSP); WASM for the web and API, UniFFI native |
+| `packages/content` | Catalog schema and data                                                   |
 
 ---
 
@@ -306,19 +305,19 @@ Versions are the pins chosen at authoring time — **re-verify at kickoff**
 
 ## Architecture decision records
 
-| #                                                    | Decision                               | Status   |
-| ---------------------------------------------------- | -------------------------------------- | -------- |
-| [0001](adr/0001-cross-platform-react-native-expo.md) | React Native + Expo                    | Accepted |
-| [0002](adr/0002-shared-rust-core.md)                 | A shared Rust core via UniFFI          | Accepted |
-| [0003](adr/0003-offline-first-sqlite-sync.md)        | Offline-first SQLite with delta sync   | Accepted |
-| [0004](adr/0004-fsrs-scheduler.md)                   | FSRS as the scheduling algorithm       | Accepted |
-| [0005](adr/0005-on-device-asr-cloud-fallback.md)     | On-device ASR with a reveal fallback   | Accepted |
-| [0006](adr/0006-pluggable-practice-engines.md)       | Pluggable practice engines             | Accepted |
-| [0007](adr/0007-audio-pipeline.md)                   | A native audio module, not a JS player | Accepted |
-| [0008](adr/0008-backend-nestjs-postgres.md)          | NestJS + Postgres over a BaaS          | Accepted |
-| [0009](adr/0009-content-pipeline-and-packs.md)       | Content ships independently of the app | Accepted |
-| [0010](adr/0010-llm-roleplay-and-guardrails.md)      | LLM roleplay with hard guardrails      | Accepted |
-| [0011](adr/0011-analytics-and-privacy.md)            | Privacy posture and the audio promise  | Accepted |
-| [0012](adr/0012-state-management.md)                 | Zustand write-through projection       | Accepted |
-| [0013](adr/0013-design-tokens-pipeline.md)           | Design tokens as generated code        | Accepted |
-| [0014](adr/0014-monorepo-tooling.md)                 | pnpm workspaces + Turborepo            | Accepted |
+| #                                                    | Decision                               | Status                               |
+| ---------------------------------------------------- | -------------------------------------- | ------------------------------------ |
+| [0001](adr/0001-cross-platform-react-native-expo.md) | React Native + Expo                    | Accepted                             |
+| [0002](adr/0002-shared-rust-core.md)                 | A shared Rust core via UniFFI          | Accepted                             |
+| [0003](adr/0003-offline-first-sqlite-sync.md)        | Offline-first SQLite with delta sync   | Accepted; client removed 2026-09-30  |
+| [0004](adr/0004-fsrs-scheduler.md)                   | FSRS as the scheduling algorithm       | Accepted                             |
+| [0005](adr/0005-on-device-asr-cloud-fallback.md)     | On-device ASR with a reveal fallback   | Accepted                             |
+| [0006](adr/0006-pluggable-practice-engines.md)       | Pluggable practice engines             | Accepted; engines removed 2026-09-30 |
+| [0007](adr/0007-audio-pipeline.md)                   | A native audio module, not a JS player | Accepted                             |
+| [0008](adr/0008-backend-nestjs-postgres.md)          | NestJS + Postgres over a BaaS          | Accepted                             |
+| [0009](adr/0009-content-pipeline-and-packs.md)       | Content ships independently of the app | Accepted                             |
+| [0010](adr/0010-llm-roleplay-and-guardrails.md)      | LLM roleplay with hard guardrails      | Accepted                             |
+| [0011](adr/0011-analytics-and-privacy.md)            | Privacy posture and the audio promise  | Accepted                             |
+| [0012](adr/0012-state-management.md)                 | Zustand write-through projection       | Superseded 2026-09-30                |
+| [0013](adr/0013-design-tokens-pipeline.md)           | Design tokens as generated code        | Superseded 2026-09-30                |
+| [0014](adr/0014-monorepo-tooling.md)                 | pnpm workspaces + Turborepo            | Accepted                             |

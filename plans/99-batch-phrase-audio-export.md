@@ -8,14 +8,13 @@
   cache/`playFile` with checksum-on-lookup, batch restore, `/listen-export` copy/E2E, a labeled
   development fixture that **downloads over loopback HTTP** into that cache (native debug, not
   Hermes `__DEV__`; not a `store()` bypass), file-URI generate/cache/listen tests, iOS/Android
-  `playFile`/download parity, Q-15 leaning Voice Library pins in `LISTENING_VOICE_DECISION`,
-  pinned listening generate into the native file-URI cache (ElevenLabs or labeled
-  `TTS_STUB_RENDER=1`), and Q-22 mux/share fail-closed are implemented. Browser generate stays
-  `native-unavailable` (no JS PCM download). Pronunciation review remains on
-  [Q-15](../docs/decisions/open-questions.md#q-15). Share-out-of-app remains ⛔
-  [Q-22](../docs/decisions/open-questions.md#q-22). On the `loro_listen` API 36 emulator
-  (`emulator-5554`, `app.loro.android.dev`), native `download()` fetched the labeled silent AAC over
-  loopback HTTP (20× `fixture-http-download` + sha256
+  `playFile`/download parity, Q-15 leaning Voice Library pins in `LISTENING_VOICE_DECISION`, pinned
+  listening generate into the native file-URI cache (ElevenLabs or labeled `TTS_STUB_RENDER=1`), and
+  Q-22 mux/share fail-closed are implemented. Browser generate stays `native-unavailable` (no JS PCM
+  download). Pronunciation review remains on [Q-15](../docs/decisions/open-questions.md#q-15).
+  Share-out-of-app remains ⛔ [Q-22](../docs/decisions/open-questions.md#q-22). On the `loro_listen`
+  API 36 emulator (`emulator-5554`, `app.loro.android.dev`), native `download()` fetched the labeled
+  silent AAC over loopback HTTP (20× `fixture-http-download` + sha256
   `7450e588d78b20dabaccb960a9860951f2374de5d18756751f358578727cb6b0`), then airplane mode
   (`ping 8.8.8.8` unreachable) replayed that `file://` clip via `playFile`. Debug fixture seed is
   skipped when licensed generate is available (native cache + API URL + pins + network) so Generate
@@ -25,6 +24,9 @@
   fallback, not the primary path. `CI_BASE_REF=origin/main pnpm ci:local` passed at `bcd35dc`
   (learner E2E 197, workbench, production-e2e, mobile-bundle, API image). Item 7 pins are filled;
   pronunciation review and Q-22 remain.
+- **App swap (2026-09-30):** the composer, `/listen-export` route and `loro-audio-cache` native
+  module were in the first app and were removed with it. The listening-class TTS contract,
+  ElevenLabs transport and API render remain; the current app has no listen-companion client.
 - **Depends on:** 56 route declaration; 81 More destination; 59 active-course phrase inventory; 87
   target locale; 62 disk cache, atomic download, and exclusive playback session; 86 ElevenLabs
   transport; 61 asset identity and checksum policy for model audio; 58/72 for native evidence. The

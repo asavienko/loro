@@ -123,35 +123,32 @@ day for a month. A team that doesn't will ship something that looks right and fe
 
 ---
 
-## Working with the blueprint
+## Working with the design
 
-`design/Language Learning by Phrases - V1.1/Loro.dc.html` is the design source of truth
-([`../design/screen-catalog.md`](../design/screen-catalog.md)).
+The app in `apps/mobile` is the reference for learner-visible behaviour, and
+[`../design/v2-prototype-decisions.md`](../design/v2-prototype-decisions.md) records the decisions
+it carries. The v1.1 blueprint (`design/Language Learning by Phrases - V1.1/Loro.dc.html`) was
+removed on 2026-09-30 and stays in Git history at `52a0e3b`; citations into it in `docs/` record
+where a requirement came from.
 
-- **Open it before implementing a screen.** It's interactive; the `renderVals()` of each logic class
-  is a complete view model.
-- **When a spec in `docs/` and the blueprint disagree, the blueprint wins.** File an issue and fix
-  the doc.
-- **When the blueprint is wrong** (it has five known prototype-only behaviours, listed in the screen
-  catalog), the divergence is documented in `docs/` and referenced in the code.
-- **Don't edit the blueprint.** It's the authored artefact. Changes to intended design go in `docs/`
-  with a note.
+- **When a doc and the app disagree,** decide which is intended, then fix the other in the same
+  change.
+- Intended-design changes are recorded in `docs/` with their requirement ID.
 
 ---
 
 ## Code ownership
 
-| Area                                               | Owner            | Reviewers                                                |
-| -------------------------------------------------- | ---------------- | -------------------------------------------------------- |
-| `apps/mobile/src/{features,ui}`                    | Mobile           | Mobile + designer for anything visual                    |
-| `apps/mobile/modules/*` (native)                   | Mobile lead      | Mobile lead required                                     |
-| `apps/mobile/src/engines`, `packages/core/engines` | Tech lead        | Tech lead required                                       |
-| `packages/core-rs`                                 | Core owner       | Core owner required                                      |
-| `packages/core/src/sync`                           | Tech lead        | **Tech lead + backend, both**                            |
-| `apps/api`                                         | Backend          | Backend                                                  |
-| `packages/content`                                 | Content lead     | Content lead required; native-speaker review for Spanish |
-| `packages/design-tokens`                           | Designer         | Designer required                                        |
-| `docs/`                                            | The area's owner | One reviewer                                             |
+| Area                                  | Owner            | Reviewers                                                |
+| ------------------------------------- | ---------------- | -------------------------------------------------------- |
+| `apps/mobile/src/{screens,sheets,ui}` | Mobile           | Mobile + designer for anything visual                    |
+| `apps/mobile/modules/*` (native)      | Mobile lead      | Mobile lead required                                     |
+| `apps/mobile/src/shared/state`        | Tech lead        | Tech lead required                                       |
+| `packages/core-rs`                    | Core owner       | Core owner required                                      |
+| `packages/core/src/sync`              | Tech lead        | **Tech lead + backend, both**                            |
+| `apps/api`                            | Backend          | Backend                                                  |
+| `packages/content`                    | Content lead     | Content lead required; native-speaker review for Spanish |
+| `docs/`                               | The area's owner | One reviewer                                             |
 
 Encoded in `.github/CODEOWNERS`.
 

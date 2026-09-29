@@ -1,6 +1,8 @@
 # 0006 · Make the practice loop a plug-in, and have every engine maintain every progress signal
 
-- **Status:** Accepted
+- **Status:** Accepted; implementation removed (2026-09-30) — the engines left `packages/core` with
+  the first app (Git history at `52a0e3b`). The current app has one listening loop behind a pure
+  state machine.
 - **Date:** 2026-07-28
 - **Deciders:** Product, tech lead
 

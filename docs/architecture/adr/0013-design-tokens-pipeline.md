@@ -1,6 +1,7 @@
 # 0013 · Treat design tokens as generated code, with contrast checking in CI
 
-- **Status:** Accepted
+- **Status:** Superseded (2026-09-30) — `packages/design-tokens` was removed with the first app; the
+  current app keeps its tokens in `apps/mobile/src/ui/theme.ts` with no generator or contrast gate.
 - **Date:** 2026-07-28
 - **Deciders:** Designer, mobile lead
 
@@ -109,8 +110,8 @@ A new accent theme that fails is adjusted before it ships, not after an audit.
 ### Motion tokens too
 
 The eleven keyframes and three easing curves from the blueprint become tokens
-([`design/motion.md`](../../design/motion.md)), so a reduced-motion variant can be generated from
-the same source rather than hand-maintained per animation.
+(`docs/design/motion.md`, removed 2026-09-30), so a reduced-motion variant can be generated from the
+same source rather than hand-maintained per animation.
 
 ## Consequences
 

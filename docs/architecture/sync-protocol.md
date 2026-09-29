@@ -1,5 +1,10 @@
 # Sync protocol
 
+> **App swap, 2026-09-30.** The first app in `apps/mobile` was replaced by the v2.0 listening-first
+> player, and `packages/core` lost the client engines and SQLite persistence it used; both remain in
+> Git history at `52a0e3b`. The mobile outbox client described below was removed with it; the
+> current app does not sync. The Rust merge, field policy and API push/pull are unchanged.
+
 Sync primitives, a tenant-scoped PostgreSQL API and a mobile outbox client are implemented.
 Physical-device convergence and OS background sync remain plan 68 acceptance. Rationale:
 [ADR-0003](adr/0003-offline-first-sqlite-sync.md).

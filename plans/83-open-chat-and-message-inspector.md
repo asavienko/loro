@@ -4,6 +4,9 @@
 - **Milestone:** M3 / v1.1
 - **Status:** — Open chat and inspector routes remain to do. Text/offline slices need
   56/57/59/81/82; voice needs 62/63, Review handoff needs 75, and Q-16 gates release enablement.
+- **App swap (2026-09-30):** the first app and the v1.1 Chat artifact (`Loro Chat.dc.html`, now in
+  Git history at `52a0e3b`) were removed; the current app is the v2.0 player (plan
+  [104](104-prototype-react-native.md)). Re-scope the routes against it before resuming.
 - **Depends on:** 79 completed; 56/57/59/81/82 for text UI; 62/63 for real audio/ASR; 75 for Review
   handoff; 72 applicable harness.
 - **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.

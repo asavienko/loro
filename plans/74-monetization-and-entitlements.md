@@ -4,6 +4,9 @@
 - **Milestone:** M2
 - **Status:** ⛔ Product/billing implementation waits on Q-08 and Q-12. Decision research and cost
   inputs may proceed; draft schemas or vendor candidates do not authorize paid product behavior.
+- **App swap (2026-09-30):** the first app this plan extended was replaced in `apps/mobile` by the
+  v2.0 player (plan [104](104-prototype-react-native.md)); re-scope the client work against it
+  before resuming.
 - **Depends on:** Q-08 pricing/package, Q-12 billing mechanism; 59 cache, 67 identity, 73
   distribution; 86 vendor adapters.
 - **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.

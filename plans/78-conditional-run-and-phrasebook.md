@@ -4,6 +4,9 @@
 - **Milestone:** M5
 - **Status:** ⛔ Run and ladder Phrasebook remain blocked by Q-05 and comparative M3 evidence.
   Existing ladder helpers are reusable inputs, not approval to build Loop C.
+- **App swap (2026-09-30):** the first app this plan extended was replaced in `apps/mobile` by the
+  v2.0 player (plan [104](104-prototype-react-native.md)); re-scope the screens against it before
+  resuming.
 - **Depends on:** 59 course history; 60 canonical selection; 71 approved experiment and data; 72
   applicable release evidence.
 - **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.

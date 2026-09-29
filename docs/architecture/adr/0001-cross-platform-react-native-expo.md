@@ -6,9 +6,8 @@
 
 ## Context
 
-We need one iOS and Android app covering **21 dense, animated screens**
-([`design/screen-catalog.md`](../../design/screen-catalog.md)), built by a team of two mobile
-engineers.
+We need one iOS and Android app covering **21 dense, animated screens** (the screen catalog, since
+removed with the first app; Git history at `52a0e3b`), built by a team of two mobile engineers.
 
 The screens are not simple. They include a colour-and-shadow-morphing "warming card", pitch contours
 traced against a native reference, dual waveforms, a live-redrawing forgetting curve, a card-shuffle

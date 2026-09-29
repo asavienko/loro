@@ -1,5 +1,10 @@
 # Persistent practice and account sync
 
+> **App swap, 2026-09-30.** The first app in `apps/mobile` was replaced by the v2.0 listening-first
+> player, and `packages/core` lost the client engines and SQLite persistence it used; both remain in
+> Git history at `52a0e3b`. This page records the removed app's persistence, sign-in and sync
+> evidence. The current app keeps progress on the device and has no sign-in.
+
 The runtime implements SQLite-backed learner progress, canonical Rust scheduling, native foreground
 speech, required email/Google/Apple sign-in and tenant-scoped Postgres sync. These capabilities are
 implemented in plan 94 alongside feature plans 59/60/62/63/66/67/68/89. Native/device acceptance and

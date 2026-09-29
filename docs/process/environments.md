@@ -138,6 +138,10 @@ client lands, but never database, signing, AWS or provider secrets.
 
 ### Practice audio on web and APK
 
+**Historical (first app, removed 2026-09-30).** The current app speaks phrases with the device voice
+(Web Speech on the web, expo-speech on iOS/Android) and does not call these routes. The API side
+below still applies to any client that does.
+
 Stream, Phrase Detail and Refrain play a catalog file or `POST /v1/tts/render` reference audio. They
 do not use device TTS. Fill these on the API the app calls (`EXPO_PUBLIC_API_URL`):
 

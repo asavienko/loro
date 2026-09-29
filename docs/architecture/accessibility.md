@@ -128,7 +128,8 @@ duration. Native pattern, then the learner's.
 | Press feedback            | Retained — it's a 130 ms affordance, not motion                                                                                |
 
 The rule: **if an animation carries information, its information survives; only the motion goes.**
-Detail per animation: [`design/motion.md`](../design/motion.md#reduced-motion).
+The per-animation table for the first app (`docs/design/motion.md`) was removed with it on
+2026-09-30 and is in Git history at `52a0e3b`.
 
 ---
 
@@ -146,14 +147,16 @@ Detail per animation: [`design/motion.md`](../design/motion.md#reduced-motion).
 
 ### Contrast audit
 
-**Done, and now automated.** `packages/design-tokens/src/checkContrast.ts` computes **107 pairings**
-across all four accent themes on every CI run and fails the build on a violation.
-`pnpm --filter @loro/design-tokens check:contrast` runs it locally.
+**Done for the first app; not yet automated for the current one.** `packages/design-tokens` computed
+**107 pairings** across all four accent themes and failed the build on a violation. The package was
+removed with the first app on 2026-09-30 (Git history, `52a0e3b`). The current app's colours live in
+`apps/mobile/src/ui/theme.ts` and have no contrast gate yet. The corrections below record the audit.
 
 The audit found **eight colours in the blueprint's palette that do not meet AA in the pairing they
 are actually used in**, plus one that passes only at a declared size floor. Each was darkened along
 the same hue — never re-hued, so the palette still reads as the blueprint's — and each correction is
-recorded as a `deviation` field next to the value in `packages/design-tokens/tokens/color.json`:
+recorded as a `deviation` field next to the value in `packages/design-tokens/tokens/color.json` (now
+historical):
 
 | Token                          | Blueprint | Was    | Now       | Note                                                  |
 | ------------------------------ | --------- | ------ | --------- | ----------------------------------------------------- |
@@ -206,7 +209,8 @@ Baseline values on the `#fcf9f4` surface:
    adjusted, not shipped.
 5. A CI check computes contrast for every token pair used in the codebase and fails on a violation
    ([ADR-0013](adr/0013-design-tokens-pipeline.md)).
-6. **Colour literals are a lint error** in `apps/mobile/{app,src}/**`. The token names carry the
+6. **Colour literals were a lint error** in the first app. The current app's lint
+   (`apps/mobile/eslint.config.mjs`) does not enforce this yet. The token names carry the
    accessibility rule (`accentInk` for text, `accent` for fills), so a literal is not just a style
    inconsistency — it is the one way to bypass every check above.
 

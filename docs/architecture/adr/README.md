@@ -5,22 +5,22 @@ actually considered, what we chose, and the consequences we accepted.
 
 ## Index
 
-| #                                                | Decision                               | Status   | Date       |
-| ------------------------------------------------ | -------------------------------------- | -------- | ---------- |
-| [0001](0001-cross-platform-react-native-expo.md) | React Native + Expo for the app        | Accepted | 2026-07-28 |
-| [0002](0002-shared-rust-core.md)                 | A shared Rust core via UniFFI          | Accepted | 2026-07-28 |
-| [0003](0003-offline-first-sqlite-sync.md)        | Offline-first SQLite with delta sync   | Accepted | 2026-07-28 |
-| [0004](0004-fsrs-scheduler.md)                   | FSRS as the scheduling algorithm       | Accepted | 2026-07-28 |
-| [0005](0005-on-device-asr-cloud-fallback.md)     | On-device ASR, reveal-mode fallback    | Accepted | 2026-07-28 |
-| [0006](0006-pluggable-practice-engines.md)       | Pluggable practice engines             | Accepted | 2026-07-28 |
-| [0007](0007-audio-pipeline.md)                   | A native audio module, not a JS player | Accepted | 2026-07-28 |
-| [0008](0008-backend-nestjs-postgres.md)          | NestJS + Postgres over a BaaS          | Accepted | 2026-07-28 |
-| [0009](0009-content-pipeline-and-packs.md)       | Content ships independently of the app | Accepted | 2026-07-28 |
-| [0010](0010-llm-roleplay-and-guardrails.md)      | LLM roleplay with hard guardrails      | Accepted | 2026-07-28 |
-| [0011](0011-analytics-and-privacy.md)            | Privacy posture and the audio promise  | Accepted | 2026-07-28 |
-| [0012](0012-state-management.md)                 | Zustand write-through projection       | Accepted | 2026-07-28 |
-| [0013](0013-design-tokens-pipeline.md)           | Design tokens as generated code        | Accepted | 2026-07-28 |
-| [0014](0014-monorepo-tooling.md)                 | pnpm workspaces + Turborepo            | Accepted | 2026-07-28 |
+| #                                                | Decision                               | Status                               | Date       |
+| ------------------------------------------------ | -------------------------------------- | ------------------------------------ | ---------- |
+| [0001](0001-cross-platform-react-native-expo.md) | React Native + Expo for the app        | Accepted                             | 2026-07-28 |
+| [0002](0002-shared-rust-core.md)                 | A shared Rust core via UniFFI          | Accepted                             | 2026-07-28 |
+| [0003](0003-offline-first-sqlite-sync.md)        | Offline-first SQLite with delta sync   | Accepted; client removed 2026-09-30  | 2026-07-28 |
+| [0004](0004-fsrs-scheduler.md)                   | FSRS as the scheduling algorithm       | Accepted                             | 2026-07-28 |
+| [0005](0005-on-device-asr-cloud-fallback.md)     | On-device ASR, reveal-mode fallback    | Accepted                             | 2026-07-28 |
+| [0006](0006-pluggable-practice-engines.md)       | Pluggable practice engines             | Accepted; engines removed 2026-09-30 | 2026-07-28 |
+| [0007](0007-audio-pipeline.md)                   | A native audio module, not a JS player | Accepted                             | 2026-07-28 |
+| [0008](0008-backend-nestjs-postgres.md)          | NestJS + Postgres over a BaaS          | Accepted                             | 2026-07-28 |
+| [0009](0009-content-pipeline-and-packs.md)       | Content ships independently of the app | Accepted                             | 2026-07-28 |
+| [0010](0010-llm-roleplay-and-guardrails.md)      | LLM roleplay with hard guardrails      | Accepted                             | 2026-07-28 |
+| [0011](0011-analytics-and-privacy.md)            | Privacy posture and the audio promise  | Accepted                             | 2026-07-28 |
+| [0012](0012-state-management.md)                 | Zustand write-through projection       | Superseded 2026-09-30                | 2026-07-28 |
+| [0013](0013-design-tokens-pipeline.md)           | Design tokens as generated code        | Superseded 2026-09-30                | 2026-07-28 |
+| [0014](0014-monorepo-tooling.md)                 | pnpm workspaces + Turborepo            | Accepted                             | 2026-07-28 |
 
 ## Statuses
 
