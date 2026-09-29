@@ -5,7 +5,7 @@
 // languages, onboarding stands in for the app.
 import '../src/platform/intl';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, usePathname, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
@@ -90,6 +90,13 @@ function App() {
 /** The app once the course is installed; onboarding before the learner has chosen their languages. */
 function Gate({ onboarded }: { onboarded: boolean }) {
   const { status, refresh } = useContent();
+  const pathname = usePathname();
+  const router = useRouter();
+  // A shared link opened before onboarding (a first visit): opened once the learner is in.
+  const [pending] = useState(() => (!onboarded && pathname.startsWith('/shared/') ? pathname : null));
+  useEffect(() => {
+    if (onboarded && pending) router.replace(pending as never);
+  }, [onboarded, pending, router]);
   if (status !== 'ready') return <ConnectionScreen status={status} onRetry={() => void refresh()} />;
   if (!onboarded) return <Onboarding />;
   return (
