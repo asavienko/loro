@@ -146,3 +146,16 @@ export const LIBRARY_REPORTS_MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS library
 );
 CREATE INDEX IF NOT EXISTS library_reports_item ON library_reports(kind, item_id);
 `
+
+/** Utterances a stored phrase may be spoken in, and their clip once rendered (library/speech.ts). */
+export const LIBRARY_SPEECH_MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS library_speech (
+  id text PRIMARY KEY,
+  lang text NOT NULL,
+  text text NOT NULL,
+  voice_id text,
+  model text,
+  audio_id text,
+  duration_ms integer,
+  created_at bigint NOT NULL
+);
+`
