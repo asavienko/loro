@@ -184,6 +184,12 @@ export class LibraryWriteController {
     await this.library.unsave(request.principal.userId, kind, id)
   }
 
+  @Post('reports')
+  @HttpCode(200)
+  report(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    return this.library.report(request.principal.userId, body)
+  }
+
   @Post('generate/phrases')
   @HttpCode(200)
   generatePhrases(@Req() request: AuthenticatedRequest, @Body() body: unknown) {

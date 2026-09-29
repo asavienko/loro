@@ -42,9 +42,7 @@ export function resolveMusicCatalogPhrases(
       id: entry.id,
       targetText: entry.targetText,
       translation: phraseMeaning(entry, meaningLanguage),
-      ...(entry.deprecatedBy === undefined
-        ? {}
-        : { deprecatedBy: entry.deprecatedBy }),
+      ...(entry.deprecatedBy === undefined ? {} : { deprecatedBy: entry.deprecatedBy }),
     })),
     catalogVersion: catalog.catalogVersion,
   }

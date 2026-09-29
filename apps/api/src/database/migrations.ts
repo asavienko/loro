@@ -1,5 +1,9 @@
 import { AUTH_MIGRATION_SQL } from '../auth/auth.schema.js'
-import { LIBRARY_MIGRATION_SQL, LIBRARY_PROGRESS_MIGRATION_SQL } from '../library/library.schema.js'
+import {
+  LIBRARY_MIGRATION_SQL,
+  LIBRARY_PROGRESS_MIGRATION_SQL,
+  LIBRARY_REPORTS_MIGRATION_SQL,
+} from '../library/library.schema.js'
 import { MUSIC_MIGRATION_SQL } from '../music/music.schema.js'
 import { SYNC_MIGRATION_SQL } from '../sync/sync.schema.js'
 import type { SqlConnection } from './database.js'
@@ -16,6 +20,7 @@ export const NAMED_MIGRATIONS: readonly NamedMigration[] = [
   { id: '003_music', sql: MUSIC_MIGRATION_SQL },
   { id: '004_library', sql: LIBRARY_MIGRATION_SQL },
   { id: '005_progress', sql: LIBRARY_PROGRESS_MIGRATION_SQL },
+  { id: '006_reports', sql: LIBRARY_REPORTS_MIGRATION_SQL },
 ]
 
 const LEDGER = `CREATE TABLE IF NOT EXISTS schema_migrations (

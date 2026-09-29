@@ -110,6 +110,13 @@ export const SaveSchema = z.strictObject({
   id: LibraryIdSchema,
 })
 
+/** Why a learner reports a public set or album. */
+export const ReportSchema = z.strictObject({
+  kind: z.enum(['set', 'album']),
+  id: LibraryIdSchema,
+  reason: z.enum(['offensive', 'wrong', 'spam', 'other']),
+})
+
 export const ProfileSchema = z.strictObject({
   displayName: z.string().trim().min(1).max(40),
 })

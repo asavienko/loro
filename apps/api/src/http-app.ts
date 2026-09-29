@@ -9,7 +9,8 @@ import type { INestApplication } from '@nestjs/common'
 import type { NestExpressApplication } from '@nestjs/platform-express'
 import { ProblemDetailsFilter } from './common/problem-filter.js'
 
-export const JSON_BODY_LIMIT = '1mb'
+/** Room for a learner's progress (library/progress.ts); everything else is far smaller. */
+export const JSON_BODY_LIMIT = '4mb'
 export const FORM_BODY_LIMIT = '32kb'
 
 export function configureHttpApp(app: INestApplication): INestApplication {
