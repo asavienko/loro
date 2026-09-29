@@ -171,11 +171,57 @@ export class LibraryService {
 
   /** Loro's content, written once per content version (and again after a failed attempt). */
   private ready(): Promise<void> {
-    this.seeded ??= this.seed().catch((error: unknown) => {
-      this.seeded = undefined
-      throw error
-    })
+    this.seeded ??= this.seed()
+      .then(() => {
+        // Once per process, in the background: Loro's songs get the server's voice when it has one.
+        if (!this.voicing && process.env['LIBRARY_VOICE_LORO_SONGS'] !== '0') {
+          this.voicing = this.voiceLoroSongs().catch((error: unknown) => {
+            this.logger.warn(
+              `voicing Loro's songs failed: ${error instanceof Error ? error.message : 'unknown'}`,
+            )
+          })
+        }
+      })
+      .catch((error: unknown) => {
+        this.seeded = undefined
+        throw error
+      })
     return this.seeded
+  }
+
+  private voicing: Promise<void> | undefined
+
+  /**
+   * Loro's seeded songs are the plain demo; with a voice for their language, their lines are spoken
+   * over it once (the same music, from the same seed), counted against the server's clip allowance.
+   */
+  private async voiceLoroSongs(): Promise<void> {
+    if (!this.speech) return
+    const songs = await this.db.query<{
+      id: string
+      set_id: string
+      style_id: MusicStyleId
+      lyrics: SongRow['lyrics']
+      target_lang: Language
+    }>(
+      `SELECT so.id, so.set_id, so.style_id, so.lyrics, a.target_lang FROM library_songs so JOIN library_albums a ON a.id = so.album_id
+       WHERE a.origin = 'loro' AND so.status = 'ready' AND so.voiced = false ORDER BY a.position, so.position`,
+    )
+    for (const song of songs.rows) {
+      const texts = song.lyrics.flatMap((section) => section.lines.map((line) => line.text))
+      const voices = await this.speech.songVoices(song.target_lang, texts, '__loro__')
+      if (!voices.some((voice) => voice !== null)) continue
+      const demo = synthesizeDemo(song.style_id, texts.length, song.set_id, voices)
+      await this.db.transaction(async (tx) => {
+        const audioId = await this.storeAudio(tx, demo.wav, 'audio/wav')
+        await tx.query(
+          'UPDATE library_songs SET audio_id = $2, duration_ms = $3, voiced = true WHERE id = $1',
+          [song.id, audioId, demo.durationMs],
+        )
+        await forgetUnusedAudio(tx)
+      })
+      this.logger.log(`voiced Loro's song ${song.id}`)
+    }
   }
 
   private async seed(): Promise<void> {

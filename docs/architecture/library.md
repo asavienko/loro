@@ -100,9 +100,10 @@ in the style, two bars per lyric line) whose line timings let the lyrics follow 
 labelled "Demo sound" everywhere it is heard. When the server has a voice for the song's language
 (`TTS_PROVIDER=elevenlabs`), each lyric line is also spoken over its bars (raw PCM from the voice,
 mixed in with the music ducked under it; distinct lines only, counted against the owner's and the
-server's clip allowances), and the song is labelled "Spoken demo". A song is saved at once as
-`rendering` and made in the background; the app polls it. `GET /library/usage` says which writer
-each kind uses here.
+server's clip allowances), and the song is labelled "Spoken demo". Loro's own album songs are voiced
+the same way once, in the background, after the server starts with a voice
+(`LIBRARY_VOICE_LORO_SONGS=0` turns it off). A song is saved at once as `rendering` and made in the
+background; the app polls it. `GET /library/usage` says which writer each kind uses here.
 
 The app asks the server's phrase writer only when it is Claude; otherwise the device's copy of the
 phrase bank answers the same suggestions without spending the allowance.
