@@ -551,6 +551,38 @@ export class LibraryService {
     throw new LoroError('NOT_FOUND')
   }
 
+  /** Songs sung from a set, in albums the reader can see: Loro's first, then the newest. */
+  async songsOfSet(
+    userId: string | null,
+    id: unknown,
+  ): Promise<{ songs: SongWire[]; albums: AlbumWire[] }> {
+    await this.ready()
+    const set = await this.readableSet(userId, parseContract(LibraryIdSchema, id))
+    const rows = (
+      await this.db.query<
+        SongRow & { album_origin: string; album_owner: string | null; album_visibility: Visibility }
+      >(
+        `SELECT so.*, a.origin AS album_origin, a.owner_id AS album_owner, a.visibility AS album_visibility
+         FROM library_songs so JOIN library_albums a ON a.id = so.album_id
+         WHERE so.set_id = $1 AND so.status = 'ready' ORDER BY (a.origin = 'loro') DESC, so.created_at DESC LIMIT 20`,
+        [set.id],
+      )
+    ).rows.filter((row) =>
+      canRead(
+        { origin: row.album_origin, owner_id: row.album_owner, visibility: row.album_visibility },
+        userId,
+      ),
+    )
+    const saved = await this.savedIds(userId, 'album')
+    const albumIds = [...new Set(rows.map((row) => row.album_id))]
+    const albums = albumIds.length
+      ? (
+          await this.db.query<AlbumRow>(`${ALBUM_SELECT} WHERE a.id = ANY($1::text[])`, [albumIds])
+        ).rows.map((row) => toAlbumWire(row, userId, saved))
+      : []
+    return { songs: rows.map((row) => this.toSongWire(row)), albums }
+  }
+
   async song(userId: string | null, id: unknown): Promise<SongWire> {
     const row = (
       await this.db.query<SongRow>('SELECT * FROM library_songs WHERE id = $1', [

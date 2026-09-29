@@ -584,4 +584,31 @@ describePostgres('the library against real PostgreSQL', () => {
     expect(await library.profile('sam')).toEqual({ displayName: null })
     expect((await library.pack(null, 'es-ES')).sets.map((s) => s.id)).toContain('set-cafe')
   })
+
+  it('lists the songs of a set that the reader may hear', async () => {
+    const { song, album } = await library.generateSong('uma', {
+      setId: 'set-sobremesa',
+      styleId: 'gentle_ballad',
+      nativeLang: 'en-GB',
+    })
+    await vi.waitFor(
+      async () => {
+        expect((await library.song('uma', song.id)).status).toBe('ready')
+      },
+      { timeout: 5000 },
+    )
+    const loroSong = 'song-loro-sobremesa'
+    expect((await library.songsOfSet('uma', 'set-sobremesa')).songs.map((s) => s.id)).toEqual([
+      loroSong,
+      song.id,
+    ])
+    // Uma's album is private: someone else hears only Loro's.
+    expect((await library.songsOfSet('vic', 'set-sobremesa')).songs.map((s) => s.id)).toEqual([
+      loroSong,
+    ])
+    await library.updateAlbum('uma', album.id, { visibility: 'public' })
+    expect((await library.songsOfSet(null, 'set-sobremesa')).albums.map((a) => a.id)).toContain(
+      album.id,
+    )
+  })
 })
