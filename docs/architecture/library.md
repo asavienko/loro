@@ -43,7 +43,9 @@ the refresh token in the Keychain/Keystore (`expo-secure-store`; `localStorage` 
 account's public details in the key-value store, and renews the 15-minute access token before use or
 after a 401. Signing out revokes the refresh token and forgets the downloaded packs (they held the
 learner's own sets); progress on the device is untouched. The display name shown on shared items is
-`POST /library/profile`.
+`POST /library/profile`. `POST /library/me/delete` deletes everything a learner keeps in the library
+(sets, albums, songs, covers, saves, reports, profile, account progress, and their phrases' clips);
+the app then signs out without saving progress back, and the progress on the device stays.
 
 A signed-in learner's **progress** follows them (`GET/POST /library/progress`): the device merges
 the account's copy of its learner state (union of logs, latest of each field, as two tabs merge) and

@@ -116,6 +116,13 @@ export class LibraryWriteController {
     return this.library.usage(request.principal.userId)
   }
 
+  /** Deletes everything the learner keeps in the library (their account's sign-in stays). */
+  @Post('me/delete')
+  @HttpCode(200)
+  deleteEverything(@Req() request: AuthenticatedRequest) {
+    return this.library.deleteEverything(request.principal.userId)
+  }
+
   @Get('profile')
   @Header('Cache-Control', 'no-store')
   profile(@Req() request: AuthenticatedRequest) {

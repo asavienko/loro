@@ -551,4 +551,37 @@ describePostgres('the library against real PostgreSQL', () => {
     )
     expect((await library.song('rae', plain.id)).voiced).toBe(false)
   })
+
+  it('deletes everything a learner keeps, and nobody else’s', async () => {
+    const phrases = (await deck('sam')).slice(0, 1)
+    const { set } = await library.createSet('sam', {
+      title: 'Mine',
+      targetLang: 'es-ES',
+      nativeLang: 'bg-BG',
+      visibility: 'public',
+      phrases,
+    })
+    const { album } = await library.generateSong('sam', {
+      setId: set.id,
+      styleId: 'modern_pop',
+      nativeLang: 'en-GB',
+    })
+    await library.save('tom', { kind: 'set', id: set.id })
+    await library.setProfile('sam', { displayName: 'Sam' })
+    const progress = new ProgressService(database, { now: () => now })
+    await progress.write('sam', { progress: { log: [] }, baseRevision: 0 })
+    await vi.waitFor(
+      async () => {
+        expect((await library.album('sam', album.id)).songs[0]?.status).toBe('ready')
+      },
+      { timeout: 5000 },
+    )
+    await library.deleteEverything('sam')
+    expect(await code(library.set('sam', set.id))).toBe('NOT_FOUND')
+    expect(await code(library.album('sam', album.id))).toBe('NOT_FOUND')
+    expect((await library.pack('tom', 'es-ES')).sets.map((s) => s.id)).not.toContain(set.id)
+    expect((await progress.read('sam')).progress).toBeNull()
+    expect(await library.profile('sam')).toEqual({ displayName: null })
+    expect((await library.pack(null, 'es-ES')).sets.map((s) => s.id)).toContain('set-cafe')
+  })
 })
