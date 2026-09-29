@@ -14,7 +14,7 @@ import { useCopy, useNow, useStore } from '../state/store';
 import { Button, Chip } from '../ui/Button';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
-import { PhraseShelves } from './PhraseShelves';
+import { MakeSetButton, PhraseShelves } from './PhraseShelves';
 import { progressLabel } from '../ui/progressLabel';
 import { SetCard } from '../ui/SetCard';
 import { TONE } from '../ui/SetCover';
@@ -284,6 +284,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
           </View>
         )}
 
+        {tiles && <MakeSetButton />}
         {tiles && (
           <View accessibilityLabel={c.explore.topics} style={styles.tiles}>
             {courseTopics.map(({ topic: t, count }) => (
