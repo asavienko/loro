@@ -642,6 +642,8 @@ export function makeEn(n: Plural) {
       playAlbum: 'Play album',
       playSong: (title: string) => `Play ${title}`,
       demoSound: 'Demo sound',
+      spokenDemo: 'Spoken demo',
+      spokenNote: 'The lines are spoken by Loro’s voice over an instrumental the server made; they light up as they play. Songs are sung once a music provider is set up.',
       demoNote: 'The server made this instrumental; the lyrics light up as it plays. Songs are sung once a music provider is set up.',
       sung: 'Sung',
       lyrics: 'Lyrics',

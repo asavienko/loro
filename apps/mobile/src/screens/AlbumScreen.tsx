@@ -223,7 +223,7 @@ export function AlbumScreen({ id }: { id: string }) {
 function SongRow({ song, index, current, playing, onPlay }: { song: Song; index: number; current: boolean; playing: boolean; onPlay: () => void }) {
   const c = useCopy();
   const ready = song.status === 'ready';
-  const meta = [c.music.style[song.styleId], song.durationMs ? clockTime(song.durationMs / 1000) : null, song.audioBy === 'demo' ? c.music.demoSound : song.audioBy === 'elevenlabs' ? c.music.sung : null]
+  const meta = [c.music.style[song.styleId], song.durationMs ? clockTime(song.durationMs / 1000) : null, song.audioBy === 'demo' ? (song.voiced ? c.music.spokenDemo : c.music.demoSound) : song.audioBy === 'elevenlabs' ? c.music.sung : null]
     .filter(Boolean)
     .join(' · ');
   return (

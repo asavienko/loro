@@ -62,13 +62,13 @@ export function SongScreen() {
           {song.title}
         </Txt>
         <View style={styles.badges}>
-          <Badge icon={song.audioBy === 'demo' ? 'graphic_eq' : 'mic'} label={song.audioBy === 'demo' ? c.music.demoSound : c.music.sung} />
+          <Badge icon={song.audioBy === 'demo' && !song.voiced ? 'graphic_eq' : 'mic'} label={song.audioBy === 'demo' ? (song.voiced ? c.music.spokenDemo : c.music.demoSound) : c.music.sung} />
           <Badge icon="lyrics" label={c.music.lyricsBy[song.lyricsBy]} />
           <Badge icon="equalizer" label={c.music.style[song.styleId]} />
         </View>
         {song.audioBy === 'demo' && (
           <Txt variant="label" color="onNightVariant">
-            {c.music.demoNote}
+            {song.voiced ? c.music.spokenNote : c.music.demoNote}
           </Txt>
         )}
 
