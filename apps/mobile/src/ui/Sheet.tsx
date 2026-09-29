@@ -63,6 +63,8 @@ export function SheetOption({
     <Pressable
       accessibilityRole={choice ? 'radio' : 'button'}
       accessibilityState={choice ? { checked: selected, disabled: Boolean(disabled) } : { disabled: Boolean(disabled) }}
+      // react-native-web drops a nested accessibilityState; the flat ARIA form reaches the DOM.
+      aria-checked={choice ? selected : undefined}
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => [styles.option, pressed && styles.pressed, disabled && styles.disabled]}
