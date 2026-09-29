@@ -80,6 +80,7 @@ export function Chip({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityState={toggle ? { selected, disabled: Boolean(disabled) } : { disabled: Boolean(disabled) }}
+      aria-pressed={toggle ? selected : undefined}
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => [chip.target, pressed && { opacity: 0.8 }, disabled && styles.disabled]}
