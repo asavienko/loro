@@ -609,6 +609,7 @@ export function makeRu(n: Plural): Copy {
       signInToMake: 'Войдите, чтобы создавать наборы с ИИ',
     },
     music: {
+      setSongs: 'Песни из этого набора',
       title: 'Музыка',
       loro: 'От Loro',
       yours: 'Ваши альбомы',

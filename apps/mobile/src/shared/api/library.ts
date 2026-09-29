@@ -89,6 +89,7 @@ export const fetchCommunityAlbums = (targetLang: LanguageCode, q = '') =>
 export const fetchSet = (id: string) => api<SetDetail>(`/library/sets/${encodeURIComponent(id)}`);
 export const fetchAlbum = (id: string) => api<AlbumDetail>(`/library/albums/${encodeURIComponent(id)}`);
 export const fetchShared = (code: string) => api<Shared>(`/library/shared/${encodeURIComponent(code)}`);
+export const fetchSetSongs = (setId: string) => api<{ songs: Song[]; albums: Album[] }>(`/library/sets/${encodeURIComponent(setId)}/songs`);
 export const fetchSong = (id: string) => api<Song>(`/library/songs/${encodeURIComponent(id)}`);
 export const fetchUsage = () => api<Usage>('/library/usage', { auth: 'required' });
 

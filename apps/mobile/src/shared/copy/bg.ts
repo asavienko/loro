@@ -607,6 +607,7 @@ export function makeBg(n: Plural): Copy {
       signInToMake: 'Влезте, за да създавате набори с ИИ',
     },
     music: {
+      setSongs: 'Песни от този набор',
       title: 'Музика',
       loro: 'От Loro',
       yours: 'Вашите албуми',

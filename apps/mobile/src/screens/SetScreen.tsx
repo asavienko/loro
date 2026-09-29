@@ -16,6 +16,7 @@ import { currentPhraseId, displayLearner, isLiked, phraseProgress, PhraseProgres
 import type { SortKey } from '@shared/state/types';
 import { isTargetRevealed } from '@shared/ui/phase';
 import { hrefOf, useShell } from '../nav/Shell';
+import { SetSongs } from '../music/SetSongs';
 import { PickPhrasesSheet } from '../sheets/PickPhrasesSheet';
 import { RenameSheet } from '../sheets/RenameSheet';
 import { ReportSheet } from '../sheets/ReportSheet';
@@ -407,6 +408,9 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
           </View>
         )}
       </View>
+
+      {/* The music side of a served set (plan 106): its songs, and making one. */}
+      {served && <SetSongs setId={setId} />}
 
       {view.kind === 'own' && <PickPhrasesSheet setId={picking ? setId : null} onClose={() => setPicking(false)} />}
 
