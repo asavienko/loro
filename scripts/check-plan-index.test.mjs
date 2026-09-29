@@ -16,6 +16,7 @@ import {
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const readme = readFileSync(join(root, 'plans/README.md'), 'utf8')
+const nextId = Number(readme.match(/next new plan is \*\*(\d+)\*\*/)?.[1])
 
 test('the working tree index matches top-level plans and next is highest assigned+1', () => {
   assert.deepEqual(checkPlanIndex(root), [])
@@ -23,7 +24,7 @@ test('the working tree index matches top-level plans and next is highest assigne
   const assigned = discoverAssignedIds(join(root, 'plans'))
   assert.ok(topLevel.includes(99), 'plan 99 listen companion must stay top-level')
   assert.ok(assigned.includes(100), 'plan 100 hygiene still occupies ID 100 after archive')
-  assert.equal(Math.max(...assigned) + 1, 102)
+  assert.equal(Math.max(...assigned) + 1, nextId)
 })
 
 test('two 96 rows still pass when the collision is documented', () => {
@@ -49,15 +50,15 @@ test('removing a remaining top-level row from a copy of README fails', () => {
   )
 })
 
-test('“next is 102” is required while 101 is the highest assigned ID', () => {
-  const lagged = readme.replace('next new plan is **102**', 'next new plan is **101**')
+test('“next is N” is required while N-1 is the highest assigned ID', () => {
+  const lagged = readme.replace(`next new plan is **${nextId}**`, `next new plan is **${nextId - 1}**`)
   const errors = planIndexErrors({
     plans: discoverTopLevelPlans(join(root, 'plans')),
     assignedIds: discoverAssignedIds(join(root, 'plans')),
     readme: lagged,
   })
   assert.ok(
-    errors.some((error) => error.includes('next is 101')),
+    errors.some((error) => error.includes(`next is ${nextId - 1}`)),
     errors.join('\n'),
   )
 })
