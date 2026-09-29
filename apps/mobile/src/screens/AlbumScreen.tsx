@@ -41,25 +41,33 @@ export function AlbumScreen({ id }: { id: string }) {
   const [reporting, setReporting] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const { state } = useStore();
+  // The song whose retry or removal is on its way: its buttons wait, so a second tap sends nothing.
+  const [acting, setActing] = useState<string | null>(null);
 
   // A failed song of the learner's own: made again (another of the day's songs), or taken out.
   const retry = async (song: Song) => {
+    setActing(song.id);
     try {
       await retrySong(song.id, state.learner.profile.nativeLang);
       void account.refreshUsage();
       await load();
     } catch (error) {
       toast(problemText(c, error));
+    } finally {
+      setActing(null);
     }
   };
   const removeSong = async (song: Song) => {
     if (!(await confirm(c.music.removeSongConfirm(song.title), c.music.removeSong, c.common.cancel))) return;
+    setActing(song.id);
     try {
       await deleteSong(song.id);
       await load();
       await content.refresh();
     } catch (error) {
       toast(problemText(c, error));
+    } finally {
+      setActing(null);
     }
   };
 
@@ -235,6 +243,7 @@ export function AlbumScreen({ id }: { id: string }) {
             }}
             onRetry={mine && song.status === 'failed' ? () => void retry(song) : undefined}
             onRemove={mine && song.status === 'failed' ? () => void removeSong(song) : undefined}
+            acting={acting === song.id}
           />
         ))}
         {rendering && (
@@ -248,7 +257,7 @@ export function AlbumScreen({ id }: { id: string }) {
   );
 }
 
-function SongRow({ song, index, current, playing, onPlay, onRetry, onRemove }: { song: Song; index: number; current: boolean; playing: boolean; onPlay: () => void; onRetry?: () => void; onRemove?: () => void }) {
+function SongRow({ song, index, current, playing, onPlay, onRetry, onRemove, acting = false }: { song: Song; index: number; current: boolean; playing: boolean; onPlay: () => void; onRetry?: () => void; onRemove?: () => void; acting?: boolean }) {
   const c = useCopy();
   const ready = song.status === 'ready';
   const meta = [c.music.style[song.styleId], song.durationMs ? clockTime(song.durationMs / 1000) : null, song.audioBy === 'demo' ? (song.voiced ? c.music.spokenDemo : c.music.demoSound) : song.audioBy === 'elevenlabs' ? c.music.sung : null]
@@ -288,8 +297,8 @@ function SongRow({ song, index, current, playing, onPlay, onRetry, onRemove }: {
         </View>
         {ready && <Icon name={playing ? 'pause' : 'play_arrow'} fill color="onNight" />}
       </Pressable>
-      {onRetry && <Button variant="icon" icon="refresh" color="onNight" accessibilityLabel={c.music.retrySong(song.title)} onPress={onRetry} />}
-      {onRemove && <Button variant="icon" icon="delete" color="onNight" accessibilityLabel={c.music.removeSong} onPress={onRemove} />}
+      {onRetry && <Button variant="icon" icon="refresh" color="onNight" accessibilityLabel={c.music.retrySong(song.title)} disabled={acting} onPress={onRetry} />}
+      {onRemove && <Button variant="icon" icon="delete" color="onNight" accessibilityLabel={c.music.removeSong} disabled={acting} onPress={onRemove} />}
     </View>
   );
 }
