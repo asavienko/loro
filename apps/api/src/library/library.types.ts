@@ -79,6 +79,8 @@ export interface SongWire {
   audioUrl: string | null
   /** `elevenlabs`, or `demo`: the server's instrumental, labelled "Demo sound". */
   audioBy: 'elevenlabs' | 'demo' | null
+  /** The lines are spoken over the sound (the server's voice over a demo, or sung). */
+  voiced: boolean
   durationMs: number | null
   error: string | null
   createdAt: number

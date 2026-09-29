@@ -14,9 +14,11 @@ import { Controller, Get, Inject, Injectable, Logger, Optional, Param, Res } fro
 import type { Response } from 'express'
 import { normalizeListeningText } from '@loro/core'
 import { audioDurationMs } from '@loro/content/audio-duration'
+import { DEMO_SAMPLE_RATE } from './synth.js'
 import { SERVER_CLOCK, type ServerClock } from '../common/clock.js'
 import { LoroError } from '../common/errors.js'
 import { DATABASE, type SqlConnection, type SqlDatabase } from '../database/database.js'
+import { ElevenLabsTts } from '../integrations/elevenlabs/tts.js'
 import {
   TTS_RUNTIME_CONFIG,
   TTS_TRANSPORT,
@@ -24,6 +26,9 @@ import {
   type TtsRuntimeConfig,
   type TtsTransport,
 } from '../tts/transport.js'
+
+/** Nest token for a raw-PCM voice, for tests; production builds one from the TTS config. */
+export const PCM_TRANSPORT = Symbol('PcmTransport')
 
 /** An utterance: a language and the text said in it. */
 export function utteranceId(lang: string, text: string): string {
@@ -114,7 +119,95 @@ export class SpeechService {
     @Inject(SERVER_CLOCK) private readonly clock: ServerClock,
     @Inject(TTS_TRANSPORT) private readonly transport: TtsTransport,
     @Optional() @Inject(TTS_RUNTIME_CONFIG) private readonly runtime?: TtsRuntimeConfig,
+    /** Renders raw PCM for song lines; built from the runtime config unless a test supplies one. */
+    @Optional() @Inject(PCM_TRANSPORT) private readonly pcmTransport?: TtsTransport,
   ) {}
+
+  private pcm: TtsTransport | null | undefined
+
+  /** A voice that answers in raw PCM at the demo's rate, or null without a provider. */
+  private pcmVoice(): TtsTransport | null {
+    if (this.pcmTransport) return this.pcmTransport
+    if (this.pcm !== undefined) return this.pcm
+    const runtime = this.config()
+    this.pcm =
+      runtime?.provider === 'elevenlabs'
+        ? new ElevenLabsTts({
+            apiKey: runtime.apiKey,
+            model: runtime.model,
+            outputFormat: `pcm_${DEMO_SAMPLE_RATE}`,
+            timeoutMs: 10_000,
+            maxRequestBytes: 16_384,
+            maxResponseBytes: 4_000_000,
+            maxConcurrentRequests: 2,
+          })
+        : null
+    return this.pcm
+  }
+
+  /**
+   * Song lines spoken by the language's voice, as mono PCM at the demo's rate, each counted against
+   * the owner's and the server's day like a phrase clip. A line that can't be spoken is null: the
+   * song keeps its music there.
+   */
+  async songVoices(
+    lang: string,
+    texts: readonly string[],
+    ownerId: string,
+  ): Promise<(Int16Array | null)[]> {
+    const voice = speechVoice(this.config(), lang)
+    const transport = this.pcmVoice()
+    if (!voice || !transport) return texts.map(() => null)
+    const day = new Date(this.clock.now()).toISOString().slice(0, 10)
+    const spoken = new Map<string, Int16Array | null>()
+    const out: (Int16Array | null)[] = []
+    for (const text of texts) {
+      const key = normalizeListeningText(text)
+      if (!spoken.has(key))
+        spoken.set(key, await this.linePcm(transport, voice, lang, key, ownerId, day))
+      out.push(spoken.get(key) ?? null)
+    }
+    return out
+  }
+
+  private async linePcm(
+    transport: TtsTransport,
+    voice: { voiceId: string; model: string },
+    lang: string,
+    text: string,
+    ownerId: string,
+    day: string,
+  ): Promise<Int16Array | null> {
+    const budgets: [string, number][] = [
+      ['__server__', Number(process.env['LIMIT_SPEECH_RENDERS_DAILY'] ?? DEFAULT_DAILY_RENDERS)],
+      [ownerId, Number(process.env['LIMIT_SPEECH_OWNER_DAILY'] ?? DEFAULT_OWNER_RENDERS)],
+    ]
+    const taken: string[] = []
+    for (const [who, limit] of budgets) {
+      if (!(await this.take(who, day, limit))) {
+        for (const back of taken) await this.giveBack(back, day)
+        return null
+      }
+      taken.push(who)
+    }
+    try {
+      const result = await transport.synthesize({
+        text,
+        locale: lang,
+        voiceId: voice.voiceId,
+        modelId: voice.model,
+      })
+      if (result.provenance.provider !== 'elevenlabs') throw new Error('not a voice')
+      const bytes = result.bytes
+      return new Int16Array(
+        bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + (bytes.byteLength & ~1)),
+      )
+    } catch (error) {
+      this.logger.warn(`song line voice failed (${lang}): ${failureCode(error)}`)
+      for (const back of taken) await this.giveBack(back, day)
+      return null
+    }
+  }
 
   config(): TtsRuntimeConfig {
     return this.runtime !== undefined ? this.runtime : readTtsRuntimeConfig()

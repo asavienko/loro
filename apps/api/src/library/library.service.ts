@@ -7,7 +7,7 @@
  * counted against the learner's daily allowance before any provider is asked.
  */
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
-import { Inject, Injectable, Logger } from '@nestjs/common'
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common'
 import { MUSIC_STYLE_IDS, type MusicStyleId } from '@loro/core'
 import { V2_CONTENT, type V2Language, type V2Localized, type V2Topic } from '@loro/content/v2'
 import {
@@ -51,7 +51,7 @@ import type {
   UsageWire,
 } from './library.types.js'
 import { composeLive, liveMusicConfigured } from './music-live.js'
-import { registerSpeech, speechFor } from './speech.js'
+import { registerSpeech, SpeechService, speechFor } from './speech.js'
 import { readTtsRuntimeConfig, type TtsRuntimeConfig } from '../tts/transport.js'
 import { synthesizeDemo } from './synth.js'
 import {
@@ -138,6 +138,7 @@ interface SongRow {
   lyrics_by: SongWire['lyricsBy']
   audio_id: string | null
   audio_by: SongWire['audioBy']
+  voiced?: boolean | null
   duration_ms: number | null
   error: string | null
   created_at: string | number
@@ -162,6 +163,8 @@ export class LibraryService {
   constructor(
     @Inject(DATABASE) private readonly db: SqlDatabase,
     @Inject(SERVER_CLOCK) private readonly clock: ServerClock,
+    /** Speaks a demo song's lines when the server has a voice for its language. */
+    @Optional() @Inject(SpeechService) private readonly speech?: SpeechService,
   ) {}
 
   // ---------- seed ----------
@@ -1092,6 +1095,7 @@ export class LibraryService {
       native: p.doc.translations[request.nativeLang] ?? Object.values(p.doc.translations)[0] ?? '',
     }))
     void this.render(id, {
+      ownerId: userId,
       title,
       styleId: request.styleId,
       targetLang: set.target_lang,
@@ -1105,6 +1109,7 @@ export class LibraryService {
   private async render(
     id: string,
     input: {
+      ownerId: string
       title: string
       styleId: MusicStyleId
       targetLang: Language
@@ -1134,6 +1139,7 @@ export class LibraryService {
         durationMs: number | null
         lines: { startMs: number; endMs: number }[] | null
         by: 'elevenlabs' | 'demo'
+        voiced: boolean
       }
       if (liveMusicConfigured()) {
         const live = await composeLive({
@@ -1142,15 +1148,21 @@ export class LibraryService {
           targetLang: input.targetLang,
           lengthMs: Math.min(120_000, Math.max(30_000, lineCount * 5_000)),
         })
-        audio = { ...live, durationMs: null, lines: null, by: 'elevenlabs' }
+        audio = { ...live, durationMs: null, lines: null, by: 'elevenlabs', voiced: true }
       } else {
-        const demo = synthesizeDemo(input.styleId, lineCount, `${id}:${input.title}`)
+        // Without a music provider, the server's voice speaks each line over the demo's bars.
+        const lineTexts = sections.flatMap((section) => section.lines.map((line) => line.text))
+        const voices = this.speech
+          ? await this.speech.songVoices(input.targetLang, lineTexts, input.ownerId)
+          : []
+        const demo = synthesizeDemo(input.styleId, lineCount, `${id}:${input.title}`, voices)
         audio = {
           bytes: demo.wav,
           contentType: 'audio/wav',
           durationMs: demo.durationMs,
           lines: demo.lines,
           by: 'demo',
+          voiced: voices.some((voice) => voice !== null),
         }
       }
       // The sound and the song that plays it are saved together, so a clean-up in between can't
@@ -1158,7 +1170,7 @@ export class LibraryService {
       await this.db.transaction(async (tx) => {
         const audioId = await this.storeAudio(tx, audio.bytes, audio.contentType)
         await tx.query(
-          `UPDATE library_songs SET status = 'ready', lyrics = $2, lyrics_by = $3, audio_id = $4, audio_by = $5, duration_ms = $6 WHERE id = $1`,
+          `UPDATE library_songs SET status = 'ready', lyrics = $2, lyrics_by = $3, audio_id = $4, audio_by = $5, duration_ms = $6, voiced = $7 WHERE id = $1`,
           [
             id,
             JSON.stringify(timed(sections, audio.lines)),
@@ -1166,6 +1178,7 @@ export class LibraryService {
             audioId,
             audio.by,
             audio.durationMs,
+            audio.voiced,
           ],
         )
       })
@@ -1226,6 +1239,7 @@ export class LibraryService {
       lyricsBy: row.lyrics_by,
       audioUrl: row.audio_id ? signedAudioPath(row.id, this.clock.now()) : null,
       audioBy: row.audio_by,
+      voiced: row.voiced === true,
       durationMs: row.duration_ms,
       error: lost ? 'lost' : row.error,
       createdAt: num(row.created_at),

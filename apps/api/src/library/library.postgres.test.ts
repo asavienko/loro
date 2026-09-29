@@ -483,4 +483,71 @@ describePostgres('the library against real PostgreSQL', () => {
     )
     vi.stubEnv('LIMIT_SPEECH_OWNER_DAILY', '100')
   })
+
+  it('speaks a demo song’s lines when the server has a voice for its language', async () => {
+    let spoken = 0
+    const pcm = {
+      synthesize: () => {
+        spoken += 1
+        return Promise.resolve({
+          bytes: new Uint8Array(new Int16Array(8000).fill(12_000).buffer),
+          contentType: 'audio/pcm',
+          provenance: {
+            provider: 'elevenlabs' as const,
+            model: 'm',
+            voiceId: 'v-es',
+            outputFormat: 'pcm_22050',
+            locale: 'es-ES',
+          },
+          characterCount: 4,
+        })
+      },
+    }
+    const runtime = {
+      provider: 'elevenlabs' as const,
+      apiKey: 'k',
+      model: 'm',
+      outputFormat: 'mp3',
+      voices: { 'es-ES': 'v-es' },
+      stubRender: false,
+    }
+    const unused = { synthesize: () => Promise.reject(new Error('not used')) }
+    const voiced = new LibraryService(
+      database,
+      { now: () => now },
+      new SpeechService(database, { now: () => now }, unused, runtime, pcm),
+    )
+    const { song } = await voiced.generateSong('rae', {
+      setId: 'set-transit',
+      styleId: 'acoustic_folk',
+      nativeLang: 'en-GB',
+    })
+    await vi.waitFor(
+      async () => {
+        expect((await voiced.song('rae', song.id)).status).toBe('ready')
+      },
+      { timeout: 5000 },
+    )
+    const ready = await voiced.song('rae', song.id)
+    expect(ready.voiced).toBe(true)
+    expect(ready.audioBy).toBe('demo')
+    // Each distinct line is spoken once, however often the chorus repeats it.
+    const distinct = new Set(
+      ready.sections.flatMap((section) => section.lines.map((line) => line.text)),
+    )
+    expect(spoken).toBe(distinct.size)
+    // Without a voice for the language, the song is the plain demo.
+    const { song: plain } = await library.generateSong('rae', {
+      setId: 'set-market',
+      styleId: 'acoustic_folk',
+      nativeLang: 'en-GB',
+    })
+    await vi.waitFor(
+      async () => {
+        expect((await library.song('rae', plain.id)).status).toBe('ready')
+      },
+      { timeout: 5000 },
+    )
+    expect((await library.song('rae', plain.id)).voiced).toBe(false)
+  })
 })

@@ -167,3 +167,7 @@ export const LIBRARY_SPEECH_FAILURES_MIGRATION_SQL = `ALTER TABLE library_speech
 /** Whose phrase an utterance came from, so a learner's clips count against their own allowance too. */
 export const LIBRARY_SPEECH_OWNERS_MIGRATION_SQL = `ALTER TABLE library_speech ADD COLUMN IF NOT EXISTS owner_id text;
 `
+
+/** A demo song whose lines the server's voice speaks over its bars (library/speech.ts). */
+export const LIBRARY_SONG_VOICES_MIGRATION_SQL = `ALTER TABLE library_songs ADD COLUMN IF NOT EXISTS voiced boolean NOT NULL DEFAULT false;
+`

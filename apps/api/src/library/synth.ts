@@ -63,7 +63,20 @@ function degree(tonic: number, step: number): number {
 }
 
 /** Plays one lyric line per two bars in the style; the same seed always gives the same track. */
-export function synthesizeDemo(style: MusicStyleId, lineCount: number, seed: string): DemoTrack {
+/** The synthesizer's sample rate; spoken lines mixed in must be mono 16-bit PCM at this rate. */
+export const DEMO_SAMPLE_RATE = RATE
+
+/**
+ * Plays one lyric line per two bars in the style; the same seed always gives the same track. A line
+ * with `voices[i]` (mono 16-bit PCM at DEMO_SAMPLE_RATE) is spoken over its bars, the music ducked
+ * under it.
+ */
+export function synthesizeDemo(
+  style: MusicStyleId,
+  lineCount: number,
+  seed: string,
+  voices: readonly (Int16Array | null)[] = [],
+): DemoTrack {
   const spec = STYLES[style]
   const rand = random(`${style}:${seed}`)
   const tonic = 55 + Math.floor(rand() * 8) // G3 to D4
@@ -149,13 +162,6 @@ export function synthesizeDemo(style: MusicStyleId, lineCount: number, seed: str
     }
   }
 
-  // Master: gentle fade in and out, then a soft limiter.
-  const fade = RATE * 0.8
-  for (let i = 0; i < length; i++) {
-    const edge = Math.min(1, i / fade, (length - i) / fade)
-    out[i] = Math.tanh((out[i] ?? 0) * 1.2) * 0.85 * edge
-  }
-
   const lines: LineTiming[] = Array.from({ length: Math.max(1, lineCount) }, (_, line) => {
     const start = (INTRO_BARS + line * BARS_PER_LINE) * BEATS_PER_BAR * beat
     return {
@@ -163,6 +169,31 @@ export function synthesizeDemo(style: MusicStyleId, lineCount: number, seed: str
       endMs: Math.round((start + BARS_PER_LINE * BEATS_PER_BAR * beat) * 1000),
     }
   })
+
+  // Spoken lines: each starts half a beat into its bars, no longer than them, the music ducked under it.
+  const duck = new Float32Array(length).fill(1)
+  const voice = new Float32Array(length)
+  for (const [line, pcm] of voices.entries()) {
+    const timing = lines[line]
+    if (!pcm || !timing) continue
+    const from = Math.floor((timing.startMs / 1000 + beat / 2) * RATE)
+    const room = Math.floor(((timing.endMs - timing.startMs) / 1000) * RATE)
+    const take = Math.min(pcm.length, room, length - from)
+    for (let i = 0; i < take; i++) {
+      voice[from + i] = (pcm[i] ?? 0) / 32_768
+      duck[from + i] = 0.45
+    }
+  }
+
+  // Master: the music ducked under any voice, the voice on top, a gentle fade in and out, then a
+  // soft limiter.
+  const fade = RATE * 0.8
+  for (let i = 0; i < length; i++) {
+    const edge = Math.min(1, i / fade, (length - i) / fade)
+    const mixed = (out[i] ?? 0) * (duck[i] ?? 1) + (voice[i] ?? 0) * 1.1
+    out[i] = Math.tanh(mixed * 1.2) * 0.85 * edge
+  }
+
   return { wav: wavBytes(out), durationMs: Math.round((length / RATE) * 1000), lines }
 }
 
