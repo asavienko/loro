@@ -36,6 +36,31 @@ in-memory harness.
 
 These statuses and bodies are verified over HTTP. Target schemas do not silently change them.
 
+### Library (plan 106)
+
+What the v2.0 app calls; the model, visibility and limits are in [library.md](library.md). Reading
+routes take an optional bearer (a bad one is 401); the rest require one. A spent allowance or a full
+account is `429 LIMIT_REACHED` (`resets_at` is null for a full account).
+
+| Method   | Route                                                       | Success     | What it does                                                 |
+| -------- | ----------------------------------------------------------- | ----------- | ------------------------------------------------------------ |
+| GET      | `/library/pack?target=`                                     | 200         | Topics, sets, phrases (with clips), bank, albums of a course |
+| GET      | `/library/community?kind=&target=&q=`                       | 200         | Public sets (with phrases) or albums, newest first           |
+| GET      | `/library/sets/:id`, `/library/albums/:id`                  | 200         | One set with phrases; one album with songs                   |
+| GET      | `/library/shared/:code`                                     | 200         | What a share code opens                                      |
+| GET      | `/library/songs/:id`, `…/audio`                             | 200/206     | A song; its sound (ranges; signed URL or a reader who may)   |
+| GET      | `/library/covers/:id.svg`, `/library/speech/:utterance.mp3` | 200         | A cover; a phrase clip (rendered on first request)           |
+| GET/POST | `/library/usage`, `/library/profile`                        | 200         | Today's allowances and writers; the display name             |
+| POST     | `/library/sets`, `/library/sets/:id`                        | 201/200     | Create a set; change it (title, visibility, cover, phrases)  |
+| DELETE   | `/library/sets/:id`                                         | 204         | Delete one's own set                                         |
+| POST     | `/library/albums`, `/library/albums/:id`                    | 201/200     | Create an album; change it                                   |
+| DELETE   | `/library/albums/:id`                                       | 204         | Delete one's own album                                       |
+| POST     | `/library/saves`, DELETE `/library/saves/:kind/:id`         | 200/204     | Save or unsave another's readable item                       |
+| POST     | `/library/reports`                                          | 200         | Report another's shared item                                 |
+| POST     | `/library/generate/{phrases,notes,cover,song}`              | 200/201/202 | Generate within the day's allowance                          |
+| GET/POST | `/library/progress`                                         | 200         | The learner's progress; a stale revision is 409              |
+| POST     | `/library/me/delete`                                        | 200         | Delete everything the learner keeps in the library           |
+
 ## Target transport conventions
 
 Target base: `https://api.loro.app/v1`. All paths below are relative to `/v1`.
