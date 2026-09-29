@@ -53,6 +53,8 @@ export interface PhraseWire {
   /** Note titles and texts in other native languages, by note kind. */
   noteTranslations: Partial<Record<keyof LibraryNotes, Partial<Record<Language, Note>>>>
   source: PhraseSource | 'loro'
+  /** Clips by language, where this server's voices speak it (library/speech.ts). */
+  audio?: Partial<Record<Language, string>>
 }
 
 export interface SongLineWire {

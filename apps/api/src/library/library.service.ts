@@ -51,6 +51,8 @@ import type {
   UsageWire,
 } from './library.types.js'
 import { composeLive, liveMusicConfigured } from './music-live.js'
+import { registerSpeech, speechFor } from './speech.js'
+import { readTtsRuntimeConfig, type TtsRuntimeConfig } from '../tts/transport.js'
 import { synthesizeDemo } from './synth.js'
 import {
   MAX_SONG_LINES,
@@ -67,7 +69,7 @@ import {
 } from './writers.js'
 
 /** Bump when the seed's shape changes without the content version changing. */
-const SEED_REVISION = 2
+const SEED_REVISION = 3
 /** A song still rendering after this long was lost with its process: it reads as failed. */
 const RENDER_TIMEOUT_MS = 10 * 60_000
 const DAY_MS = 86_400_000
@@ -100,6 +102,8 @@ interface SetRow {
 interface PhraseRow {
   id: string
   set_id: string
+  /** The set's course, joined in: the language the phrase is said in. */
+  target_lang: Language
   position: number
   source: PhraseWire['source']
   doc: Omit<PhraseWire, 'id' | 'setId' | 'noteTranslations' | 'source'>
@@ -186,6 +190,16 @@ export class LibraryService {
       const now = this.clock.now()
       await this.seedPhrases(tx, now)
       await this.seedAlbums(tx, now)
+      // Learners' phrases stored before their utterances were recorded can be spoken too.
+      const stored = await tx.query<{ doc: PhraseRow['doc']; target_lang: Language }>(
+        `SELECT p.doc, s.target_lang FROM library_phrases p JOIN library_sets s ON s.id = p.set_id WHERE s.origin = 'user'`,
+      )
+      for (const row of stored.rows)
+        await registerSpeech(
+          tx,
+          { [row.target_lang]: row.doc.target, ...row.doc.translations },
+          now,
+        )
       await tx.query(
         "INSERT INTO library_meta(key, value) VALUES ('seed', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
         [version],
@@ -247,6 +261,7 @@ export class LibraryService {
             JSON.stringify(noteTranslationsOf(id, V2_CONTENT.noteTranslations)),
           ],
         )
+        await registerSpeech(tx, { [set.targetLang]: phrase.target, ...phrase.translations }, now)
       }
     }
     await tx.query('DELETE FROM library_bank_themes')
@@ -394,7 +409,7 @@ export class LibraryService {
       targetLang,
       topics,
       sets,
-      phrases: phrases.map(toPhraseWire),
+      phrases: phrases.map((p) => toPhraseWire(p, readTtsRuntimeConfig())),
       bank: { themes, phrases: bank },
       albums,
     }
@@ -425,7 +440,7 @@ export class LibraryService {
       const phrases = await this.phrasesOf(rows.map((r) => r.id))
       return {
         sets: rows.map((row) => toSetWire(row, userId, saved, phrases)),
-        phrases: phrases.map(toPhraseWire),
+        phrases: phrases.map((p) => toPhraseWire(p, readTtsRuntimeConfig())),
       }
     }
     const rows = (
@@ -447,7 +462,7 @@ export class LibraryService {
     const phrases = await this.phrasesOf([row.id])
     return {
       set: toSetWire(row, userId, await this.savedIds(userId, 'set'), phrases),
-      phrases: phrases.map(toPhraseWire),
+      phrases: phrases.map((p) => toPhraseWire(p, readTtsRuntimeConfig())),
     }
   }
 
@@ -571,7 +586,7 @@ export class LibraryService {
           now,
         ],
       )
-      await this.insertPhrases(tx, id, input.nativeLang, input.phrases, 0)
+      await this.insertPhrases(tx, id, input.targetLang, input.nativeLang, input.phrases, 0)
     })
     return this.set(userId, id)
   }
@@ -600,6 +615,7 @@ export class LibraryService {
         await this.insertPhrases(
           tx,
           row.id,
+          row.target_lang,
           row.native_lang ?? 'en-GB',
           input.addPhrases,
           (last.rows[0]?.max ?? -1) + 1,
@@ -645,6 +661,7 @@ export class LibraryService {
   private async insertPhrases(
     tx: SqlConnection,
     setId: string,
+    targetLang: Language,
     nativeLang: Language,
     phrases: NewPhrase[],
     from: number,
@@ -690,6 +707,11 @@ export class LibraryService {
           JSON.stringify(doc),
           JSON.stringify(noteTranslations),
         ],
+      )
+      await registerSpeech(
+        tx,
+        { [targetLang]: phrase.target, [nativeLang]: phrase.native },
+        this.clock.now(),
       )
     }
   }
@@ -1163,7 +1185,8 @@ export class LibraryService {
     if (setIds.length === 0) return []
     return (
       await this.db.query<PhraseRow>(
-        'SELECT * FROM library_phrases WHERE set_id = ANY($1::text[]) ORDER BY set_id, position',
+        `SELECT p.*, s.target_lang FROM library_phrases p JOIN library_sets s ON s.id = p.set_id
+         WHERE p.set_id = ANY($1::text[]) ORDER BY p.set_id, p.position`,
         [setIds],
       )
     ).rows
@@ -1312,11 +1335,14 @@ function toAlbumWire(row: AlbumRow, userId: string | null, saved: Set<string>): 
   }
 }
 
-function toPhraseWire(row: PhraseRow): PhraseWire {
+/** A phrase as the app reads it, with a clip in each language this server's voices speak. */
+function toPhraseWire(row: PhraseRow, speech: TtsRuntimeConfig): PhraseWire {
+  const audio = speechFor(speech, { [row.target_lang]: row.doc.target, ...row.doc.translations })
   return {
     id: row.id,
     setId: row.set_id,
     ...row.doc,
+    ...(Object.keys(audio).length > 0 ? { audio } : {}),
     noteTranslations: row.note_translations,
     source: row.source,
   }

@@ -125,6 +125,7 @@ truth. Entries in `.env.example` without a reader are reserved for future adapte
 | `LIMIT_COVER_DAILY`                 | Covers per learner per UTC day (default 10)                                                                         |
 | `LIMIT_SONG_DAILY`                  | Songs per learner per UTC day (default 5)                                                                           |
 | `LIMIT_SETS_KEPT`                   | Sets one account keeps (default 100); also `LIMIT_ALBUMS_KEPT` (30) and `LIMIT_SONGS_KEPT` (120)                    |
+| `LIMIT_SPEECH_RENDERS_DAILY`        | New phrase clips rendered per day across all learners (default 500), with `TTS_PROVIDER=elevenlabs`                 |
 | `LIBRARY_URL_SECRET`                | Signs song audio URLs; random per process when unset, so set it when several processes share a database             |
 | `CDN_BASE_URL`                      | Legacy content manifest `audio_base`; no CDN or working audio download is implied                                   |
 | `npm_package_version`               | Version reported by health; defaults to `0.0.0` outside the package runner                                          |

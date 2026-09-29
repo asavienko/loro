@@ -16,6 +16,7 @@ import {
 } from '../testing/postgres-schema.js'
 import { LibraryService } from './library.service.js'
 import { ProgressService } from './progress.js'
+import { SpeechService, speechFor, utteranceId } from './speech.js'
 import { resetWriter } from './writers.js'
 
 const code = async (work: Promise<unknown>) => {
@@ -346,5 +347,58 @@ describePostgres('the library against real PostgreSQL', () => {
     await library.report('oli', { kind: 'set', id: set.id, reason: 'offensive' })
     expect(await listed()).toBe(false)
     expect((await library.set(null, set.id)).set.id).toBe(set.id)
+  })
+
+  it('speaks only the library’s own text, renders each clip once, and bounds renders a day', async () => {
+    vi.stubEnv('LIMIT_SPEECH_RENDERS_DAILY', '2')
+    let renders = 0
+    const transport = {
+      synthesize: ({ text }: { text: string }) => {
+        renders += 1
+        return Promise.resolve({
+          bytes: new TextEncoder().encode(`mp3:${text}`),
+          contentType: 'audio/mpeg',
+          provenance: {
+            provider: 'elevenlabs' as const,
+            model: 'm',
+            voiceId: 'v-es',
+            outputFormat: 'mp3',
+            locale: 'es-ES',
+          },
+          characterCount: text.length,
+        })
+      },
+    }
+    const runtime = {
+      provider: 'elevenlabs' as const,
+      apiKey: 'k',
+      model: 'm',
+      outputFormat: 'mp3',
+      voices: { 'es-ES': 'v-es' },
+      stubRender: false,
+    }
+    const speech = new SpeechService(database, { now: () => now }, transport, runtime)
+    await library.pack(null, 'es-ES')
+    const phrase = (await library.set(null, 'set-cafe')).phrases[0]
+    const urls = speechFor(runtime, { 'es-ES': phrase?.target ?? '', 'en-GB': 'no English voice' })
+    expect(Object.keys(urls)).toEqual(['es-ES'])
+    const file = `${utteranceId('es-ES', phrase?.target ?? '')}.mp3`
+    expect(new TextDecoder().decode((await speech.clip(file)).bytes)).toBe(
+      `mp3:${phrase?.target ?? ''}`,
+    )
+    await speech.clip(file)
+    expect(renders).toBe(1)
+    // Text the library doesn't hold is never spoken.
+    expect(await code(speech.clip(`${utteranceId('es-ES', 'Anything at all')}.mp3`))).toBe(
+      'NOT_FOUND',
+    )
+    expect(await code(speech.clip('../etc/passwd'))).toBe('NOT_FOUND')
+    // The day's renders are bounded.
+    const others = (await library.set(null, 'set-tapas')).phrases.map(
+      (p) => `${utteranceId('es-ES', p.target)}.mp3`,
+    )
+    await speech.clip(others[0] ?? '')
+    expect(await code(speech.clip(others[1] ?? ''))).toBe('PROVIDER_UNAVAILABLE')
+    vi.stubEnv('LIMIT_SPEECH_RENDERS_DAILY', '500')
   })
 })

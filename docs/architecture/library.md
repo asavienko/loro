@@ -74,6 +74,17 @@ send a bearer, so a song's `audioUrl` carries a signature valid for about 12 hou
 (`LIBRARY_URL_SECRET`, random per process when unset); the app fetches the song again for a fresh
 one.
 
+## Phrases spoken by the server
+
+With `TTS_PROVIDER=elevenlabs`, each phrase in a pack carries a clip per language that has a pinned
+voice (`TTS_VOICE_ES_ES`, `…_BG_BG`, `…_RU_RU`; English prompts stay with the device voice):
+`/library/speech/<utterance>.mp3?v=<voice>`. Only text the library holds can be spoken: storing a
+phrase records its utterances (a hash of language and text), and the route renders nothing else. A
+clip renders once, on its first request, and is kept with the songs' audio; new renders are capped
+per day (`LIMIT_SPEECH_RENDERS_DAILY`, default 500). The player preloads only the two languages the
+learner hears, and falls back to the device voice when a clip can't play. Without a provider there
+are no clips and the device voice speaks, as before.
+
 ## Generation and limits
 
 | Route                            | Claude (`ANTHROPIC_API_KEY`)              | Without it (labelled)                            |
