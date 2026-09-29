@@ -1,11 +1,10 @@
 # Developer onboarding
 
 This page describes the repository that exists today. The app in `apps/mobile` is the v2.0
-listening-first player (Expo; iOS, Android and the web). Onboarding, Home and the player are real;
-Explore, Library, the set page, the queue, Make a set and the sheets are still stand-ins. The API,
-the shared TypeScript domain, the Rust core and the content catalogs sit beside it. The first app,
-its browser E2E suites and the design packages were removed on 2026-09-30 (Git history at
-`52a0e3b`).
+listening-first player (Expo; iOS, Android and the web): onboarding, Home, the player, Explore,
+Library, the set page, the queue, Make a set and the sheets. The API, the shared TypeScript domain,
+the Rust core and the content catalogs sit beside it. The first app, its browser E2E suites and the
+design packages were removed on 2026-09-30 (Git history at `52a0e3b`).
 
 ---
 

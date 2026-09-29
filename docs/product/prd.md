@@ -19,9 +19,9 @@ original blueprint's five phases, the v1.1 conversation addition, and cross-cutt
 ### Implementation ledger — 2026-07-30
 
 > **App swap, 2026-09-30.** This describes the first app, since replaced in `apps/mobile` by the
-> v2.0 listening-first player (Git history at `52a0e3b`). The current app has onboarding, Home and
-> the player; Explore, Library, the set page, the queue and Make a set are stand-ins. It keeps
-> progress on the device, speaks with the device voice and has no sign-in or sync.
+> v2.0 listening-first player (Git history at `52a0e3b`). The current app has onboarding, Home, the
+> player, Explore, Library, the set page, the queue and Make a set. It keeps progress on the device,
+> speaks with the device voice and has no sign-in or sync.
 
 `Built surface` means a learner can reach the route on web today. `Partial` means some UI/domain
 seams exist but the requirement range is not complete; in particular, browser interaction is not

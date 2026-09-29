@@ -12,9 +12,8 @@ in the target language, rate it; FSRS schedules the next time).
 [104](plans/104-prototype-react-native.md)). It replaced the v1.1-based app on 2026-09-30. That app,
 the v1.1/v1.2/v1.3 design packages, the v2.0 web prototype, `packages/design-tokens` and the browser
 E2E/storybook/workbench suites were removed; they remain in Git history (last present at `52a0e3b`).
-Onboarding, Home, the player, Explore, Library and Settings are real; the set page, the queue, Make
-a set and the other sheets are stand-ins (files marked `STAND-IN`) to be ported from the web
-prototype in history.
+Every screen and sheet of the web prototype is ported: onboarding, Home, the player, Explore,
+Library, the set page, the queue, Make a set and the sheets.
 
 The app keeps progress on the device (AsyncStorage native, browser storage web) as an append-only
 learner log with a pure state machine. FSRS runs in `packages/core-rs` through the `LoroCore` Expo
@@ -40,8 +39,8 @@ long-form belongs in `docs/`.
 
 There is no separate authored design package any more. The running app in `apps/mobile` and
 `docs/design/v2-prototype-decisions.md` are the reference; intended-design changes are recorded in
-`docs/`. For a stand-in screen, the web prototype's version in Git history
-(`design/design-v2.0/rapid-ui-prototype/src/`) is what it ports.
+`docs/`. For how a screen was meant to behave, the web prototype's version in Git history
+(`design/design-v2.0/rapid-ui-prototype/src/`) is what it ported.
 
 ## The three non-negotiables
 
