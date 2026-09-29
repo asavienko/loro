@@ -9,13 +9,15 @@
   the owner set the phrase-content goal (plan 105) first. **Done:** scope 1–3 (the Expo app, Metro
   wiring to the shared modules, the native storage/speech/cues/core modules, Intl polyfills, the
   native store and playback driver, navigation over the prototype's `Navigation` interface,
-  primitives), and in scope 4 onboarding, Home and the player with its notes sheet. The Android
-  debug build (LoroCore's Rust core via cargo-ndk) runs on the Pixel 8 API 36 emulator: Home and the
-  player render, the device voice speaks, and the rating previews come from FSRS. **Left:** the rest
-  of scope 4 (Explore, Library, the set page, the queue, Make a set and every sheet are still marked
-  stand-ins) and 5 (the full verification; iOS needs Xcode). **Blocked by:** nothing but priority.
-  Owner request 2026-09-28: "make this ui a react native app with …" (the message ends there; Expo,
-  the repository's React Native toolchain, is assumed).
+  primitives), and in scope 4 onboarding, Home, the player with its notes sheet, and (2026-09-30)
+  Explore, Library and the Settings sheet, checked on Expo web: search, topic/level/tag filters, the
+  Library lists and charts, and settings that survive a reload. The Android debug build (LoroCore's
+  Rust core via cargo-ndk) runs on the Pixel 8 API 36 emulator: Home and the player render, the
+  device voice speaks, and the rating previews come from FSRS. **Left:** the rest of scope 4 (the
+  set page, the queue, Make a set and the other sheets are still marked stand-ins) and 5 (the full
+  verification; iOS needs Xcode). **Blocked by:** nothing but priority. Owner request 2026-09-28:
+  "make this ui a react native app with …" (the message ends there; Expo, the repository's React
+  Native toolchain, is assumed).
 - **Depends on:** archived plan [103](archive/2026-09-30/103-prototype-phrase-generator.md) (Make a
   set logic, in `src/shared/generate/`). The stand-in screens port from the web prototype's
   `src/screens` and `src/sheets` in Git history
