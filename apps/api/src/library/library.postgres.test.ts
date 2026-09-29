@@ -705,5 +705,48 @@ describePostgres('the library against real PostgreSQL', () => {
     expect((await library.songsOfSet(null, 'set-sobremesa')).albums.map((a) => a.id)).toContain(
       album.id,
     )
+    // Out of Community after three reports, and off the set's page too, but not for its owner.
+    for (const who of ['r1', 'r2', 'r3'])
+      await library.report(who, { kind: 'album', id: album.id, reason: 'offensive' })
+    expect((await library.songsOfSet(null, 'set-sobremesa')).songs.map((s) => s.id)).toEqual([
+      loroSong,
+    ])
+    expect((await library.songsOfSet('uma', 'set-sobremesa')).songs.map((s) => s.id)).toContain(
+      song.id,
+    )
+  })
+
+  it('makes a song lost to a restart again without spending another', async () => {
+    const { song } = await library.generateSong('zoe', {
+      setId: 'set-taxi',
+      styleId: 'modern_pop',
+      nativeLang: 'en-GB',
+    })
+    await vi.waitFor(
+      async () => {
+        expect((await library.song('zoe', song.id)).status).toBe('ready')
+      },
+      { timeout: 5000 },
+    )
+    // As if the server stopped while making it, long ago.
+    await database.query(
+      "UPDATE library_songs SET status = 'rendering', created_at = $2 WHERE id = $1",
+      [song.id, now - 3_600_000],
+    )
+    expect((await library.song('zoe', song.id)).status).toBe('failed')
+    expect(await code(library.deleteSong('zoe', 'song-none'))).toBe('NOT_FOUND')
+    await library.retrySong('zoe', song.id, { nativeLang: 'en-GB' })
+    // A second tap while it is being made is refused, and nothing more is spent.
+    expect(await code(library.retrySong('zoe', song.id, { nativeLang: 'en-GB' }))).toBe(
+      'VALIDATION_FAILED',
+    )
+    expect(await code(library.deleteSong('zoe', song.id))).toBe('VALIDATION_FAILED')
+    expect((await library.usage('zoe')).daily.song.used).toBe(1)
+    await vi.waitFor(
+      async () => {
+        expect((await library.song('zoe', song.id)).status).toBe('ready')
+      },
+      { timeout: 5000 },
+    )
   })
 })

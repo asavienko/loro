@@ -571,7 +571,11 @@ export class LibraryService {
     throw new LoroError('NOT_FOUND')
   }
 
-  /** Songs sung from a set, in albums the reader can see: Loro's first, then the newest. */
+  /**
+   * Songs sung from a set, in albums the reader can see: Loro's first, then the newest. What the
+   * reader may hear is decided before the page is cut, and an album reports took out of Community
+   * stays out of here too, except for its owner.
+   */
   async songsOfSet(
     userId: string | null,
     id: unknown,
@@ -579,20 +583,15 @@ export class LibraryService {
     await this.ready()
     const set = await this.readableSet(userId, parseContract(LibraryIdSchema, id))
     const rows = (
-      await this.db.query<
-        SongRow & { album_origin: string; album_owner: string | null; album_visibility: Visibility }
-      >(
-        `SELECT so.*, a.origin AS album_origin, a.owner_id AS album_owner, a.visibility AS album_visibility
-         FROM library_songs so JOIN library_albums a ON a.id = so.album_id
-         WHERE so.set_id = $1 AND so.status = 'ready' ORDER BY (a.origin = 'loro') DESC, so.created_at DESC LIMIT 20`,
-        [set.id],
+      await this.db.query<SongRow>(
+        `SELECT so.* FROM library_songs so JOIN library_albums a ON a.id = so.album_id
+         WHERE so.set_id = $1 AND so.status = 'ready'
+           AND (a.origin = 'loro' OR a.owner_id = $2 OR (a.visibility <> 'private'
+             AND (SELECT count(*) FROM library_reports r WHERE r.kind = 'album' AND r.item_id = a.id) < ${REPORTS_TO_HIDE}))
+         ORDER BY (a.origin = 'loro') DESC, so.created_at DESC LIMIT 20`,
+        [set.id, userId ?? ''],
       )
-    ).rows.filter((row) =>
-      canRead(
-        { origin: row.album_origin, owner_id: row.album_owner, visibility: row.album_visibility },
-        userId,
-      ),
-    )
+    ).rows
     const saved = await this.savedIds(userId, 'album')
     const albumIds = [...new Set(rows.map((row) => row.album_id))]
     const albums = albumIds.length
@@ -974,11 +973,15 @@ export class LibraryService {
       await tx.query('DELETE FROM library_usage WHERE user_id = $1', [userId])
       for (const table of SYNC_TABLES)
         await tx.query(`DELETE FROM ${table} WHERE user_id = $1`, [userId])
+      // Only the tracks this learner's jobs made that no one else's job points at: a global sweep
+      // could take an object another learner's job is about to point at.
+      await tx.query(
+        `DELETE FROM music_objects o WHERE o.sha256 IN (SELECT sha256 FROM music_jobs WHERE user_id = $1)
+           AND NOT EXISTS (SELECT 1 FROM music_jobs j WHERE j.sha256 = o.sha256 AND j.user_id <> $1)`,
+        [userId],
+      )
       await tx.query('DELETE FROM music_jobs WHERE user_id = $1', [userId])
       await tx.query('DELETE FROM music_lyric_documents WHERE user_id = $1', [userId])
-      await tx.query(
-        'DELETE FROM music_objects o WHERE NOT EXISTS (SELECT 1 FROM music_jobs j WHERE j.sha256 = o.sha256)',
-      )
       await tx.query('DELETE FROM auth_users WHERE id = $1', [userId])
     })
     return { deleted: true }
@@ -1067,11 +1070,15 @@ export class LibraryService {
       })
   }
 
-  /** Gives back one use of today's allowance, when the writer asked for it failed. */
-  private async refund(userId: string, kind: UsageKind): Promise<void> {
+  /** Gives back one use of a day's allowance (today's unless said), when what it paid for failed. */
+  private async refund(
+    userId: string,
+    kind: UsageKind,
+    day = utcDay(this.clock.now()),
+  ): Promise<void> {
     await this.db.query(
       'UPDATE library_usage SET used = used - 1 WHERE user_id = $1 AND kind = $2 AND day = $3 AND used > 0',
-      [userId, kind, utcDay(this.clock.now())],
+      [userId, kind, day],
     )
   }
 
@@ -1227,6 +1234,7 @@ export class LibraryService {
     }))
     void this.render(id, {
       ownerId: userId,
+      chargedDay: utcDay(now),
       title,
       styleId: request.styleId,
       targetLang: set.target_lang,
@@ -1244,18 +1252,36 @@ export class LibraryService {
     await this.ready()
     const { nativeLang } = parseContract(RetrySongSchema, body)
     const row = await this.ownSong(userId, parseContract(LibraryIdSchema, id))
-    if (this.toSongWire(row).status !== 'failed')
-      throw new LoroError('VALIDATION_FAILED', 'Only a failed song can be made again')
     const set = await this.readableSet(userId, row.set_id)
     const phrases = (await this.phrasesOf([set.id])).slice(0, MAX_SONG_LINES - 4)
     if (phrases.length === 0) throw new LoroError('VALIDATION_FAILED', 'The set has no phrases')
-    await this.spend(userId, 'song')
-    await this.db.query(
-      "UPDATE library_songs SET status = 'rendering', error = NULL, created_at = $2 WHERE id = $1",
-      [row.id, this.clock.now()],
-    )
+    const now = this.clock.now()
+    // Claimed in one statement, so two taps make it once. A song lost to a restart kept its
+    // allowance (nothing gave it back), so making it again costs nothing more.
+    const claimed = (
+      await this.db.query<{ id: string }>(
+        `UPDATE library_songs SET status = 'rendering', error = NULL, created_at = $2
+         WHERE id = $1 AND (status = 'failed' OR (status = 'rendering' AND created_at < $3))
+         RETURNING id`,
+        [row.id, now, now - RENDER_TIMEOUT_MS],
+      )
+    ).rows[0]
+    if (!claimed) throw new LoroError('VALIDATION_FAILED', 'Only a failed song can be made again')
+    const lost = row.status === 'rendering'
+    if (!lost) {
+      try {
+        await this.spend(userId, 'song')
+      } catch (error) {
+        await this.db.query(
+          "UPDATE library_songs SET status = 'failed', error = $2 WHERE id = $1",
+          [row.id, row.error ?? 'failed'],
+        )
+        throw error
+      }
+    }
     void this.render(row.id, {
       ownerId: userId,
+      chargedDay: utcDay(now),
       title: row.title,
       styleId: parseContract(z.enum(MUSIC_STYLE_IDS), row.style_id),
       targetLang: set.target_lang,
@@ -1272,6 +1298,8 @@ export class LibraryService {
   /** Takes a song out of the learner's album; its sound goes once nothing else plays it. */
   async deleteSong(userId: string, id: unknown): Promise<void> {
     const row = await this.ownSong(userId, parseContract(LibraryIdSchema, id))
+    if (this.toSongWire(row).status === 'rendering')
+      throw new LoroError('VALIDATION_FAILED', 'The song is still being made')
     await this.db.transaction(async (tx) => {
       await tx.query('DELETE FROM library_songs WHERE id = $1', [row.id])
       await tx.query('UPDATE library_albums SET updated_at = $2 WHERE id = $1', [
@@ -1295,6 +1323,8 @@ export class LibraryService {
     id: string,
     input: {
       ownerId: string
+      /** The day whose song this spent, given back there if it fails. */
+      chargedDay: string
       title: string
       styleId: MusicStyleId
       targetLang: Language
@@ -1353,6 +1383,9 @@ export class LibraryService {
       // The sound and the song that plays it are saved together, so a clean-up in between can't
       // take a sound no song points at yet.
       await this.db.transaction(async (tx) => {
+        // Removed (or its account deleted) while it was being made: nothing to keep.
+        const still = await tx.query('SELECT 1 FROM library_songs WHERE id = $1 FOR UPDATE', [id])
+        if (still.rows.length === 0) return
         const audioId = await this.storeAudio(tx, audio.bytes, audio.contentType)
         await tx.query(
           `UPDATE library_songs SET status = 'ready', lyrics = $2, lyrics_by = $3, audio_id = $4, audio_by = $5, duration_ms = $6, voiced = $7 WHERE id = $1`,
@@ -1378,7 +1411,7 @@ export class LibraryService {
         .query("UPDATE library_songs SET status = 'failed', error = $2 WHERE id = $1", [id, code])
         .catch(() => undefined)
       // A song that couldn't be made doesn't count against the day's songs.
-      await this.refund(input.ownerId, 'song').catch(() => undefined)
+      await this.refund(input.ownerId, 'song', input.chargedDay).catch(() => undefined)
     }
   }
 
@@ -1504,18 +1537,33 @@ async function deleteLibraryOf(tx: SqlConnection, userId: string): Promise<void>
     "DELETE FROM library_saves WHERE kind = 'album' AND item_id IN (SELECT id FROM library_albums WHERE owner_id = $1)",
     [userId],
   )
+  await tx.query(
+    `DELETE FROM library_reports WHERE (kind = 'set' AND item_id IN (SELECT id FROM library_sets WHERE owner_id = $1))
+       OR (kind = 'album' AND item_id IN (SELECT id FROM library_albums WHERE owner_id = $1))`,
+    [userId],
+  )
   await tx.query('DELETE FROM library_sets WHERE owner_id = $1', [userId])
   await tx.query(
     'DELETE FROM library_songs WHERE owner_id = $1 OR album_id IN (SELECT id FROM library_albums WHERE owner_id = $1)',
     [userId],
   )
   await tx.query('DELETE FROM library_albums WHERE owner_id = $1', [userId])
-  await tx.query('DELETE FROM library_covers WHERE owner_id = $1', [userId])
+  // A song made from someone's set takes the set's cover: a cover another learner's set or album
+  // still wears stays, no longer theirs.
+  await tx.query(
+    `DELETE FROM library_covers c WHERE c.owner_id = $1
+       AND NOT EXISTS (SELECT 1 FROM library_sets s WHERE s.cover_id = c.id)
+       AND NOT EXISTS (SELECT 1 FROM library_albums a WHERE a.cover_id = c.id)`,
+    [userId],
+  )
+  await tx.query('UPDATE library_covers SET owner_id = NULL WHERE owner_id = $1', [userId])
   await tx.query('DELETE FROM library_saves WHERE user_id = $1', [userId])
   await tx.query('DELETE FROM library_reports WHERE user_id = $1', [userId])
   await tx.query('DELETE FROM library_profiles WHERE user_id = $1', [userId])
   await tx.query('DELETE FROM library_progress WHERE user_id = $1', [userId])
-  await tx.query('DELETE FROM library_speech WHERE owner_id = $1', [userId])
+  // A clip is keyed by its language and text, so another learner's phrase (or Loro's) may speak
+  // the same words: it stays, no longer counted against this learner.
+  await tx.query('UPDATE library_speech SET owner_id = NULL WHERE owner_id = $1', [userId])
   await forgetUnusedAudio(tx)
 }
 
