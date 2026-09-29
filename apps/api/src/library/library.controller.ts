@@ -190,6 +190,12 @@ export class LibraryWriteController {
     return this.library.generatePhrases(request.principal.userId, body)
   }
 
+  @Post('generate/notes')
+  @HttpCode(200)
+  generateNotes(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    return this.library.generateNotes(request.principal.userId, body)
+  }
+
   @Post('generate/cover')
   @HttpCode(201)
   generateCover(@Req() request: AuthenticatedRequest, @Body() body: unknown) {

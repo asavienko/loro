@@ -14,6 +14,7 @@ import {
   CreateAlbumSchema,
   CreateSetSchema,
   GenerateCoverSchema,
+  GenerateNotesSchema,
   GeneratePhrasesSchema,
   GenerateSongSchema,
   LibraryCourseSchema,
@@ -56,6 +57,7 @@ import {
   bankPhrases,
   claudeCover,
   claudeLyrics,
+  claudeNotes,
   claudePhrases,
   writer,
   type SongPhrase,
@@ -918,6 +920,20 @@ export class LibraryService {
     const themes =
       phrases.length > 0 ? [] : V2_CONTENT.bank.themes.map((t) => ({ id: t.id, title: t.title }))
     return { provider: 'bank' as const, phrases, themes }
+  }
+
+  /** Notes for a phrase the learner wrote: Claude only, so without a key the app keeps its own. */
+  async generateNotes(userId: string, body: unknown) {
+    const request = parseContract(GenerateNotesSchema, body)
+    const ai = writer()
+    if (!ai) throw new LoroError('PROVIDER_UNAVAILABLE', 'No notes writer is configured')
+    await this.spend(userId, 'phrases')
+    try {
+      return await claudeNotes(ai, request)
+    } catch (error) {
+      this.logger.warn(`notes writer failed: ${error instanceof Error ? error.message : 'unknown'}`)
+      throw new LoroError('PROVIDER_UNAVAILABLE', 'The notes writer failed')
+    }
   }
 
   async generateCover(
