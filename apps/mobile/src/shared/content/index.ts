@@ -88,7 +88,8 @@ export interface Album {
   shareCode: string | null;
   saved: boolean;
   songCount: number;
-  durationMs: number;
+  /** Null while a sung song's length is unknown, rather than a total that leaves it out. */
+  durationMs: number | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -247,7 +248,13 @@ export function installExtras(more: ExtraSets): void {
   rebuild();
 }
 
-/** Forgets every installed pack and extra: for tests, and after signing out. */
+/** Forgets the sets opened from outside the packs. */
+export function forgetExtras(): void {
+  extras = { sets: [], phrases: [] };
+  rebuild();
+}
+
+/** Forgets every installed pack and extra: for tests. */
 export function resetContent(): void {
   packs.clear();
   extras = { sets: [], phrases: [] };

@@ -17,6 +17,7 @@ import type { SortKey } from '@shared/state/types';
 import { isTargetRevealed } from '@shared/ui/phase';
 import { hrefOf, useShell } from '../nav/Shell';
 import { PickPhrasesSheet } from '../sheets/PickPhrasesSheet';
+import { ReportSheet } from '../sheets/ReportSheet';
 import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
 import { useCopy, useNow, useStore } from '../state/store';
@@ -108,6 +109,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
   const [moreOpen, setMoreOpen] = useState(false);
   const [picking, setPicking] = useState(false);
   const [drawing, setDrawing] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const account = useAccount();
   const content = useContent();
   const view = findSetView(state.learner, setId);
@@ -423,6 +425,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
         </View>
       </Sheet>
 
+      <ReportSheet item={reporting ? { kind: 'set', id: setId } : null} onClose={() => setReporting(false)} />
       <Sheet open={moreOpen} title={view.title} onClose={() => setMoreOpen(false)}>
         <SheetOption
           icon="queue_play_next"
@@ -462,6 +465,16 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
             onPress={() => {
               setMoreOpen(false);
               void toggleSaved();
+            }}
+          />
+        )}
+        {served?.owner === 'other' && (
+          <SheetOption
+            icon="info"
+            label={c.share.report}
+            onPress={() => {
+              setMoreOpen(false);
+              setReporting(true);
             }}
           />
         )}

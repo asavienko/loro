@@ -143,9 +143,18 @@ export async function signOut(): Promise<void> {
   if (refresh) await api('/auth/logout', { method: 'POST', body: { refresh_token: refresh }, auth: 'none', timeoutMs: 5000 }).catch(() => {});
 }
 
+/**
+ * Browser tabs share one refresh token, and using a spent one ends the session. Where the browser has
+ * Web Locks, one tab refreshes at a time, and the next reads the token the first one stored.
+ */
+function oneAtATime<T>(work: () => Promise<T>): Promise<T> {
+  const locks = (globalThis.navigator as { locks?: { request: (name: string, run: () => Promise<T>) => Promise<T> } } | undefined)?.locks;
+  return locks ? locks.request('loro.refresh', work) : work();
+}
+
 /** A new access token from the refresh token, one request at a time; null when the session is over. */
 function renew(): Promise<string | null> {
-  refreshing ??= (async () => {
+  refreshing ??= oneAtATime(async () => {
     const refresh = await secretGet(REFRESH_KEY);
     if (!refresh) return null;
     try {
@@ -163,7 +172,7 @@ function renew(): Promise<string | null> {
       }
       throw error;
     }
-  })().finally(() => {
+  }).finally(() => {
     refreshing = null;
   });
   return refreshing;

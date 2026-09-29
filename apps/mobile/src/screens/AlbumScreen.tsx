@@ -9,6 +9,7 @@ import { deleteAlbum, fetchAlbum, generateCover, saveItem, unsaveItem, type Albu
 import { useNav } from '@shared/nav/NavContext';
 import { AlbumCover } from '../music/AlbumCover';
 import { clockTime, useMusic } from '../music/MusicPlayer';
+import { ReportSheet } from '../sheets/ReportSheet';
 import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
 import { useCopy } from '../state/store';
@@ -35,6 +36,7 @@ export function AlbumScreen({ id }: { id: string }) {
   const [detail, setDetail] = useState<AlbumDetail | null>(null);
   const [failed, setFailed] = useState(false);
   const [drawing, setDrawing] = useState(false);
+  const [reporting, setReporting] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -150,7 +152,7 @@ export function AlbumScreen({ id }: { id: string }) {
           {album.title}
         </Txt>
         <Txt variant="body" color="onNightVariant" align="center">
-          {`${byline} · ${c.music.songs(album.songCount)}${album.durationMs > 0 ? ` · ${clockTime(album.durationMs / 1000)}` : ''}`}
+          {`${byline} · ${c.music.songs(album.songCount)}${album.durationMs ? ` · ${clockTime(album.durationMs / 1000)}` : ''}`}
         </Txt>
         {(album.description ?? (album.owner === 'loro' ? c.music.loroAlbum : null)) && (
           <Txt variant="body" color="onNightVariant" align="center">
@@ -180,10 +182,12 @@ export function AlbumScreen({ id }: { id: string }) {
               />
             )}
             {album.shareCode && <Button variant="icon" icon="share" color="onNight" accessibilityLabel={c.share.share} onPress={() => nav.share({ kind: 'album', ...album })} />}
+            {album.owner === 'other' && <Button variant="icon" icon="info" color="onNight" accessibilityLabel={c.share.report} onPress={() => setReporting(true)} />}
           </>
         )}
       </View>
 
+      <ReportSheet item={reporting ? { kind: 'album', id: album.id } : null} onClose={() => setReporting(false)} />
       <View style={styles.songs}>
         {songs.length === 0 && (
           <Txt variant="body" color="onNightVariant" style={styles.pad}>

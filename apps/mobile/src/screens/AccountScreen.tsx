@@ -10,6 +10,7 @@ import { ApiError } from '@shared/api/client';
 import { setDisplayName } from '@shared/api/library';
 import { requestCode, signInMethods, updateAccount, verifyCode } from '@shared/api/session';
 import { remaining, useAccount } from '../state/account';
+import { lastSync } from '../state/syncHooks';
 import { useCopy } from '../state/store';
 import { Button } from '../ui/Button';
 import { field, placeholderColor } from '../ui/field';
@@ -224,6 +225,12 @@ function SignedIn() {
           {c.account.signedInAs(account?.email ?? '')}
         </Txt>
       </View>
+
+      {(lastSync.done || lastSync.failed) && (
+        <Txt variant="body" color="secondary">
+          {lastSync.failed ? c.account.syncFailed : c.account.synced}
+        </Txt>
+      )}
 
       <Txt variant="label" weight={600} nativeID="name-label">
         {c.account.displayName}

@@ -30,11 +30,14 @@ interface MusicValue {
 
 const MusicContext = createContext<MusicValue | null>(null);
 
-/** A signed song URL expires; refetching the song gives a fresh one. */
+/**
+ * A song's URL is signed and expires (and a server restart may change its key), so each play asks
+ * for the song again; the one it came with serves only when the server can't be reached.
+ */
 async function playableUrl(song: Song): Promise<string | null> {
-  if (song.audioUrl) return apiUrl(song.audioUrl);
   const fresh = await fetchSong(song.id).catch(() => null);
-  return fresh?.audioUrl ? apiUrl(fresh.audioUrl) : null;
+  const url = fresh?.audioUrl ?? song.audioUrl;
+  return url ? apiUrl(url) : null;
 }
 
 export function MusicProvider({ children }: { children: ReactNode }) {
