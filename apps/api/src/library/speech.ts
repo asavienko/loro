@@ -59,23 +59,29 @@ export function speechFor(
   return out
 }
 
-/** Records the utterances a stored phrase may be spoken in. */
+/**
+ * Records the utterances a stored phrase may be spoken in; `ownerId` is the learner whose phrase it
+ * is (null for Loro's), whose own allowance its first render counts against.
+ */
 export async function registerSpeech(
   tx: SqlConnection,
   texts: Partial<Record<string, string>>,
   now: number,
+  ownerId: string | null = null,
 ): Promise<void> {
   for (const [lang, text] of Object.entries(texts)) {
     if (!text) continue
     await tx.query(
-      `INSERT INTO library_speech(id, lang, text, voice_id, model, audio_id, duration_ms, created_at)
-       VALUES ($1,$2,$3,NULL,NULL,NULL,NULL,$4) ON CONFLICT (id) DO NOTHING`,
-      [utteranceId(lang, text), lang, normalizeListeningText(text), now],
+      `INSERT INTO library_speech(id, lang, text, voice_id, model, audio_id, duration_ms, created_at, owner_id)
+       VALUES ($1,$2,$3,NULL,NULL,NULL,NULL,$4,$5) ON CONFLICT (id) DO NOTHING`,
+      [utteranceId(lang, text), lang, normalizeListeningText(text), now, ownerId],
     )
   }
 }
 
 const DEFAULT_DAILY_RENDERS = 500
+/** New clips one learner's phrases may have rendered a day. */
+const DEFAULT_OWNER_RENDERS = 100
 /** A clip whose render failed (a voice the provider refuses) isn't asked for again for this long. */
 const RETRY_AFTER_FAILURE_MS = 6 * 3_600_000
 
@@ -87,6 +93,7 @@ interface SpeechRow {
   model: string | null
   audio_id: string | null
   failed_at: string | number | null
+  owner_id: string | null
 }
 
 @Injectable()
@@ -111,7 +118,9 @@ export class SpeechService {
     if (!id) throw new LoroError('NOT_FOUND')
     const row = (await this.db.query<SpeechRow>('SELECT * FROM library_speech WHERE id = $1', [id]))
       .rows[0]
-    if (!row) throw new LoroError('NOT_FOUND')
+    // Text the library doesn't hold answers as a clip that can't be made, so the route can't be
+    // used to learn which phrases are in someone's private set.
+    if (!row) throw new LoroError('PROVIDER_UNAVAILABLE')
     const voice = speechVoice(this.config(), row.lang)
     if (!voice) throw new LoroError('PROVIDER_UNAVAILABLE')
     if (row.audio_id && row.voice_id === voice.voiceId && row.model === voice.model) {
@@ -141,20 +150,49 @@ export class SpeechService {
     }
   }
 
+  private async take(who: string, day: string, limit: number): Promise<boolean> {
+    const counted = await this.db.query<{ used: number }>(
+      `INSERT INTO library_usage(user_id, kind, day, used) VALUES ($1, 'speech', $2, 1)
+       ON CONFLICT (user_id, kind, day) DO UPDATE SET used = library_usage.used + 1 WHERE library_usage.used < $3
+       RETURNING used`,
+      [who, day, limit],
+    )
+    return counted.rows.length > 0
+  }
+
+  private async giveBack(who: string, day: string): Promise<void> {
+    await this.db.query(
+      `UPDATE library_usage SET used = used - 1 WHERE user_id = $1 AND kind = 'speech' AND day = $2 AND used > 0`,
+      [who, day],
+    )
+  }
+
   private async render(
     row: SpeechRow,
     voice: { voiceId: string; model: string },
   ): Promise<{ bytes: Buffer; contentType: string }> {
     const day = new Date(this.clock.now()).toISOString().slice(0, 10)
-    const limit = Number(process.env['LIMIT_SPEECH_RENDERS_DAILY'] ?? DEFAULT_DAILY_RENDERS)
-    const counted = await this.db.query<{ used: number }>(
-      `INSERT INTO library_usage(user_id, kind, day, used) VALUES ('__server__', 'speech', $1, 1)
-       ON CONFLICT (user_id, kind, day) DO UPDATE SET used = library_usage.used + 1 WHERE library_usage.used < $2
-       RETURNING used`,
-      [day, limit],
-    )
-    if (counted.rows.length === 0)
-      throw new LoroError('PROVIDER_UNAVAILABLE', 'Speech renders are used up for today')
+    // Every render counts against the server's day, and a learner's phrase against theirs too, so
+    // no one account can spend everyone's renders.
+    const budgets: [string, number][] = [
+      ['__server__', Number(process.env['LIMIT_SPEECH_RENDERS_DAILY'] ?? DEFAULT_DAILY_RENDERS)],
+      ...(row.owner_id
+        ? [
+            [
+              row.owner_id,
+              Number(process.env['LIMIT_SPEECH_OWNER_DAILY'] ?? DEFAULT_OWNER_RENDERS),
+            ] as [string, number],
+          ]
+        : []),
+    ]
+    const taken: string[] = []
+    for (const [who, limit] of budgets) {
+      if (!(await this.take(who, day, limit))) {
+        for (const back of taken) await this.giveBack(back, day)
+        throw new LoroError('PROVIDER_UNAVAILABLE', 'Speech renders are used up for today')
+      }
+      taken.push(who)
+    }
     let result
     try {
       result = await this.transport.synthesize({
@@ -167,10 +205,7 @@ export class SpeechService {
       const code = error instanceof Error && 'code' in error ? String(error.code) : 'unknown'
       this.logger.warn(`speech render failed (${row.lang}): ${code}`)
       // A failure doesn't use up the day's renders, and isn't retried for a while.
-      await this.db.query(
-        `UPDATE library_usage SET used = used - 1 WHERE user_id = '__server__' AND kind = 'speech' AND day = $1 AND used > 0`,
-        [day],
-      )
+      for (const back of taken) await this.giveBack(back, day)
       await this.db.query('UPDATE library_speech SET failed_at = $2 WHERE id = $1', [
         row.id,
         this.clock.now(),

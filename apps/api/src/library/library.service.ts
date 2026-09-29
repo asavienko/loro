@@ -191,14 +191,19 @@ export class LibraryService {
       await this.seedPhrases(tx, now)
       await this.seedAlbums(tx, now)
       // Learners' phrases stored before their utterances were recorded can be spoken too.
-      const stored = await tx.query<{ doc: PhraseRow['doc']; target_lang: Language }>(
-        `SELECT p.doc, s.target_lang FROM library_phrases p JOIN library_sets s ON s.id = p.set_id WHERE s.origin = 'user'`,
+      const stored = await tx.query<{
+        doc: PhraseRow['doc']
+        target_lang: Language
+        owner_id: string
+      }>(
+        `SELECT p.doc, s.target_lang, s.owner_id FROM library_phrases p JOIN library_sets s ON s.id = p.set_id WHERE s.origin = 'user'`,
       )
       for (const row of stored.rows)
         await registerSpeech(
           tx,
           { [row.target_lang]: row.doc.target, ...row.doc.translations },
           now,
+          row.owner_id,
         )
       await tx.query(
         "INSERT INTO library_meta(key, value) VALUES ('seed', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
@@ -586,7 +591,7 @@ export class LibraryService {
           now,
         ],
       )
-      await this.insertPhrases(tx, id, input.targetLang, input.nativeLang, input.phrases, 0)
+      await this.insertPhrases(tx, id, input.targetLang, input.nativeLang, input.phrases, 0, userId)
     })
     return this.set(userId, id)
   }
@@ -619,6 +624,7 @@ export class LibraryService {
           row.native_lang ?? 'en-GB',
           input.addPhrases,
           (last.rows[0]?.max ?? -1) + 1,
+          userId,
         )
       }
       const count = await tx.query<{ n: string }>(
@@ -665,6 +671,7 @@ export class LibraryService {
     nativeLang: Language,
     phrases: NewPhrase[],
     from: number,
+    ownerId: string,
   ): Promise<void> {
     const stem = setId.replace(/^set-u-/, 'u')
     const existing = await tx.query<{ id: string }>(
@@ -712,6 +719,7 @@ export class LibraryService {
         tx,
         { [targetLang]: phrase.target, [nativeLang]: phrase.native },
         this.clock.now(),
+        ownerId,
       )
     }
   }
@@ -1145,18 +1153,22 @@ export class LibraryService {
           by: 'demo',
         }
       }
-      const audioId = await this.storeAudio(this.db, audio.bytes, audio.contentType)
-      await this.db.query(
-        `UPDATE library_songs SET status = 'ready', lyrics = $2, lyrics_by = $3, audio_id = $4, audio_by = $5, duration_ms = $6 WHERE id = $1`,
-        [
-          id,
-          JSON.stringify(timed(sections, audio.lines)),
-          lyricsBy,
-          audioId,
-          audio.by,
-          audio.durationMs,
-        ],
-      )
+      // The sound and the song that plays it are saved together, so a clean-up in between can't
+      // take a sound no song points at yet.
+      await this.db.transaction(async (tx) => {
+        const audioId = await this.storeAudio(tx, audio.bytes, audio.contentType)
+        await tx.query(
+          `UPDATE library_songs SET status = 'ready', lyrics = $2, lyrics_by = $3, audio_id = $4, audio_by = $5, duration_ms = $6 WHERE id = $1`,
+          [
+            id,
+            JSON.stringify(timed(sections, audio.lines)),
+            lyricsBy,
+            audioId,
+            audio.by,
+            audio.durationMs,
+          ],
+        )
+      })
     } catch (error) {
       const reason = error instanceof Error ? error.message : 'unknown'
       this.logger.warn(`song ${id} failed: ${reason}`)

@@ -390,7 +390,7 @@ describePostgres('the library against real PostgreSQL', () => {
     expect(renders).toBe(1)
     // Text the library doesn't hold is never spoken.
     expect(await code(speech.clip(`${utteranceId('es-ES', 'Anything at all')}.mp3`))).toBe(
-      'NOT_FOUND',
+      'PROVIDER_UNAVAILABLE',
     )
     expect(await code(speech.clip('../etc/passwd'))).toBe('NOT_FOUND')
     // The day's renders are bounded.
@@ -432,5 +432,55 @@ describePostgres('the library against real PostgreSQL', () => {
     await speech.clip(file)
     expect(renders).toBe(3)
     vi.stubEnv('LIMIT_SPEECH_RENDERS_DAILY', '500')
+  })
+
+  it('counts a learner’s phrase clips against their own day as well as the server’s', async () => {
+    vi.stubEnv('LIMIT_SPEECH_OWNER_DAILY', '1')
+    const transport = {
+      synthesize: ({ text }: { text: string }) =>
+        Promise.resolve({
+          bytes: new TextEncoder().encode(`mp3:${text}`),
+          contentType: 'audio/mpeg',
+          provenance: {
+            provider: 'elevenlabs' as const,
+            model: 'm',
+            voiceId: 'v-es',
+            outputFormat: 'mp3',
+            locale: 'es-ES',
+          },
+          characterCount: text.length,
+        }),
+    }
+    const runtime = {
+      provider: 'elevenlabs' as const,
+      apiKey: 'k',
+      model: 'm',
+      outputFormat: 'mp3',
+      voices: { 'es-ES': 'v-es' },
+      stubRender: false,
+    }
+    const speech = new SpeechService(database, { now: () => now }, transport, runtime)
+    const written = (target: string) => ({
+      target,
+      native: 'x',
+      image: ['forum'],
+      source: 'written' as const,
+      notes: {
+        mnemonic: { title: 't', text: 't' },
+        grammar: { title: 't', text: 't' },
+        pronunciation: { title: 't', text: 't', ipa: '[a]', respelling: 'a' },
+      },
+    })
+    await library.createSet('quin', {
+      title: 'Q',
+      targetLang: 'es-ES',
+      nativeLang: 'en-GB',
+      phrases: [written('Una frase de Quin'), written('Otra frase de Quin')],
+    })
+    await speech.clip(`${utteranceId('es-ES', 'Una frase de Quin')}.mp3`)
+    expect(await code(speech.clip(`${utteranceId('es-ES', 'Otra frase de Quin')}.mp3`))).toBe(
+      'PROVIDER_UNAVAILABLE',
+    )
+    vi.stubEnv('LIMIT_SPEECH_OWNER_DAILY', '100')
   })
 })
