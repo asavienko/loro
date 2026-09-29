@@ -26,7 +26,10 @@ test('skips when the host library is absent', () => {
 })
 
 test('normalize matches build.sh trailing-whitespace strip', () => {
-  assert.equal(normalizeBindingText('val size: Int  \nreturn result\t\n'), 'val size: Int\nreturn result\n')
+  assert.equal(
+    normalizeBindingText('val size: Int  \nreturn result\t\n'),
+    'val size: Int\nreturn result\n',
+  )
 })
 
 test('bindingDrift fails when a committed file changed and when extras appear', () => {
@@ -38,12 +41,16 @@ test('bindingDrift fails when a committed file changed and when extras appear', 
     assert.deepEqual(bindingDrift(generated, committed), [])
 
     writeFileSync(path.join(generated, 'loro_core.swift'), 'fun b()\n')
-    assert.ok(bindingDrift(generated, committed).includes('UniFFI bindings drifted: loro_core.swift'))
+    assert.ok(
+      bindingDrift(generated, committed).includes('UniFFI bindings drifted: loro_core.swift'),
+    )
 
     mkdirSync(path.join(generated, 'uniffi'), { recursive: true })
     writeFileSync(path.join(generated, 'uniffi', 'extra.kt'), 'package x\n')
     assert.ok(
-      bindingDrift(generated, committed).includes('Generated UniFFI file is not committed: uniffi/extra.kt'),
+      bindingDrift(generated, committed).includes(
+        'Generated UniFFI file is not committed: uniffi/extra.kt',
+      ),
     )
   } finally {
     rmSync(generated, { recursive: true, force: true })
