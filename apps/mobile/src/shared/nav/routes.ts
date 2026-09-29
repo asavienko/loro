@@ -2,7 +2,8 @@
 // set can be shared as a link. Pure: parse and format round-trip.
 import { TOPICS, type Level, type Tag } from '../content';
 
-export type Tab = 'home' | 'explore' | 'library';
+/** The bottom bar: Home, Phrases (the route `explore`), Music, Create and Library (plan 106). */
+export type Tab = 'home' | 'explore' | 'music' | 'create' | 'library';
 
 export type LibraryView = 'liked' | 'mine' | 'due' | 'learning' | 'missed' | 'learned' | 'ownSets' | 'likedSets';
 
@@ -19,11 +20,14 @@ export type Route =
   | { name: 'home' }
   | ({ name: 'explore' } & ExploreFilters)
   | { name: 'library'; view?: LibraryView }
-  | { name: 'set'; id: string; from: Tab };
+  | { name: 'music' }
+  | { name: 'create' }
+  | { name: 'set'; id: string; from: Tab }
+  | { name: 'album'; id: string; from: Tab };
 
 const LEVELS: readonly string[] = ['A1', 'A2', 'B1'];
 const TAGS: readonly string[] = ['politeness', 'question', 'request', 'numbers', 'food', 'directions', 'social'];
-const TABS: readonly string[] = ['home', 'explore', 'library'];
+const TABS: readonly string[] = ['home', 'explore', 'music', 'create', 'library'];
 
 /** A malformed escape (a stray "%" in a pasted link) is kept as typed rather than throwing. */
 function safeDecode(part: string): string {
@@ -57,10 +61,16 @@ export function parseRoute(hash: string): Route {
       const view = params.get('view');
       return { name: 'library', ...(view && (LIBRARY_VIEWS as string[]).includes(view) ? { view: view as LibraryView } : {}) };
     }
-    case 'set': {
+    case 'music':
+      return { name: 'music' };
+    case 'create':
+      return { name: 'create' };
+    case 'set':
+    case 'album': {
       if (!parts[1]) return { name: 'home' };
       const from = params.get('from');
-      return { name: 'set', id: parts[1], from: from && TABS.includes(from) ? (from as Tab) : 'home' };
+      const tab = from && TABS.includes(from) ? (from as Tab) : parts[0] === 'album' ? 'music' : 'home';
+      return { name: parts[0], id: parts[1], from: tab };
     }
     default:
       return { name: 'home' };
@@ -81,13 +91,18 @@ export function formatRoute(route: Route): string {
     case 'library':
       if (route.view) params.set('view', route.view);
       return `#/library${params.size ? `?${params}` : ''}`;
+    case 'music':
+      return '#/music';
+    case 'create':
+      return '#/create';
     case 'set':
+    case 'album':
       params.set('from', route.from);
-      return `#/set/${encodeURIComponent(route.id)}?${params}`;
+      return `#/${route.name}/${encodeURIComponent(route.id)}?${params}`;
   }
 }
 
 /** The bottom-bar tab a route belongs to. */
 export function tabOf(route: Route): Tab {
-  return route.name === 'set' ? route.from : route.name;
+  return route.name === 'set' || route.name === 'album' ? route.from : route.name;
 }

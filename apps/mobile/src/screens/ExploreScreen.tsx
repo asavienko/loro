@@ -138,7 +138,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
     if (filters.tag && !s.phraseIds.some((id) => phrases.some((p) => p.id === id))) return false;
     if (!q) return true;
     const topicTitle = Object.values(TOPICS.find((t) => t.id === s.topicId)?.title ?? {}).join(' ');
-    return matchesWords(`${s.title} ${Object.values(s.subtitle).join(' ')} ${topicTitle}`, words) || s.phraseIds.some((id) => phrases.some((p) => p.id === id));
+    return matchesWords(`${s.title} ${Object.values(s.subtitle ?? {}).join(' ')} ${s.description ?? ''} ${topicTitle}`, words) || s.phraseIds.some((id) => phrases.some((p) => p.id === id));
   });
 
   const chips: { label: string; clear: Partial<ExploreFilters> }[] = [];

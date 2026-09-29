@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import phrasesJson from './phrases.json';
-import setsJson from './sets.json';
-import topicsJson from './topics.json';
+import phrasesJson from '../../../../../packages/content/v2/phrases.json';
+import setsJson from '../../../../../packages/content/v2/sets.json';
+import topicsJson from '../../../../../packages/content/v2/topics.json';
 import languagesJson from './languages.json';
-import noteTranslationsJson from './note-translations.json';
-import bankJson from './bank.json';
-import bankNoteTranslationsJson from './bank-note-translations.json';
+import noteTranslationsJson from '../../../../../packages/content/v2/note-translations.json';
+import bankJson from '../../../../../packages/content/v2/bank.json';
+import bankNoteTranslationsJson from '../../../../../packages/content/v2/bank-note-translations.json';
 import { BANK_PHRASES, BANK_THEMES, CONTENT_PHRASES, coursesFor, LANGUAGES, SETS, TARGET_LANGUAGES, TOPICS } from './index';
 import { z } from 'zod';
 import { BankJson, bankProblems, contentProblems, PhraseJson, phraseSchema, SetJson } from './schema';

@@ -1,6 +1,8 @@
-// The root: Intl for Hermes first, then the fonts and saved progress, read before the first render
-// so the app never flashes an empty state (as the web prototype's main.tsx does). Until the learner
-// has chosen their languages, onboarding stands in for the app.
+// The root: Intl for Hermes first, then the fonts, saved progress, the content packs this device has
+// and who is signed in, all read before the first render so the app never flashes an empty state.
+// The course's content comes from the API (plan 106): until a copy of it is installed, the app says
+// it is getting it, or that the server can't be reached. Until the learner has chosen their
+// languages, onboarding stands in for the app.
 import '../src/platform/intl';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -10,11 +12,17 @@ import { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { restoreContent } from '@shared/api/contentCache';
+import { loadSession } from '@shared/api/session';
 import { copyForNative } from '@shared/copy';
 import { openStorage, Stored } from '@shared/state/storage';
 import { usePlaybackDriver } from '../src/audio/driver';
+import { MusicProvider } from '../src/music/MusicPlayer';
 import { Shell } from '../src/nav/Shell';
+import { ConnectionScreen } from '../src/screens/ConnectionScreen';
 import { Onboarding } from '../src/screens/Onboarding';
+import { AccountProvider } from '../src/state/account';
+import { ContentProvider, useContent } from '../src/state/content';
 import { StoreProvider, useStore } from '../src/state/store';
 import { FONTS } from '../src/ui/fonts';
 import { UiLocaleContext } from '../src/ui/locale';
@@ -23,11 +31,21 @@ import { ToastProvider } from '../src/ui/Toast';
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
+/** What the device holds, read once: saved progress (the packs and the session are installed as a side effect). */
+async function boot(): Promise<Stored> {
+  const [stored] = await Promise.all([
+    openStorage().catch(() => ({ saved: null, pending: null })),
+    restoreContent().catch(() => []),
+    loadSession().catch(() => null),
+  ]);
+  return stored;
+}
+
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(FONTS);
   const [stored, setStored] = useState<Stored | null>(null);
   useEffect(() => {
-    openStorage().then(setStored, () => setStored({ saved: null, pending: null }));
+    void boot().then(setStored);
   }, []);
   const ready = (fontsLoaded || fontError !== null) && stored !== null;
   useEffect(() => {
@@ -37,9 +55,11 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
-        <StoreProvider stored={stored}>
-          <App />
-        </StoreProvider>
+        <AccountProvider>
+          <StoreProvider stored={stored}>
+            <App />
+          </StoreProvider>
+        </AccountProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
@@ -53,21 +73,34 @@ function App() {
     <UiLocaleContext.Provider value={locale}>
       <ToastProvider>
         <StatusBar style="dark" />
-        <Shell>
-          {state.learner.profile.onboarded ? (
-            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.surface } }}>
-              <Stack.Screen name="(tabs)" />
-              {/* Full-screen overlays slide up over the tabs, as the web's player and queue do. */}
-              <Stack.Screen name="player" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
-              <Stack.Screen name="queue" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
-              <Stack.Screen name="make" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
-            </Stack>
-          ) : (
-            <Onboarding />
-          )}
-        </Shell>
+        <ContentProvider targetLang={state.learner.profile.targetLang}>
+          <MusicProvider>
+            <Shell>
+              <Gate onboarded={state.learner.profile.onboarded} />
+            </Shell>
+          </MusicProvider>
+        </ContentProvider>
       </ToastProvider>
     </UiLocaleContext.Provider>
+  );
+}
+
+/** The app once the course is installed; onboarding before the learner has chosen their languages. */
+function Gate({ onboarded }: { onboarded: boolean }) {
+  const { status, refresh } = useContent();
+  if (status !== 'ready') return <ConnectionScreen status={status} onRetry={() => void refresh()} />;
+  if (!onboarded) return <Onboarding />;
+  return (
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.surface } }}>
+      <Stack.Screen name="(tabs)" />
+      {/* Full-screen overlays slide up over the tabs, as the web's player and queue do. */}
+      <Stack.Screen name="player" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="queue" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="make" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="song" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: colors.night } }} />
+      <Stack.Screen name="account" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="shared/[code]" />
+    </Stack>
   );
 }
 

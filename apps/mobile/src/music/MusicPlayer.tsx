@@ -1,0 +1,163 @@
+// Songs play here (plan 106), apart from the phrase player: an album's songs as a queue through
+// expo-audio, with where the song is so the lyrics can follow it. Only one of the two players sounds
+// at a time: a song pauses the phrase loop, and the phrase loop starting pauses the song.
+import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { apiUrl } from '@shared/api/client';
+import { fetchSong, type Song } from '@shared/api/library';
+import { useLatest } from '@shared/lib/useLatest';
+import type { Album } from '@shared/content';
+import { useStore } from '../state/store';
+
+interface MusicValue {
+  album: Album | null;
+  queue: Song[];
+  index: number;
+  song: Song | null;
+  playing: boolean;
+  /** Seconds into the song, and its length once known. */
+  position: number;
+  duration: number;
+  buffering: boolean;
+  /** Plays an album's ready songs from `startIndex`. */
+  playAlbum: (album: Album, songs: Song[], startIndex?: number) => void;
+  toggle: () => void;
+  next: () => void;
+  previous: () => void;
+  seek: (seconds: number) => void;
+  stop: () => void;
+}
+
+const MusicContext = createContext<MusicValue | null>(null);
+
+/** A signed song URL expires; refetching the song gives a fresh one. */
+async function playableUrl(song: Song): Promise<string | null> {
+  if (song.audioUrl) return apiUrl(song.audioUrl);
+  const fresh = await fetchSong(song.id).catch(() => null);
+  return fresh?.audioUrl ? apiUrl(fresh.audioUrl) : null;
+}
+
+export function MusicProvider({ children }: { children: ReactNode }) {
+  const player = useAudioPlayer(null, { updateInterval: 250 });
+  const status = useAudioPlayerStatus(player);
+  const { state, actions } = useStore();
+  const [album, setAlbum] = useState<Album | null>(null);
+  const [queue, setQueue] = useState<Song[]>([]);
+  const [index, setIndex] = useState(0);
+  const wantsPlay = useRef(false);
+
+  useEffect(() => {
+    void setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true, interruptionMode: 'doNotMix' }).catch(() => {});
+  }, []);
+
+  const load = useCallback(
+    async (songs: Song[], at: number) => {
+      const song = songs[at];
+      if (!song) return;
+      const uri = await playableUrl(song);
+      if (!uri) return;
+      player.replace({ uri });
+      wantsPlay.current = true;
+      player.play();
+    },
+    [player],
+  );
+
+  const playAlbum = useCallback(
+    (next: Album, songs: Song[], startIndex = 0) => {
+      const ready = songs.filter((s) => s.status === 'ready' && s.audioUrl);
+      const start = Math.max(0, ready.findIndex((s) => s.id === songs[startIndex]?.id));
+      if (ready.length === 0) return;
+      // One player sounds at a time.
+      if (state.player.status === 'playing') actions.pause();
+      setAlbum(next);
+      setQueue(ready);
+      setIndex(start);
+      void load(ready, start);
+    },
+    [actions, load, state.player.status],
+  );
+
+  const step = useCallback(
+    (by: number) => {
+      const at = index + by;
+      if (at < 0 || at >= queue.length) return;
+      setIndex(at);
+      void load(queue, at);
+    },
+    [index, queue, load],
+  );
+
+  // A finished song moves on to the next, and the album ends after its last.
+  const stepRef = useLatest(step);
+  const atEnd = useLatest(index + 1 >= queue.length);
+  useEffect(() => {
+    const subscription = player.addListener('playbackStatusUpdate', (update) => {
+      if (!update.didJustFinish) return;
+      if (!atEnd.current) stepRef.current(1);
+      else {
+        wantsPlay.current = false;
+        void player.seekTo(0);
+      }
+    });
+    return () => subscription.remove();
+  }, [player, stepRef, atEnd]);
+
+  // The phrase loop starting pauses the song.
+  useEffect(() => {
+    if (state.player.status === 'playing' && status.playing) {
+      wantsPlay.current = false;
+      player.pause();
+    }
+  }, [state.player.status, status.playing, player]);
+
+  const value = useMemo<MusicValue>(
+    () => ({
+      album,
+      queue,
+      index,
+      song: queue[index] ?? null,
+      playing: status.playing,
+      position: status.currentTime,
+      duration: status.duration || (queue[index]?.durationMs ?? 0) / 1000,
+      buffering: status.isBuffering,
+      playAlbum,
+      toggle: () => {
+        if (!queue[index]) return;
+        if (status.playing) {
+          wantsPlay.current = false;
+          player.pause();
+        } else {
+          if (state.player.status === 'playing') actions.pause();
+          wantsPlay.current = true;
+          player.play();
+        }
+      },
+      next: () => step(1),
+      previous: () => (status.currentTime > 3 ? void player.seekTo(0) : step(-1)),
+      seek: (seconds) => void player.seekTo(Math.max(0, seconds)),
+      stop: () => {
+        wantsPlay.current = false;
+        player.pause();
+        setQueue([]);
+        setAlbum(null);
+        setIndex(0);
+      },
+    }),
+    [album, queue, index, status.playing, status.currentTime, status.duration, status.isBuffering, playAlbum, step, player, actions, state.player.status],
+  );
+
+  return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;
+}
+
+export function useMusic(): MusicValue {
+  const value = useContext(MusicContext);
+  if (!value) throw new Error('useMusic must be used inside MusicProvider');
+  return value;
+}
+
+/** m:ss for a song's length or position. */
+export function clockTime(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}

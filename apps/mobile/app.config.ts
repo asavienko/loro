@@ -27,7 +27,7 @@ export default (): ExpoConfig => ({
     adaptiveIcon: { foregroundImage: './assets/icons/icon-maskable-512.png', backgroundColor: '#fcf9f4' },
   },
   web: { bundler: 'metro', output: 'single', favicon: './assets/icons/icon-192.png' },
-  plugins: ['expo-router', 'expo-font', 'expo-splash-screen'],
+  plugins: ['expo-router', 'expo-font', 'expo-splash-screen', 'expo-audio', 'expo-secure-store'],
   // Metro resolves @shared itself (metro.config.js); tsconfig's paths are for the type checker only.
   experiments: { typedRoutes: false, tsconfigPaths: false },
 });

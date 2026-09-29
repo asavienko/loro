@@ -5,7 +5,7 @@ import { usePathname, useRouter, useGlobalSearchParams } from 'expo-router';
 import { createContext, ReactNode, RefObject, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { learnedCue } from '@shared/audio/cues';
 import { setVoiceChoices } from '@shared/audio/speech';
-import { NavContext, Navigation } from '@shared/nav/NavContext';
+import { NavContext, Navigation, Shareable } from '@shared/nav/NavContext';
 import { formatRoute, Route, Tab } from '@shared/nav/routes';
 import { findPhrase, findSetView } from '@shared/state/catalog';
 import { clock } from '@shared/state/clock';
@@ -17,6 +17,8 @@ import type { MakeSession } from '@shared/generate/session';
 import { AddPhraseSheet } from '../sheets/AddPhraseSheet';
 import { AddSheet } from '../sheets/AddSheet';
 import { AddToSetSheet } from '../sheets/AddToSetSheet';
+import { MakeSongRequest, MakeSongSheet } from '../sheets/MakeSongSheet';
+import { ShareSheet } from '../sheets/ShareSheet';
 import { CreateSetSheet } from '../sheets/CreateSetSheet';
 import { PhraseDetailsSheet } from '../sheets/PhraseDetailsSheet';
 import { SessionSummarySheet } from '../sheets/SessionSummarySheet';
@@ -28,7 +30,11 @@ import { useToast } from '../ui/Toast';
 export function tabOfPath(pathname: string, from: string | undefined): Tab {
   if (pathname.startsWith('/explore')) return 'explore';
   if (pathname.startsWith('/library')) return 'library';
-  if (pathname.startsWith('/set/')) return from === 'explore' || from === 'library' ? from : 'home';
+  if (pathname.startsWith('/music')) return 'music';
+  if (pathname.startsWith('/create')) return 'create';
+  const tabs: string[] = ['explore', 'library', 'music', 'create'];
+  if (pathname.startsWith('/set/')) return from && tabs.includes(from) ? (from as Tab) : 'home';
+  if (pathname.startsWith('/album/')) return from && tabs.includes(from) ? (from as Tab) : 'music';
   return 'home';
 }
 
@@ -69,6 +75,8 @@ export function Shell({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<{ atVoices: boolean } | null>(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [songRequest, setSongRequest] = useState<MakeSongRequest | null>(null);
+  const [sharing, setSharing] = useState<Shareable | null>(null);
   const makeSessionRef = useRef<MakeSession | null>(null);
 
   const tab = tabOfPath(pathname, from);
@@ -118,6 +126,16 @@ export function Shell({ children }: { children: ReactNode }) {
         makeSessionRef.current = null;
         router.push({ pathname: '/make', params: { ...(options.input ? { input: options.input } : {}), ...(options.setId ? { setId: options.setId } : {}) } });
       },
+      openAlbum: (albumId) => {
+        if (pathRef.current === '/song') router.dismissAll();
+        router.push({ pathname: '/album/[id]', params: { id: albumId, from: tabRef.current } });
+      },
+      makeSong: (options = {}) => setSongRequest(options),
+      share: (item) => setSharing(item),
+      openAccount: () => {
+        setSettings(null);
+        router.push('/account');
+      },
       openSettings: () => setSettings({ atVoices: false }),
       openVoiceSettings: () => setSettings({ atVoices: true }),
     }),
@@ -139,6 +157,8 @@ export function Shell({ children }: { children: ReactNode }) {
         <CreateSetSheet request={create} onClose={() => setCreate(null)} />
         <AddPhraseSheet request={phraseForm} onClose={() => setPhraseForm(null)} />
         <AddSheet open={addOpen} onClose={() => setAddOpen(false)} />
+        <MakeSongSheet request={songRequest} onClose={() => setSongRequest(null)} />
+        <ShareSheet item={sharing} onClose={() => setSharing(null)} />
       </ShellContext.Provider>
     </NavContext.Provider>
   );
