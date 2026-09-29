@@ -45,7 +45,7 @@ account is `429 LIMIT_REACHED` (`resets_at` is null for a full account).
 | Method   | Route                                                       | Success     | What it does                                                 |
 | -------- | ----------------------------------------------------------- | ----------- | ------------------------------------------------------------ |
 | GET      | `/library/pack?target=`                                     | 200         | Topics, sets, phrases (with clips), bank, albums of a course |
-| GET      | `/library/community?kind=&target=&q=`                       | 200         | Public sets (with phrases) or albums, newest first           |
+| GET      | `/library/community?kind=&target=&q=&sort=`                 | 200         | Public sets or albums, newest or most saved first            |
 | GET      | `/library/sets/:id`, `/library/albums/:id`                  | 200         | One set with phrases; one album with songs                   |
 | GET      | `/library/shared/:code`                                     | 200         | What a share code opens                                      |
 | GET      | `/library/songs/:id`, `…/audio`                             | 200/206     | A song; its sound (ranges; signed URL or a reader who may)   |

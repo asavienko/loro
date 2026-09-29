@@ -37,6 +37,8 @@ export interface SetWire {
   saved: boolean
   /** Only on the reader's own public item that reports took out of Community; absent otherwise. */
   hidden?: true
+  /** In Community listings: how many learners keep it in their library. */
+  savedBy?: number
   createdAt: number
   updatedAt: number
 }
@@ -101,6 +103,8 @@ export interface AlbumWire {
   saved: boolean
   /** Only on the reader's own public item that reports took out of Community; absent otherwise. */
   hidden?: true
+  /** In Community listings: how many learners keep it in their library. */
+  savedBy?: number
   songCount: number
   /** Null while a song's length is unknown (a sung song), rather than a total that leaves it out. */
   durationMs: number | null

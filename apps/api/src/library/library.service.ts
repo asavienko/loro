@@ -493,10 +493,17 @@ export class LibraryService {
   }
 
   /** Public sets or albums of a course, newest first, optionally matching a search. */
-  async community(userId: string | null, query: { target?: unknown; kind?: unknown; q?: unknown }) {
+  async community(
+    userId: string | null,
+    query: { target?: unknown; kind?: unknown; q?: unknown; sort?: unknown },
+  ) {
     await this.ready()
     const targetLang = parseContract(LibraryCourseSchema, query.target)
     const kind = parseContract(z.enum(['sets', 'albums']), query.kind ?? 'sets')
+    // Newest first, or the most saved first (ties newest first).
+    const sort = parseContract(z.enum(['new', 'popular']), query.sort ?? 'new')
+    const savesOf = (alias: string, itemKind: 'set' | 'album') =>
+      `(SELECT count(*) FROM library_saves sv WHERE sv.kind = '${itemKind}' AND sv.item_id = ${alias}.id)`
     const q = typeof query.q === 'string' ? query.q.trim().slice(0, 60) : ''
     const like = `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`
     if (kind === 'sets') {
@@ -505,14 +512,21 @@ export class LibraryService {
           `${SET_SELECT} WHERE s.target_lang = $1 AND s.origin = 'user' AND s.visibility = 'public'
              AND (SELECT count(*) FROM library_reports r WHERE r.kind = 'set' AND r.item_id = s.id) < ${REPORTS_TO_HIDE}
              AND ($2 = '' OR s.title ILIKE $3 OR coalesce(s.description, '') ILIKE $3)
-           ORDER BY s.updated_at DESC LIMIT ${COMMUNITY_PAGE}`,
+           ORDER BY ${sort === 'popular' ? `${savesOf('s', 'set')} DESC, ` : ''}s.updated_at DESC LIMIT ${COMMUNITY_PAGE}`,
           [targetLang, q, like],
         )
       ).rows
       const saved = await this.savedIds(userId, 'set')
       const phrases = await this.phrasesOf(rows.map((r) => r.id))
+      const savedBy = await this.savedBy(
+        'set',
+        rows.map((r) => r.id),
+      )
       return {
-        sets: rows.map((row) => toSetWire(row, userId, saved, phrases)),
+        sets: rows.map((row) => ({
+          ...toSetWire(row, userId, saved, phrases),
+          savedBy: savedBy.get(row.id) ?? 0,
+        })),
         phrases: phrases.map((p) => toPhraseWire(p, readTtsRuntimeConfig())),
       }
     }
@@ -522,12 +536,21 @@ export class LibraryService {
            AND (SELECT count(*) FROM library_reports r WHERE r.kind = 'album' AND r.item_id = a.id) < ${REPORTS_TO_HIDE}
            AND ($2 = '' OR a.title ILIKE $3 OR coalesce(a.description, '') ILIKE $3)
            AND EXISTS (SELECT 1 FROM library_songs so WHERE so.album_id = a.id AND so.status = 'ready')
-         ORDER BY a.updated_at DESC LIMIT ${COMMUNITY_PAGE}`,
+         ORDER BY ${sort === 'popular' ? `${savesOf('a', 'album')} DESC, ` : ''}a.updated_at DESC LIMIT ${COMMUNITY_PAGE}`,
         [targetLang, q, like],
       )
     ).rows
     const saved = await this.savedIds(userId, 'album')
-    return { albums: rows.map((row) => toAlbumWire(row, userId, saved)) }
+    const savedBy = await this.savedBy(
+      'album',
+      rows.map((r) => r.id),
+    )
+    return {
+      albums: rows.map((row) => ({
+        ...toAlbumWire(row, userId, saved),
+        savedBy: savedBy.get(row.id) ?? 0,
+      })),
+    }
   }
 
   async set(userId: string | null, id: unknown): Promise<{ set: SetWire; phrases: PhraseWire[] }> {
@@ -1416,6 +1439,16 @@ export class LibraryService {
   }
 
   // ---------- helpers ----------
+
+  /** How many learners keep each of these items in their library. */
+  private async savedBy(kind: 'set' | 'album', ids: string[]): Promise<Map<string, number>> {
+    if (ids.length === 0) return new Map()
+    const rows = await this.db.query<{ item_id: string; n: string }>(
+      'SELECT item_id, count(*) AS n FROM library_saves WHERE kind = $1 AND item_id = ANY($2::text[]) GROUP BY item_id',
+      [kind, ids],
+    )
+    return new Map(rows.rows.map((r) => [r.item_id, num(r.n)]))
+  }
 
   private async savedIds(userId: string | null, kind: 'set' | 'album'): Promise<Set<string>> {
     if (!userId) return new Set()
