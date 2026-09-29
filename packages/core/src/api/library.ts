@@ -138,6 +138,19 @@ export const GeneratePhrasesSchema = z
     path: ['nativeLang'],
   })
 
+/** Notes and a picture for a phrase the learner wrote themselves. */
+export const GenerateNotesSchema = z
+  .strictObject({
+    target: z.string().trim().min(1).max(LIBRARY_TEXT.phrase),
+    native: z.string().trim().min(1).max(LIBRARY_TEXT.phrase),
+    targetLang: LibraryCourseSchema,
+    nativeLang: LibraryLanguageSchema,
+  })
+  .refine((r) => r.targetLang !== r.nativeLang, {
+    message: 'A course is never in the learner’s own language',
+    path: ['nativeLang'],
+  })
+
 export const GenerateCoverSchema = z.strictObject({
   kind: z.enum(['set', 'album']),
   title: z.string().trim().min(1).max(LIBRARY_TEXT.title),
@@ -168,4 +181,5 @@ export type CreateAlbumRequest = z.infer<typeof CreateAlbumSchema>
 export type UpdateAlbumRequest = z.infer<typeof UpdateAlbumSchema>
 export type GeneratePhrasesRequest = z.infer<typeof GeneratePhrasesSchema>
 export type GenerateCoverRequest = z.infer<typeof GenerateCoverSchema>
+export type GenerateNotesRequest = z.infer<typeof GenerateNotesSchema>
 export type GenerateSongRequest = z.infer<typeof GenerateSongSchema>

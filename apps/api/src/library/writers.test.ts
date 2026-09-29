@@ -6,6 +6,7 @@ import {
   assembleLyrics,
   bankPhrases,
   claudeLyrics,
+  claudeNotes,
   claudePhrases,
   cleanImage,
   resetWriter,
@@ -167,5 +168,29 @@ describe('lyrics', () => {
       style: 'modern_pop',
     })
     expect(sections.flatMap((s) => s.lines.map((l) => l.phraseId))).toEqual(['p-00', null, 'p-01'])
+  })
+})
+
+describe('Claude’s notes for a phrase the learner wrote', () => {
+  it('keeps whole notes and a picture the app can draw', async () => {
+    const written = await claudeNotes(answering({ image: ['nope', 'key'], notes }), {
+      target: 'La llave, por favor',
+      native: 'The key, please',
+      targetLang: 'es-ES',
+      nativeLang: 'en-GB',
+    })
+    expect(written.image).toEqual(['key'])
+    expect(written.notes.pronunciation.ipa).toBe('[ˈo.la]')
+  })
+
+  it('refuses notes that are not whole', async () => {
+    await expect(
+      claudeNotes(answering({ image: ['key'], notes: { mnemonic: notes.mnemonic } }), {
+        target: 'x',
+        native: 'y',
+        targetLang: 'es-ES',
+        nativeLang: 'en-GB',
+      }),
+    ).rejects.toThrow()
   })
 })
