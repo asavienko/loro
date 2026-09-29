@@ -1,7 +1,8 @@
 // Home (the web prototype's src/screens/HomeScreen.tsx): exactly one hero, the first that applies
 // (the demo, the review, what to continue, the course done), quiet figures, then what else there is.
 import { ReactNode, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Album, albumsForCourse } from '@shared/content';
 import { greeting } from '@shared/copy';
 import { useNav } from '@shared/nav/NavContext';
 import { coursePhrases, courseSets, findSetView } from '@shared/state/catalog';
@@ -22,6 +23,7 @@ import {
   todayCounts,
 } from '@shared/state/selectors';
 import { useCopy, useNow, useStore } from '../state/store';
+import { AlbumCover } from '../music/AlbumCover';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
 import { SetCard } from '../ui/SetCard';
@@ -70,6 +72,7 @@ export function HomeScreen() {
   const nextLine = upcoming && due.length <= review.length ? (review.length > 0 ? c.home.nextAfter : c.home.next)(upcoming.count, formatWhen(upcoming.at, now, c.locale)) : null;
   const { name, targetLang } = state.learner.profile;
 
+  const album = albumsForCourse(targetLang).find((a) => a.owner === 'loro' && a.songCount > 0);
   return (
     <View style={styles.screen}>
       <TopBar title={greeting(targetLang, name)} titleLang={targetLang} onOpenSettings={nav.openSettings} />
@@ -214,6 +217,9 @@ export function HomeScreen() {
           </View>
         )}
 
+        {/* The course sung (plan 106): the way to the music side, in its night colours. */}
+        {album && !newToLoro && <AlbumTeaser album={album} onOpen={() => nav.openAlbum(album.id)} />}
+
         {recent.length === 0 && !firstRun && <Button variant="text" icon="history" label={c.home.history} onPress={() => setHistoryOpen(true)} style={styles.start} />}
       </ScrollView>
       <HistorySheet open={historyOpen} onClose={() => setHistoryOpen(false)} now={now} />
@@ -229,6 +235,27 @@ function Hero({ tone = 'primary', children }: { tone?: 'primary' | 'tertiary'; c
 function PlayButton({ label, detail, onPress }: { label: string; detail: string | null; onPress: () => void }) {
   return (
     <Button variant="primary" icon="play_arrow" iconFill label={detail ? `${label}\u00a0· ${detail}` : label} onPress={onPress} style={styles.heroButton} />
+  );
+}
+
+function AlbumTeaser({ album, onOpen }: { album: Album; onOpen: () => void }) {
+  const c = useCopy();
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={`${album.title}, ${c.music.songs(album.songCount)}`} onPress={onOpen} style={({ pressed }) => [styles.teaser, pressed && { opacity: 0.9 }]}>
+      <AlbumCover url={album.coverUrl} px={64} rounded={10} />
+      <View style={styles.flex}>
+        <Txt variant="label" weight={700} color="nightAccent">
+          {c.music.title.toLocaleUpperCase(c.locale)}
+        </Txt>
+        <Txt variant="row" weight={700} color="onNight" numberOfLines={1}>
+          {album.title}
+        </Txt>
+        <Txt variant="label" color="onNightVariant" numberOfLines={2}>
+          {`${c.music.songs(album.songCount)} · ${c.music.loroAlbum}`}
+        </Txt>
+      </View>
+      <Icon name="chevron_right" color="onNight" />
+    </Pressable>
   );
 }
 
@@ -276,6 +303,7 @@ function HistorySheet({ open, onClose, now }: { open: boolean; onClose: () => vo
 }
 
 const styles = StyleSheet.create({
+  teaser: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: radius['2xl'], backgroundColor: colors.night },
   screen: { flex: 1, backgroundColor: colors.surface },
   content: { padding: 16, gap: 28, width: '100%', maxWidth: 672, alignSelf: 'center' },
   hero: { borderRadius: radius['2xl'], padding: 20, gap: 4 },
