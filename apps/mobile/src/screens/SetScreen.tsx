@@ -239,9 +239,9 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
               when large text leaves no room for both. */}
           <View style={styles.controls}>
             <Pressable
-              accessibilityRole="togglebutton"
+              accessibilityRole="button"
               accessibilityLabel={c.set.like}
-              accessibilityState={{ checked: liked }}
+              accessibilityState={{ selected: liked }}
               aria-pressed={liked}
               onPress={() => actions.toggleLike('set', setId)}
               style={({ pressed }) => [styles.iconButton, styles.first, pressed && styles.pressed]}

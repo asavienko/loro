@@ -101,9 +101,9 @@ export function QueueScreen() {
               </Txt>
             </View>
             <Pressable
-              accessibilityRole="togglebutton"
+              accessibilityRole="button"
               accessibilityLabel={c.queue.shuffle}
-              accessibilityState={{ checked: state.player.shuffle }}
+              accessibilityState={{ selected: state.player.shuffle }}
               aria-pressed={state.player.shuffle}
               onPress={actions.toggleShuffle}
               style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
