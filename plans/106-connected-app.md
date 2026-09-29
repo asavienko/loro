@@ -4,10 +4,10 @@
   playback)
 - **Milestone:** Main app
 - **Status:** 🟡 Started 2026-09-30 at the owner's request; scope 1–14 landed the same day.
-  **Left:** item 15 (iOS, live provider runs, Google/Apple sign-in buttons). **Blocked by:**
-  nothing. Live Claude writing needs `ANTHROPIC_API_KEY` and live songs need
-  `MUSIC_PROVIDER=elevenlabs` with `MUSIC_API_KEY`; without them the server says it used its
-  fallback and the app labels it (see _Honest fallbacks_).
+  **Left:** item 15 (iOS, live provider runs, Apple sign-in). **Blocked by:** nothing. Live Claude
+  writing needs `ANTHROPIC_API_KEY` and live songs need `MUSIC_PROVIDER=elevenlabs` with
+  `MUSIC_API_KEY`; without them the server says it used its fallback and the app labels it (see
+  _Honest fallbacks_).
 - **Owner request, 2026-09-30:** "Make the app fully usable. Make the backend fully usable. The app
   should have a sign-in flow, user limits, an AI generation process for phrases, songs, and images
   for covers. The UI should also be fully functional. The UI should be clearly and distinctly
@@ -76,14 +76,18 @@ keeps each private, shares it by link, or publishes it for everyone.
 14. [x] Android emulator: onboarding, the pack, covers, songs, email sign-in (Keystore), Create,
         phrase clips.
 15. [ ] Left: iOS device run; live Claude (phrases, notes, covers, lyrics) with `ANTHROPIC_API_KEY`;
-        live ElevenLabs Music songs; Google/Apple sign-in buttons in the app (the API has them; the
-        web needs `AUTH_REDIRECT_URIS` for its origin, native needs `expo-crypto` for PKCE);
-        moderation beyond reports.
+        live ElevenLabs Music songs; an Apple button (the API has the flow); moderation beyond
+        reports.
+16. [x] Google sign-in on the web (the tab leaves and returns to `/account`) and on iOS/Android (an
+        auth session returning to `loro://account` / `loro-dev://account`, PKCE through
+        `expo-crypto`). Checked on the Android emulator up to Google's page, a cancelled page, and a
+        mismatched return; a full Google sign-in needs a real Google account.
+17. [x] A set's page lists the songs sung from it (`GET /v1/library/sets/:id/songs`).
 
 ## Verification
 
-- `pnpm --filter @loro/api test` covers the library routes against pg-mem, the limits and the
-  fallbacks; `LORO_TEST_DATABASE_URL` runs the same suite on PostgreSQL.
+- `pnpm --filter @loro/api test` covers the covers, the synth and the writers; with
+  `LORO_TEST_DATABASE_URL` it also runs the library routes, limits and fallbacks on PostgreSQL.
 - `pnpm --filter @loro/mobile test`, `lint`, `typecheck`, `bundle`.
 - Expo web against the local API: sign in, make a set, generate a cover and a song, publish it, open
   it signed out through its link.
