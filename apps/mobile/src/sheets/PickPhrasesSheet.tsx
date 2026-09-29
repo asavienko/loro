@@ -73,7 +73,7 @@ function Picker({ setId, onClose }: { setId: string; onClose: () => void }) {
           spellCheck={false}
           returnKeyType="search"
           clearButtonMode="while-editing"
-          style={[field, styles.field]}
+          style={styles.field}
         />
       </View>
 
@@ -130,7 +130,8 @@ function Picker({ setId, onClose }: { setId: string; onClose: () => void }) {
 const styles = StyleSheet.create({
   search: { justifyContent: 'center' },
   searchIcon: { position: 'absolute', left: 14, zIndex: 1 },
-  field: { paddingLeft: 44 },
+  // Its own sides, not the field's paddingHorizontal: react-native-web lets that win over paddingLeft.
+  field: { ...field, paddingHorizontal: undefined, paddingLeft: 44, paddingRight: 16 },
   list: { flexShrink: 1 },
   empty: { paddingVertical: 12 },
   group: { marginTop: 8 },
