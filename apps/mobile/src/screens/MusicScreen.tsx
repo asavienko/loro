@@ -3,7 +3,7 @@
 // what others have shared in this course. Making a song starts here.
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { unreachable } from '@shared/api/client';
 import { fetchCommunityAlbums } from '@shared/api/library';
@@ -14,6 +14,7 @@ import { NightStatusBar } from '../music/NightStatusBar';
 import { useStore, useCopy } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
+import { field } from '../ui/field';
 import { Txt } from '../ui/Txt';
 import { colors, radius, TARGET } from '../ui/theme';
 
@@ -30,11 +31,14 @@ export function MusicScreen() {
   const saved = albums.filter((a) => a.owner === 'other' && a.saved);
   const [community, setCommunity] = useState<Album[] | null>(null);
   const [offline, setOffline] = useState(false);
+  const [query, setQuery] = useState('');
+  // The search last sent: refetched with the tab's focus, so a search stays put across visits.
+  const [searched, setSearched] = useState('');
 
   useFocusEffect(
     useCallback(() => {
       let live = true;
-      fetchCommunityAlbums(target)
+      fetchCommunityAlbums(target, searched)
         .then((reply) => {
           if (!live) return;
           setCommunity(reply.albums.filter((a) => a.owner !== 'me'));
@@ -44,8 +48,15 @@ export function MusicScreen() {
       return () => {
         live = false;
       };
-    }, [target]),
+    }, [target, searched]),
   );
+
+  const search = () => {
+    const next = query.trim();
+    if (next === searched) return;
+    setCommunity(null);
+    setSearched(next);
+  };
 
   const card = Math.min(180, Math.max(132, (Math.min(width, 1024) - 56) / 2.3));
 
@@ -69,13 +80,25 @@ export function MusicScreen() {
         albums={community ?? []}
         width={card}
         loading={community === null && !offline}
-        empty={offline ? c.community.offline : c.community.emptyAlbums}
-      />
+        empty={offline ? c.community.offline : searched ? c.community.noAlbumsFound(searched) : c.community.emptyAlbums}
+      >
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          onSubmitEditing={search}
+          onBlur={search}
+          accessibilityLabel={c.community.searchAlbums}
+          placeholder={c.community.searchAlbums}
+          placeholderTextColor={colors.onNightVariant}
+          returnKeyType="search"
+          style={[field, styles.search]}
+        />
+      </Shelf>
     </ScrollView>
   );
 }
 
-function Shelf({ title, albums, width, empty, icon, loading = false }: { title: string; albums: Album[]; width: number; empty?: string; icon?: 'groups'; loading?: boolean }) {
+function Shelf({ title, albums, width, empty, icon, loading = false, children }: { title: string; albums: Album[]; width: number; empty?: string; icon?: 'groups'; loading?: boolean; children?: React.ReactNode }) {
   const nav = useNav();
   return (
     <View style={styles.shelf}>
@@ -85,6 +108,7 @@ function Shelf({ title, albums, width, empty, icon, loading = false }: { title: 
           {title}
         </Txt>
       </View>
+      {children}
       {loading ? (
         <ActivityIndicator color={colors.nightAccent} style={styles.loading} />
       ) : albums.length === 0 && empty ? (
@@ -111,5 +135,7 @@ const styles = StyleSheet.create({
   shelfHead: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20 },
   row: { paddingHorizontal: 20, gap: 14 },
   loading: { alignSelf: 'flex-start', marginHorizontal: 20 },
+  // On night: the edge is onNightVariant (5:1 against the field) so the box is findable.
+  search: { marginHorizontal: 20, backgroundColor: colors.nightContainer, borderColor: colors.onNightVariant, color: colors.onNight },
   empty: { paddingHorizontal: 20, padding: 16, marginHorizontal: 20, borderRadius: radius['2xl'], backgroundColor: colors.nightContainer },
 });
