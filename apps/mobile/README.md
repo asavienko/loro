@@ -39,10 +39,11 @@ Expo Go can't run it: the Rust core comes from `modules/loro-core`, a local Expo
   log and its merge, selectors for every number shown, copy in English/Bulgarian/Russian, phrase
   notes, and the Make a set generator. `state/clock.ts` is the only module that reads the time.
   `core/fsrs.ts` schedules through the Rust core's `core_call`; there is no JavaScript FSRS.
-- **The platform edge — `src/platform/`.** On iOS and Android, `metro.config.js` swaps six shared
+- **The platform edge — `src/platform/`.** On iOS and Android, `metro.config.js` swaps seven shared
   modules: storage and the key-value store (AsyncStorage), the refresh token (expo-secure-store),
-  speech (expo-speech), cues (haptics) and the Rust core (the LoroCore module instead of WASM). On
-  the web the originals run.
+  speech (expo-speech), cues (haptics), the Rust core (the LoroCore module instead of WASM) and the
+  provider sign-in page (an expo-web-browser auth session returning to `loro://account`, with PKCE
+  from expo-crypto, instead of leaving the tab). On the web the originals run.
 - **The connected state — `src/state/`.** The store, the account (`account.tsx`), the course's
   content (`content.tsx`) and progress sync (`progressSync.ts`); songs play in `src/music/`.
 - **UI.** `app/` holds the routes (expo-router), `src/screens/` and `src/sheets/` the screens,
