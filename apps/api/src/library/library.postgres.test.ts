@@ -323,6 +323,38 @@ describePostgres('the library against real PostgreSQL', () => {
     ).toBe('VALIDATION_FAILED')
   })
 
+  it('lists Community by the most saved, with how many keep each', async () => {
+    const make = async (who: string, title: string) =>
+      (
+        await library.createSet(who, {
+          title,
+          targetLang: 'es-ES',
+          nativeLang: 'bg-BG',
+          visibility: 'public',
+          phrases: (await deck(who)).slice(0, 1),
+        })
+      ).set
+    const older = await make('pop1', 'Older, loved')
+    now += 1000
+    const newer = await make('pop2', 'Newer, unsaved')
+    for (const who of ['fan1', 'fan2']) await library.save(who, { kind: 'set', id: older.id })
+    const ids = async (sort?: string) =>
+      (await library.community(null, { target: 'es-ES', kind: 'sets', sort })).sets
+        ?.filter((s) => s.id === older.id || s.id === newer.id)
+        .map((s) => [s.id, s.savedBy])
+    expect(await ids()).toEqual([
+      [newer.id, 0],
+      [older.id, 2],
+    ])
+    expect(await ids('popular')).toEqual([
+      [older.id, 2],
+      [newer.id, 0],
+    ])
+    expect(await code(library.community(null, { target: 'es-ES', sort: 'loud' }))).toBe(
+      'VALIDATION_FAILED',
+    )
+  })
+
   it('takes a public set out of Community once three learners report it', async () => {
     const phrases = (await deck('lou')).slice(0, 1)
     const { set } = await library.createSet('lou', {
