@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '@shared/api/client';
-import { deleteEverything, setDisplayName } from '@shared/api/library';
+import { deleteAccount, deleteEverything, setDisplayName } from '@shared/api/library';
 import {
   finishProviderSignIn,
   providerSignInAvailable,
@@ -19,6 +19,7 @@ import {
   verifyCode,
 } from '@shared/api/session';
 import { remaining, useAccount } from '../state/account';
+import { forgetAccountHere } from '../state/progressSync';
 import { lastSync } from '../state/syncHooks';
 import { useCopy } from '../state/store';
 import { Button } from '../ui/Button';
@@ -376,6 +377,25 @@ function SignedIn() {
               // Not the account's sign-out, which saves progress first and would put it back.
               await endSession();
               toast(c.account.deletedData);
+            } catch (error) {
+              toast(problemText(c, error));
+            }
+          })();
+        }}
+      />
+      <Button
+        variant="text"
+        icon="block"
+        color="error"
+        label={c.account.deleteAccount}
+        onPress={() => {
+          void (async () => {
+            if (!account || !(await confirm(c.account.deleteAccountConfirm, c.account.deleteAccountYes, c.common.cancel))) return;
+            try {
+              await deleteAccount();
+              await forgetAccountHere(account.userId);
+              await endSession();
+              toast(c.account.deletedAccount);
             } catch (error) {
               toast(problemText(c, error));
             }

@@ -150,3 +150,4 @@ export const reportItem = (kind: 'set' | 'album', id: string, reason: 'offensive
 
 /** Deletes everything the learner keeps in the library; their sign-in stays until they sign out. */
 export const deleteEverything = () => api<{ deleted: true }>('/library/me/delete', { method: 'POST', auth: 'required' });
+export const deleteAccount = () => api<{ deleted: true }>('/library/me/delete-account', { method: 'POST', auth: 'required' });
