@@ -12,16 +12,16 @@ and every buildable artifact — the app and the API.
 
 ## Status
 
-**The app is the v2.0 design, as an Expo app.** It replaced the earlier v1.1-based app on
-2026-09-30; that app, its design packages and the web prototype remain in Git history (last present
-at commit `52a0e3b`). Onboarding, Home, the player, Explore, Library and Settings are built; the set
-page, the queue, Make a set and the other sheets are still stand-ins. Progress is stored on the
-device (AsyncStorage on native, browser storage on the web); FSRS runs in the Rust core through the
-`LoroCore` native module or WASM. See [`apps/mobile/README.md`](apps/mobile/README.md) and
-[plan 104](plans/104-prototype-react-native.md).
-
-The API (accounts, sync, content, reference TTS, music, phrase suggestions) is unchanged and not yet
-called by the new app.
+**The app is the v2.0 design, as an Expo app, connected to the API.** It replaced the earlier
+v1.1-based app on 2026-09-30; that app, its design packages and the web prototype remain in Git
+history (last present at commit `52a0e3b`). Five tabs: Home, Phrases, Music, Create and Library. The
+app ships no phrase content: it downloads each course from the API, keeps it for offline use, and
+signs in by email code. Signed in, a learner makes phrase sets, covers and songs with AI within
+daily limits, keeps them private or shares them by link or publicly (Community), and their progress
+follows them between devices. Progress is stored on the device first (AsyncStorage on native,
+browser storage on the web); FSRS runs in the Rust core through the `LoroCore` native module or
+WASM. See [`apps/mobile/README.md`](apps/mobile/README.md), [plan 106](plans/106-connected-app.md)
+and [the library](docs/architecture/library.md).
 
 ```bash
 pnpm ci:local                       # full local CI; GitHub Actions stays disabled
@@ -29,7 +29,7 @@ pnpm check                          # fast lint/type/test/content/drift gate
 pnpm --filter @loro/mobile web      # the app in a browser
 pnpm --filter @loro/mobile android  # Android development build
 pnpm --filter @loro/mobile bundle   # proves the iOS bundle compiles
-pnpm --filter @loro/api start       # configured PostgreSQL/auth API on :3000/v1
+pnpm --filter @loro/api start       # configured PostgreSQL/auth API on :3000/v1 (the app needs it)
 ```
 
 **Live connectivity:** the [AWS HTTPS gateway](docs/process/public-api.md) reaches the restricted
