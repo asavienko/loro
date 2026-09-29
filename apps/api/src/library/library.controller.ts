@@ -42,6 +42,12 @@ export class LibraryReadController {
     return this.library.set(readerOf(request), id)
   }
 
+  @Get('sets/:id/songs')
+  @Header('Cache-Control', 'no-store')
+  songsOfSet(@Req() request: ReaderRequest, @Param('id') id: string) {
+    return this.library.songsOfSet(readerOf(request), id)
+  }
+
   @Get('albums/:id')
   @Header('Cache-Control', 'no-store')
   album(@Req() request: ReaderRequest, @Param('id') id: string) {
