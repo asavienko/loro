@@ -35,6 +35,8 @@ export interface SetWire {
   /** Only the owner, or anyone for a shared or public item. */
   shareCode: string | null
   saved: boolean
+  /** Only on the reader's own public item that reports took out of Community; absent otherwise. */
+  hidden?: true
   createdAt: number
   updatedAt: number
 }
@@ -97,6 +99,8 @@ export interface AlbumWire {
   visibility: Visibility
   shareCode: string | null
   saved: boolean
+  /** Only on the reader's own public item that reports took out of Community; absent otherwise. */
+  hidden?: true
   songCount: number
   /** Null while a song's length is unknown (a sung song), rather than a total that leaves it out. */
   durationMs: number | null

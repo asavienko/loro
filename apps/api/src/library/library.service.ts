@@ -417,6 +417,23 @@ export class LibraryService {
 
   // ---------- reading ----------
 
+  /**
+   * The reader's own items that enough reports took out of Community. Only the owner is told, so
+   * they know why it no longer shows there; reporters and other readers never see the count.
+   */
+  private async hiddenOf(userId: string | null): Promise<Set<string>> {
+    if (!userId) return new Set()
+    const rows = await this.db.query<{ item_id: string }>(
+      `SELECT r.item_id FROM library_reports r
+       LEFT JOIN library_sets s ON r.kind = 'set' AND s.id = r.item_id
+       LEFT JOIN library_albums a ON r.kind = 'album' AND a.id = r.item_id
+       WHERE COALESCE(s.owner_id, a.owner_id) = $1
+       GROUP BY r.item_id HAVING count(*) >= ${REPORTS_TO_HIDE}`,
+      [userId],
+    )
+    return new Set(rows.rows.map((r) => r.item_id))
+  }
+
   /** A course's pack: Loro's sets, the reader's own and saved ones, the bank, and the albums. */
   async pack(userId: string | null, target: unknown): Promise<PackWire> {
     await this.ready()
@@ -434,7 +451,8 @@ export class LibraryService {
     ).rows.filter((row) => canRead(row, userId))
     const saved = await this.savedIds(userId, 'set')
     const phrases = await this.phrasesOf(setRows.map((s) => s.id))
-    const sets = setRows.map((row) => toSetWire(row, userId, saved, phrases))
+    const hidden = await this.hiddenOf(userId)
+    const sets = setRows.map((row) => markHidden(toSetWire(row, userId, saved, phrases), hidden))
     const themes = (
       await this.db.query<{ doc: BankThemeWire }>(
         'SELECT doc FROM library_bank_themes ORDER BY position',
@@ -458,7 +476,7 @@ export class LibraryService {
       )
     ).rows.filter((row) => canRead(row, userId))
     const savedAlbums = await this.savedIds(userId, 'album')
-    const albums = albumRows.map((row) => toAlbumWire(row, userId, savedAlbums))
+    const albums = albumRows.map((row) => markHidden(toAlbumWire(row, userId, savedAlbums), hidden))
     const body = {
       targetLang,
       topics,
@@ -1453,6 +1471,13 @@ function toSetWire(
     createdAt: num(row.created_at),
     updatedAt: num(row.updated_at),
   }
+}
+
+/** Flags the owner's public item that reports took out of Community. */
+function markHidden<T extends SetWire | AlbumWire>(wire: T, hidden: Set<string>): T {
+  return wire.owner === 'me' && wire.visibility === 'public' && hidden.has(wire.id)
+    ? { ...wire, hidden: true }
+    : wire
 }
 
 function toAlbumWire(row: AlbumRow, userId: string | null, saved: Set<string>): AlbumWire {
