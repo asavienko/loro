@@ -3,8 +3,8 @@
 - **Requirement IDs:** `AI-06` (make a set), `F-04` (accounts and sync), `P3-01` (continuous
   playback)
 - **Milestone:** Main app
-- **Status:** 🟡 Started 2026-09-30 at the owner's request; scope 1–10 landed the same day.
-  **Left:** item 11 (review follow-ups, device acceptance, live provider runs). **Blocked by:**
+- **Status:** 🟡 Started 2026-09-30 at the owner's request; scope 1–14 landed the same day.
+  **Left:** item 15 (iOS, live provider runs, Google/Apple sign-in buttons). **Blocked by:**
   nothing. Live Claude writing needs `ANTHROPIC_API_KEY` and live songs need
   `MUSIC_PROVIDER=elevenlabs` with `MUSIC_API_KEY`; without them the server says it used its
   fallback and the app labels it (see _Honest fallbacks_).
@@ -68,8 +68,17 @@ keeps each private, shares it by link, or publishes it for everyone.
        generation.
 9. [x] App: sharing (visibility, share links, opening a shared link, saving others' items).
 10. [x] Progress sync: `GET/POST /v1/library/progress`, merged on the device with revisions.
-11. [ ] Docs, review pass, device acceptance (Android emulator, iOS), live Claude and ElevenLabs
-        Music runs with real keys.
+11. [x] Review pass (2026-09-30): account switch on a shared device, multi-tab refresh, signed song
+        URLs, pack cache after sign-out, allowance refunds, unknown durations, orphaned audio.
+12. [x] Phrases spoken by the server's voices (`/library/speech`, ElevenLabs when configured),
+        played on web and native with the device voice as fallback.
+13. [x] Reports of public items; three take an item out of Community.
+14. [x] Android emulator: onboarding, the pack, covers, songs, email sign-in (Keystore), Create,
+        phrase clips.
+15. [ ] Left: iOS device run; live Claude (phrases, notes, covers, lyrics) with `ANTHROPIC_API_KEY`;
+        live ElevenLabs Music songs; Google/Apple sign-in buttons in the app (the API has them; the
+        web needs `AUTH_REDIRECT_URIS` for its origin, native needs `expo-crypto` for PKCE);
+        moderation beyond reports.
 
 ## Verification
 
