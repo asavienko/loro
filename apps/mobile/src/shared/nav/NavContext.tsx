@@ -10,6 +10,7 @@ export interface Shareable {
   visibility: 'private' | 'link' | 'public';
   shareCode: string | null;
   owner: 'loro' | 'me' | 'other';
+  hidden?: boolean;
 }
 
 /** Everything a screen can ask the shell to do. The callbacks are stable across renders. */

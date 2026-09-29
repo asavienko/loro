@@ -82,6 +82,11 @@ export function ShareSheet({ item, onClose, onChanged }: { item: Shareable | nul
       )}
       {item && (
         <View style={{ paddingHorizontal: 16, paddingTop: 12, gap: 8 }}>
+          {item.owner === 'me' && item.hidden && current === 'public' && (
+            <Txt variant="body" color="error">
+              {c.share.hidden}
+            </Txt>
+          )}
           {current === 'private' && item.owner === 'me' ? (
             <Txt variant="body" color="secondary">
               {c.share.makeShareable}

@@ -584,6 +584,7 @@ export function makeEn(n: Plural) {
       library: 'Library',
     },
     share: {
+      hidden: 'People reported this, so it no longer shows in Community. Anyone with the link can still open it.',
       visibility: 'Who can see it',
       private: 'Only you',
       privateDetail: 'In your account, on your devices',
