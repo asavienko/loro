@@ -145,6 +145,10 @@ export const generateCover = (body: { kind: 'set' | 'album'; title: string; desc
 export const generateSong = (body: { setId: string; styleId: SongStyle; nativeLang: LanguageCode; title?: string; albumId?: string }) =>
   api<{ song: Song; album: Album }>('/library/generate/song', { method: 'POST', body, auth: 'required', timeoutMs: 60_000 });
 
+export const retrySong = (id: string, nativeLang: LanguageCode) =>
+  api<Song>(`/library/songs/${encodeURIComponent(id)}/retry`, { method: 'POST', body: { nativeLang }, auth: 'required' });
+export const deleteSong = (id: string) => api<void>(`/library/songs/${encodeURIComponent(id)}`, { method: 'DELETE', auth: 'required' });
+
 export const reportItem = (kind: 'set' | 'album', id: string, reason: 'offensive' | 'wrong' | 'spam' | 'other') =>
   api<{ reported: true }>('/library/reports', { method: 'POST', body: { kind, id, reason }, auth: 'required' });
 

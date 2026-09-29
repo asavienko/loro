@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { deleteAlbum, fetchAlbum, generateCover, saveItem, unsaveItem, type AlbumDetail, type Song } from '@shared/api/library';
+import { deleteAlbum, deleteSong, fetchAlbum, generateCover, retrySong, saveItem, unsaveItem, type AlbumDetail, type Song } from '@shared/api/library';
 import { useNav } from '@shared/nav/NavContext';
 import { AlbumCover } from '../music/AlbumCover';
 import { clockTime, useMusic } from '../music/MusicPlayer';
@@ -14,7 +14,7 @@ import { ReportSheet } from '../sheets/ReportSheet';
 import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
 import { NightStatusBar } from '../music/NightStatusBar';
-import { useCopy } from '../state/store';
+import { useCopy, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
 import { confirm } from '../ui/confirm';
@@ -40,6 +40,28 @@ export function AlbumScreen({ id }: { id: string }) {
   const [drawing, setDrawing] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [renaming, setRenaming] = useState(false);
+  const { state } = useStore();
+
+  // A failed song of the learner's own: made again (another of the day's songs), or taken out.
+  const retry = async (song: Song) => {
+    try {
+      await retrySong(song.id, state.learner.profile.nativeLang);
+      void account.refreshUsage();
+      await load();
+    } catch (error) {
+      toast(problemText(c, error));
+    }
+  };
+  const removeSong = async (song: Song) => {
+    if (!(await confirm(c.music.removeSongConfirm(song.title), c.music.removeSong, c.common.cancel))) return;
+    try {
+      await deleteSong(song.id);
+      await load();
+      await content.refresh();
+    } catch (error) {
+      toast(problemText(c, error));
+    }
+  };
 
   const load = useCallback(async () => {
     try {
@@ -211,6 +233,8 @@ export function AlbumScreen({ id }: { id: string }) {
               if (music.song?.id === song.id) return router.push('/song');
               music.playAlbum(album, ready, ready.findIndex((s) => s.id === song.id));
             }}
+            onRetry={mine && song.status === 'failed' ? () => void retry(song) : undefined}
+            onRemove={mine && song.status === 'failed' ? () => void removeSong(song) : undefined}
           />
         ))}
         {rendering && (
@@ -224,44 +248,49 @@ export function AlbumScreen({ id }: { id: string }) {
   );
 }
 
-function SongRow({ song, index, current, playing, onPlay }: { song: Song; index: number; current: boolean; playing: boolean; onPlay: () => void }) {
+function SongRow({ song, index, current, playing, onPlay, onRetry, onRemove }: { song: Song; index: number; current: boolean; playing: boolean; onPlay: () => void; onRetry?: () => void; onRemove?: () => void }) {
   const c = useCopy();
   const ready = song.status === 'ready';
   const meta = [c.music.style[song.styleId], song.durationMs ? clockTime(song.durationMs / 1000) : null, song.audioBy === 'demo' ? (song.voiced ? c.music.spokenDemo : c.music.demoSound) : song.audioBy === 'elevenlabs' ? c.music.sung : null]
     .filter(Boolean)
     .join(' · ');
+  // The retry and remove buttons sit beside the row's own button, never inside it.
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={ready ? c.music.playSong(song.title) : `${song.title}, ${song.status === 'rendering' ? c.music.rendering : c.music.failed}`}
-      accessibilityState={{ disabled: !ready, selected: current }}
-      disabled={!ready}
-      onPress={onPlay}
-      style={({ pressed }) => [styles.song, current && styles.songCurrent, pressed && styles.songPressed]}
-    >
-      <View style={styles.songIndex}>
-        {song.status === 'rendering' ? (
-          <ActivityIndicator size="small" color={colors.nightAccent} />
-        ) : playing ? (
-          <Icon name="graphic_eq" color="nightAccent" />
-        ) : song.status === 'failed' ? (
-          <Icon name="error" color="onNightVariant" />
-        ) : (
-          <Txt variant="body" weight={600} color={current ? 'nightAccent' : 'onNightVariant'}>
-            {index + 1}
+    <View style={[styles.songRow, current && styles.songCurrent]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={ready ? c.music.playSong(song.title) : `${song.title}, ${song.status === 'rendering' ? c.music.rendering : c.music.failed}`}
+        accessibilityState={{ disabled: !ready, selected: current }}
+        disabled={!ready}
+        onPress={onPlay}
+        style={({ pressed }) => [styles.song, pressed && styles.songPressed]}
+      >
+        <View style={styles.songIndex}>
+          {song.status === 'rendering' ? (
+            <ActivityIndicator size="small" color={colors.nightAccent} />
+          ) : playing ? (
+            <Icon name="graphic_eq" color="nightAccent" />
+          ) : song.status === 'failed' ? (
+            <Icon name="error" color="onNightVariant" />
+          ) : (
+            <Txt variant="body" weight={600} color={current ? 'nightAccent' : 'onNightVariant'}>
+              {index + 1}
+            </Txt>
+          )}
+        </View>
+        <View style={styles.songText}>
+          <Txt variant="row" weight={600} color={current ? 'nightAccent' : 'onNight'} numberOfLines={1}>
+            {song.title}
           </Txt>
-        )}
-      </View>
-      <View style={styles.songText}>
-        <Txt variant="row" weight={600} color={current ? 'nightAccent' : 'onNight'} numberOfLines={1}>
-          {song.title}
-        </Txt>
-        <Txt variant="label" color="onNightVariant" numberOfLines={1}>
-          {song.status === 'rendering' ? c.music.rendering : song.status === 'failed' ? c.music.failed : meta}
-        </Txt>
-      </View>
-      {ready && <Icon name={playing ? 'pause' : 'play_arrow'} fill color="onNight" />}
-    </Pressable>
+          <Txt variant="label" color="onNightVariant" numberOfLines={1}>
+            {song.status === 'rendering' ? c.music.rendering : song.status === 'failed' ? c.music.failed : meta}
+          </Txt>
+        </View>
+        {ready && <Icon name={playing ? 'pause' : 'play_arrow'} fill color="onNight" />}
+      </Pressable>
+      {onRetry && <Button variant="icon" icon="refresh" color="onNight" accessibilityLabel={c.music.retrySong(song.title)} onPress={onRetry} />}
+      {onRemove && <Button variant="icon" icon="delete" color="onNight" accessibilityLabel={c.music.removeSong} onPress={onRemove} />}
+    </View>
   );
 }
 
@@ -276,7 +305,8 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingTop: 16, paddingHorizontal: 16 },
   songs: { paddingTop: 20, gap: 2, paddingHorizontal: 12 },
   pad: { paddingHorizontal: 12, paddingVertical: 8 },
-  song: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: TARGET + 12, paddingHorizontal: 8, borderRadius: radius.xl },
+  songRow: { flexDirection: 'row', alignItems: 'center', borderRadius: radius.xl },
+  song: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: TARGET + 12, paddingHorizontal: 8, borderRadius: radius.xl },
   songCurrent: { backgroundColor: colors.nightContainer },
   songPressed: { backgroundColor: colors.nightContainerHigh },
   songIndex: { width: 28, alignItems: 'center' },
