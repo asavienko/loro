@@ -5,12 +5,14 @@
 // without a decision, and a card says where its phrase came from, AI included.
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Switch, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { createSet, generateCover, updateSet } from '@shared/api/library';
 import { canSpeak, Playback, speak } from '@shared/audio/speech';
 import { languageName } from '@shared/copy';
 import { BANK_THEMES } from '@shared/content';
 import { added, currentCard, deal, dealt, decide, edit, lastDecision, newDeck, nextCard, picksOf, unadd, undo } from '@shared/generate/deck';
+import { newPhrasesOf } from '@shared/generate/publish';
 import { liveAvailable } from '@shared/generate/remote';
 import { defaultTitle, MakeRequest, MakeSession } from '@shared/generate/session';
 import { suggest } from '@shared/generate/suggest';
@@ -20,6 +22,8 @@ import { useNav } from '@shared/nav/NavContext';
 import { findPhrase, findSetView, ownSets, sameKey } from '@shared/state/catalog';
 import { clip, LIMITS, tidy } from '@shared/state/limits';
 import { useCloseMake, useShell } from '../nav/Shell';
+import { useAccount } from '../state/account';
+import { useContent } from '../state/content';
 import { useCopy, useStore } from '../state/store';
 import { Button, Chip } from '../ui/Button';
 import { CharCount, charsLeft } from '../ui/CharCount';
@@ -27,6 +31,7 @@ import { field, placeholderColor } from '../ui/field';
 import { fontFamily } from '../ui/fonts';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseImage } from '../ui/PhraseImage';
+import { problemText } from '../ui/problems';
 import { SwipeDeck, SwipeDeckHandle, SwipeTravel } from '../ui/SwipeDeck';
 import { ToastOffsetContext, useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
@@ -177,7 +182,14 @@ function MakeSet({ request }: { request: MakeRequest }) {
 
   const keptCount = session.deck ? added(session.deck).length : 0;
 
-  const save = (title: string) => {
+  const [saving, setSaving] = useState(false);
+  const account = useAccount();
+  const content = useContent();
+  // A learner's set in their account takes the phrases there; a set on the device, on the device.
+  const intoServer = into?.content?.owner === 'me' ? into.content : undefined;
+  const toAccount = account.status === 'signedIn' && (!into || Boolean(intoServer));
+
+  const saveHere = (title: string) => {
     const deck = session.deck;
     if (!deck) return;
     const kept = added(deck);
@@ -194,11 +206,46 @@ function MakeSet({ request }: { request: MakeRequest }) {
     const clean = tidy(title);
     if (!clean) return;
     const id = actions.savePicks(picks, { title: clean });
-    toast(c.createSet.created(clean));
+    toast(account.status === 'signedIn' ? c.createSet.created(clean) : c.create.signedOutSave);
     saved.current = true;
     makeSessionRef.current = null;
     // The new set's page shows in this flow's place.
     nav.openSet(id);
+  };
+
+  /** Saves to the learner's account (plan 106), drawing a cover when asked. */
+  const saveToAccount = async (title: string, withCover: boolean) => {
+    const deck = session.deck;
+    if (!deck || saving) return;
+    const phrases = newPhrasesOf(learner, added(deck));
+    if (phrases.length === 0) return;
+    setSaving(true);
+    try {
+      let id: string;
+      if (intoServer) {
+        id = (await updateSet(intoServer.id, { addPhrases: phrases })).set.id;
+        toast(c.make.addedInto(phrases.length, intoServer.title));
+      } else {
+        const clean = tidy(title);
+        if (!clean) return;
+        const made = await createSet({ title: clean, targetLang, nativeLang, visibility: 'private', phrases });
+        id = made.set.id;
+        toast(c.create.savedToAccount, { tone: 'success' });
+        if (withCover) {
+          await generateCover({ kind: 'set', title: clean, attachTo: id }).catch((error: unknown) => toast(problemText(c, error)));
+        }
+      }
+      await content.refresh();
+      void account.refreshUsage();
+      saved.current = true;
+      makeSessionRef.current = null;
+      if (intoServer) close();
+      else nav.openSet(id);
+    } catch (error) {
+      toast(problemText(c, error));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -259,7 +306,10 @@ function MakeSet({ request }: { request: MakeRequest }) {
               onTitle={(title) => update({ title })}
               onRemove={(key) => setSession((s) => ({ ...s, deck: s.deck && unadd(s.deck, key) }))}
               onBack={() => update({ step: 'deck' })}
-              onSave={save}
+              onSave={(title, withCover) => (toAccount ? void saveToAccount(title, withCover) : saveHere(title))}
+              toAccount={toAccount}
+              signedOut={account.status !== 'signedIn'}
+              saving={saving}
             />
           )}
         </ScrollView>
@@ -679,6 +729,9 @@ function SaveStep({
   onRemove,
   onBack,
   onSave,
+  toAccount,
+  signedOut,
+  saving,
 }: {
   session: MakeSession;
   /** The learner's set being filled, by name; otherwise a new set is named here. */
@@ -686,8 +739,13 @@ function SaveStep({
   onTitle: (title: string) => void;
   onRemove: (key: string) => void;
   onBack: () => void;
-  onSave: (title: string) => void;
+  onSave: (title: string, withCover: boolean) => void;
+  /** Saves into the learner's account (plan 106), rather than on this device. */
+  toAccount: boolean;
+  signedOut: boolean;
+  saving: boolean;
 }) {
+  const [withCover, setWithCover] = useState(true);
   const c = useCopy();
   const { state } = useStore();
   const { nativeLang, targetLang } = state.learner.profile;
@@ -713,7 +771,7 @@ function SaveStep({
             maxLength={LIMITS.title}
             autoComplete="off"
             returnKeyType="done"
-            onSubmitEditing={() => ready && onSave(session.title)}
+            onSubmitEditing={() => ready && onSave(session.title, withCover)}
             style={field}
           />
           <CharCount value={session.title} max={LIMITS.title} />
@@ -753,7 +811,26 @@ function SaveStep({
         </View>
       </View>
 
-      <Button variant="primary" label={into ? c.make.addInto(kept.length, into) : c.createSet.create} disabled={!ready} onPress={() => onSave(session.title)} />
+      {toAccount && !into && (
+        <View style={styles.coverRow}>
+          <Txt weight={600} style={styles.flex} nativeID="with-cover">
+            {c.create.withCover}
+          </Txt>
+          <Switch value={withCover} onValueChange={setWithCover} accessibilityLabelledBy="with-cover" aria-label={c.create.withCover} />
+        </View>
+      )}
+      <Button
+        variant="primary"
+        icon={toAccount ? 'account_circle' : undefined}
+        label={saving ? c.share.opening : into ? c.make.addInto(kept.length, into) : toAccount ? c.create.saveToAccount : c.createSet.create}
+        disabled={!ready || saving}
+        onPress={() => onSave(session.title, withCover)}
+      />
+      {signedOut && !into && (
+        <Txt variant="label" color="secondary">
+          {c.create.signedOutSave}
+        </Txt>
+      )}
       <Button variant="text" icon="arrow_back" label={c.make.backToDeck} onPress={onBack} style={styles.center} />
     </View>
   );
@@ -770,6 +847,7 @@ const styles = StyleSheet.create({
   pressed: { backgroundColor: colors.surfaceContainer },
   content: { width: '100%', maxWidth: 512, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 16, overflow: 'hidden' },
   step: { gap: 16 },
+  coverRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: TARGET },
   modes: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: radius.full, backgroundColor: colors.surfaceContainerLow },
   mode: { flex: 1, minHeight: TARGET, paddingHorizontal: 4, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   modeOn: { backgroundColor: colors.surfaceContainerLowest, ...shadow.card },
