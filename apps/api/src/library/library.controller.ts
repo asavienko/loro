@@ -233,4 +233,17 @@ export class LibraryWriteController {
   generateSong(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
     return this.library.generateSong(request.principal.userId, body)
   }
+
+  /** A failed song, made again for another of the day's songs. */
+  @Post('songs/:id/retry')
+  @HttpCode(202)
+  retrySong(@Req() request: AuthenticatedRequest, @Param('id') id: string, @Body() body: unknown) {
+    return this.library.retrySong(request.principal.userId, id, body)
+  }
+
+  @Delete('songs/:id')
+  @HttpCode(204)
+  async deleteSong(@Req() request: AuthenticatedRequest, @Param('id') id: string): Promise<void> {
+    await this.library.deleteSong(request.principal.userId, id)
+  }
 }

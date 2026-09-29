@@ -59,6 +59,8 @@ account is `429 LIMIT_REACHED` (`resets_at` is null for a full account).
 | POST     | `/library/reports`                                          | 200         | Report another's shared item                                 |
 | POST     | `/library/generate/{phrases,notes,cover,song}`              | 200/201/202 | Generate within the day's allowance                          |
 | GET/POST | `/library/progress`                                         | 200         | The learner's progress; a stale revision is 409              |
+| POST     | `/library/songs/{id}/retry`                                 | 202         | Make a failed song again (another of the day's songs)        |
+| DELETE   | `/library/songs/{id}`                                       | 204         | Take a song out of the learner's album                       |
 | POST     | `/library/me/delete`                                        | 200         | Delete everything the learner keeps in the library           |
 | POST     | `/library/me/delete-account`                                | 200         | Delete the account with everything in it                     |
 

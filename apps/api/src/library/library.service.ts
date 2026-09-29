@@ -21,6 +21,7 @@ import {
   LibraryIdSchema,
   ProfileSchema,
   ReportSchema,
+  RetrySongSchema,
   SaveSchema,
   ShareCodeSchema,
   UpdateAlbumSchema,
@@ -1234,6 +1235,60 @@ export class LibraryService {
     return { song: await this.song(userId, id), album: (await this.album(userId, albumId)).album }
   }
 
+  /**
+   * Makes a failed song again from its set's phrases, for another of the day's songs (given back if
+   * it fails again).
+   */
+  async retrySong(userId: string, id: unknown, body: unknown): Promise<SongWire> {
+    await this.ready()
+    const { nativeLang } = parseContract(RetrySongSchema, body)
+    const row = await this.ownSong(userId, parseContract(LibraryIdSchema, id))
+    if (this.toSongWire(row).status !== 'failed')
+      throw new LoroError('VALIDATION_FAILED', 'Only a failed song can be made again')
+    const set = await this.readableSet(userId, row.set_id)
+    const phrases = (await this.phrasesOf([set.id])).slice(0, MAX_SONG_LINES - 4)
+    if (phrases.length === 0) throw new LoroError('VALIDATION_FAILED', 'The set has no phrases')
+    await this.spend(userId, 'song')
+    await this.db.query(
+      "UPDATE library_songs SET status = 'rendering', error = NULL, created_at = $2 WHERE id = $1",
+      [row.id, this.clock.now()],
+    )
+    void this.render(row.id, {
+      ownerId: userId,
+      title: row.title,
+      styleId: parseContract(z.enum(MUSIC_STYLE_IDS), row.style_id),
+      targetLang: set.target_lang,
+      nativeLang,
+      phrases: phrases.map((p) => ({
+        id: p.id,
+        target: p.doc.target,
+        native: p.doc.translations[nativeLang] ?? Object.values(p.doc.translations)[0] ?? '',
+      })),
+    })
+    return this.song(userId, row.id)
+  }
+
+  /** Takes a song out of the learner's album; its sound goes once nothing else plays it. */
+  async deleteSong(userId: string, id: unknown): Promise<void> {
+    const row = await this.ownSong(userId, parseContract(LibraryIdSchema, id))
+    await this.db.transaction(async (tx) => {
+      await tx.query('DELETE FROM library_songs WHERE id = $1', [row.id])
+      await tx.query('UPDATE library_albums SET updated_at = $2 WHERE id = $1', [
+        row.album_id,
+        this.clock.now(),
+      ])
+      await forgetUnusedAudio(tx)
+    })
+  }
+
+  private async ownSong(userId: string, id: string): Promise<SongRow> {
+    const row = (await this.db.query<SongRow>('SELECT * FROM library_songs WHERE id = $1', [id]))
+      .rows[0]
+    if (!row) throw new LoroError('NOT_FOUND')
+    await this.ownAlbum(userId, row.album_id)
+    return row
+  }
+
   /** Writes the lyrics and the sound; never throws, the song records what went wrong. */
   private async render(
     id: string,
@@ -1321,6 +1376,8 @@ export class LibraryService {
       await this.db
         .query("UPDATE library_songs SET status = 'failed', error = $2 WHERE id = $1", [id, code])
         .catch(() => undefined)
+      // A song that couldn't be made doesn't count against the day's songs.
+      await this.refund(input.ownerId, 'song').catch(() => undefined)
     }
   }
 
