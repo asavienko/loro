@@ -171,3 +171,7 @@ export const LIBRARY_SPEECH_OWNERS_MIGRATION_SQL = `ALTER TABLE library_speech A
 /** A demo song whose lines the server's voice speaks over its bars (library/speech.ts). */
 export const LIBRARY_SONG_VOICES_MIGRATION_SQL = `ALTER TABLE library_songs ADD COLUMN IF NOT EXISTS voiced boolean NOT NULL DEFAULT false;
 `
+
+/** A set's page lists the songs sung from it. */
+export const LIBRARY_SONG_SETS_MIGRATION_SQL = `CREATE INDEX IF NOT EXISTS library_songs_set ON library_songs(set_id, status);
+`

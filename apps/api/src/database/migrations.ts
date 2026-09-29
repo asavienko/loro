@@ -6,6 +6,7 @@ import {
   LIBRARY_SPEECH_FAILURES_MIGRATION_SQL,
   LIBRARY_SPEECH_MIGRATION_SQL,
   LIBRARY_SPEECH_OWNERS_MIGRATION_SQL,
+  LIBRARY_SONG_SETS_MIGRATION_SQL,
   LIBRARY_SONG_VOICES_MIGRATION_SQL,
 } from '../library/library.schema.js'
 import { MUSIC_MIGRATION_SQL } from '../music/music.schema.js'
@@ -29,6 +30,7 @@ export const NAMED_MIGRATIONS: readonly NamedMigration[] = [
   { id: '008_speech_failures', sql: LIBRARY_SPEECH_FAILURES_MIGRATION_SQL },
   { id: '009_speech_owners', sql: LIBRARY_SPEECH_OWNERS_MIGRATION_SQL },
   { id: '010_song_voices', sql: LIBRARY_SONG_VOICES_MIGRATION_SQL },
+  { id: '011_song_sets', sql: LIBRARY_SONG_SETS_MIGRATION_SQL },
 ]
 
 const LEDGER = `CREATE TABLE IF NOT EXISTS schema_migrations (
