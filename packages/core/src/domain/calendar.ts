@@ -12,8 +12,9 @@
  * ── Why this file exists at all ──
  * `core-rs` owns every number that must be identical across platforms (ADR-0002), and
  * these are such numbers — the widget computes a streak natively, with no JS in reach.
- * UniFFI already exports `streak_day_for` (and the rest of this module). Production JS
- * still uses this TypeScript mirror via `streakDayFor` in `apps/mobile/src/lib/clock.ts`.
+ * UniFFI already exports `streak_day_for` (and the rest of this module). No production JS
+ * calls this mirror since the app moved to its own clock (apps/mobile/src/shared/state/clock.ts);
+ * it stays as the TypeScript side of the shared parity fixtures.
  * The JSON WASM `bridge.rs` does not dispatch calendar methods (HLC is bridged). Parity
  * fixtures (`calendar.fixtures.json`) are asserted by both `calendar.test.ts` and
  * `core-rs/tests/parity.rs`, so a divergence fails the build in one language or the
@@ -25,7 +26,7 @@
  * Every `*WallMs` argument is LOCAL wall-clock milliseconds: epoch ms shifted by the
  * device's UTC offset, so that dividing by 86 400 000 lands on the learner's calendar
  * day rather than UTC's. The crate has no clock and no timezone database, which is why
- * the shift happens at the edge (`apps/mobile/src/lib/clock.ts`) and never in here.
+ * the shift happens at the caller's edge and never in here.
  */
 
 /** A local calendar date, `YYYY-MM-DD`. */

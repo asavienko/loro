@@ -42,9 +42,6 @@ export type Tag =
   /** Specific lexical items trip me up → word-by-word drilling, cloze targeting */
   | 'words'
 
-export const DIFFICULTIES = ['easy', 'med', 'hard'] as const satisfies readonly Difficulty[]
-export const TAGS = ['pron', 'remember', 'useful', 'words'] as const satisfies readonly Tag[]
-
 /** Stream repeat counts, from the blueprint (Loro.dc.html:2526). A contract, not a display model. */
 export const REPEAT_TARGET: Record<Difficulty, number> = { hard: 4, med: 3, easy: 2 }
 
@@ -52,17 +49,6 @@ export const REPEAT_TARGET: Record<Difficulty, number> = { hard: 4, med: 3, easy
 // Progress models — three independent axes
 // docs/product/learning-model.md#mastery-states
 // ─────────────────────────────────────────────────────────────────────────────
-
-/** Retention maturity, shown on the Progress screen. Derived, never stored. */
-export type MasteryBucket = 'new' | 'learning' | 'strong' | 'mastered'
-
-/** Histogram/display order. Exhaustive so a new bucket cannot disappear from a consumer. */
-export const MASTERY_BUCKETS = [
-  'new',
-  'learning',
-  'strong',
-  'mastered',
-] as const satisfies readonly MasteryBucket[]
 
 /**
  * The five-rung ladder: a permanent measure of DEPTH per phrase.
@@ -266,64 +252,13 @@ export interface PhraseView extends PhraseState {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * ELIGIBILITY — whether a row may be planned with, and whether it is owed a review.
- *
- * These two predicates exist because the same rule was written four times, in three
- * languages, and one copy disagreed: the persistence tables required `!learned` AND
- * `graduatedAt === null`, the Refrain's own candidate filter required both, and the store's
- * repository adapter required only `!learned` — so a graduated phrase stayed in what the
- * engines planned from and the Refrain kept offering work on a phrase that left rotation
- * four lock-in days ago.
- *
- * `graduatedAt` is not a nicer `learned`. `learned` is the learner saying "I know this";
- * graduation is the app concluding it after four distinct lock-in days
- * (`store/delta.ts`). Either one takes the row out of rotation, and a row can have one
- * without the other, so both have to be asked.
- *
- * Deletion is the third condition and is deliberately NOT here: a `PhraseState` has no
- * `deletedAt` field, so a tombstoned row is one a repository never hands out at all
- * (`PHRASE_SELECT` filters it; the memory table filters it; the store's array has no row
- * for it). Adding a `deletedAt` field later must add the check here too.
- *
- * The SQL implementations cannot call these — they are WHERE clauses — so
- * `apps/mobile/src/data/persistence.test.ts` runs one adversarial row history through every
- * implementation and asserts they return the same ids.
+ * ELIGIBILITY — whether a row may be planned with: neither marked learned by the learner nor
+ * graduated by the app. Either one takes the row out of rotation, and a row can have one without
+ * the other, so both have to be asked. A tombstoned row never reaches here: a `PhraseState` has
+ * no `deletedAt`.
  */
 export function isActive(p: Pick<PhraseState, 'learned' | 'graduatedAt'>): boolean {
   return !p.learned && p.graduatedAt === null
-}
-
-/**
- * Due for review at `at`.
- *
- * A graduated phrase IS still due: graduation ends the daily ritual, not the long-interval
- * schedule FSRS is keeping for it. Only `learned` — the learner's own claim — stops a row
- * being owed a review, which is why this is not `isActive` plus a date.
- */
-export function isDue(p: Pick<PhraseState, 'learned' | 'srs'>, at: number): boolean {
-  return !p.learned && p.srs !== null && p.srs.due <= at
-}
-
-/** From the blueprint (Loro.dc.html:2828). Derived — never stored. */
-export function masteryBucket(p: Pick<PhraseState, 'learned' | 'reps'>): MasteryBucket {
-  if (p.learned) return 'mastered'
-  if (p.reps >= 3) return 'strong'
-  if (p.reps >= 1) return 'learning'
-  return 'new'
-}
-
-/** Count phrases once in the canonical mastery order. */
-export function countMasteryBuckets(
-  phrases: readonly Pick<PhraseState, 'learned' | 'reps'>[],
-): Record<MasteryBucket, number> {
-  const counts: Record<MasteryBucket, number> = {
-    new: 0,
-    learning: 0,
-    strong: 0,
-    mastered: 0,
-  }
-  for (const phrase of phrases) counts[masteryBucket(phrase)]++
-  return counts
 }
 
 /**
