@@ -2,7 +2,8 @@
 
 The root Compose stack runs the current API, PostgreSQL and Expo web app. It builds the Rust/WASM
 merge inside Docker; no host Rust, Postgres or provider account is needed. The app keeps progress in
-browser storage and does not call the API yet (2026-09-30); account and sync rows live in
+browser storage and loads its content, sign-in and generation from the API (plan 106,
+[library.md](../architecture/library.md)); accounts, the library and synced progress live in
 PostgreSQL. Provider/email sign-in requires the separately configured credentials in
 [persistent practice](persistent-practice.md). Containers serve the browser and API; native speech
 requires an installed device build.
