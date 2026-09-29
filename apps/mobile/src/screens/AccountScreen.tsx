@@ -70,7 +70,6 @@ export function SignIn({ onDone, embedded = false }: { onDone: () => void; embed
       await requestCode(clean);
       setSent(clean);
       setCode('');
-      setTimeout(() => codeField.current?.focus(), 50);
     } catch (error) {
       setProblem(problemText(c, error));
     } finally {
@@ -117,6 +116,7 @@ export function SignIn({ onDone, embedded = false }: { onDone: () => void; embed
           </Txt>
           <TextInput
             ref={codeField}
+            autoFocus
             accessibilityLabelledBy="code-label"
             aria-label={c.account.code}
             value={code}
