@@ -87,6 +87,8 @@ export function makeActions(dispatch: (event: AppEvent) => void, latest: RefObje
     setProfile: (profile: Partial<Omit<Profile, 'updatedAt'>>) => dispatch({ type: 'SET_PROFILE', profile, now: now() }),
     mergeRemote: (learner: LearnerState, pending?: PendingRating[], prefs?: Prefs) => dispatch({ type: 'MERGE_REMOTE', learner, pending, prefs, now: now() }),
     reset: () => dispatch({ type: 'RESET' }),
+    /** Replaces the whole state with a saved one (checked as a load is); another account's progress. */
+    restore: (state: unknown) => dispatch({ type: 'RESTORE', state }),
   };
 }
 

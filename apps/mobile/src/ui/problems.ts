@@ -12,12 +12,12 @@ export function problemText(c: Copy, error: unknown): string {
   if (error.code === 'OFFLINE' || error.code === 'TIMEOUT') return c.account.errors.offline;
   if (error.code === 'LIMIT_REACHED') {
     const at = error.extra.resets_at;
-    return typeof at === 'number' ? c.account.spent(resetTime(c.locale, at)) : c.account.errors.generic;
+    return typeof at === 'number' ? c.account.spent(resetTime(c.locale, at)) : c.account.errors.full;
   }
   if (error.code === 'RATE_LIMITED') return c.account.errors.tooMany;
   if (error.code === 'PROVIDER_UNAVAILABLE') return c.account.errors.unavailable;
   if (error.code === 'UNAUTHENTICATED') return c.account.needed;
   if (error.code === 'NOT_FOUND') return c.share.notFound;
-  if (error.status === 422) return c.account.errors.badCode;
+  if (error.status === 422) return c.account.errors.invalid;
   return c.account.errors.generic;
 }

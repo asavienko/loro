@@ -13,6 +13,12 @@ interface Stored {
   revision: number;
 }
 
+/** The account's progress as this device would load it, or null when it has none. */
+export async function fetchProgress(): Promise<LearnerState | null> {
+  const stored = await api<Stored>('/library/progress', { auth: 'required' });
+  return stored.progress ? sanitizeLearner(stored.progress) : null;
+}
+
 /** Tries this many times when another device keeps writing in between. */
 const ATTEMPTS = 3;
 

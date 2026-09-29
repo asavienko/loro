@@ -4,6 +4,7 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { fetchUsage, Usage } from '@shared/api/library';
 import { onSessionChange, sessionState, SessionState, signOut } from '@shared/api/session';
+import { beforeSignOut } from './syncHooks';
 
 interface AccountValue extends SessionState {
   /** Today's allowances; null while signed out or before the first answer. */
@@ -36,7 +37,12 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
   // Signed out, there is no allowance to show, whatever the last answer was.
   const shown = session.status === 'signedIn' ? usage : null;
-  return <AccountContext.Provider value={{ ...session, usage: shown, refreshUsage, signOut }}>{children}</AccountContext.Provider>;
+  // Signing out saves the learner's progress to their account first (progressSync.ts).
+  const signOutSaving = useCallback(async () => {
+    await beforeSignOut.run();
+    await signOut();
+  }, []);
+  return <AccountContext.Provider value={{ ...session, usage: shown, refreshUsage, signOut: signOutSaving }}>{children}</AccountContext.Provider>;
 }
 
 export function useAccount(): AccountValue {

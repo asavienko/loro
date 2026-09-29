@@ -531,6 +531,8 @@ export function makeEn(n: Plural) {
       changeEmail: 'Use another email',
       signedInAs: (email: string) => `Signed in as ${email}`,
       signOut: 'Sign out',
+      synced: 'Your progress is kept in your account and follows you to other devices.',
+      syncFailed: 'Your progress couldn’t be saved to your account just now. It is safe on this device and will be saved when the connection is back.',
       signedOut: 'Signed out. Your progress on this device is kept.',
       welcome: 'Signed in',
       displayName: 'Name on what you share',
@@ -545,6 +547,8 @@ export function makeEn(n: Plural) {
         unavailable: 'Signing in by email isn’t set up on this server.',
         offline: 'Loro can’t reach its server. Check the connection.',
         generic: 'Something went wrong. Try again.',
+        full: 'Your account holds as many of these as it can. Delete one to make room.',
+        invalid: 'That couldn’t be saved: something in it is too long or missing.',
       },
       today: 'Today’s allowance',
       usage: {
@@ -603,6 +607,9 @@ export function makeEn(n: Plural) {
       changed: 'Saved',
       notFound: 'This link doesn’t open anything. It may have been made private or deleted.',
       opening: 'Opening…',
+      report: 'Report',
+      reported: 'Reported. Thank you.',
+      reason: { offensive: 'Offensive or hurtful', wrong: 'Wrong language or mistakes', spam: 'Spam or advertising', other: 'Something else' },
     },
     community: {
       title: 'Community',

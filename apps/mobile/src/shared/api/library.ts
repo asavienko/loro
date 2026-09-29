@@ -141,3 +141,6 @@ export const generateCover = (body: { kind: 'set' | 'album'; title: string; desc
 
 export const generateSong = (body: { setId: string; styleId: SongStyle; nativeLang: LanguageCode; title?: string; albumId?: string }) =>
   api<{ song: Song; album: Album }>('/library/generate/song', { method: 'POST', body, auth: 'required', timeoutMs: 60_000 });
+
+export const reportItem = (kind: 'set' | 'album', id: string, reason: 'offensive' | 'wrong' | 'spam' | 'other') =>
+  api<{ reported: true }>('/library/reports', { method: 'POST', body: { kind, id, reason }, auth: 'required' });
