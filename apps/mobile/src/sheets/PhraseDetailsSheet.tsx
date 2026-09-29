@@ -4,16 +4,19 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { languageLabel, languageName } from '@shared/copy';
-import { getLanguage, getTopic } from '@shared/content';
+import { updateSet } from '@shared/api/library';
+import { findSet, getLanguage, getTopic } from '@shared/content';
 import { liveAvailable, writeNotes } from '@shared/generate/remote';
 import { useNav } from '@shared/nav/NavContext';
 import { findPhrase, findSetView, promptOf } from '@shared/state/catalog';
 import { currentPhraseId, displayLearner, isLiked, phraseProgress } from '@shared/state/selectors';
+import { useContent } from '../state/content';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
 import { PhraseNotesView } from '../ui/Notes';
 import { PhraseImage } from '../ui/PhraseImage';
+import { problemText } from '../ui/problems';
 import { progressLabel } from '../ui/progressLabel';
 import { Sheet, SheetAction, SheetActionGrid, SheetOption } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
@@ -44,6 +47,7 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
   const { toast } = useToast();
   const { state, actions } = useStore();
   const now = useNow(30_000);
+  const content = useContent();
   const phrase = findPhrase(state.learner, phraseId);
   // Deleting your own phrase closes the sheet; while it slides away, the phrase is already gone.
   if (!phrase) return null;
@@ -52,6 +56,8 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
   const isCurrent = currentPhraseId(state.player) === phrase.id;
   const ownSet = ownSetId ? findSetView(state.learner, ownSetId) : undefined;
+  const served = findSet(phrase.setId);
+  const accountSet = served?.owner === 'me' ? served : undefined;
   const topicId = findSetView(state.learner, phrase.setId)?.topicId;
   // A phrase the learner added from suggestions says where its text came from.
   const own = state.learner.ownPhrases[phrase.id];
@@ -181,6 +187,23 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
                 actions.removeFromSet(ownSet.id, phrase.id);
                 toast(c.phrase.removedFromSet, { action: { label: c.common.undo, run: () => actions.addToSet(ownSet.id, [phrase.id], at) } });
                 onClose();
+              }}
+            />
+          )}
+          {/* A phrase of a set in the learner's account (plan 106) leaves it there. */}
+          {accountSet && accountSet.phraseIds.length > 1 && (
+            <SheetOption
+              icon="playlist_remove"
+              label={c.phrase.removeFromSet}
+              onPress={() => {
+                onClose();
+                updateSet(accountSet.id, { removePhraseIds: [phrase.id] }).then(
+                  () => {
+                    toast(c.phrase.removedFromSet);
+                    void content.refresh();
+                  },
+                  (error: unknown) => toast(problemText(c, error)),
+                );
               }}
             />
           )}

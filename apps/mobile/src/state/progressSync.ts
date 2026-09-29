@@ -3,16 +3,19 @@
 // device merges into this one. Offline, it waits: the device's own copy is always the one that plays.
 //
 // The device remembers whose progress it holds. Signing out first saves it to that account; signing
-// in as someone else then replaces it with that account's progress rather than merging one learner's
-// history into another's (a shared phone).
+// in as someone else keeps it on the device under the first account and loads the second's, rather
+// than merging one learner's history into another's (a shared phone). The first learner's kept
+// progress rejoins theirs when they sign in here again.
 import { useEffect, useRef } from 'react';
 import { AppState as AppLifecycle } from 'react-native';
-import { kvGet, kvSet } from '@shared/api/kv';
+import { kvGet, kvRemove, kvSet } from '@shared/api/kv';
 import { fetchProgress, syncProgress } from '@shared/api/progress';
 import { useLatest } from '@shared/lib/useLatest';
 import { initialLearner } from '@shared/state/initial';
-import { serializeState } from '@shared/state/persistence';
-import type { AppState } from '@shared/state/types';
+import { encodeLog } from '@shared/state/compactLog';
+import { mergeLearner } from '@shared/state/merge';
+import { sanitizeLearner, serializeState } from '@shared/state/persistence';
+import type { AppState, LearnerState } from '@shared/state/types';
 import { useAccount } from './account';
 import { useStore } from './store';
 import { beforeSignOut, lastSync } from './syncHooks';
@@ -20,6 +23,24 @@ import { beforeSignOut, lastSync } from './syncHooks';
 /** Changes are sent this long after the last one, so a session of ratings is one write. */
 const AFTER_CHANGE_MS = 20_000;
 const OWNER_KEY = 'loro.progress.owner';
+
+const stashKey = (userId: string) => `loro.progress.stash.${userId}`;
+
+/** Keeps a learner's progress on this device under their account, merged with any kept before. */
+async function stash(userId: string, learner: LearnerState): Promise<void> {
+  const kept = await unstash(userId);
+  const merged = kept ? mergeLearner(kept, learner) : learner;
+  await kvSet(stashKey(userId), JSON.stringify({ ...merged, log: encodeLog(merged.log) }));
+}
+
+async function unstash(userId: string): Promise<LearnerState | null> {
+  try {
+    const raw = await kvGet(stashKey(userId));
+    return raw ? sanitizeLearner(JSON.parse(raw)) : null;
+  } catch {
+    return null;
+  }
+}
 
 export function useProgressSync(): void {
   const { state, actions } = useStore();
@@ -35,11 +56,20 @@ export function useProgressSync(): void {
       try {
         const owner = await kvGet(OWNER_KEY);
         if (owner && owner !== userId) {
-          // Another account's progress is on this device: this account's replaces it.
+          // Another account's progress is on this device. It is kept here under that account (its
+          // last save may not have reached it) and never merged into this one; this account's
+          // progress, with anything it left on this device before, takes its place.
           const current: AppState = latest.current;
+          await stash(owner, current.learner);
           const theirs = await fetchProgress();
-          const learner = theirs ?? { ...initialLearner(), profile: { ...current.learner.profile, name: '' } };
+          const left = await unstash(userId);
+          let learner = theirs ?? { ...initialLearner(), profile: { ...current.learner.profile, name: '' } };
+          if (left) learner = mergeLearner(learner, left);
           actions.restore(JSON.parse(serializeState({ ...current, learner, pending: [] })));
+          if (left) {
+            await syncProgress(learner);
+            await kvRemove(stashKey(userId));
+          }
         } else {
           const before = latest.current.learner;
           const merged = await syncProgress(before);
@@ -60,6 +90,8 @@ export function useProgressSync(): void {
 
   useEffect(() => {
     beforeSignOut.run = async () => {
+      // A sync already under way may have started before the latest change: wait, then save again.
+      await running.current?.catch(() => {});
       await run.current().catch(() => {});
     };
   }, [run]);
