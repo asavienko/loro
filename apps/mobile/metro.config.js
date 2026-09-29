@@ -47,6 +47,8 @@ const NATIVE = {
   [path.join(sharedRoot, 'api/kv.ts')]: path.join(projectRoot, 'src/platform/kv.ts'),
   // The refresh token: the Keychain / Keystore instead of localStorage.
   [path.join(sharedRoot, 'api/secrets.ts')]: path.join(projectRoot, 'src/platform/secrets.ts'),
+  // A provider's sign-in page: an auth session that returns to the app instead of leaving it.
+  [path.join(sharedRoot, 'api/oauth.ts')]: path.join(projectRoot, 'src/platform/oauth.ts'),
 };
 
 const SHARED = '@shared/';

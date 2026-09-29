@@ -5,6 +5,7 @@
 import { clock } from '../state/clock';
 import { api, ApiError, setTokenSource } from './client';
 import { kvGet, kvRemove, kvSet, PLATFORM } from './kv';
+import { pkcePair, providerPageAvailable, returnAddress, takePending, visitProviderPage, type Returned } from './oauth';
 import { secretGet, secretRemove, secretSet } from './secrets';
 
 export interface Account {
@@ -127,42 +128,34 @@ async function completeSignIn(reply: SignInReply, email: string | null): Promise
   return account;
 }
 
-// ---------- signing in with a provider in the browser (PKCE) ----------
+// ---------- signing in with a provider's page (PKCE) ----------
 
-const OAUTH_KEY = 'loro.oauth';
-
-const base64url = (bytes: Uint8Array) =>
-  btoa(String.fromCharCode(...bytes))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-
-/** Whether this runtime can sign in with a provider page: a browser with Web Crypto. */
-export function providerSignInAvailable(): boolean {
-  return typeof window !== 'undefined' && typeof window.location !== 'undefined' && Boolean(globalThis.crypto?.subtle);
-}
+/** Whether this runtime can sign in with a provider page (./oauth.ts; the native one on iOS/Android). */
+export const providerSignInAvailable = providerPageAvailable;
 
 /**
- * Sends the browser to the provider's sign-in page. It comes back to `returnTo` with a ticket that
- * `finishProviderSignIn` exchanges for a session; the verifier waits in this tab's session storage.
+ * Signs in on the provider's page. In a browser the tab leaves for it (`'left'`) and comes back to
+ * the account screen with a ticket for `finishProviderSignIn`; on iOS and Android the page opens in
+ * an auth session and this returns the account, or null when the learner closed the page.
  */
-export async function startProviderSignIn(provider: 'google' | 'apple', returnTo: string): Promise<void> {
-  const verifier = base64url(globalThis.crypto.getRandomValues(new Uint8Array(32)));
-  const challenge = base64url(new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))));
+export async function signInWithProvider(provider: 'google' | 'apple'): Promise<Account | 'left' | null> {
+  const { verifier, challenge } = await pkcePair();
+  const returnTo = returnAddress();
   const started = await api<{ authorization_url: string; state: string }>(`/auth/${provider}/start`, {
     method: 'POST',
     auth: 'none',
     body: { redirect_uri: returnTo, code_challenge: challenge },
   });
-  sessionStorage.setItem(OAUTH_KEY, JSON.stringify({ verifier, state: started.state }));
-  window.location.assign(started.authorization_url);
+  const back = await visitProviderPage(started.authorization_url, returnTo, { verifier, state: started.state });
+  if (back === 'left') return 'left';
+  if (back === 'cancelled') return null;
+  return finishProviderSignIn(back);
 }
 
 /** Exchanges the ticket the provider's page returned with for a session; the state must match. */
-export async function finishProviderSignIn(params: { state?: string; ticket?: string }): Promise<Account> {
-  const saved = sessionStorage.getItem(OAUTH_KEY);
-  sessionStorage.removeItem(OAUTH_KEY);
-  const pending = saved ? (JSON.parse(saved) as { verifier: string; state: string }) : null;
+export async function finishProviderSignIn(params: Returned): Promise<Account> {
+  const pending = takePending();
+  if (params.error) throw new ApiError(401, 'UNAUTHENTICATED', 'Sign-in refused');
   if (!pending || !params.ticket || params.state !== pending.state) throw new ApiError(401, 'UNAUTHENTICATED', 'Sign-in did not match');
   const reply = await api<SignInReply>('/auth/exchange', {
     method: 'POST',
