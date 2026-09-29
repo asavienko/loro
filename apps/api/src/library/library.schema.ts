@@ -121,3 +121,16 @@ CREATE TABLE IF NOT EXISTS library_profiles (
   updated_at bigint NOT NULL
 );
 `
+
+/**
+ * A learner's progress in their account (plan 106): the app's learner state (compact log, likes,
+ * own phrases and sets, profile), merged on the device before it is written. `revision` makes a
+ * write from a device that hasn't seen the latest one fail, so no device's progress is lost.
+ */
+export const LIBRARY_PROGRESS_MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS library_progress (
+  user_id text PRIMARY KEY,
+  revision integer NOT NULL,
+  body jsonb NOT NULL,
+  updated_at bigint NOT NULL
+);
+`

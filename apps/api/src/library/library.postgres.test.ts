@@ -15,6 +15,7 @@ import {
   isolatedSchemaName,
 } from '../testing/postgres-schema.js'
 import { LibraryService } from './library.service.js'
+import { ProgressService } from './progress.js'
 import { resetWriter } from './writers.js'
 
 const code = async (work: Promise<unknown>) => {
@@ -293,5 +294,30 @@ describePostgres('the library against real PostgreSQL', () => {
         }),
       ),
     ).toBe('NOT_FOUND')
+  })
+
+  it('keeps a learner’s progress and refuses a write that missed another device’s', async () => {
+    const progress = new ProgressService(database, { now: () => now })
+    expect(await progress.read('joy')).toEqual({ progress: null, revision: 0, updatedAt: null })
+    expect(await progress.write('joy', { progress: { log: [1] }, baseRevision: 0 })).toEqual({
+      revision: 1,
+    })
+    // A second device that also started from nothing must merge what the first wrote.
+    expect(await code(progress.write('joy', { progress: { log: [2] }, baseRevision: 0 }))).toBe(
+      'CURSOR_EXPIRED',
+    )
+    expect(await progress.write('joy', { progress: { log: [1, 2] }, baseRevision: 1 })).toEqual({
+      revision: 2,
+    })
+    expect(await code(progress.write('joy', { progress: { log: [9] }, baseRevision: 1 }))).toBe(
+      'CURSOR_EXPIRED',
+    )
+    expect((await progress.read('joy')).progress).toEqual({ log: [1, 2] })
+    expect((await progress.read('kim')).progress).toBeNull()
+    expect(
+      await code(
+        progress.write('joy', { progress: { log: 'x'.repeat(1_000_000) }, baseRevision: 2 }),
+      ),
+    ).toBe('VALIDATION_FAILED')
   })
 })
