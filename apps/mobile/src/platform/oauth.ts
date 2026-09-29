@@ -46,6 +46,8 @@ export async function pkcePair(): Promise<{ verifier: string; challenge: string 
 }
 
 export async function visitProviderPage(url: string, returnTo: string, next: Pending): Promise<Returned | 'left' | 'cancelled'> {
+  // One page at a time: a second would replace the first's verifier and fail its return.
+  if (pending) return 'cancelled';
   pending = next;
   const result = await WebBrowser.openAuthSessionAsync(url, returnTo);
   if (result.type !== 'success') {
