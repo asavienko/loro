@@ -20,6 +20,7 @@ import {
   LibraryCourseSchema,
   LibraryIdSchema,
   ProfileSchema,
+  ReportSchema,
   SaveSchema,
   ShareCodeSchema,
   UpdateAlbumSchema,
@@ -71,6 +72,8 @@ const SEED_REVISION = 2
 const RENDER_TIMEOUT_MS = 10 * 60_000
 const DAY_MS = 86_400_000
 const COMMUNITY_PAGE = 50
+/** This many learners reporting a public item take it out of Community; its link still opens it. */
+const REPORTS_TO_HIDE = 3
 
 type Language = V2Language
 type NoteTranslations = PhraseWire['noteTranslations']
@@ -412,6 +415,7 @@ export class LibraryService {
       const rows = (
         await this.db.query<SetRow>(
           `${SET_SELECT} WHERE s.target_lang = $1 AND s.origin = 'user' AND s.visibility = 'public'
+             AND (SELECT count(*) FROM library_reports r WHERE r.kind = 'set' AND r.item_id = s.id) < ${REPORTS_TO_HIDE}
              AND ($2 = '' OR s.title ILIKE $3 OR coalesce(s.description, '') ILIKE $3)
            ORDER BY s.updated_at DESC LIMIT ${COMMUNITY_PAGE}`,
           [targetLang, q, like],
@@ -427,6 +431,7 @@ export class LibraryService {
     const rows = (
       await this.db.query<AlbumRow>(
         `${ALBUM_SELECT} WHERE a.target_lang = $1 AND a.origin = 'user' AND a.visibility = 'public'
+           AND (SELECT count(*) FROM library_reports r WHERE r.kind = 'album' AND r.item_id = a.id) < ${REPORTS_TO_HIDE}
            AND ($2 = '' OR a.title ILIKE $3 OR coalesce(a.description, '') ILIKE $3)
          ORDER BY a.updated_at DESC LIMIT ${COMMUNITY_PAGE}`,
         [targetLang, q, like],
@@ -747,6 +752,7 @@ export class LibraryService {
           row.id,
           input.removeSongIds,
         ])
+        await forgetUnusedAudio(tx)
       }
       await tx.query(
         `UPDATE library_albums SET title = coalesce($2, title), description = CASE WHEN $3 THEN $4 ELSE description END,
@@ -772,6 +778,7 @@ export class LibraryService {
       await tx.query('DELETE FROM library_songs WHERE album_id = $1', [row.id])
       await tx.query("DELETE FROM library_saves WHERE kind = 'album' AND item_id = $1", [row.id])
       await tx.query('DELETE FROM library_albums WHERE id = $1', [row.id])
+      await forgetUnusedAudio(tx)
     })
   }
 
@@ -793,6 +800,24 @@ export class LibraryService {
       'DELETE FROM library_saves WHERE user_id = $1 AND kind = $2 AND item_id = $3',
       [userId, input.kind, input.id],
     )
+  }
+
+  /** One report per learner per item, of something they can see and don't own. */
+  async report(userId: string, body: unknown): Promise<{ reported: true }> {
+    await this.ready()
+    const input = parseContract(ReportSchema, body)
+    const row =
+      input.kind === 'set'
+        ? await this.readableSet(userId, input.id)
+        : await this.readableAlbum(userId, input.id)
+    if (row.origin === 'loro' || row.owner_id === userId)
+      throw new LoroError('VALIDATION_FAILED', 'Nothing to report')
+    await this.db.query(
+      `INSERT INTO library_reports(user_id, kind, item_id, reason, created_at) VALUES ($1,$2,$3,$4,$5)
+       ON CONFLICT (user_id, kind, item_id) DO UPDATE SET reason = EXCLUDED.reason`,
+      [userId, input.kind, input.id, input.reason, this.clock.now()],
+    )
+    return { reported: true }
   }
 
   async profile(userId: string): Promise<{ displayName: string | null }> {
@@ -878,6 +903,14 @@ export class LibraryService {
       })
   }
 
+  /** Gives back one use of today's allowance, when the writer asked for it failed. */
+  private async refund(userId: string, kind: UsageKind): Promise<void> {
+    await this.db.query(
+      'UPDATE library_usage SET used = used - 1 WHERE user_id = $1 AND kind = $2 AND day = $3 AND used > 0',
+      [userId, kind, utcDay(this.clock.now())],
+    )
+  }
+
   private async keptCount(userId: string, kind: KeptKind): Promise<number> {
     const table = { sets: 'library_sets', albums: 'library_albums', songs: 'library_songs' }[kind]
     return num(
@@ -914,6 +947,8 @@ export class LibraryService {
         this.logger.warn(
           `phrase writer failed: ${error instanceof Error ? error.message : 'unknown'}; answering from the bank`,
         )
+        // The app keeps its own bank: a writer's failure doesn't cost the learner a deck.
+        await this.refund(userId, 'phrases')
       }
     }
     const phrases = bankPhrases(request)
@@ -994,6 +1029,8 @@ export class LibraryService {
       if (album.target_lang !== set.target_lang)
         throw new LoroError('VALIDATION_FAILED', 'The album is in another language')
     }
+    // A new album must fit before the allowance is spent on a song that couldn't be kept.
+    if (!albumId) await this.assertKept(userId, 'albums')
     await this.spend(userId, 'song')
     albumId ??= await this.insertAlbum(userId, {
       title: set.title,
@@ -1101,11 +1138,12 @@ export class LibraryService {
     } catch (error) {
       const reason = error instanceof Error ? error.message : 'unknown'
       this.logger.warn(`song ${id} failed: ${reason}`)
+      // Only the provider's own failure kinds reach the app, never an internal message.
+      const code = ['rate_limited', 'provider', 'invalid_audio', 'unavailable'].includes(reason)
+        ? reason
+        : 'failed'
       await this.db
-        .query("UPDATE library_songs SET status = 'failed', error = $2 WHERE id = $1", [
-          id,
-          reason.slice(0, 40),
-        ])
+        .query("UPDATE library_songs SET status = 'failed', error = $2 WHERE id = $1", [id, code])
         .catch(() => undefined)
     }
   }
@@ -1198,8 +1236,15 @@ export class LibraryService {
 const SET_SELECT = `SELECT s.*, p.display_name AS author FROM library_sets s LEFT JOIN library_profiles p ON p.user_id = s.owner_id`
 const ALBUM_SELECT = `SELECT a.*, p.display_name AS author,
   (SELECT count(*) FROM library_songs so WHERE so.album_id = a.id AND so.status = 'ready') AS song_count,
-  (SELECT coalesce(sum(so.duration_ms), 0) FROM library_songs so WHERE so.album_id = a.id AND so.status = 'ready') AS duration_ms
+  (SELECT CASE WHEN count(so.duration_ms) = count(*) THEN coalesce(sum(so.duration_ms), 0) END FROM library_songs so WHERE so.album_id = a.id AND so.status = 'ready') AS duration_ms
   FROM library_albums a LEFT JOIN library_profiles p ON p.user_id = a.owner_id`
+
+/** Song sounds no song plays any more (content-addressed, so shared sounds stay). */
+async function forgetUnusedAudio(tx: SqlConnection): Promise<void> {
+  await tx.query(
+    'DELETE FROM library_audio a WHERE NOT EXISTS (SELECT 1 FROM library_songs s WHERE s.audio_id = a.id)',
+  )
+}
 
 function canRead(
   row: { origin: string; owner_id: string | null; visibility: Visibility },
@@ -1259,7 +1304,9 @@ function toAlbumWire(row: AlbumRow, userId: string | null, saved: Set<string>): 
     shareCode: owner === 'me' || row.visibility !== 'private' ? row.share_code : null,
     saved: saved.has(row.id),
     songCount: num(row.song_count),
-    durationMs: num(row.duration_ms),
+    // Unknown when a sung song's length isn't measured: never a total that leaves it out.
+    durationMs:
+      row.duration_ms === null || row.duration_ms === undefined ? null : num(row.duration_ms),
     createdAt: num(row.created_at),
     updatedAt: num(row.updated_at),
   }

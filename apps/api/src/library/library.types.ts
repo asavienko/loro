@@ -94,7 +94,8 @@ export interface AlbumWire {
   shareCode: string | null
   saved: boolean
   songCount: number
-  durationMs: number
+  /** Null while a song's length is unknown (a sung song), rather than a total that leaves it out. */
+  durationMs: number | null
   createdAt: number
   updatedAt: number
 }

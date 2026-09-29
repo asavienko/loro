@@ -316,8 +316,35 @@ describePostgres('the library against real PostgreSQL', () => {
     expect((await progress.read('kim')).progress).toBeNull()
     expect(
       await code(
-        progress.write('joy', { progress: { log: 'x'.repeat(1_000_000) }, baseRevision: 2 }),
+        progress.write('joy', { progress: { log: 'x'.repeat(4_000_000) }, baseRevision: 2 }),
       ),
     ).toBe('VALIDATION_FAILED')
+  })
+
+  it('takes a public set out of Community once three learners report it', async () => {
+    const phrases = (await deck('lou')).slice(0, 1)
+    const { set } = await library.createSet('lou', {
+      title: 'Reported',
+      targetLang: 'es-ES',
+      nativeLang: 'bg-BG',
+      visibility: 'public',
+      phrases,
+    })
+    const listed = async () =>
+      (await library.community(null, { target: 'es-ES', kind: 'sets' })).sets?.some(
+        (s) => s.id === set.id,
+      )
+    expect(await code(library.report('lou', { kind: 'set', id: set.id, reason: 'spam' }))).toBe(
+      'VALIDATION_FAILED',
+    )
+    expect(await code(library.report('max', { kind: 'set', id: 'set-cafe', reason: 'spam' }))).toBe(
+      'VALIDATION_FAILED',
+    )
+    for (const who of ['max', 'max', 'ned'])
+      await library.report(who, { kind: 'set', id: set.id, reason: 'offensive' })
+    expect(await listed()).toBe(true)
+    await library.report('oli', { kind: 'set', id: set.id, reason: 'offensive' })
+    expect(await listed()).toBe(false)
+    expect((await library.set(null, set.id)).set.id).toBe(set.id)
   })
 })

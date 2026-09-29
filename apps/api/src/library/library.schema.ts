@@ -134,3 +134,15 @@ export const LIBRARY_PROGRESS_MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS librar
   updated_at bigint NOT NULL
 );
 `
+
+/** Reports of a public item (plan 106): one per learner per item; enough of them take it out of Community. */
+export const LIBRARY_REPORTS_MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS library_reports (
+  user_id text NOT NULL,
+  kind text NOT NULL,
+  item_id text NOT NULL,
+  reason text NOT NULL,
+  created_at bigint NOT NULL,
+  PRIMARY KEY (user_id, kind, item_id)
+);
+CREATE INDEX IF NOT EXISTS library_reports_item ON library_reports(kind, item_id);
+`

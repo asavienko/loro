@@ -23,8 +23,8 @@ import { LoroError } from '../common/errors.js'
 import { parseContract } from '../common/parse.js'
 import { DATABASE, type SqlDatabase } from '../database/database.js'
 
-/** Within the API's 1 MB JSON limit, with room for the envelope. */
-export const MAX_PROGRESS_BYTES = 900_000
+/** Within the API's JSON limit, with room for the envelope: years of daily practice. */
+export const MAX_PROGRESS_BYTES = 3_800_000
 
 const ProgressWriteSchema = z.strictObject({
   /** The app's learner state; its shape is the app's to check (sanitizeLearner). */

@@ -47,9 +47,12 @@ learner's own sets); progress on the device is untouched. The display name shown
 
 A signed-in learner's **progress** follows them (`GET/POST /library/progress`): the device merges
 the account's copy of its learner state (union of logs, latest of each field, as two tabs merge) and
-writes the result back with the revision it merged onto. A write on an older revision is refused
-(`409 CURSOR_EXPIRED`) and merged again, so no device's progress is lost. It runs on signing in, on
-returning to the foreground and 20 s after a change.
+writes the result back with the revision it merged onto (at most 3.8 MB, within the API's 4 MB JSON
+limit). A write on an older revision is refused (`409 CURSOR_EXPIRED`) and merged again, so no
+device's progress is lost. It runs on signing in, on returning to the foreground and 20 s after a
+change. The device remembers whose progress it holds: signing out first saves it to that account,
+and signing in as someone else replaces it with that account's progress instead of merging two
+learners (a shared phone).
 
 ## Visibility and sharing
 
@@ -59,9 +62,12 @@ returning to the foreground and 20 s after a change.
 | `link`     | Anyone with its id or share code (`/shared/<code>`) | No                  |
 | `public`   | Anyone                                              | Yes                 |
 
-Loro's rows are public and read-only. Anyone who can read a set or album can save it to their
-library; it then comes with their pack until its owner makes it private. Only the owner changes or
-deletes something; for anyone else it is not found. Deleting removes it from everyone's library.
+Loro's rows are public and read-only. A signed-in learner can report someone else's shared set or
+album once (`POST /library/reports`: offensive, wrong, spam or other); three learners' reports take
+a public item out of Community, while its link still opens it. Anyone who can read a set or album
+can save it to their library; it then comes with their pack until its owner makes it private. Only
+the owner changes or deletes something; for anyone else it is not found. Deleting removes it from
+everyone's library.
 
 Song audio is served with byte ranges from `GET /library/songs/:id/audio`. An audio element cannot
 send a bearer, so a song's `audioUrl` carries a signature valid for about 12 hours
