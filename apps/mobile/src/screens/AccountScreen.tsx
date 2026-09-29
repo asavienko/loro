@@ -42,7 +42,8 @@ export function AccountScreen() {
   );
 }
 
-function SignIn({ onDone }: { onDone: () => void }) {
+/** The email-code sign-in; `embedded` (onboarding) leaves out its own Not now. */
+export function SignIn({ onDone, embedded = false }: { onDone: () => void; embedded?: boolean }) {
   const c = useCopy();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
@@ -171,7 +172,7 @@ function SignIn({ onDone }: { onDone: () => void }) {
           />
           {problem && <Problem text={problem} />}
           <Button variant="primary" icon="mail" label={busy ? c.account.sending : c.account.sendCode} disabled={busy || !email.trim() || !emailOffered} onPress={() => void send()} />
-          <Button variant="text" label={c.account.notNow} onPress={onDone} />
+          {!embedded && <Button variant="text" label={c.account.notNow} onPress={onDone} />}
         </>
       )}
       {busy && <ActivityIndicator color={colors.primaryContainer} />}
