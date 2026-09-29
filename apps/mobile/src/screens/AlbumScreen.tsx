@@ -12,6 +12,7 @@ import { clockTime, useMusic } from '../music/MusicPlayer';
 import { ReportSheet } from '../sheets/ReportSheet';
 import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
+import { NightStatusBar } from '../music/NightStatusBar';
 import { useCopy } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
@@ -130,6 +131,7 @@ export function AlbumScreen({ id }: { id: string }) {
 
   return (
     <ScrollView style={styles.page} contentContainerStyle={[styles.content, { paddingTop: insets.top + 4 }]}>
+      <NightStatusBar />
       <View style={styles.top}>
         <Button variant="icon" icon="arrow_back" color="onNight" accessibilityLabel={c.common.back} onPress={back} />
       </View>

@@ -10,6 +10,7 @@ import { fetchCommunityAlbums } from '@shared/api/library';
 import { Album, albumsForCourse } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
 import { AlbumCard } from '../music/AlbumCard';
+import { NightStatusBar } from '../music/NightStatusBar';
 import { useStore, useCopy } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
@@ -50,6 +51,7 @@ export function MusicScreen() {
 
   return (
     <ScrollView style={styles.page} contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}>
+      <NightStatusBar />
       <View style={styles.head}>
         <Txt variant="display" face="serif" weight={600} color="onNight" accessibilityRole="header" style={{ flex: 1 }}>
           {c.music.title}

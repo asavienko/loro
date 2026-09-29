@@ -9,6 +9,7 @@ import { findSet } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
 import { AlbumCover } from '../music/AlbumCover';
 import { clockTime, useMusic } from '../music/MusicPlayer';
+import { NightStatusBar } from '../music/NightStatusBar';
 import { useCopy } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
@@ -45,6 +46,7 @@ export function SongScreen() {
 
   return (
     <View style={[styles.page, { paddingTop: insets.top }]}>
+      <NightStatusBar />
       <View style={styles.top}>
         <Button variant="icon" icon="keyboard_arrow_down" color="onNight" accessibilityLabel={c.common.close} onPress={close} />
         <Txt variant="label" weight={700} color="onNightVariant" style={styles.topTitle} numberOfLines={1}>
