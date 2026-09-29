@@ -159,3 +159,7 @@ export const LIBRARY_SPEECH_MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS library_
   created_at bigint NOT NULL
 );
 `
+
+/** A clip whose render failed is not asked for again for a while (library/speech.ts). */
+export const LIBRARY_SPEECH_FAILURES_MIGRATION_SQL = `ALTER TABLE library_speech ADD COLUMN IF NOT EXISTS failed_at bigint;
+`

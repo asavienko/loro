@@ -3,6 +3,7 @@ import {
   LIBRARY_MIGRATION_SQL,
   LIBRARY_PROGRESS_MIGRATION_SQL,
   LIBRARY_REPORTS_MIGRATION_SQL,
+  LIBRARY_SPEECH_FAILURES_MIGRATION_SQL,
   LIBRARY_SPEECH_MIGRATION_SQL,
 } from '../library/library.schema.js'
 import { MUSIC_MIGRATION_SQL } from '../music/music.schema.js'
@@ -23,6 +24,7 @@ export const NAMED_MIGRATIONS: readonly NamedMigration[] = [
   { id: '005_progress', sql: LIBRARY_PROGRESS_MIGRATION_SQL },
   { id: '006_reports', sql: LIBRARY_REPORTS_MIGRATION_SQL },
   { id: '007_speech', sql: LIBRARY_SPEECH_MIGRATION_SQL },
+  { id: '008_speech_failures', sql: LIBRARY_SPEECH_FAILURES_MIGRATION_SQL },
 ]
 
 const LEDGER = `CREATE TABLE IF NOT EXISTS schema_migrations (

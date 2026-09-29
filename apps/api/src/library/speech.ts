@@ -76,6 +76,8 @@ export async function registerSpeech(
 }
 
 const DEFAULT_DAILY_RENDERS = 500
+/** A clip whose render failed (a voice the provider refuses) isn't asked for again for this long. */
+const RETRY_AFTER_FAILURE_MS = 6 * 3_600_000
 
 interface SpeechRow {
   id: string
@@ -84,6 +86,7 @@ interface SpeechRow {
   voice_id: string | null
   model: string | null
   audio_id: string | null
+  failed_at: string | number | null
 }
 
 @Injectable()
@@ -120,6 +123,13 @@ export class SpeechService {
       ).rows[0]
       if (stored) return { bytes: stored.body, contentType: stored.content_type }
     }
+    // A render that just failed would fail again and cost a try: the device voice speaks meanwhile.
+    if (
+      row.failed_at !== null &&
+      this.clock.now() - Number(row.failed_at) < RETRY_AFTER_FAILURE_MS
+    ) {
+      throw new LoroError('PROVIDER_UNAVAILABLE')
+    }
     const pending = this.inflight.get(id)
     if (pending) return pending
     const work = this.render(row, voice)
@@ -154,9 +164,17 @@ export class SpeechService {
         modelId: voice.model,
       })
     } catch (error) {
-      this.logger.warn(
-        `speech render failed (${row.lang}): ${error instanceof Error ? error.name : 'unknown'}`,
+      const code = error instanceof Error && 'code' in error ? String(error.code) : 'unknown'
+      this.logger.warn(`speech render failed (${row.lang}): ${code}`)
+      // A failure doesn't use up the day's renders, and isn't retried for a while.
+      await this.db.query(
+        `UPDATE library_usage SET used = used - 1 WHERE user_id = '__server__' AND kind = 'speech' AND day = $1 AND used > 0`,
+        [day],
       )
+      await this.db.query('UPDATE library_speech SET failed_at = $2 WHERE id = $1', [
+        row.id,
+        this.clock.now(),
+      ])
       throw new LoroError('PROVIDER_UNAVAILABLE')
     }
     if (result.provenance.provider !== 'elevenlabs') throw new LoroError('PROVIDER_UNAVAILABLE')
@@ -168,7 +186,7 @@ export class SpeechService {
         [audioId, result.contentType, bytes.byteLength, bytes],
       )
       await tx.query(
-        'UPDATE library_speech SET voice_id = $2, model = $3, audio_id = $4, duration_ms = $5 WHERE id = $1',
+        'UPDATE library_speech SET voice_id = $2, model = $3, audio_id = $4, duration_ms = $5, failed_at = NULL WHERE id = $1',
         [row.id, voice.voiceId, voice.model, audioId, audioDurationMs(bytes)],
       )
     })
