@@ -71,6 +71,7 @@ export const errorStatus = {
   INTERNAL: 500,
   NOT_FOUND: 404,
   CURSOR_EXPIRED: 409,
+  LIMIT_REACHED: 429,
 } as const
 export const ErrorCodeSchema = z.enum(
   Object.keys(errorStatus) as [keyof typeof errorStatus, ...(keyof typeof errorStatus)[]],
