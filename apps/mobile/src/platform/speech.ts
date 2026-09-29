@@ -118,8 +118,50 @@ export function preloadClip(_url: string): void {}
 /** A clip that never loads or never ends gives way after this, or twice its length. */
 const CLIP_STALL_MS = 15_000;
 
+/** How long a clip may take to answer (the server renders one it hasn't yet) and then to load. */
+const CLIP_CHECK_MS = 8_000;
+const CLIP_LOAD_MS = 5_000;
+
+/**
+ * Whether the clip can be fetched. expo-audio reports no load error, so a clip the server can't
+ * make (offline, a voice it lacks) is found here, at once, rather than after a silent wait.
+ */
+async function clipAvailable(url: string, signal: AbortSignal): Promise<boolean> {
+  try {
+    const response = await fetch(url, { method: 'HEAD', signal });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
 /** A clip from the server's voice (plan 106), measured by its own length. */
 function playClip(url: string, rate: number): Playback {
+  let resolve: (r: PlaybackResult) => void = () => {};
+  const done = new Promise<PlaybackResult>((r) => (resolve = r));
+  const check = new AbortController();
+  const checkTimer = setTimeout(() => check.abort(), CLIP_CHECK_MS);
+  let cancelled = false;
+  let playing: Playback | null = null;
+  void clipAvailable(url, check.signal).then((ok) => {
+    clearTimeout(checkTimer);
+    if (cancelled) return;
+    if (!ok) return resolve({ status: 'failed', reason: 'silent' });
+    playing = startClip(url, rate);
+    void playing.done.then(resolve);
+  });
+  return {
+    done,
+    cancel: () => {
+      cancelled = true;
+      clearTimeout(checkTimer);
+      check.abort();
+      playing?.cancel();
+    },
+  };
+}
+
+function startClip(url: string, rate: number): Playback {
   let resolve: (r: PlaybackResult) => void = () => {};
   const done = new Promise<PlaybackResult>((r) => (resolve = r));
   const player = createAudioPlayer({ uri: url }, { updateInterval: 100 });
@@ -132,7 +174,7 @@ function playClip(url: string, rate: number): Playback {
     player.remove();
     resolve(r);
   };
-  let watchdog = setTimeout(() => settle({ status: 'failed', reason: 'silent' }), CLIP_STALL_MS);
+  let watchdog = setTimeout(() => settle({ status: 'failed', reason: 'silent' }), CLIP_LOAD_MS);
   let started = false;
   const subscription = player.addListener('playbackStatusUpdate', (status) => {
     if (status.isLoaded && !started) {
