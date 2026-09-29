@@ -3,10 +3,11 @@
 - **Requirement IDs:** `AI-06` (make a set), `F-04` (accounts and sync), `P3-01` (continuous
   playback)
 - **Milestone:** Main app
-- **Status:** 🟡 Started 2026-09-30 at the owner's request. **Left:** everything below; the
-  checklist records what has landed. **Blocked by:** nothing. Live Claude writing needs
-  `ANTHROPIC_API_KEY` and live songs need `MUSIC_PROVIDER=elevenlabs` with `MUSIC_API_KEY`; without
-  them the server says it used its fallback and the app labels it (see _Honest fallbacks_).
+- **Status:** 🟡 Started 2026-09-30 at the owner's request; scope 1–10 landed the same day.
+  **Left:** item 11 (review follow-ups, device acceptance, live provider runs). **Blocked by:**
+  nothing. Live Claude writing needs `ANTHROPIC_API_KEY` and live songs need
+  `MUSIC_PROVIDER=elevenlabs` with `MUSIC_API_KEY`; without them the server says it used its
+  fallback and the app labels it (see _Honest fallbacks_).
 - **Owner request, 2026-09-30:** "Make the app fully usable. Make the backend fully usable. The app
   should have a sign-in flow, user limits, an AI generation process for phrases, songs, and images
   for covers. The UI should also be fully functional. The UI should be clearly and distinctly
@@ -52,20 +53,23 @@ keeps each private, shares it by link, or publishes it for everyone.
 
 ## Scope
 
-1. [ ] API: `library` module — schema, seed of pre-generated content, pack, sets CRUD, visibility
+1. [x] API: `library` module — schema, seed of pre-generated content, pack, sets CRUD, visibility
        and share codes, Community listing, saves.
-2. [ ] API: usage limits service and `GET /v1/library/usage`.
-3. [ ] API: generation — phrases (Claude or bank), covers (Claude or pattern), songs (lyrics from
-       phrases, Claude or assembled; audio from ElevenLabs Music or the demo synthesizer), albums.
-4. [ ] App: API client, account store and the sign-in flow (email code, sign-out, account in
-       Settings).
-5. [ ] App: content from the API (pack download, offline copy, first-launch failure screen).
-6. [ ] App: tabs Home · Phrases · Music · Create · Library; Community in Phrases and Music.
-7. [ ] App: Make a set on the server generator; save to the account; cover generation.
-8. [ ] App: songs — album pages, the music player (`expo-audio`), lyrics with meanings, song
+2. [x] API: usage limits service and `GET /v1/library/usage`.
+3. [x] API: generation — phrases (Claude or bank), notes (Claude), covers (Claude or pattern), songs
+       (lyrics from phrases, Claude or assembled; audio from ElevenLabs Music or the demo
+       synthesizer), albums.
+4. [x] App: API client, account store and the sign-in flow (email code in onboarding and from
+       Settings, sign-out, display name, allowances).
+5. [x] App: content from the API (pack download, offline copy, first-launch failure screen).
+6. [x] App: tabs Home · Phrases · Music · Create · Library; Community in Phrases and Music.
+7. [x] App: Make a set on the server generator; save to the account; cover generation.
+8. [x] App: songs — album pages, the music player (`expo-audio`), lyrics with meanings, song
        generation.
-9. [ ] App: sharing (visibility, share links, opening a shared link).
-10. [ ] Docs, README, CLAUDE.md, local run instructions; review pass.
+9. [x] App: sharing (visibility, share links, opening a shared link, saving others' items).
+10. [x] Progress sync: `GET/POST /v1/library/progress`, merged on the device with revisions.
+11. [ ] Docs, review pass, device acceptance (Android emulator, iOS), live Claude and ElevenLabs
+        Music runs with real keys.
 
 ## Verification
 

@@ -12,14 +12,20 @@ in the target language, rate it; FSRS schedules the next time).
 [104](plans/104-prototype-react-native.md)). It replaced the v1.1-based app on 2026-09-30. That app,
 the v1.1/v1.2/v1.3 design packages, the v2.0 web prototype, `packages/design-tokens` and the browser
 E2E/storybook/workbench suites were removed; they remain in Git history (last present at `52a0e3b`).
-Every screen and sheet of the web prototype is ported: onboarding, Home, the player, Explore,
-Library, the set page, the queue, Make a set and the sheets.
+Every screen and sheet of the web prototype is ported. Five tabs: Home, Phrases, Music (albums of
+songs sung from sets, their own player, night palette), Create and Library.
 
-The app keeps progress on the device (AsyncStorage native, browser storage web) as an append-only
-learner log with a pure state machine. FSRS runs in `packages/core-rs` through the `LoroCore` Expo
-module (`apps/mobile/modules/loro-core`, UniFFI) on native and the committed WASM browser build on
-the web. The app does not call the API yet. The API (NestJS + PostgreSQL: accounts, tenant-scoped
-sync, content, gated TTS/music/suggest) is unchanged and deployed to a restricted EC2 host.
+**The app is connected** (plan [106](plans/106-connected-app.md),
+[library.md](docs/architecture/library.md)): it ships no phrase content. It downloads each course's
+pack from `GET /v1/library/pack` (seeded from `packages/content/v2/`), keeps it for offline use and
+installs it before learner state loads. Email-code sign-in, sharing (private/link/public,
+Community), progress sync and AI generation of phrase sets, covers and songs (within per-user daily
+limits) go through the API's `library` module; without `ANTHROPIC_API_KEY` or a music provider the
+server uses labelled fallbacks (phrase bank, drawn patterns, the set's phrases as lyrics, a "Demo
+sound" instrumental). Progress stays on the device first (AsyncStorage native, browser storage web)
+as an append-only learner log with a pure state machine; FSRS runs in `packages/core-rs` through the
+`LoroCore` Expo module (`apps/mobile/modules/loro-core`, UniFFI) on native and the committed WASM
+browser build on the web. The API (NestJS + PostgreSQL) is deployed to a restricted EC2 host.
 
 ## Keep this file current
 
@@ -140,7 +146,8 @@ pnpm local:up / pnpm local:down       # SOPS-decrypted API + Expo web containers
 | `apps/api/`                                | NestJS backend                                                   |
 | `packages/core/`                           | Shared TS domain and API contracts — used by the API and content |
 | `packages/core-rs/`                        | Rust: FSRS, sync merge, ranking                                  |
-| `packages/content/`                        | Server Spanish/Bulgarian/Russian catalogs and review gates       |
+| `packages/content/`                        | Server catalogs, review gates; `v2/` is the app's seeded content |
+| `apps/api/src/library/`                    | Packs, sharing, limits, AI phrases/covers/songs, progress sync   |
 | `docs/`                                    | All documentation — start at `docs/README.md`                    |
 
 ## Open questions
