@@ -110,9 +110,14 @@ export async function verifyCode(email: string, code: string): Promise<Account> 
       device: { installation_id: await installationId(), platform: PLATFORM, app_version: APP_VERSION },
     },
   });
+  return completeSignIn(reply, email.trim().toLowerCase());
+}
+
+/** Keeps a new session's tokens and account, whichever way the learner signed in. */
+async function completeSignIn(reply: SignInReply, email: string | null): Promise<Account> {
   access = { token: reply.access_token, expiresAt: clock.now() + reply.expires_in * 1000 };
   await secretSet(REFRESH_KEY, reply.refresh_token);
-  const account: Account = { userId: reply.user.id, email: email.trim().toLowerCase(), provider: reply.user.provider ?? 'email', displayName: null };
+  const account: Account = { userId: reply.user.id, email, provider: reply.user.provider ?? 'email', displayName: null };
   await saveAccount(account);
   publish({ status: 'signedIn', account });
   // The display name lives on the server; a failure here leaves it unset, not the sign-in undone.
@@ -120,6 +125,56 @@ export async function verifyCode(email: string, code: string): Promise<Account> 
     .then((profile) => updateAccount({ displayName: profile.displayName }))
     .catch(() => {});
   return account;
+}
+
+// ---------- signing in with a provider in the browser (PKCE) ----------
+
+const OAUTH_KEY = 'loro.oauth';
+
+const base64url = (bytes: Uint8Array) =>
+  btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+
+/** Whether this runtime can sign in with a provider page: a browser with Web Crypto. */
+export function providerSignInAvailable(): boolean {
+  return typeof window !== 'undefined' && typeof window.location !== 'undefined' && Boolean(globalThis.crypto?.subtle);
+}
+
+/**
+ * Sends the browser to the provider's sign-in page. It comes back to `returnTo` with a ticket that
+ * `finishProviderSignIn` exchanges for a session; the verifier waits in this tab's session storage.
+ */
+export async function startProviderSignIn(provider: 'google' | 'apple', returnTo: string): Promise<void> {
+  const verifier = base64url(globalThis.crypto.getRandomValues(new Uint8Array(32)));
+  const challenge = base64url(new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))));
+  const started = await api<{ authorization_url: string; state: string }>(`/auth/${provider}/start`, {
+    method: 'POST',
+    auth: 'none',
+    body: { redirect_uri: returnTo, code_challenge: challenge },
+  });
+  sessionStorage.setItem(OAUTH_KEY, JSON.stringify({ verifier, state: started.state }));
+  window.location.assign(started.authorization_url);
+}
+
+/** Exchanges the ticket the provider's page returned with for a session; the state must match. */
+export async function finishProviderSignIn(params: { state?: string; ticket?: string }): Promise<Account> {
+  const saved = sessionStorage.getItem(OAUTH_KEY);
+  sessionStorage.removeItem(OAUTH_KEY);
+  const pending = saved ? (JSON.parse(saved) as { verifier: string; state: string }) : null;
+  if (!pending || !params.ticket || params.state !== pending.state) throw new ApiError(401, 'UNAUTHENTICATED', 'Sign-in did not match');
+  const reply = await api<SignInReply>('/auth/exchange', {
+    method: 'POST',
+    auth: 'none',
+    body: {
+      ticket: params.ticket,
+      code_verifier: pending.verifier,
+      anon_id: uuid7(),
+      device: { installation_id: await installationId(), platform: PLATFORM, app_version: APP_VERSION },
+    },
+  });
+  return completeSignIn(reply, null);
 }
 
 async function saveAccount(account: Account): Promise<void> {
