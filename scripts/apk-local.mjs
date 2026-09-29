@@ -47,6 +47,10 @@ if (api) {
     )
   }
 }
+if (!api)
+  console.warn(
+    'EXPO_PUBLIC_API_URL is not set: the APK will look for http://localhost:3000/v1, which a release build cannot reach. Set an HTTPS URL ending in /v1.',
+  )
 env.EXPO_PUBLIC_API_URL = api
 for (const key of Object.keys(env)) {
   if (key.startsWith('EXPO_PUBLIC_') && key !== 'EXPO_PUBLIC_API_URL') delete env[key]

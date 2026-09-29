@@ -2,8 +2,9 @@
 
 **Status:** Contract work from plan 85 (F-04). The account/sync clients and the eight learner routes
 this inventory was written against belonged to the first app, removed on 2026-09-30; the current app
-(`apps/mobile`) does not call the API yet. Durable local writes do not wait on the network. An
-endpoint in the target specification does not mean the server implements it.
+(`apps/mobile`) talks to the library routes instead (plan 106: sign-in, packs, generation, progress
+sync — see [library.md](library.md)). Durable local writes do not wait on the network. An endpoint
+in the target specification does not mean the server implements it.
 
 Source precedence: the v1.1 screen catalog (removed 2026-09-30; Git history at `52a0e3b`) mapped
 authored artifacts; [PRD](../product/prd.md) supplies requirement IDs. Every screen writes locally
