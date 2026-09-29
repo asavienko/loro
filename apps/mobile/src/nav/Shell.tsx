@@ -81,8 +81,8 @@ export function Shell({ children }: { children: ReactNode }) {
     () => ({
       go: (route) => router.navigate(hrefOf(route) as never),
       openSet: (setId) => {
-        // A page opened from the player (a set just made there) shows in its place.
-        if (pathRef.current === '/player' || pathRef.current === '/queue') router.dismissAll();
+        // A page opened from the player or Make a set (a set just made there) shows in its place.
+        if (pathRef.current === '/player' || pathRef.current === '/queue' || pathRef.current === '/make') router.dismissAll();
         router.push({ pathname: '/set/[id]', params: { id: setId, from: tabRef.current } });
       },
       playSet: (setId, options = {}) => {
