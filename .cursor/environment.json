@@ -1,12 +1,17 @@
 {
   "name": "Loro",
-  "install": "pnpm install --frozen-lockfile && for app in apps/mobile apps/api; do [ -f \"$app/.env\" ] || cp \"$app/.env.example\" \"$app/.env\"; done",
+  "install": "pnpm install --frozen-lockfile && { [ -f apps/api/.env ] || cp apps/api/.env.example apps/api/.env; }",
   "terminals": [
     {
       "name": "expo-web",
-      "command": "cd apps/mobile && EXPO_NO_TELEMETRY=1 npx expo start --web --port 8081",
-      "description": "Expo web dev server for the mobile app. Open http://localhost:8081 to see the learner screens. Offline-first; needs no API or database to practice."
+      "command": "pnpm --filter @loro/mobile exec expo start --web --port 8081",
+      "description": "Expo web dev server for the app. Open http://localhost:8081. Progress stays in the browser; needs no API or database."
     }
   ],
-  "ports": [{ "name": "expo-web", "port": 8081 }]
+  "ports": [
+    {
+      "name": "expo-web",
+      "port": 8081
+    }
+  ]
 }

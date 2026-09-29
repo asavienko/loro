@@ -1,83 +1,59 @@
 /* global require, module, __dirname */
 /* eslint-disable @typescript-eslint/no-require-imports */
-// Metro config for the monorepo.
+// Metro for the app.
 //
-// Two things Metro needs that the defaults don't give us:
+//  1. SHARED BEHAVIOUR. `@shared/*` is src/shared: content, the state machine, persistence, copy,
+//     the phrase notes and the suggestion generator. It is platform-neutral; tsconfig.json maps the
+//     same path for the type checker.
 //
-//  1. WORKSPACE ROOTS — packages/* live outside apps/mobile, so Metro has to watch
-//     the repo root and resolve from the root node_modules that pnpm links into.
+//  2. THE PLATFORM EDGE. On iOS and Android four leaf modules are swapped for native ones; on the
+//     web the originals run (NATIVE below).
 //
-//  2. NodeNext '.js' SPECIFIERS — packages/core is authored for `moduleResolution:
-//     nodenext`, so its relative imports carry a `.js` extension that points at a
-//     `.ts` file. Node and tsc understand that; Metro doesn't. The resolver below
-//     strips the extension for OUR packages only, leaving real .js deps untouched.
+//  3. THE WORKSPACE. pnpm hoists packages to the repository root (.npmrc), and the Rust core's
+//     browser build lives in packages/core-rs.
+const { getDefaultConfig } = require('expo/metro-config');
+const path = require('node:path');
 
-const { getDefaultConfig } = require('expo/metro-config')
-const path = require('node:path')
+const projectRoot = __dirname;
+const sharedRoot = path.join(projectRoot, 'src/shared');
+const workspaceRoot = path.resolve(projectRoot, '../..');
+const coreBrowser = path.join(workspaceRoot, 'packages/core-rs/browser/loro_core.js');
 
-const projectRoot = __dirname
-const workspaceRoot = path.resolve(projectRoot, '../..')
+const config = getDefaultConfig(projectRoot);
 
-const config = getDefaultConfig(projectRoot)
-
-config.watchFolders = [workspaceRoot]
-// Native and Rust build products are large, rapidly changing trees, never JS inputs.
-// Keeping them out also prevents native compilation from triggering learner-page reloads.
-const escapePath = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-const existingBlocks = config.resolver.blockList ?? []
+config.watchFolders = [workspaceRoot];
+config.resolver.nodeModulesPaths = [path.join(projectRoot, 'node_modules'), path.join(workspaceRoot, 'node_modules')];
+const escapePath = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// Native and Rust build products are large, fast-changing trees, never JS inputs; tests never
+// reach the app.
 config.resolver.blockList = [
-  ...(Array.isArray(existingBlocks) ? existingBlocks : [existingBlocks]),
   new RegExp(`^${escapePath(path.join(workspaceRoot, 'packages/core-rs/target'))}[/\\\\]`),
   new RegExp(`^${escapePath(projectRoot)}[/\\\\](?:android|ios)[/\\\\]`),
-  new RegExp(`^${escapePath(projectRoot)}[/\\\\]modules[/\\\\][^/\\\\]+[/\\\\]build[/\\\\]`),
-  /[\\/](?:\.storybook)[\\/]/,
-  /\.(?:test|spec|stories)\.[cm]?[jt]sx?$/,
-]
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, 'node_modules'),
-  path.resolve(workspaceRoot, 'node_modules'),
-]
-// pnpm's isolated layout means a package can only be reached through its own links.
-config.resolver.disableHierarchicalLookup = true
+  new RegExp(`^${escapePath(projectRoot)}[/\\\\]modules[/\\\\][^/\\\\]+[/\\\\](?:android[/\\\\])?build[/\\\\]`),
+  /\.test\.[cm]?[jt]sx?$/,
+];
 
-const defaultResolveRequest = config.resolver.resolveRequest
+/** Shared module → its native stand-in. */
+const NATIVE = {
+  // Saved progress: AsyncStorage instead of IndexedDB/localStorage.
+  [path.join(sharedRoot, 'state/storage.ts')]: path.join(projectRoot, 'src/platform/storage.ts'),
+  // The device voice: expo-speech instead of the Web Speech API.
+  [path.join(sharedRoot, 'audio/speech.ts')]: path.join(projectRoot, 'src/platform/speech.ts'),
+  // Cues: haptics instead of Web Audio tones.
+  [path.join(sharedRoot, 'audio/cues.ts')]: path.join(projectRoot, 'src/platform/cues.ts'),
+  // The Rust core: the LoroCore native module instead of WASM (Hermes has no WebAssembly).
+  [coreBrowser]: path.join(projectRoot, 'src/platform/loroCore.ts'),
+};
+
+const SHARED = '@shared/';
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  const resolve = defaultResolveRequest ?? context.resolveRequest
-
-  // Learner Metro must not follow Storybook/Vitest into Vite's Node runner.
-  if (
-    moduleName === 'vite' ||
-    moduleName === 'vitest' ||
-    moduleName.startsWith('vite/') ||
-    moduleName.startsWith('vitest/') ||
-    moduleName.startsWith('@storybook/')
-  )
-    return { type: 'empty' }
-
-  // sql.js embeds an offline asm.js SQLite build. Its Node-only branches are never
-  // evaluated in the browser; do not ask Metro to bundle native Node builtins there.
-  if (
-    platform === 'web' &&
-    (context.originModulePath ?? '').includes(`${path.sep}sql.js${path.sep}`) &&
-    (moduleName === 'node:fs' || moduleName === 'node:crypto')
-  )
-    return { type: 'empty' }
-
-  // Relative '.js' specifier from inside a workspace package -> try the extensionless
-  // form first, so Metro picks up the .ts/.tsx source.
-  if (moduleName.startsWith('.') && moduleName.endsWith('.js')) {
-    const origin = context.originModulePath ?? ''
-    if (origin.includes(`${path.sep}packages${path.sep}`)) {
-      try {
-        return resolve(context, moduleName.slice(0, -3), platform)
-      } catch {
-        // Fall through — it really was a .js file.
-      }
-    }
+  const name = moduleName.startsWith(SHARED) ? path.join(sharedRoot, moduleName.slice(SHARED.length)) : moduleName;
+  const resolved = context.resolveRequest(context, name, platform);
+  if (platform !== 'web' && resolved.type === 'sourceFile' && NATIVE[resolved.filePath]) {
+    return { type: 'sourceFile', filePath: NATIVE[resolved.filePath] };
   }
+  return resolved;
+};
 
-  return resolve(context, moduleName, platform)
-}
-
-module.exports = config
+module.exports = config;

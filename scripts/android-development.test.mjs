@@ -108,7 +108,6 @@ test('keeps the development identity when Expo loads a Preview dotenv value', ()
             sentinel: process.env.EXPO_PUBLIC_ANDROID_REVIEW_SENTINEL,
             package: config.android.package,
             scheme: config.scheme,
-            nativeRedirectUri: config.extra.nativeRedirectUri,
           }))
         `,
       ],
@@ -125,7 +124,6 @@ test('keeps the development identity when Expo loads a Preview dotenv value', ()
       sentinel: 'loaded',
       package: 'app.loro.android.dev',
       scheme: 'loro-dev',
-      nativeRedirectUri: 'loro-dev://account',
     })
   } finally {
     rmSync(fixtureRoot, { force: true, recursive: true })

@@ -56,14 +56,6 @@ pnpm install
 ok "installed"
 
 # ─────────────────────────────────────────────────────────────
-step "Generating design tokens"
-# ─────────────────────────────────────────────────────────────
-# out/ is committed and drift-checked in CI, because the native widget targets build
-# without the JS toolchain. See ADR-0013.
-pnpm tokens:build
-ok "packages/design-tokens/out"
-
-# ─────────────────────────────────────────────────────────────
 step "Building loro-core"
 # ─────────────────────────────────────────────────────────────
 if [[ "$WITH_RUST" == true ]]; then
@@ -83,7 +75,7 @@ pnpm content:validate || warn "content validation reported issues (expected whil
 # ─────────────────────────────────────────────────────────────
 step "Creating env files"
 # ─────────────────────────────────────────────────────────────
-for app in apps/mobile apps/api; do
+for app in apps/api; do
   if [[ -f "$app/.env" ]]; then
     ok "$app/.env exists"
   else
@@ -103,8 +95,8 @@ cat <<'NEXT'
                                 pnpm --filter api db:seed
                                 pnpm --filter api dev
 
-  Run the app on a device:      pnpm --filter mobile ios --device
-                                pnpm --filter mobile android --device
+  Run the app on a device:      pnpm --filter @loro/mobile ios --device
+                                pnpm --filter @loro/mobile android --device
 
   Then check these FIVE BY HAND — a green build does not mean a working app:
     • audio plays in the stream

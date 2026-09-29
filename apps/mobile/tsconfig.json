@@ -1,28 +1,18 @@
 {
-  "extends": ["../../tsconfig.base.json", "expo/tsconfig.base"],
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
-    "lib": ["ES2022", "DOM"],
-    "moduleResolution": "bundler",
-    "noEmit": true,
-    "composite": false,
+    "types": ["node"],
     "paths": {
       "@/*": ["./src/*"],
-      "@loro/core": ["../../packages/core/src/index.ts"],
-      "@loro/core/*": ["../../packages/core/src/*"],
-      "@loro/design-tokens": ["../../packages/design-tokens/out/tokens.ts"],
-      "@loro/content": ["../../packages/content/src/index.ts"]
+      "@shared/*": ["./src/shared/*"]
     }
   },
-  "include": [
-    "app/**/*",
-    "src/**/*",
-    "modules/**/*.ts",
-    "scripts/**/*",
-    "e2e/**/*",
-    ".storybook/**/*",
-    ".expo/types/**/*",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
-  ]
+  "include": ["app/**/*", "src/**/*", "app.config.ts"]
 }

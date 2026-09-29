@@ -1,9 +1,0 @@
-node_modules/
-.expo/
-dist-web/
-android/
-ios/
-test-results/
-playwright-report/
-*.log
-.env*

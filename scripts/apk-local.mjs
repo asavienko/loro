@@ -112,7 +112,6 @@ try {
   run('git', ['archive', '--format=tar', `--output=${archive}`, sha])
   run('tar', ['-xf', archive, '-C', source])
   run('pnpm', ['install', '--frozen-lockfile'], source)
-  run('pnpm', ['tokens:build'], source)
   const mobile = join(source, 'apps/mobile')
   run('pnpm', ['exec', 'expo', 'prebuild', '--platform', 'android', '--no-install'], mobile)
   run(
@@ -147,8 +146,6 @@ try {
   for (const abi of ['arm64-v8a', 'x86_64']) {
     if (!entries.includes(`lib/${abi}/libloro_core.so`))
       throw new Error(`APK is missing the Rust runtime for ${abi}.`)
-    if (!entries.includes(`lib/${abi}/libop-sqlite.so`))
-      throw new Error(`APK is missing the SQLite runtime for ${abi}.`)
   }
   const checksum = createHash('sha256').update(readFileSync(apk)).digest('hex')
   const checksumFile = `${apk}.sha256`

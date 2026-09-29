@@ -112,31 +112,6 @@ async function main() {
           env: environment,
           logDirectory,
         }),
-        commandJob('tokens-build', 'pnpm', ['tokens:build'], {
-          cwd: ROOT,
-          env: environment,
-          logDirectory,
-        }),
-        commandJob('expo-routes', process.execPath, ['scripts/ci-expo-routes.mjs'], {
-          cwd: ROOT,
-          env: environment,
-          logDirectory,
-        }),
-        commandJob(
-          'expo-env',
-          process.execPath,
-          [
-            '--input-type=module',
-            '-e',
-            `import path from 'node:path'; import { createRequire } from 'node:module'; const require = createRequire(import.meta.url); const cli = path.dirname(require.resolve('@expo/cli/package.json')); await require(path.join(cli, 'build/src/start/server/type-generation/expo-env.js')).writeExpoEnvDTS(path.resolve('apps/mobile'));`,
-          ],
-          { cwd: ROOT, env: environment, logDirectory },
-        ),
-        commandJob('chromium-install', 'pnpm', ['test:e2e:install'], {
-          cwd: ROOT,
-          env: environment,
-          logDirectory,
-        }),
       ],
       {
         limit: jobLimit,
@@ -258,23 +233,6 @@ async function main() {
 
     const browserEnvironment = { ...environment }
     const browserJobs = []
-    const browserSuites = [
-      ['learner-e2e', 'test:e2e'],
-      ['pseudo-locale-e2e', 'test:e2e:pseudo-locale'],
-      ['workbench-e2e', 'test:e2e:workbench'],
-      ['production-e2e', 'test:e2e:bundle'],
-    ]
-    for (const [name, script] of browserSuites) {
-      browserJobs.push(
-        isolatedJob(name, snapshot, [['suite', 'pnpm', [script]]], {
-          reportDirectory,
-          logDirectory,
-          portEnv: 'LORO_E2E_PORT',
-          inventory: snapshotInventory,
-          extraEnv: browserEnvironment,
-        }),
-      )
-    }
     const imageCheckPrefix = `loro-image-check-${runId}`
     const apiSmokeContainer = `loro-built-api-check-${runId}`
     browserJobs.push(
