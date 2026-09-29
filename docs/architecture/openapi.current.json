@@ -3222,7 +3222,8 @@
               "PROVIDER_UNAVAILABLE",
               "INTERNAL",
               "NOT_FOUND",
-              "CURSOR_EXPIRED"
+              "CURSOR_EXPIRED",
+              "LIMIT_REACHED"
             ]
           },
           "detail": {

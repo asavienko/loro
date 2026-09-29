@@ -15,7 +15,8 @@
     "./api/draft": "./src/api/draft.ts",
     "./api/oauth": "./src/api/oauth.ts",
     "./api/account": "./src/api/account.ts",
-    "./api/sync": "./src/api/sync.ts"
+    "./api/sync": "./src/api/sync.ts",
+    "./api/library": "./src/api/library.ts"
   },
   "scripts": {
     "build": "tsc -b",
