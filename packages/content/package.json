@@ -42,6 +42,7 @@
     ".": "./src/index.ts",
     "./fs": "./src/fs.ts",
     "./types": "./src/types.ts",
-    "./audio-duration": "./src/audioDuration.ts"
+    "./audio-duration": "./src/audioDuration.ts",
+    "./v2": "./src/v2.ts"
   }
 }
