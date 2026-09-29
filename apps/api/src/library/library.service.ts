@@ -64,7 +64,7 @@ import {
 } from './writers.js'
 
 /** Bump when the seed's shape changes without the content version changing. */
-const SEED_REVISION = 1
+const SEED_REVISION = 2
 /** A song still rendering after this long was lost with its process: it reads as failed. */
 const RENDER_TIMEOUT_MS = 10 * 60_000
 const DAY_MS = 86_400_000
@@ -269,9 +269,10 @@ export class LibraryService {
 
   /** One album per course, one song per Loro set, its lyrics the set's phrases, with the demo sound. */
   private async seedAlbums(tx: SqlConnection, now: number): Promise<void> {
-    const albums: { lang: Language; title: string; description: string }[] = [
-      { lang: 'es-ES', title: 'Canciones de Loro', description: 'Every Loro set, sung.' },
-      { lang: 'bg-BG', title: 'Песни на Лоро', description: 'Every Loro set, sung.' },
+    // Titles in the course's language; the app describes Loro's albums in the learner's own.
+    const albums: { lang: Language; title: string }[] = [
+      { lang: 'es-ES', title: 'Canciones de Loro' },
+      { lang: 'bg-BG', title: 'Песни на Лоро' },
     ]
     await tx.query(
       "DELETE FROM library_songs WHERE album_id IN (SELECT id FROM library_albums WHERE origin = 'loro')",
@@ -289,7 +290,7 @@ export class LibraryService {
          VALUES ($1, NULL, $2, $3, $4, $5, 'public', $6, 'loro', $7, $8, $8)
          ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description, cover_id = EXCLUDED.cover_id,
            updated_at = EXCLUDED.updated_at`,
-        [id, album.lang, album.title, album.description, coverId, shareCodeFor(id), position, now],
+        [id, album.lang, album.title, null, coverId, shareCodeFor(id), position, now],
       )
       const sets = V2_CONTENT.sets.filter((s) => s.targetLang === album.lang)
       for (const [index, set] of sets.entries()) {
