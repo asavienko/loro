@@ -1,5 +1,11 @@
 # Scheduling
 
+> **App swap, 2026-09-30.** The first app in `apps/mobile` was replaced by the v2.0 listening-first
+> player, and `packages/core` lost the client engines and SQLite persistence it used; both remain in
+> Git history at `52a0e3b`. Stream rank, waves and the Refrain below describe that app. The current
+> app schedules with the same Rust FSRS through `core_call` (`apps/mobile/src/shared/core/fsrs.ts`),
+> and `apps/mobile/src/shared/state/clock.ts` is its only clock.
+
 Every "when does this come back?" and "what's next?" decision in the product. The architectural
 owner is `loro-core` (Rust), so iOS, Android, and the server must compute identical answers
 ([ADR-0002](adr/0002-shared-rust-core.md)). The implemented engines now call its generated

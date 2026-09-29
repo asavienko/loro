@@ -1,6 +1,7 @@
 # 0014 · One repo, pnpm workspaces + Turborepo
 
-- **Status:** Accepted
+- **Status:** Accepted; partly superseded (2026-09-30) — `packages/design-tokens` was removed, and
+  `apps/mobile` (the v2.0 app) no longer consumes `core`, `content` or the tokens.
 - **Date:** 2026-07-28
 - **Deciders:** Tech lead
 
@@ -131,9 +132,9 @@ and a regression sat in `main` unnoticed for exactly as long as that was true.
    are in the repo (the native widget targets and Xcode/Gradle builds need them without running the
    JS toolchain), and CI regenerates and fails on any difference. A hand-edited generated file
    cannot merge.
-2. **The layer-boundary lint rule is a build gate.** The mobile app's layering
-   ([mobile-app.md](../mobile-app.md#layers)) is enforced by `no-restricted-imports`, not by
-   convention.
+2. **The layer-boundary lint rule is a build gate.** The first mobile app's layering
+   (`docs/architecture/mobile-app.md`, removed 2026-09-30) was enforced by `no-restricted-imports`,
+   not by convention. The current app has its own lint config (`apps/mobile/eslint.config.mjs`).
 
 ## Consequences
 

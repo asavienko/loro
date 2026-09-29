@@ -5,6 +5,9 @@
 - **Status:** ⛔ Trip lifecycle implementation is blocked by Q-07 return/relocation semantics.
   Content inventory and design review can proceed; do not commit the state machine/schema before
   that decision.
+- **App swap (2026-09-30):** the first app this plan extended was replaced in `apps/mobile` by the
+  v2.0 player (plan [104](104-prototype-react-native.md)); re-scope the screens against it before
+  resuming.
 - **Depends on:** 56 route laws; 59 persistence; 60 selection/scheduling; 61 trip content/assets;
   Q-07.
 - **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.

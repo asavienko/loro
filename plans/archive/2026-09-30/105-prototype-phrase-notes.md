@@ -2,15 +2,19 @@
 
 - **Requirement IDs:** `P2-04` (phrase detail), `F-03` (offline-first), `AI-06` (suggested phrases)
 - **Milestone:** Design exploration (v2.0 rapid prototype); no app release depends on it
-- **Status:** 🟡 Scope 1–8 implemented and tested on 2026-09-28: every phrase has all four,
-  including one the learner types that neither the bank nor the writer covers (scope 8, the device's
-  rules). **Left:** one run of the writer against the real service (its notes and pictures are
-  verified against a stand-in only), the same run plan 103 waits for. **Blocked by:** a key on the
-  machine that runs it. All new text awaits native review (`meta.json`), the device's rule library
-  too. Owner request 2026-09-28: "every phrase should have image, phonetic, mnemonic hint, and
-  grammar rules".
+- **Archived 2026-09-30:** implemented. The notes content and the device's rules live in
+  `apps/mobile/src/shared/content/` and `apps/mobile/src/shared/notes/`, and the app's player shows
+  them. The writer's live run goes with plan 103's: the dev server that called it was removed with
+  the web prototype (Git history at `52a0e3b`).
+- **Status (at archive):** 🟡 Scope 1–8 implemented and tested on 2026-09-28: every phrase has all
+  four, including one the learner types that neither the bank nor the writer covers (scope 8, the
+  device's rules). **Left:** one run of the writer against the real service (its notes and pictures
+  are verified against a stand-in only), the same run plan 103 waits for. **Blocked by:** a key on
+  the machine that runs it. All new text awaits native review (`meta.json`), the device's rule
+  library too. Owner request 2026-09-28: "every phrase should have image, phonetic, mnemonic hint,
+  and grammar rules".
 - **Depends on:** plans [103](103-prototype-phrase-generator.md) (the phrase bank and suggestions)
-  and [104](104-prototype-react-native.md) (paused; it will read the same content).
+  and [104](../../104-prototype-react-native.md) (paused; it will read the same content).
 - **Number allocation:** the highest assigned ID was 104; this plan is **105**. The next new plan
   is 106.
 

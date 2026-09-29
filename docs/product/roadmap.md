@@ -7,6 +7,11 @@ work.
 
 ## Current baseline — 2026-09-08
 
+> **App swap, 2026-09-30.** This describes the first app, since replaced in `apps/mobile` by the
+> v2.0 listening-first player (Git history at `52a0e3b`). The current app has onboarding, Home and
+> the player; Explore, Library, the set page, the queue and Make a set are stand-ins. It keeps
+> progress on the device, speaks with the device voice and has no sign-in or sync.
+
 Reviewed against integrated runtime `e013141`. Eight of 23 authored learner screens plus Languages,
 Account, the shared shell and the developer workbench exist. Native/browser SQLite, durable course
 progress and resume, canonical Rust scheduling/matching/merge, foreground device TTS, on-device
@@ -97,18 +102,18 @@ ships a trivial PR to `dev` in under a day.
 The one-sentence test: _a learner can complete onboarding, add a phrase from Discover, tag it as
 Difficult/Pronunciation, hear that change the stream's repeat count, and see it in Progress._
 
-| Scope                                                                             | Requirements                                                        |
-| --------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Onboarding, all six steps                                                         | `P1-01`…`P1-12`                                                     |
-| Design system in code — all tokens, ~20 core components                           | [`design/component-inventory.md`](../design/component-inventory.md) |
-| Add phrases: Discover + Browse (Import deferred to M2)                            | `P2-01`…`P2-08`, `P2-11`…`P2-14`                                    |
-| The tagging sheet                                                                 | `P2-20`…`P2-26`                                                     |
-| Phrase detail                                                                     | `P2-30`…`P2-40`                                                     |
-| Audio: TTS cache, rates, exclusive playback                                       | `AS-01`, `AS-02`                                                    |
-| Listening companion: online multi-voice generate, on-device cache, optional share | `AS-07`                                                             |
-| Adaptive stream, foreground only                                                  | `P3-01`…`P3-10`, `P3-12`                                            |
-| Progress screen                                                                   | `P4-01`…`P4-08`                                                     |
-| Content: 150 phrases, 8 themes, 5 scenarios, 6 packs, all with audio              | [content-model.md](content-model.md)                                |
+| Scope                                                                             | Requirements                         |
+| --------------------------------------------------------------------------------- | ------------------------------------ |
+| Onboarding, all six steps                                                         | `P1-01`…`P1-12`                      |
+| Design system in code — all tokens, ~20 core components                           | First app only (removed 2026-09-30)  |
+| Add phrases: Discover + Browse (Import deferred to M2)                            | `P2-01`…`P2-08`, `P2-11`…`P2-14`     |
+| The tagging sheet                                                                 | `P2-20`…`P2-26`                      |
+| Phrase detail                                                                     | `P2-30`…`P2-40`                      |
+| Audio: TTS cache, rates, exclusive playback                                       | `AS-01`, `AS-02`                     |
+| Listening companion: online multi-voice generate, on-device cache, optional share | `AS-07`                              |
+| Adaptive stream, foreground only                                                  | `P3-01`…`P3-10`, `P3-12`             |
+| Progress screen                                                                   | `P4-01`…`P4-08`                      |
+| Content: 150 phrases, 8 themes, 5 scenarios, 6 packs, all with audio              | [content-model.md](content-model.md) |
 
 **Exit criteria:** the thread demonstrably works — changing a rating visibly changes the stream and
 the Progress rollup. Internal dogfooding starts here and never stops.

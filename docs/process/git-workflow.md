@@ -233,7 +233,6 @@ store release ([ci-cd.md](ci-cd.md#ota-updates)).
 
 Committed, and drift-checked in CI ([ADR-0014](../architecture/adr/0014-monorepo-tooling.md)):
 
-- `packages/design-tokens/out/**` — the native widget targets build without the JS toolchain
 - `packages/core-rs/bindings/**` — UniFFI-generated Swift and Kotlin
 
 **Never edit these by hand.** CI regenerates them and fails on any difference, so a hand edit cannot

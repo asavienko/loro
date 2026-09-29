@@ -13,31 +13,31 @@ before implementing it.** The prototype is executable spec; the prose below is a
 `Built` means an Expo route exists; it does not mean every target behaviour in that section is
 complete. `Planned` means the section specifies future behaviour and has no current learner route.
 
-| #                                        | Screen             | Loop | Rel  | Repository status           |
-| ---------------------------------------- | ------------------ | ---- | ---- | --------------------------- |
-| [1](#1-onboarding)                       | Onboarding         | —    | v1   | Built · `/onboarding`       |
-| [2](#2-add-phrases)                      | Add phrases        | —    | v1   | Built · `/add`              |
-| [3](#3-phrase-detail)                    | Phrase detail      | —    | v1   | Built · `/phrase/[id]`      |
-| [4](#4-adaptive-stream)                  | Adaptive stream    | all  | v1   | Built · `/practice/stream`  |
-| [5](#5-speak-to-progress)                | Speak to progress  | A    | v1   | Planned                     |
+| #                                        | Screen             | Loop | Rel  | Repository status               |
+| ---------------------------------------- | ------------------ | ---- | ---- | ------------------------------- |
+| [1](#1-onboarding)                       | Onboarding         | —    | v1   | Built · `/onboarding`           |
+| [2](#2-add-phrases)                      | Add phrases        | —    | v1   | Built · `/add`                  |
+| [3](#3-phrase-detail)                    | Phrase detail      | —    | v1   | Built · `/phrase/[id]`          |
+| [4](#4-adaptive-stream)                  | Adaptive stream    | all  | v1   | Built · `/practice/stream`      |
+| [5](#5-speak-to-progress)                | Speak to progress  | A    | v1   | Planned                         |
 | [6](#6-review-session)                   | Review session     | A    | v1.1 | Built · `/practice/review` dock |
-| [7](#7-roleplay)                         | Roleplay           | A+   | v1.1 | Planned                     |
-| [8](#8-memory-model)                     | Memory model       | A+   | v1.1 | Planned                     |
-| [9](#9-pronunciation-lab)                | Pronunciation lab  | A+   | v1.1 | Planned                     |
-| [10](#10-prosody-lab)                    | Prosody lab        | A+   | v1.1 | Planned                     |
-| [11](#11-today--the-ritual)              | Today — the ritual | B    | v1   | Built · `/`                 |
-| [12](#12-the-refrain)                    | The Refrain        | B    | v1   | Built · `/practice/refrain` |
-| [13](#13-the-run)                        | The Run            | C    | v2   | Planned                     |
-| [14](#14-phrasebook--collection--ladder) | Phrasebook         | C    | v2   | Planned                     |
-| [15](#15-progress)                       | Progress           | —    | v1   | Built · `/progress`         |
-| [16](#16-set-the-arrival)                | Set the arrival    | Trip | v1   | Planned                     |
-| [17](#17-countdown-home)                 | Countdown home     | Trip | v1   | Planned                     |
-| [18](#18-daily-drop)                     | Daily drop         | Trip | v1   | Planned                     |
-| [19](#19-lock-screen-widget)             | Lock screen widget | Trip | v1   | Planned · native surface    |
-| [20](#20-survival-mode)                  | Survival mode      | Trip | v1   | Planned                     |
-| [21](#21-souvenir)                       | Souvenir           | Trip | v1   | Planned                     |
-| [22](#22-open-chat)                      | Open chat          | D    | v1.1 | Planned                     |
-| [23](#23-message-inspector)              | Message inspector  | D    | v1.1 | Planned                     |
+| [7](#7-roleplay)                         | Roleplay           | A+   | v1.1 | Planned                         |
+| [8](#8-memory-model)                     | Memory model       | A+   | v1.1 | Planned                         |
+| [9](#9-pronunciation-lab)                | Pronunciation lab  | A+   | v1.1 | Planned                         |
+| [10](#10-prosody-lab)                    | Prosody lab        | A+   | v1.1 | Planned                         |
+| [11](#11-today--the-ritual)              | Today — the ritual | B    | v1   | Built · `/`                     |
+| [12](#12-the-refrain)                    | The Refrain        | B    | v1   | Built · `/practice/refrain`     |
+| [13](#13-the-run)                        | The Run            | C    | v2   | Planned                         |
+| [14](#14-phrasebook--collection--ladder) | Phrasebook         | C    | v2   | Planned                         |
+| [15](#15-progress)                       | Progress           | —    | v1   | Built · `/progress`             |
+| [16](#16-set-the-arrival)                | Set the arrival    | Trip | v1   | Planned                         |
+| [17](#17-countdown-home)                 | Countdown home     | Trip | v1   | Planned                         |
+| [18](#18-daily-drop)                     | Daily drop         | Trip | v1   | Planned                         |
+| [19](#19-lock-screen-widget)             | Lock screen widget | Trip | v1   | Planned · native surface        |
+| [20](#20-survival-mode)                  | Survival mode      | Trip | v1   | Planned                         |
+| [21](#21-souvenir)                       | Souvenir           | Trip | v1   | Planned                         |
+| [22](#22-open-chat)                      | Open chat          | D    | v1.1 | Planned                         |
+| [23](#23-message-inspector)              | Message inspector  | D    | v1.1 | Planned                         |
 
 Plus: [Navigation shell](#navigation-shell) · [Permissions](#permissions) ·
 [Global behaviours](#global-behaviours)
@@ -46,23 +46,12 @@ Plus: [Navigation shell](#navigation-shell) · [Permissions](#permissions) ·
 
 ## Keeping specification, routes, and states aligned
 
-The current app has 7 learner routes and 21 declared learner-visible browser states. The exact
-route-to-state inventory is maintained in
-[`screen-catalog.md`](../design/screen-catalog.md#current-implementation-and-browser-coverage), and
-the executable manifest is [`apps/mobile/e2e/states.ts`](../../apps/mobile/e2e/states.ts).
-
-When functionality grows, extend these three layers together:
-
-- Describe the state and its transitions in the appropriate numbered section here. Preserve the
-  section number: it maps to the authored 21-screen blueprint, not to implementation order.
-- Add the Expo route if the screen is new. A route file alone is not functional coverage.
-- Add a manifest entry for each materially different learner-visible state in the same change. This
-  includes sheets/dialogs, empty and not-found views, permission fallbacks, completion states, and
-  drilled sub-views. Give each entry a unique stable name, its actual route, a reference to the
-  correct section here, and a learner-reachable interaction path.
-- Update the catalog's current-inventory table whenever a route or manifest state changes, and run
-  `pnpm test:e2e`. Its route guard, accessibility suite, and text-scale suite all consume the state
-  manifest.
+**App swap, 2026-09-30.** The first app — its routes, the screen catalog and the browser state
+manifest (`apps/mobile/e2e/states.ts`) — was replaced by the v2.0 listening-first player and is in
+Git history at `52a0e3b`. This spec still describes the authored 21-screen product intent; section
+numbers map to that blueprint, not to the current app. The current app's behaviour is recorded in
+[`../../apps/mobile/README.md`](../../apps/mobile/README.md) and
+[`../design/v2-prototype-decisions.md`](../design/v2-prototype-decisions.md).
 
 The manifest's `spec` field is traceability metadata and uses the canonical headings in this file:
 Onboarding §1, Add §2, Phrase detail §3, Adaptive stream §4, Today §11, Refrain §12, and Progress
@@ -398,8 +387,8 @@ Classic SRS, made tag-aware.
 Current runtime (plan 75): `/practice/review` is a built dock. It does not bounce home. Empty
 course, no-schedule, and nothing-due are honest. A due set shows real theme/difficulty banners,
 flips meaning → target, and grades through ReviewEngine + `applyDelta` with real FSRS intervals.
-Resume hydrates a validated checkpoint. Hear-it and the HTML Hard+Easy toy stay omitted — no
-device TTS fallback, no 14,890 / 18.4 MB / VOL. 03.
+Resume hydrates a validated checkpoint. Hear-it and the HTML Hard+Easy toy stay omitted — no device
+TTS fallback, no 14,890 / 18.4 MB / VOL. 03.
 
 **Card front** — a focus banner, then the theme pill, difficulty pill, prompt label, and the
 English. **Card back** (after reveal, `flip` 300 ms) — a rule, the Spanish in accent ink, the
@@ -1050,8 +1039,7 @@ Requested **in context only**, never at launch:
 - **Toasts** — dark pill, bottom-centred, `popIn` 300 ms, 1.7 s (informational) or 2.6 s (with
   Undo). One at a time; a new toast replaces the current one.
 - **Tap feedback** — every interactive element scales on press (0.98 for rows/cards, 0.90 for icon
-  buttons) and every interactive target has a minimum 44×44 hit area regardless of visual size. See
-  [motion.md](../design/motion.md).
+  buttons) and every interactive target has a minimum 44×44 hit area regardless of visual size.
 - **Audio playback is exclusive** — starting any utterance cancels the current one.
 - **Every owned/library row that represents an existing learner phrase opens
   [Phrase detail](#3-phrase-detail)** on tap. Discovery suggestions may instead open the Add tagging
@@ -1095,13 +1083,13 @@ authored learner screen. See [account implementation](../architecture/google-app
 Optional `/listen-export` utility (plan 99); not one of the 23 authored learner screens. The learner
 selects the active-course batch and a repeat count of 2–5 (default 3). The primary path **generates
 licensed neural takes online** (ElevenLabs `eleven_multilingual_v2` pins in
-`LISTENING_VOICE_DECISION`; default stub/missing key still fail closed;
-`TTS_STUB_RENDER=1` is labeled listening-class only), **caches each phrase×voice clip on
-device**, then plays that cache with no network. Each phrase is spoken that many times, rotating
-through distinct licensed voices for the target locale. The primary action requires at least two
-approved listening voices; otherwise the control is unavailable. First-time generation needs
-network; a cache hit does not. Empty-cache airplane mode is unavailable, not a silent device-TTS
-export. Device TTS may play a labeled in-app fallback on a miss.
+`LISTENING_VOICE_DECISION`; default stub/missing key still fail closed; `TTS_STUB_RENDER=1` is
+labeled listening-class only), **caches each phrase×voice clip on device**, then plays that cache
+with no network. Each phrase is spoken that many times, rotating through distinct licensed voices
+for the target locale. The primary action requires at least two approved listening voices; otherwise
+the control is unavailable. First-time generation needs network; a cache hit does not. Empty-cache
+airplane mode is unavailable, not a silent device-TTS export. Device TTS may play a labeled in-app
+fallback on a miss.
 
 Duration is measured or `null`, never estimated. This is a listening companion: it does not record
 practice, include learner recordings, or replace canonical one-voice reference audio.

@@ -1,12 +1,14 @@
 # Backend integration inventory
 
-**Status:** Contract work from plan 85 (F-04) plus implemented account/sync clients. Eight learner
-routes plus Languages/Account/More/Settings exist. Durable local writes do not wait on the network.
-An endpoint in the target specification does not mean the server implements it.
+**Status:** Contract work from plan 85 (F-04). The account/sync clients and the eight learner routes
+this inventory was written against belonged to the first app, removed on 2026-09-30; the current app
+(`apps/mobile`) does not call the API yet. Durable local writes do not wait on the network. An
+endpoint in the target specification does not mean the server implements it.
 
-Source precedence: the [screen catalog](../design/screen-catalog.md) maps authored artifacts;
-[PRD](../product/prd.md) supplies requirement IDs. Every screen writes locally first. Sync is
-background convergence, never a practice dependency. **There is no per-screen CRUD API.**
+Source precedence: the v1.1 screen catalog (removed 2026-09-30; Git history at `52a0e3b`) mapped
+authored artifacts; [PRD](../product/prd.md) supplies requirement IDs. Every screen writes locally
+first. Sync is background convergence, never a practice dependency. **There is no per-screen CRUD
+API.**
 
 Paths below are relative to `/v1`. Schema names refer to `@loro/core/api/target` unless marked
 `draft`; current contracts are independently exported by `@loro/core/api/current`.

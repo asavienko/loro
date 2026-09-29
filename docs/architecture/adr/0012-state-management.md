@@ -1,6 +1,7 @@
 # 0012 · Zustand for session state, live SQLite queries for everything durable
 
-- **Status:** Accepted
+- **Status:** Superseded (2026-09-30) — the Zustand projection left with the first app. The current
+  app keeps a pure state machine (`apps/mobile/src/shared/state/`) behind a React store.
 - **Date:** 2026-07-28
 - **Deciders:** Mobile lead
 

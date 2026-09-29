@@ -5,10 +5,10 @@ uses Expo prebuild and Gradle on your machine and uploads files through the GitH
 use EAS or submit anything to Google Play.
 
 `pnpm --filter @loro/mobile android` is the Metro-dependent debug workflow and rejects release
-variants, custom APKs and caller-supplied app IDs. It forces the Development build flag even when a
-local dotenv file selects Preview. Use this Preview APK workflow for a standalone release build.
-Development also rejects positional project paths and declares its package directly in the generated
-native project so a fresh Metro session can resolve it. Preview retains its own package.
+variants, custom APKs and caller-supplied app IDs. It forces the Development identity
+(`LORO_ANDROID_DEV_CLIENT=1`, `app.loro.android.dev`) even when a local dotenv file selects Preview.
+Use this Preview APK workflow (`LORO_LOCAL_APK=1`, `app.loro.android.preview`) for a standalone
+release build. Both identities are chosen in `apps/mobile/app.config.ts`.
 
 ## Prerequisites
 
@@ -40,22 +40,11 @@ happens locally. Build output remains under `.local-builds/apk/<commit>/` (gitig
 
 ## Backend configuration
 
-Without an API URL, the APK supports the implemented local learning flows and reports sign-in as
-unavailable. To configure a real backend, supply its public HTTPS URL including `/v1`:
-
-```bash
-EXPO_PUBLIC_API_URL=https://your-testing-api.example/v1 pnpm apk:local
-```
-
-Use the deployed `ApiUrl` from the [AWS gateway](public-api.md) for standalone internet access.
-Account shows the actual server connection and keeps sign-in availability separate.
-
-The URL is public configuration embedded in the APK. It must not contain credentials, query strings
-or fragments. The snapshot excludes ignored local environment files; Expo dotenv loading is
-disabled. Other inherited `EXPO_PUBLIC_*` values are cleared. No API keys or backend secrets belong
-in this build. The backend must register `loro://account` for Preview sign-in. The Metro-dependent
-Android development client uses `loro-dev://account`; add that exact redirect to its development
-backend only when testing sign-in from that client.
+The current app (the v2.0 player, 2026-09-30) does not call the API; it keeps progress on the
+device. The runner still accepts `EXPO_PUBLIC_API_URL` (HTTPS, ending in `/v1`, no credentials,
+query or fragment) and clears every other inherited `EXPO_PUBLIC_*` value; ignored local environment
+files are excluded and Expo dotenv loading is disabled. No API keys or backend secrets belong in
+this build.
 
 ## Upload to GitHub
 
@@ -77,16 +66,13 @@ its hash before optionally publishing. Failed verification leaves a draft for in
 
 This uses Gradle's release variant with Expo's **development signing key**, not a production signing
 identity. JavaScript/Hermes is bundled, the Android manifest is non-debuggable, and Metro is not
-needed. The runner verifies the APK signature, application ID, bundled JavaScript and both Rust and
-SQLite shared libraries for each requested ABI before upload.
+needed. The runner verifies the APK signature, application ID, bundled JavaScript and the Rust
+shared library for each requested ABI before upload.
 
 The local-build config uses `app.loro.android.preview` and the name “Loro Preview”, separate from
-the planned production app. OTA/EAS placeholders and missing production icon/splash image references
-are excluded only for this preview. Android uses the generated template icon and an explicit
-transparent splash drawable, preserving a background-only launch screen. Store signing, branded
-native assets and version-code policy remain release work. A verified build is not a device-test
-result: SQLite, Rust and foreground device speech modules are implemented, while physical-device
-audio/ASR acceptance, iOS builds and background playback remain separate gates. See
+the production app. Store signing and version-code policy remain release work. A verified build is
+not a device-test result: physical-device audio acceptance, iOS builds and background playback
+remain separate gates. The build evidence below predates the 2026-09-30 app swap. See
 [persistent practice](persistent-practice.md) for the recorded platform evidence.
 
 The implementation follows

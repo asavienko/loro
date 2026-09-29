@@ -7,8 +7,8 @@ See docs/process/git-workflow.md#pull-requests
 
 <!-- Two sentences. The diff shows what changed; say why. -->
 
-**Requirements:** <!-- e.g. P2-04, LB-25 — from docs/product/prd.md --> **Blueprint:**
-<!-- e.g. Loro.dc.html:1404–1538 — or "new design" -->
+**Requirements:** <!-- e.g. P2-04, LB-25 — from docs/product/prd.md --> **Design:**
+<!-- the app behaviour this changes, or "new design" -->
 
 ## How I verified it
 
@@ -45,10 +45,10 @@ ANIMATED change → screen recording. A still cannot show whether the warming ca
 
 <details><summary>Screen or component</summary>
 
-- [ ] Compared against the blueprint side by side
-- [ ] Every `sc-if` state implemented, including empty and error
-- [ ] Toast/label copy verbatim where the blueprint has copy
-- [ ] Tokens only, no colour literals; `accentInk` for text
+- [ ] Compared with the running app (web and a device)
+- [ ] Every state implemented, including empty and error
+- [ ] Copy in `apps/mobile/src/shared/copy/`, in all three UI languages
+- [ ] Colours from `apps/mobile/src/ui/theme.ts`, no literals
 - [ ] Press feedback on every interactive element
 - [ ] Reduced-motion variant works
 - [ ] Dynamic Type at 200% doesn't break
@@ -57,13 +57,13 @@ ANIMATED change → screen recording. A still cannot show whether the warming ca
 
 </details>
 
-<details><summary>Practice engine</summary>
+<details><summary>State machine or learner log</summary>
 
-- [ ] Passes the conformance suite
-- [ ] Selection and sequencing rules unit-tested
-- [ ] `plan()` is read-only; deterministic with an injected clock and seed
+- [ ] `transition` stays pure; new events are allowed in `chart.ts`
+- [ ] Unit/property tests in `apps/mobile/src/shared/state/`
+- [ ] Deterministic: time only from `state/clock.ts`
 - [ ] **Maintains every progress signal it can compute, including ones it doesn't display** (rule 5)
-- [ ] Session state persisted — an interruption resumes rather than restarts
+- [ ] Saved progress migrates (`persistence.ts`); an interruption resumes rather than restarts
 
 </details>
 

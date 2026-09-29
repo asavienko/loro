@@ -109,8 +109,7 @@ On the device floor, with the frame-rate overlay on: do six reps and watch the c
 through all four bands. **Zero dropped frames across the 500 ms transition.**
 
 A stutter here doesn't read as a slow app — it reads as the app not having noticed the learner's
-rep, which undermines the entire feedback loop
-([`../design/motion.md`](../design/motion.md#1--the-warming-card--the-refrain)).
+rep, which undermines the entire feedback loop.
 
 ### 4 · Background stream soak
 

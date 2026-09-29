@@ -5,15 +5,21 @@
 - **Status:** 🟡 Shared candidate/handoff, Discover Add-your-own floor, bundled topic suggestions
   and a stub `/v1/phrases/suggest` exist. Live provider traffic remains behind **Q-21**. Chat
   screens stay 82/83; they consume the handoff contract only.
+- **App swap (2026-09-30):** the Discover UI (Add your own, bundled topic suggestions) was in the
+  first app and was removed with it. The shared candidate contract and the stub
+  `/v1/phrases/suggest` remain. The current app's Make a set logic
+  (`apps/mobile/src/shared/generate/`, archived plan
+  [103](archive/2026-09-30/103-prototype-phrase-generator.md)) calls an `/api/phrases/*` writer
+  route that no server provides today.
 - **Depends on:** 59 persistence; 61/87 for authored catalog publication and bilingual review; 65
   Import/OCR remains separate; 76/86 transport/spend for a future live path; 82/83 consume the
   keep-line handoff
 - **Number allocation:** 97 follows inspection of active, archived and concurrent plan files. 95 and
   archived 96 (account sign-in) are archived. Active phrase-music reuses 96 (unresolved collision).
   Plan 98 owns voice/TTS. Plan 99 owns the online-first listening companion. Archived plan 100 owns
-  hygiene/reuse/tooling; active `100-ui-design-system.md` is the motion kit under the same number
-  (unresolved collision). Plan 101 owns the phrase-relation graph and Discover association score.
-  The next new plan is 102.
+  hygiene/reuse/tooling; `100-ui-design-system.md` (archived 2026-09-30) is the motion kit under the
+  same number (unresolved collision). Plan 101 owns the phrase-relation graph and Discover
+  association score. The next new plan is 102.
 
 ## Outcome
 

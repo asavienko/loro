@@ -1,5 +1,11 @@
 # Data model
 
+> **App swap, 2026-09-30.** The first app in `apps/mobile` was replaced by the v2.0 listening-first
+> player, and `packages/core` lost the client engines and SQLite persistence it used; both remain in
+> Git history at `52a0e3b`. The status below describes that removed client. The current app keeps an
+> append-only learner log in AsyncStorage (native) or browser storage (web) and does not sync. The
+> PostgreSQL model and API are unchanged.
+
 The data model has two layers today: a tested SQLite persistence library and a larger target model
 for the finished product. They are not the same thing yet.
 

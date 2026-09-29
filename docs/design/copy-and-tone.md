@@ -89,7 +89,7 @@ decoration on a UI label.
 > live"_ _"¡Hecho! Today is done"_ → _"Today's set is warmed up"_
 
 The Spanish is always in the italic serif; the English is always in the sans
-([design-system.md](design-system.md#typography)).
+(`apps/mobile/src/ui/theme.ts`, `src/ui/fonts.ts`).
 
 ---
 

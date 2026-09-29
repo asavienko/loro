@@ -23,25 +23,22 @@ pnpm ci:local
 
 Alternatively `bash scripts/ci-local.sh` selects Node 22 through nvm when available, including when
 pnpm is initially off PATH. The runner exits on failure and refuses to run in GitHub Actions. It
-sets `CI=1` so Playwright starts fresh servers and uses its strict CI behavior, and forces Turbo
-checks to execute instead of accepting cached task results. The full runner schedules independent
-jobs with a bounded default of two (`LORO_CI_JOBS`); Turbo's internal task limit remains separately
-configurable with `LORO_CI_CONCURRENCY`.
+sets `CI=1` and forces Turbo checks to execute instead of accepting cached task results. The full
+runner schedules independent jobs with a bounded default of two (`LORO_CI_JOBS`); Turbo's internal
+task limit remains separately configurable with `LORO_CI_CONCURRENCY`.
 
 The full gate runs in dependency-aware phases:
 
-1. Frozen-lockfile dependency installation, then host/WASM/UniFFI, design-token, Expo route-type and
-   Chromium preparation jobs run concurrently. Route types are refreshed with the installed Expo SDK
-   before typechecking.
-2. `pnpm check`: contracts, lint, typecheck, JS/TS/Rust tests, content and accessibility checks.
+1. Frozen-lockfile dependency installation, then the host/WASM/UniFFI build.
+2. `pnpm check`: plan index, script tests, contracts, lint, typecheck, JS/TS/Rust tests and content.
    This phase stays exclusive because Turbo and generated artifacts share the checkout.
 3. Auth/PostgreSQL, optional golden tests, formatting, optional commit-range lint and generated
    drift checks run concurrently. The auth transaction tests use a disposable PostgreSQL 16
    container; missing golden targets are reported as omitted.
-4. Learner, pseudo-locale, workbench and production-export browser suites, mobile export, and API
-   build/smoke/image verification run concurrently in separate temporary source workspaces. Each
-   workspace has its own Expo/Metro cache, temporary directory, port, export output and reports;
-   Playwright remains single-worker inside each suite.
+4. The app's iOS bundle (`pnpm --filter @loro/mobile bundle`) and API build/smoke/image verification
+   run concurrently in separate temporary source workspaces. Each workspace has its own Expo/Metro
+   cache, temporary directory, export output and reports. There is no browser E2E suite since the
+   first app was removed on 2026-09-30.
 5. Criterion benchmarks run exclusively with short warm-up and measurement windows.
 
 `LORO_CI_JOBS=1` restores serial top-level scheduling. A lock prevents two full runs from sharing a
@@ -51,11 +48,11 @@ Cancellation stops install fallbacks and queued commands, then escalates owned p
 SIGTERM to SIGKILL after a bounded grace period. Cleanup waits for those groups before removing
 workspaces and removes the run-owned API containers, network and image even when shell traps were
 skipped. The workspace snapshot comes from Git's NUL-delimited tracked and non-ignored inventory,
-plus the required generated WASM, bindings, token output and Expo declarations. It preserves
-working-tree edits and deletions, omits secrets, dependencies and native build output, and rejects
-symlinks that escape the source tree. Authored source and commit identity are captured before
-validation, matched against the snapshot, checked between phases and rechecked after benchmarks;
-generated input identity is recorded separately.
+plus the required generated WASM, bindings and Expo declarations. It preserves working-tree edits
+and deletions, omits secrets, dependencies and native build output, and rejects symlinks that escape
+the source tree. Authored source and commit identity are captured before validation, matched against
+the snapshot, checked between phases and rechecked after benchmarks; generated input identity is
+recorded separately.
 
 To validate branch commits, provide a locally available base ref:
 
@@ -64,10 +61,10 @@ CI_BASE_REF=origin/main pnpm ci:local
 ```
 
 Without `CI_BASE_REF`, commit lint is explicitly omitted; no network fetch or push is performed.
-`pnpm check` remains the fast development command. Full CI installs dependencies/browsers when
-needed but never publishes, deploys, queues EAS, or calls GitHub. The full runner's checkout lock
-prevents unsafe concurrent runs; isolated suites select their own free local ports and leave
-existing development servers alone.
+`pnpm check` remains the fast development command. Full CI installs dependencies when needed but
+never publishes, deploys, queues EAS, or calls GitHub. The full runner's checkout lock prevents
+unsafe concurrent runs; isolated suites select their own free local ports and leave existing
+development servers alone.
 
 Record the checked commit, commands and results in the PR. No GitHub status check is required by
 this policy. If a repository rule later requires an old Actions check, remove that obsolete check
@@ -90,10 +87,8 @@ and content-quality jobs were placeholders; they are not pretend local successes
 
 ## Reports and limits
 
-Playwright keeps reports in `playwright-report/` and diagnostics in `test-results/`. Criterion keeps
-results in `packages/core-rs/target/criterion/`. Results remain local; nothing uploads them.
-Generated tokens and bindings must match Git: regenerate from source and review/commit changes.
-Browser baselines are platform-specific; do not overwrite another platform's baseline to pass.
+Criterion keeps results in `packages/core-rs/target/criterion/`. Results remain local; nothing
+uploads them. Generated bindings must match Git: regenerate from source and review/commit changes.
 
 A green local gate does not prove native audio, microphone, lifecycle, device persistence, offline
 resume, notifications or widgets. Calendar parity is a Rust fixture test, not Swift/Kotlin parity.

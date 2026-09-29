@@ -3,25 +3,29 @@
 - **Requirement IDs:** `F-05`, `F-06`, `LB-25`…`LB-28`, `NAV-04`, `NAV-06`
 - **Number allocation:** 99 is the online-first listening companion. This interaction kit was
   allocated 100 while hygiene was still on a branch. Main archived hygiene as
-  [`100-hygiene-reuse-and-tooling.md`](archive/2026-09-10/100-hygiene-reuse-and-tooling.md) under
-  the same ID (unresolved collision; do not silently reuse or drop either). Highest assigned ID
-  is 100. Plan 101 owns the phrase-relation graph. The next new plan is 102.
+  [`100-hygiene-reuse-and-tooling.md`](../2026-09-10/100-hygiene-reuse-and-tooling.md) under the
+  same ID (unresolved collision; do not silently reuse or drop either). Highest assigned ID is 100.
+  Plan 101 owns the phrase-relation graph. The next new plan is 102.
 - **Milestone:** M1/M2 substrate for remaining learner screens
+- **Archived 2026-09-30:** the first app this kit served was removed from `apps/mobile` and replaced
+  by the v2.0 player (plan [104](../../104-prototype-react-native.md)); none of the components below
+  exist in the current app. The status that follows is the record at archive time.
 - **Status:** 🟡 Adapter, UI-thread Pressable, `sheetUp`, Arrival, WarmingSurface, BeatBars,
   Equalizer, PulseRing and UnblurText are consumed by real routes and registered in the workbench.
   Practice/form/chat composites wait for a second caller. Physical-device 60 fps and touch proof
-  remain [58](archive/2026-09-09/58-native-workspace-and-device-ci.md) /
-  [72](archive/2026-09-09/72-release-quality-gates.md). Fonts, dark theme and the haptic _port_ stay
-  [57](archive/2026-09-09/57-runtime-design-system.md). Spine/sheet pull _laws_ stay
-  [93](archive/2026-09-09/93-mobile-shell-gestures.md).
+  remain [58](../2026-09-09/58-native-workspace-and-device-ci.md) /
+  [72](../2026-09-09/72-release-quality-gates.md). Fonts, dark theme and the haptic _port_ stay
+  [57](../2026-09-09/57-runtime-design-system.md). Spine/sheet pull _laws_ stay
+  [93](../2026-09-09/93-mobile-shell-gestures.md).
 - **Depends on:** generated tokens
-  ([ADR-0013](../docs/architecture/adr/0013-design-tokens-pipeline.md), done); 57 fonts/haptics/dark
-  as they land; 80 specimens; 93 pull-down laws; 56 keyboard/lists; 81 named chrome; 64/75/83
-  consume the kit; 58/72 device evidence; Q-14 peak-card treatment only.
+  ([ADR-0013](../../../docs/architecture/adr/0013-design-tokens-pipeline.md), done); 57
+  fonts/haptics/dark as they land; 80 specimens; 93 pull-down laws; 56 keyboard/lists; 81 named
+  chrome; 64/75/83 consume the kit; 58/72 device evidence; Q-14 peak-card treatment only.
 - **Reviewed:** 2026-09-10 against `66bc7ad`; current `apps/mobile/src/ui/`, generated motion
-  tokens, authored `Design System.dc.html` / `components/`, [motion.md](../docs/design/motion.md),
-  [component-inventory.md](../docs/design/component-inventory.md) and the
-  [native-libraries review](../docs/reviews/2026-09-09-native-libraries-and-approaches.md)
+  tokens, authored `Design System.dc.html` / `components/`,
+  [motion.md](../../../docs/design/motion.md),
+  [component-inventory.md](../../../docs/design/component-inventory.md) and the
+  [native-libraries review](../../../docs/reviews/2026-09-09-native-libraries-and-approaches.md)
   inspected. This plan supplies no new runtime, device or deployment acceptance.
 
 ## Outcome
@@ -49,54 +53,54 @@ screen used once stays in the route.
 
 ## Why this is a new owner
 
-| Existing owner                                                                                                                | What it already covers                                                         | Why it cannot absorb this                                                                                                              |
-| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| [ADR-0013](../docs/architecture/adr/0013-design-tokens-pipeline.md) / [34](archive/2026-07-30/34-design-system-completion.md) | Token pipeline, contrast gate, early primitive inventory                       | Tokens and the 2026-07 inventory are data. This plan owns the runtime adapter that _plays_ motion tokens and the remaining-screen kit. |
-| [57](archive/2026-09-09/57-runtime-design-system.md)                                                                          | Fonts, dark theme, haptic _port_, remaining current-screen inventory           | 57 is the visual/theme substrate. It does not own Reanimated wiring, the gesture catalog, or the remaining-screen kit roadmap.         |
-| [80](archive/2026-09-09/80-dev-design-system-workbench.md)                                                                    | `/dev/tokens` gallery and specimen coverage                                    | 80 inspects production APIs; it does not implement them.                                                                               |
-| [93](archive/2026-09-09/93-mobile-shell-gestures.md)                                                                          | Spine pull-down and sheet-handle dismiss (`Navigation.dc.html:474`, `681–685`) | 93 owns those two laws. This plan owns every later gesture and the optional RNGH body _inside_ `usePullDown`.                          |
-| [56](archive/2026-09-09/56-navigation-failure-and-input-shell.md)                                                             | Route laws, keyboard-safe fields, scalable lists                               | 56 owns when FlashList/keyboard-controller land. This plan owns press/sheet/list _motion_ those lists sit on.                          |
-| [81](archive/2026-09-09/81-navigation-spine-switcher-and-more.md)                                                             | More, named headers, exits, resume, travelling transport                       | Chrome presentation. Not press physics, beat bars or grade rows.                                                                       |
-| [64](archive/2026-09-09/64-today-and-refrain-production-loop.md)                                                              | Timed waves, Refrain audio, tag drills, peak acceptance                        | 64 owns the ritual. This plan owns the warming interpolator and beat primitive 64 (and later Memory) consume.                          |
-| [75](archive/2026-09-09/75-review-and-memory.md)                                                                              | Review engine, Memory curve product                                            | 75 owns scheduling and the route. This plan owns `RevealCard` / `GradeRow` / curve-panel _flip_ once a second caller exists.           |
-| [77](archive/2026-09-09/77-dsp-and-speech-labs.md)                                                                            | DSP spike and Skia lab drawings                                                | Skia charts stay 77. This plan owns the reduce-motion scrubber gesture and the domain-free chart _frame_.                              |
-| [83](83-open-chat-and-message-inspector.md)                                                                                   | Open chat and Message inspector screens                                        | 83 owns the conversation. This plan owns `MessageBubble`, hold-to-talk and typing-dots primitives 83 consumes.                         |
+| Existing owner                                                                                                                 | What it already covers                                                         | Why it cannot absorb this                                                                                                              |
+| ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| [ADR-0013](../../../docs/architecture/adr/0013-design-tokens-pipeline.md) / [34](../2026-07-30/34-design-system-completion.md) | Token pipeline, contrast gate, early primitive inventory                       | Tokens and the 2026-07 inventory are data. This plan owns the runtime adapter that _plays_ motion tokens and the remaining-screen kit. |
+| [57](../2026-09-09/57-runtime-design-system.md)                                                                                | Fonts, dark theme, haptic _port_, remaining current-screen inventory           | 57 is the visual/theme substrate. It does not own Reanimated wiring, the gesture catalog, or the remaining-screen kit roadmap.         |
+| [80](../2026-09-09/80-dev-design-system-workbench.md)                                                                          | `/dev/tokens` gallery and specimen coverage                                    | 80 inspects production APIs; it does not implement them.                                                                               |
+| [93](../2026-09-09/93-mobile-shell-gestures.md)                                                                                | Spine pull-down and sheet-handle dismiss (`Navigation.dc.html:474`, `681–685`) | 93 owns those two laws. This plan owns every later gesture and the optional RNGH body _inside_ `usePullDown`.                          |
+| [56](../2026-09-09/56-navigation-failure-and-input-shell.md)                                                                   | Route laws, keyboard-safe fields, scalable lists                               | 56 owns when FlashList/keyboard-controller land. This plan owns press/sheet/list _motion_ those lists sit on.                          |
+| [81](../2026-09-09/81-navigation-spine-switcher-and-more.md)                                                                   | More, named headers, exits, resume, travelling transport                       | Chrome presentation. Not press physics, beat bars or grade rows.                                                                       |
+| [64](../2026-09-09/64-today-and-refrain-production-loop.md)                                                                    | Timed waves, Refrain audio, tag drills, peak acceptance                        | 64 owns the ritual. This plan owns the warming interpolator and beat primitive 64 (and later Memory) consume.                          |
+| [75](../2026-09-09/75-review-and-memory.md)                                                                                    | Review engine, Memory curve product                                            | 75 owns scheduling and the route. This plan owns `RevealCard` / `GradeRow` / curve-panel _flip_ once a second caller exists.           |
+| [77](../2026-09-09/77-dsp-and-speech-labs.md)                                                                                  | DSP spike and Skia lab drawings                                                | Skia charts stay 77. This plan owns the reduce-motion scrubber gesture and the domain-free chart _frame_.                              |
+| [83](../../83-open-chat-and-message-inspector.md)                                                                              | Open chat and Message inspector screens                                        | 83 owns the conversation. This plan owns `MessageBubble`, hold-to-talk and typing-dots primitives 83 consumes.                         |
 
 Do not fold a Tamagui/NativeBase/gluestack/NativeWind rewrite into this plan. The tokens, copy
 ownership, layer lint and E2E locators already _are_ the design system
-([native-libraries review](../docs/reviews/2026-09-09-native-libraries-and-approaches.md#explicit-non-goals--do-not-adopt)).
+([native-libraries review](../../../docs/reviews/2026-09-09-native-libraries-and-approaches.md#explicit-non-goals--do-not-adopt)).
 
 ## Verified starting point (2026-09-10, `66bc7ad`)
 
 ### What already exists
 
 - Generated colour, type, space, radius, motion, audio-timing and touch tokens in
-  [`packages/design-tokens/tokens/`](../packages/design-tokens/tokens/). Front door:
-  [`apps/mobile/src/ui/theme.ts`](../apps/mobile/src/ui/theme.ts).
+  [`packages/design-tokens/tokens/`](../../../packages/design-tokens/tokens). Front door:
+  [`apps/mobile/src/ui/theme.ts`](../../../apps/mobile/src/ui/theme.ts).
 - Runtime accent, text-scale and reduced-motion provider
-  ([`ThemeProvider.tsx`](../apps/mobile/src/ui/ThemeProvider.tsx)). Learner routes still default to
-  Coral. Dark theme and licensed font loading remain 57.
+  ([`ThemeProvider.tsx`](../../../apps/mobile/src/ui/ThemeProvider.tsx)). Learner routes still
+  default to Coral. Dark theme and licensed font loading remain 57.
 - 24 exported primitives and 9 composites, including `Pressable`, `Sheet`, `usePullDown`,
   `ProgressBar`, `DifficultySelector`, `TagChips`, `PhraseRow`, `EmptyState`, `NavigationMenu`.
-  Inventory: [component-inventory.md](../docs/design/component-inventory.md).
+  Inventory: [component-inventory.md](../../../docs/design/component-inventory.md).
 - Authored reference kit: **39** JSX files under
   `design/Language Learning by Phrases - V1.1/components/` (8 chat, 7 core, 5 forms, 2 frames, 10
   navigation, 4 practice, 3 progress). These are **not** imported by the app.
 - Spine/sheet pull-down via RN `PanResponder` in
-  [`usePullDown.ts`](../apps/mobile/src/ui/primitives/usePullDown.ts): 4 px activate, 48 px commit,
-  2× vertical dominance, dedicated handle only. Practice routes set `gestureEnabled: false`.
+  [`usePullDown.ts`](../../../apps/mobile/src/ui/primitives/usePullDown.ts): 4 px activate, 48 px
+  commit, 2× vertical dominance, dedicated handle only. Practice routes set `gestureEnabled: false`.
 - `Sheet` uses RN `Modal` `animationType="slide"`, not the authored `sheetUp` (340 ms, `ease.pop`)
   on a UI-thread `translateY`.
 - `Pressable` scales on the JS thread through RN `Pressable` style
-  ([`Pressable.tsx`](../apps/mobile/src/ui/primitives/Pressable.tsx)). Generated press scales
+  ([`Pressable.tsx`](../../../apps/mobile/src/ui/primitives/Pressable.tsx)). Generated press scales
   (`row 0.988`, `button 0.98`, `small 0.9`, `icon 0.82`) are already consumed.
 - Refrain `WarmingCard` is **route-local** in
-  [`apps/mobile/app/practice/refrain.tsx`](../apps/mobile/app/practice/refrain.tsx). It snaps to a
-  band base colour (gradient string stripped to a hex). No Reanimated `interpolateColor`. No glow.
-  No 500 ms transition. Peak contrast still uses the generated `warming.peak` text-size floor.
+  [`apps/mobile/app/practice/refrain.tsx`](../../../apps/mobile/app/practice/refrain.tsx). It snaps
+  to a band base colour (gradient string stripped to a hex). No Reanimated `interpolateColor`. No
+  glow. No 500 ms transition. Peak contrast still uses the generated `warming.peak` text-size floor.
 - `react-native-reanimated` **4.1.7**, `react-native-gesture-handler` **2.28.0**,
   `react-native-worklets` **0.5.1** (pinned — do not float) and `expo-font` are in
-  [`apps/mobile/package.json`](../apps/mobile/package.json). **Zero**
+  [`apps/mobile/package.json`](../../../apps/mobile/package.json). **Zero**
   `from 'react-native-reanimated'` or `GestureDetector` imports in app source.
 - Workbench registry covers all 33 current exports (plan 80). New kit exports must register there in
   the same change.
@@ -104,7 +108,7 @@ ownership, layer lint and E2E locators already _are_ the design system
 
 ### What the artifacts require that the app does not yet do
 
-From [`motion.md`](../docs/design/motion.md) and `Loro.dc.html:19–62`:
+From [`motion.md`](../../../docs/design/motion.md) and `Loro.dc.html:19–62`:
 
 | Authored motion                        | Current app                                          | Owner after this plan                                  |
 | -------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ |
@@ -119,9 +123,9 @@ From [`motion.md`](../docs/design/motion.md) and `Loro.dc.html:19–62`:
 | Contour trace + reduce-motion scrubber | Unbuilt labs                                         | **77** Skia drawing; **100** scrubber gesture          |
 
 From
-[`Navigation.dc.html`](../design/Language%20Learning%20by%20Phrases%20-%20V1.1/Navigation.dc.html)
+[`Navigation.dc.html`](../../../design/Language%20Learning%20by%20Phrases%20-%20V1.1/Navigation.dc.html)
 and
-[`Loro Chat.dc.html`](../design/Language%20Learning%20by%20Phrases%20-%20V1.1/Loro%20Chat.dc.html):
+[`Loro Chat.dc.html`](../../../design/Language%20Learning%20by%20Phrases%20-%20V1.1/Loro%20Chat.dc.html):
 
 | Gesture                          | Citation                                    | Current                    | Owner                                          |
 | -------------------------------- | ------------------------------------------- | -------------------------- | ---------------------------------------------- |
@@ -138,15 +142,15 @@ Worklets at **0.5.1**.
 
 ### Keep and deepen
 
-| Package / approach                   | Work this plan does                                                                      | Do not                                                                                      |
-| ------------------------------------ | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Generated tokens + `theme.ts`        | Consume motion/press/warming tokens through the existing front door                      | Hand-edit `design-tokens/out/`                                                              |
-| `Pressable`                          | Move scale/opacity to Reanimated; keep `MIN_TAP`, dual a11y, loading/forcedState         | Add a second press primitive                                                                |
-| `usePullDown` + `Sheet`              | Same laws, same testIDs. Optional RNGH _inside_ `usePullDown` only after device evidence | Import `GestureDetector` in routes; adopt `@gorhom/bottom-sheet`                            |
-| Expo Router + `react-native-screens` | Native stack transitions stay the platform's                                             | Custom page-transition choreography ([motion.md](../docs/design/motion.md#what-we-dont-do)) |
-| `react-native-reanimated` 4.1.7      | First app-source imports: press, sheet, warming, beat, arrivals                          | Mix into store/delta/A–G files; float Worklets                                              |
-| `react-native-gesture-handler` 2.28  | Router peer today. Deepen only inside `usePullDown` or the hold-to-talk primitive        | Per-route gesture detectors                                                                 |
-| Plan 80 workbench                    | Register every new export; drive real APIs                                               | Demonstration-only clones                                                                   |
+| Package / approach                   | Work this plan does                                                                      | Do not                                                                                            |
+| ------------------------------------ | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Generated tokens + `theme.ts`        | Consume motion/press/warming tokens through the existing front door                      | Hand-edit `design-tokens/out/`                                                                    |
+| `Pressable`                          | Move scale/opacity to Reanimated; keep `MIN_TAP`, dual a11y, loading/forcedState         | Add a second press primitive                                                                      |
+| `usePullDown` + `Sheet`              | Same laws, same testIDs. Optional RNGH _inside_ `usePullDown` only after device evidence | Import `GestureDetector` in routes; adopt `@gorhom/bottom-sheet`                                  |
+| Expo Router + `react-native-screens` | Native stack transitions stay the platform's                                             | Custom page-transition choreography ([motion.md](../../../docs/design/motion.md#what-we-dont-do)) |
+| `react-native-reanimated` 4.1.7      | First app-source imports: press, sheet, warming, beat, arrivals                          | Mix into store/delta/A–G files; float Worklets                                                    |
+| `react-native-gesture-handler` 2.28  | Router peer today. Deepen only inside `usePullDown` or the hold-to-talk primitive        | Per-route gesture detectors                                                                       |
+| Plan 80 workbench                    | Register every new export; drive real APIs                                               | Demonstration-only clones                                                                         |
 
 ### Adopt when the named owner is touched
 
@@ -166,8 +170,8 @@ Tamagui, NativeBase, gluestack, NativeWind, Paper, Restyle, Moti as a second mot
 `react-native-modal`, `@gorhom/bottom-sheet`, Lottie/Rive mascots, confetti/particle kits,
 `react-native-animatable`, a second icon font, `expo-speech` / `expo-av` as UI toys, cloud ASR,
 skeleton-loader kits, or a `features/` rewrite. Reasons are in the
-[native-libraries review](../docs/reviews/2026-09-09-native-libraries-and-approaches.md#explicit-non-goals--do-not-adopt)
-and [motion.md](../docs/design/motion.md#what-we-dont-do).
+[native-libraries review](../../../docs/reviews/2026-09-09-native-libraries-and-approaches.md#explicit-non-goals--do-not-adopt)
+and [motion.md](../../../docs/design/motion.md#what-we-dont-do).
 
 Do **not** invent swipe-to-rate, swipe-to-delete, parallax headers, or pull-to-refresh. Those are
 absent from `Navigation.dc.html` and would fight session `gestureEnabled: false`.
@@ -181,9 +185,9 @@ Add one module, for example `apps/mobile/src/ui/motion.ts`, that:
 2. Exposes typed helpers: `withToken(name)`, `pressScale(feedback)`, `sheetUp`, `popIn`, `flip`,
    `stepIn`, `fadeIn`, `grow`, `barJump({ tempoMs })`, `eqBars`, `pulseRing`, `warmingBand`,
    `wordUnblur`.
-3. Applies [motion.md § Reduced motion](../docs/design/motion.md#reduced-motion) from the theme
-   provider: information survives; only motion goes. Warming **colour** stays. Press feedback stays
-   (130–160 ms affordance).
+3. Applies [motion.md § Reduced motion](../../../docs/design/motion.md#reduced-motion) from the
+   theme provider: information survives; only motion goes. Warming **colour** stays. Press feedback
+   stays (130–160 ms affordance).
 4. Never uses `setInterval` to drive animation. The blueprint's 80 ms progress timer
    (`Loro.dc.html:2521`) is prototype-only; real bars track real playback or real progress.
 5. Never interpolates or invents learner numbers. A bar width is a real 0–1. A beat tempo is the
@@ -302,7 +306,7 @@ native memory (ADR-0011). The primitive reports phase; it does not return audio 
 
 Every control already goes through `Pressable`. Moving scale to Reanimated is how tap → visual
 feedback stays ≤ 50 ms while audio plays
-([performance.md](../docs/architecture/performance.md#interaction-latency)).
+([performance.md](../../../docs/architecture/performance.md#interaction-latency)).
 
 ## Performance work
 
@@ -379,29 +383,27 @@ No skeleton loaders — data is local. No layout animation in lists. No `setInte
    speculative gallery.
 5. **Workbench registration** in the same change as each export (80 coverage, 100 implementation).
 6. **Device traces** on the floor devices in
-   [performance.md](../docs/architecture/performance.md#startup) before claiming 60 fps.
+   [performance.md](../../../docs/architecture/performance.md#startup) before claiming 60 fps.
 7. Q-14 still gates peak-card visual treatment. Q-05 still gates Run/Phrasebook. Q-16 still gates
    chat _release_. Offline chat primitives may proceed with 83.
 
 ## Out of scope
 
 - Font licensing/loading, dark theme, haptic _module_ —
-  [57](archive/2026-09-09/57-runtime-design-system.md)
-- Durable accent/motion preferences —
-  [71](archive/2026-09-09/71-settings-telemetry-and-experiments.md)
+  [57](../2026-09-09/57-runtime-design-system.md)
+- Durable accent/motion preferences — [71](../2026-09-09/71-settings-telemetry-and-experiments.md)
 - Workbench route, contrast report, production exclusion —
-  [80](archive/2026-09-09/80-dev-design-system-workbench.md)
-- Spine/sheet pull _laws_ and session back-swipe —
-  [93](archive/2026-09-09/93-mobile-shell-gestures.md)
+  [80](../2026-09-09/80-dev-design-system-workbench.md)
+- Spine/sheet pull _laws_ and session back-swipe — [93](../2026-09-09/93-mobile-shell-gestures.md)
 - Route metadata, keyboard controller, FlashList adoption —
-  [56](archive/2026-09-09/56-navigation-failure-and-input-shell.md)
+  [56](../2026-09-09/56-navigation-failure-and-input-shell.md)
 - More / exits / resume / transport chrome —
-  [81](archive/2026-09-09/81-navigation-spine-switcher-and-more.md)
-- Refrain waves, audio, drills — [64](archive/2026-09-09/64-today-and-refrain-production-loop.md)
-- Review engine and Memory maths — [75](archive/2026-09-09/75-review-and-memory.md)
-- Skia DSP drawings — [77](archive/2026-09-09/77-dsp-and-speech-labs.md)
-- Chat product and live providers — [82](archive/2026-09-09/82-guided-chat-domain-and-service.md) /
-  [83](83-open-chat-and-message-inspector.md)
+  [81](../2026-09-09/81-navigation-spine-switcher-and-more.md)
+- Refrain waves, audio, drills — [64](../2026-09-09/64-today-and-refrain-production-loop.md)
+- Review engine and Memory maths — [75](../2026-09-09/75-review-and-memory.md)
+- Skia DSP drawings — [77](../2026-09-09/77-dsp-and-speech-labs.md)
+- Chat product and live providers — [82](../2026-09-09/82-guided-chat-domain-and-service.md) /
+  [83](../../83-open-chat-and-message-inspector.md)
 - Token generator changes — plan 53 (done)
 - Editing authored `.dc.html` / reference JSX
 - A new UI kit, a `features/` rewrite, or abandoning Expo

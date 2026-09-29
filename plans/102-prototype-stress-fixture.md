@@ -1,10 +1,12 @@
 # v2.0 prototype stress fixture
 
 - **Requirement IDs:** `P3-01`, `F-03`, `F-04`
-- **Milestone:** Design exploration (v2.0 rapid prototype); no app release depends on it
+- **Milestone:** Design exploration (v2.0 app); no app release depends on it
 - **Status:** — Ready. Requested in round 3 of the prototype review (item 65: "will be implemented
   later, create a plan for this"). Nothing is built yet.
-- **Depends on:** nothing in the app. Works inside `design/design-v2.0/rapid-ui-prototype`.
+- **Depends on:** nothing new. The web prototype this was written for became the app on 2026-09-30;
+  the fixture now works against `apps/mobile/src/shared/` (content, state, selectors) and the app on
+  the web (`pnpm --filter @loro/mobile web`).
 - **Number allocation:** the highest assigned ID was 101; this plan is **102**. The next new plan
   is 103.
 
