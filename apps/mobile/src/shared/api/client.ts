@@ -51,6 +51,8 @@ export function setTokenSource(source: TokenSource): void {
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 
 async function send(path: string, options: RequestOptions, token: string | null): Promise<Response> {
+  // Cancelled before it went out (while a token was being fetched): nothing to send.
+  if (options.signal?.aborted) throw new ApiError(0, 'CANCELLED', 'Cancelled');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? 20_000);
   const onAbort = () => controller.abort();
