@@ -6,13 +6,13 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { unreachable } from '@shared/api/client';
-import { fetchCommunityAlbums } from '@shared/api/library';
+import { fetchCommunityAlbums, type CommunitySort } from '@shared/api/library';
 import { Album, albumsForCourse } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
 import { AlbumCard } from '../music/AlbumCard';
 import { NightStatusBar } from '../music/NightStatusBar';
 import { useStore, useCopy } from '../state/store';
-import { Button } from '../ui/Button';
+import { Button, Chip } from '../ui/Button';
 import { Icon } from '../ui/Icon';
 import { field } from '../ui/field';
 import { Txt } from '../ui/Txt';
@@ -34,11 +34,12 @@ export function MusicScreen() {
   const [query, setQuery] = useState('');
   // The search last sent: refetched with the tab's focus, so a search stays put across visits.
   const [searched, setSearched] = useState('');
+  const [sort, setSort] = useState<CommunitySort>('new');
 
   useFocusEffect(
     useCallback(() => {
       let live = true;
-      fetchCommunityAlbums(target, searched)
+      fetchCommunityAlbums(target, searched, sort)
         .then((reply) => {
           if (!live) return;
           setCommunity(reply.albums.filter((a) => a.owner !== 'me'));
@@ -48,7 +49,7 @@ export function MusicScreen() {
       return () => {
         live = false;
       };
-    }, [target, searched]),
+    }, [target, searched, sort]),
   );
 
   const search = () => {
@@ -56,6 +57,11 @@ export function MusicScreen() {
     if (next === searched) return;
     setCommunity(null);
     setSearched(next);
+  };
+  const order = (next: CommunitySort) => {
+    if (next === sort) return;
+    setCommunity(null);
+    setSort(next);
   };
 
   const card = Math.min(180, Math.max(132, (Math.min(width, 1024) - 56) / 2.3));
@@ -93,6 +99,10 @@ export function MusicScreen() {
           returnKeyType="search"
           style={[field, styles.search]}
         />
+        <View style={styles.sort} accessibilityRole="radiogroup" accessibilityLabel={c.community.sortLabel}>
+          <Chip tone="night" label={c.community.sortNew} selected={sort === 'new'} onPress={() => order('new')} />
+          <Chip tone="night" label={c.community.sortPopular} selected={sort === 'popular'} onPress={() => order('popular')} />
+        </View>
       </Shelf>
     </ScrollView>
   );
@@ -136,6 +146,7 @@ const styles = StyleSheet.create({
   row: { paddingHorizontal: 20, gap: 14 },
   loading: { alignSelf: 'flex-start', marginHorizontal: 20 },
   // On night: the edge is onNightVariant (5:1 against the field) so the box is findable.
+  sort: { flexDirection: 'row', gap: 8, paddingHorizontal: 20 },
   search: { marginHorizontal: 20, backgroundColor: colors.nightContainer, borderColor: colors.onNightVariant, color: colors.onNight },
   empty: { paddingHorizontal: 20, padding: 16, marginHorizontal: 20, borderRadius: radius['2xl'], backgroundColor: colors.nightContainer },
 });

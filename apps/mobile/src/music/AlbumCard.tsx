@@ -7,7 +7,8 @@ import { AlbumCover } from './AlbumCover';
 
 export function AlbumCard({ album, width, onOpen }: { album: Album; width: number; onOpen: () => void }) {
   const c = useCopy();
-  const byline = album.owner === 'loro' ? c.music.loro : album.owner === 'me' ? c.share.yours : album.author ? c.share.by(album.author) : c.share.byLearner;
+  const by = album.owner === 'loro' ? c.music.loro : album.owner === 'me' ? c.share.yours : album.author ? c.share.by(album.author) : c.share.byLearner;
+  const byline = album.savedBy ? `${by} · ${c.community.savedBy(album.savedBy)}` : by;
   return (
     <Pressable
       accessibilityRole="button"

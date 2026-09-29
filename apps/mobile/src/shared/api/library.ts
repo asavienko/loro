@@ -80,11 +80,14 @@ export type Shared = ({ kind: 'set' } & SetDetail) | ({ kind: 'album' } & AlbumD
 
 export const fetchPack = (targetLang: LanguageCode) => api<ContentPack>(`/library/pack?target=${targetLang}`, { timeoutMs: 30_000 });
 
-export const fetchCommunitySets = (targetLang: LanguageCode, q = '') =>
-  api<{ sets: PhraseSet[]; phrases: PhraseWire[] }>(`/library/community?kind=sets&target=${targetLang}&q=${encodeURIComponent(q)}`);
+/** Community's order: the newest first, or the most saved first. */
+export type CommunitySort = 'new' | 'popular';
 
-export const fetchCommunityAlbums = (targetLang: LanguageCode, q = '') =>
-  api<{ albums: Album[] }>(`/library/community?kind=albums&target=${targetLang}&q=${encodeURIComponent(q)}`);
+export const fetchCommunitySets = (targetLang: LanguageCode, q = '', sort: CommunitySort = 'new') =>
+  api<{ sets: PhraseSet[]; phrases: PhraseWire[] }>(`/library/community?kind=sets&target=${targetLang}&q=${encodeURIComponent(q)}&sort=${sort}`);
+
+export const fetchCommunityAlbums = (targetLang: LanguageCode, q = '', sort: CommunitySort = 'new') =>
+  api<{ albums: Album[] }>(`/library/community?kind=albums&target=${targetLang}&q=${encodeURIComponent(q)}&sort=${sort}`);
 
 export const fetchSet = (id: string) => api<SetDetail>(`/library/sets/${encodeURIComponent(id)}`);
 export const fetchAlbum = (id: string) => api<AlbumDetail>(`/library/albums/${encodeURIComponent(id)}`);
