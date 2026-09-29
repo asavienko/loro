@@ -114,11 +114,18 @@ truth. Entries in `.env.example` without a reader are reserved for future adapte
 | `TTS_VOICE_RU_RU`                   | Documented pin `1qd9R09Ljlx9V1Ok0t5S` (Ivan)                                                                        |
 | `TTS_CACHE_DIR`                     | Process-local identity cache for `/tts/render`; defaults to os tmpdir                                               |
 | `TTS_STUB_RENDER`                   | `1` labeled listening-class silence only; CI and catalog publish stay `0`; listening render/asset may omit a bearer |
-| `MUSIC_PROVIDER`                    | Defaults to `stub`; fixture music only. Never `TTS_PROVIDER`. Live spend is Q-21                                    |
+| `MUSIC_PROVIDER`                    | Defaults to `stub` (library songs get the labelled demo instrumental); `elevenlabs` + key sings library songs       |
 | `MUSIC_API_KEY`                     | Server-only Music credential; unused while `MUSIC_PROVIDER=stub`                                                    |
 | `MUSIC_BASE_URL`                    | Defaults to `https://api.elevenlabs.io`; residency host is an ops/Q-21 choice                                       |
 | `MUSIC_MONTHLY_BUDGET_USD_PER_USER` | Separate from `AI_MONTHLY_BUDGET_USD_PER_USER`; `0` means unlimited in stub                                         |
 | `MUSIC_DAILY_BUDGET_USD_GLOBAL`     | Separate global music cap; `0` means unlimited in stub                                                              |
+| `ANTHROPIC_API_KEY`                 | Plan 106 library writers (phrase decks, lyrics, covers) use Claude when set; empty uses the labelled fallbacks      |
+| `AI_MODEL_GENERATE`                 | The library writers' model; defaults to `claude-sonnet-5`                                                           |
+| `LIMIT_PHRASES_DAILY`               | A learner's phrase decks per UTC day (default 30); `0` turns deck writing off                                       |
+| `LIMIT_COVER_DAILY`                 | Covers per learner per UTC day (default 10)                                                                         |
+| `LIMIT_SONG_DAILY`                  | Songs per learner per UTC day (default 5)                                                                           |
+| `LIMIT_SETS_KEPT`                   | Sets one account keeps (default 100); also `LIMIT_ALBUMS_KEPT` (30) and `LIMIT_SONGS_KEPT` (120)                    |
+| `LIBRARY_URL_SECRET`                | Signs song audio URLs; random per process when unset, so set it when several processes share a database             |
 | `CDN_BASE_URL`                      | Legacy content manifest `audio_base`; no CDN or working audio download is implied                                   |
 | `npm_package_version`               | Version reported by health; defaults to `0.0.0` outside the package runner                                          |
 

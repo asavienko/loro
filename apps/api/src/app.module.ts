@@ -15,6 +15,7 @@ import { AuthBoundaryGuard } from './auth/auth-boundary.guard.js'
 import { AuthModule } from './auth/auth.module.js'
 import { ContentModule } from './content/content.module.js'
 import { HealthModule } from './health/health.module.js'
+import { LibraryModule } from './library/library.module.js'
 import { MusicModule } from './music/music.module.js'
 import { PlatformModule } from './platform.module.js'
 import { SyncModule } from './sync/sync.module.js'
@@ -29,6 +30,7 @@ import { TtsModule } from './tts/tts.module.js'
     TtsModule,
     AiModule,
     ContentModule,
+    LibraryModule,
     HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: AuthBoundaryGuard }],

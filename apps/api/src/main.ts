@@ -52,16 +52,17 @@ async function bootstrap(): Promise<void> {
     .map((uri) => new URL(uri).origin)
   app.enableCors({
     origin: [...new Set([...config.allowedOrigins(), ...redirectOrigins])],
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'DELETE'],
     allowedHeaders: [
       'Content-Type',
       'Authorization',
       'X-Loro-Device',
       'X-Loro-App',
       'Idempotency-Key',
+      'Range',
     ],
     credentials: false,
-    exposedHeaders: ['Retry-After'],
+    exposedHeaders: ['Retry-After', 'Content-Range', 'Accept-Ranges'],
   })
 
   configureHttpApp(app)

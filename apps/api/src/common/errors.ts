@@ -87,6 +87,12 @@ const CATALOG = {
     title: 'Sync cursor is not available',
     client: 'restart a full pull while retaining local writes',
   },
+  /** A learner's own daily allowance or storage cap (plan 106), unlike the silent AI budget. */
+  LIMIT_REACHED: {
+    status: 429,
+    title: 'Allowance used',
+    client: 'show the allowance and when it resets (`resets_at`); do not retry before then',
+  },
 } as const satisfies Record<string, ErrorSpec>
 
 export type ErrorCode = keyof typeof CATALOG

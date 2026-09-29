@@ -1,0 +1,123 @@
+/**
+ * The library (plan 106): Loro's content and what learners make, with who can see it.
+ *
+ * `owner_id` is null for Loro's own rows. Documents keep the app's JSON shapes in `doc` so the pack
+ * is served without re-mapping every field. Times are epoch milliseconds; `day` is a UTC date.
+ */
+export const LIBRARY_MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS library_meta (
+  key text PRIMARY KEY,
+  value text NOT NULL
+);
+CREATE TABLE IF NOT EXISTS library_topics (
+  id text PRIMARY KEY,
+  position integer NOT NULL,
+  doc jsonb NOT NULL
+);
+CREATE TABLE IF NOT EXISTS library_sets (
+  id text PRIMARY KEY,
+  owner_id text,
+  target_lang text NOT NULL,
+  native_lang text,
+  title text NOT NULL,
+  subtitle jsonb,
+  description text,
+  topic_id text NOT NULL,
+  level text NOT NULL,
+  cover_icon text NOT NULL,
+  cover_id text,
+  visibility text NOT NULL,
+  share_code text NOT NULL UNIQUE,
+  origin text NOT NULL,
+  position integer NOT NULL DEFAULT 0,
+  created_at bigint NOT NULL,
+  updated_at bigint NOT NULL
+);
+CREATE INDEX IF NOT EXISTS library_sets_owner ON library_sets(owner_id);
+CREATE INDEX IF NOT EXISTS library_sets_listing ON library_sets(target_lang, visibility);
+CREATE TABLE IF NOT EXISTS library_phrases (
+  id text PRIMARY KEY,
+  set_id text NOT NULL,
+  position integer NOT NULL,
+  source text NOT NULL,
+  doc jsonb NOT NULL,
+  note_translations jsonb NOT NULL
+);
+CREATE INDEX IF NOT EXISTS library_phrases_set ON library_phrases(set_id);
+CREATE TABLE IF NOT EXISTS library_bank_themes (
+  id text PRIMARY KEY,
+  position integer NOT NULL,
+  doc jsonb NOT NULL
+);
+CREATE TABLE IF NOT EXISTS library_bank (
+  id text PRIMARY KEY,
+  target_lang text NOT NULL,
+  position integer NOT NULL,
+  doc jsonb NOT NULL,
+  note_translations jsonb NOT NULL
+);
+CREATE TABLE IF NOT EXISTS library_covers (
+  id text PRIMARY KEY,
+  owner_id text,
+  provider text NOT NULL,
+  svg text NOT NULL,
+  created_at bigint NOT NULL
+);
+CREATE TABLE IF NOT EXISTS library_albums (
+  id text PRIMARY KEY,
+  owner_id text,
+  target_lang text NOT NULL,
+  title text NOT NULL,
+  description text,
+  cover_id text,
+  visibility text NOT NULL,
+  share_code text NOT NULL UNIQUE,
+  origin text NOT NULL,
+  position integer NOT NULL DEFAULT 0,
+  created_at bigint NOT NULL,
+  updated_at bigint NOT NULL
+);
+CREATE INDEX IF NOT EXISTS library_albums_owner ON library_albums(owner_id);
+CREATE TABLE IF NOT EXISTS library_songs (
+  id text PRIMARY KEY,
+  album_id text NOT NULL,
+  owner_id text,
+  set_id text NOT NULL,
+  position integer NOT NULL,
+  title text NOT NULL,
+  style_id text NOT NULL,
+  status text NOT NULL,
+  lyrics jsonb NOT NULL,
+  lyrics_by text NOT NULL,
+  audio_id text,
+  audio_by text,
+  duration_ms integer,
+  error text,
+  created_at bigint NOT NULL
+);
+CREATE INDEX IF NOT EXISTS library_songs_album ON library_songs(album_id);
+CREATE TABLE IF NOT EXISTS library_audio (
+  id text PRIMARY KEY,
+  content_type text NOT NULL,
+  byte_length integer NOT NULL,
+  body bytea NOT NULL
+);
+CREATE TABLE IF NOT EXISTS library_saves (
+  user_id text NOT NULL,
+  kind text NOT NULL,
+  item_id text NOT NULL,
+  created_at bigint NOT NULL,
+  PRIMARY KEY (user_id, kind, item_id)
+);
+CREATE TABLE IF NOT EXISTS library_usage (
+  user_id text NOT NULL,
+  kind text NOT NULL,
+  day text NOT NULL,
+  used integer NOT NULL,
+  PRIMARY KEY (user_id, kind, day)
+);
+CREATE TABLE IF NOT EXISTS library_profiles (
+  user_id text PRIMARY KEY,
+  display_name text NOT NULL,
+  updated_at bigint NOT NULL
+);
+`

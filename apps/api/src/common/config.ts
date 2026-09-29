@@ -27,6 +27,29 @@ export const config = {
   aiProvider: (): string => process.env['AI_PROVIDER'] ?? 'stub',
   aiApiKey: (): string | undefined => process.env['ANTHROPIC_API_KEY'],
   aiSuggestModel: (): string => process.env['AI_MODEL_TRANSLATE'] ?? 'claude-haiku-4-5-20251001',
+  /** The library's writer (plan 106): phrase decks, lyrics and cover specs. */
+  aiGenerateModel: (): string => process.env['AI_MODEL_GENERATE'] ?? 'claude-sonnet-5',
+
+  /**
+   * A learner's daily allowances (plan 106), counted per UTC day: phrase decks, covers and songs.
+   * Zero turns that kind of generation off.
+   */
+  libraryDailyLimit: (kind: 'phrases' | 'cover' | 'song'): number =>
+    Number(
+      process.env[`LIMIT_${kind.toUpperCase()}_DAILY`] ??
+        { phrases: '30', cover: '10', song: '5' }[kind],
+    ),
+  /** Signs song audio URLs; set it when more than one API process serves the same database. */
+  libraryUrlSecret: (): string | undefined => {
+    const value = process.env['LIBRARY_URL_SECRET']?.trim()
+    return value === '' ? undefined : value
+  },
+  /** How many sets, albums and songs one account keeps. */
+  libraryStorageLimit: (kind: 'sets' | 'albums' | 'songs'): number =>
+    Number(
+      process.env[`LIMIT_${kind.toUpperCase()}_KEPT`] ??
+        { sets: '100', albums: '30', songs: '120' }[kind],
+    ),
 
   /** Lyrics model selector only. Never used to pick ElevenLabs Music. */
   musicProvider: (): string => process.env['MUSIC_PROVIDER'] ?? 'stub',

@@ -1,0 +1,1352 @@
+/**
+ * The library (plan 106): Loro's pre-generated content, what learners make, and who may see it.
+ *
+ * Loro's rows (owner null) are seeded from `@loro/content/v2` the first time the library is used
+ * after a content change. A learner's set or album is `private`, `link` (readable by anyone who has
+ * its id or share code) or `public` (also listed in Community). Generation is signed-in only and
+ * counted against the learner's daily allowance before any provider is asked.
+ */
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
+import { Inject, Injectable, Logger } from '@nestjs/common'
+import { MUSIC_STYLE_IDS, type MusicStyleId } from '@loro/core'
+import { V2_CONTENT, type V2Language, type V2Localized, type V2Topic } from '@loro/content/v2'
+import {
+  CreateAlbumSchema,
+  CreateSetSchema,
+  GenerateCoverSchema,
+  GeneratePhrasesSchema,
+  GenerateSongSchema,
+  LibraryCourseSchema,
+  LibraryIdSchema,
+  ProfileSchema,
+  SaveSchema,
+  ShareCodeSchema,
+  UpdateAlbumSchema,
+  UpdateSetSchema,
+  type LibraryNotes,
+  type NewPhrase,
+  type Visibility,
+} from '@loro/core/api/library'
+import { z } from 'zod'
+import { SERVER_CLOCK, type ServerClock } from '../common/clock.js'
+import { config } from '../common/config.js'
+import { LoroError } from '../common/errors.js'
+import { parseContract } from '../common/parse.js'
+import { DATABASE, type SqlConnection, type SqlDatabase } from '../database/database.js'
+import { patternCover, renderCover, type CoverSpec } from './covers.js'
+import type {
+  AlbumWire,
+  BankPhraseWire,
+  BankThemeWire,
+  KeptKind,
+  Owner,
+  PackWire,
+  PhraseWire,
+  SetWire,
+  SongLineWire,
+  SongWire,
+  UsageKind,
+  UsageWire,
+} from './library.types.js'
+import { composeLive, liveMusicConfigured } from './music-live.js'
+import { synthesizeDemo } from './synth.js'
+import {
+  MAX_SONG_LINES,
+  assembleLyrics,
+  bankPhrases,
+  claudeCover,
+  claudeLyrics,
+  claudePhrases,
+  writer,
+  type SongPhrase,
+  type SongSection,
+  type WrittenPhrase,
+} from './writers.js'
+
+/** Bump when the seed's shape changes without the content version changing. */
+const SEED_REVISION = 1
+/** A song still rendering after this long was lost with its process: it reads as failed. */
+const RENDER_TIMEOUT_MS = 10 * 60_000
+const DAY_MS = 86_400_000
+const COMMUNITY_PAGE = 50
+
+type Language = V2Language
+type NoteTranslations = PhraseWire['noteTranslations']
+
+interface SetRow {
+  id: string
+  owner_id: string | null
+  target_lang: Language
+  native_lang: Language | null
+  title: string
+  subtitle: V2Localized | null
+  description: string | null
+  topic_id: string
+  level: 'A1' | 'A2' | 'B1'
+  cover_icon: string
+  cover_id: string | null
+  visibility: Visibility
+  share_code: string
+  origin: 'loro' | 'user'
+  created_at: string | number
+  updated_at: string | number
+  author?: string | null
+}
+interface PhraseRow {
+  id: string
+  set_id: string
+  position: number
+  source: PhraseWire['source']
+  doc: Omit<PhraseWire, 'id' | 'setId' | 'noteTranslations' | 'source'>
+  note_translations: NoteTranslations
+}
+interface AlbumRow {
+  id: string
+  owner_id: string | null
+  target_lang: Language
+  title: string
+  description: string | null
+  cover_id: string | null
+  visibility: Visibility
+  share_code: string
+  origin: 'loro' | 'user'
+  created_at: string | number
+  updated_at: string | number
+  author?: string | null
+  song_count?: string | number
+  duration_ms?: string | number | null
+}
+interface SongRow {
+  id: string
+  album_id: string
+  owner_id: string | null
+  set_id: string
+  position: number
+  title: string
+  style_id: string
+  status: SongWire['status']
+  lyrics: { name: SongSection['name']; lines: SongLineWire[] }[]
+  lyrics_by: SongWire['lyricsBy']
+  audio_id: string | null
+  audio_by: SongWire['audioBy']
+  duration_ms: number | null
+  error: string | null
+  created_at: string | number
+}
+
+const num = (value: string | number | null | undefined) => Number(value ?? 0)
+/** An empty description is no description. */
+const blankToNull = (text: string | null | undefined): string | null =>
+  text === undefined || text === null || text === '' ? null : text
+const coverPath = (id: string | null) => (id ? `/library/covers/${id}.svg` : null)
+const newId = (prefix: string) => `${prefix}-${randomBytes(8).toString('hex').slice(0, 12)}`
+const newShareCode = () => {
+  const alphabet = 'abcdefghijkmnpqrstuvwxyz23456789'
+  return Array.from(randomBytes(10), (byte) => alphabet[byte % alphabet.length]).join('')
+}
+
+@Injectable()
+export class LibraryService {
+  private readonly logger = new Logger('library')
+  private seeded: Promise<void> | undefined
+
+  constructor(
+    @Inject(DATABASE) private readonly db: SqlDatabase,
+    @Inject(SERVER_CLOCK) private readonly clock: ServerClock,
+  ) {}
+
+  // ---------- seed ----------
+
+  /** Loro's content, written once per content version (and again after a failed attempt). */
+  private ready(): Promise<void> {
+    this.seeded ??= this.seed().catch((error: unknown) => {
+      this.seeded = undefined
+      throw error
+    })
+    return this.seeded
+  }
+
+  private async seed(): Promise<void> {
+    const version = `${V2_CONTENT.version}:${SEED_REVISION}`
+    const current = await this.db.query<{ value: string }>(
+      "SELECT value FROM library_meta WHERE key = 'seed'",
+    )
+    if (current.rows[0]?.value === version) return
+    await this.db.transaction(async (tx) => {
+      await tx.query("SELECT pg_advisory_xact_lock(hashtext('loro-library-seed'))")
+      const again = await tx.query<{ value: string }>(
+        "SELECT value FROM library_meta WHERE key = 'seed'",
+      )
+      if (again.rows[0]?.value === version) return
+      const now = this.clock.now()
+      await this.seedPhrases(tx, now)
+      await this.seedAlbums(tx, now)
+      await tx.query(
+        "INSERT INTO library_meta(key, value) VALUES ('seed', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
+        [version],
+      )
+    })
+    this.logger.log(`seeded Loro content ${version}`)
+  }
+
+  private async seedPhrases(tx: SqlConnection, now: number): Promise<void> {
+    await tx.query('DELETE FROM library_topics')
+    for (const [position, topic] of V2_CONTENT.topics.entries()) {
+      await tx.query('INSERT INTO library_topics(id, position, doc) VALUES ($1,$2,$3)', [
+        topic.id,
+        position,
+        JSON.stringify(topic),
+      ])
+    }
+    const loroSets = V2_CONTENT.sets.map((s) => s.id)
+    await tx.query(
+      "DELETE FROM library_phrases WHERE set_id IN (SELECT id FROM library_sets WHERE origin = 'loro')",
+    )
+    await tx.query(
+      "DELETE FROM library_sets WHERE origin = 'loro' AND NOT (id = ANY($1::text[]))",
+      [loroSets],
+    )
+    for (const [position, set] of V2_CONTENT.sets.entries()) {
+      await tx.query(
+        `INSERT INTO library_sets(id, owner_id, target_lang, native_lang, title, subtitle, description, topic_id, level,
+           cover_icon, cover_id, visibility, share_code, origin, position, created_at, updated_at)
+         VALUES ($1, NULL, $2, NULL, $3, $4, NULL, $5, $6, $7, NULL, 'public', $8, 'loro', $9, $10, $10)
+         ON CONFLICT (id) DO UPDATE SET target_lang = EXCLUDED.target_lang, title = EXCLUDED.title,
+           subtitle = EXCLUDED.subtitle, topic_id = EXCLUDED.topic_id, level = EXCLUDED.level,
+           cover_icon = EXCLUDED.cover_icon, position = EXCLUDED.position, updated_at = EXCLUDED.updated_at`,
+        [
+          set.id,
+          set.targetLang,
+          set.title,
+          JSON.stringify(set.subtitle),
+          set.topicId,
+          set.level,
+          set.coverIcon,
+          shareCodeFor(set.id),
+          position,
+          now,
+        ],
+      )
+      for (const [index, phraseId] of set.phraseIds.entries()) {
+        const phrase = V2_CONTENT.phrases.find((p) => p.id === phraseId)
+        if (!phrase) throw new Error(`Seed: ${set.id} names unknown phrase ${phraseId}`)
+        const { id, ...doc } = phrase
+        await tx.query(
+          'INSERT INTO library_phrases(id, set_id, position, source, doc, note_translations) VALUES ($1,$2,$3,$4,$5,$6)',
+          [
+            id,
+            set.id,
+            index,
+            'loro',
+            JSON.stringify(doc),
+            JSON.stringify(noteTranslationsOf(id, V2_CONTENT.noteTranslations)),
+          ],
+        )
+      }
+    }
+    await tx.query('DELETE FROM library_bank_themes')
+    for (const [position, theme] of V2_CONTENT.bank.themes.entries()) {
+      await tx.query('INSERT INTO library_bank_themes(id, position, doc) VALUES ($1,$2,$3)', [
+        theme.id,
+        position,
+        JSON.stringify(theme),
+      ])
+    }
+    await tx.query('DELETE FROM library_bank')
+    for (const [position, phrase] of V2_CONTENT.bank.phrases.entries()) {
+      await tx.query(
+        'INSERT INTO library_bank(id, target_lang, position, doc, note_translations) VALUES ($1,$2,$3,$4,$5)',
+        [
+          phrase.id,
+          phrase.targetLang,
+          position,
+          JSON.stringify(phrase),
+          JSON.stringify(noteTranslationsOf(phrase.id, V2_CONTENT.bankNoteTranslations)),
+        ],
+      )
+    }
+  }
+
+  /** One album per course, one song per Loro set, its lyrics the set's phrases, with the demo sound. */
+  private async seedAlbums(tx: SqlConnection, now: number): Promise<void> {
+    const albums: { lang: Language; title: string; description: string }[] = [
+      { lang: 'es-ES', title: 'Canciones de Loro', description: 'Every Loro set, sung.' },
+      { lang: 'bg-BG', title: 'Песни на Лоро', description: 'Every Loro set, sung.' },
+    ]
+    await tx.query(
+      "DELETE FROM library_songs WHERE album_id IN (SELECT id FROM library_albums WHERE origin = 'loro')",
+    )
+    for (const [position, album] of albums.entries()) {
+      const id = `album-loro-${album.lang.slice(0, 2)}`
+      const coverId = `cover-loro-${album.lang.slice(0, 2)}`
+      await tx.query(
+        `INSERT INTO library_covers(id, owner_id, provider, svg, created_at) VALUES ($1, NULL, 'pattern', $2, $3)
+         ON CONFLICT (id) DO UPDATE SET svg = EXCLUDED.svg`,
+        [coverId, renderCover(patternCover(album.title)), now],
+      )
+      await tx.query(
+        `INSERT INTO library_albums(id, owner_id, target_lang, title, description, cover_id, visibility, share_code, origin, position, created_at, updated_at)
+         VALUES ($1, NULL, $2, $3, $4, $5, 'public', $6, 'loro', $7, $8, $8)
+         ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description, cover_id = EXCLUDED.cover_id,
+           updated_at = EXCLUDED.updated_at`,
+        [id, album.lang, album.title, album.description, coverId, shareCodeFor(id), position, now],
+      )
+      const sets = V2_CONTENT.sets.filter((s) => s.targetLang === album.lang)
+      for (const [index, set] of sets.entries()) {
+        const phrases = set.phraseIds.flatMap((pid) =>
+          V2_CONTENT.phrases.filter((p) => p.id === pid),
+        )
+        const songPhrases = phrases.map((p) => ({
+          id: p.id,
+          target: p.target,
+          native: p.translations['en-GB'] ?? '',
+        }))
+        const style = MUSIC_STYLE_IDS[index % MUSIC_STYLE_IDS.length] ?? 'acoustic_folk'
+        const sections = assembleLyrics(songPhrases)
+        const lineCount = sections.reduce((n, s) => n + s.lines.length, 0)
+        const demo = synthesizeDemo(style, lineCount, set.id)
+        const audioId = await this.storeAudio(tx, demo.wav, 'audio/wav')
+        await tx.query(
+          `INSERT INTO library_songs(id, album_id, owner_id, set_id, position, title, style_id, status, lyrics, lyrics_by, audio_id,
+             audio_by, duration_ms, error, created_at)
+           VALUES ($1,$2,NULL,$3,$4,$5,$6,'ready',$7,'phrases',$8,'demo',$9,NULL,$10)`,
+          [
+            `song-loro-${set.id.slice(4)}`,
+            id,
+            set.id,
+            index,
+            set.title,
+            style,
+            JSON.stringify(timed(sections, demo.lines)),
+            audioId,
+            demo.durationMs,
+            now,
+          ],
+        )
+      }
+    }
+  }
+
+  private async storeAudio(
+    tx: SqlConnection,
+    bytes: Uint8Array,
+    contentType: string,
+  ): Promise<string> {
+    const id = createHash('sha256').update(bytes).digest('hex')
+    await tx.query(
+      'INSERT INTO library_audio(id, content_type, byte_length, body) VALUES ($1,$2,$3,$4) ON CONFLICT (id) DO NOTHING',
+      [id, contentType, bytes.byteLength, Buffer.from(bytes)],
+    )
+    return id
+  }
+
+  // ---------- reading ----------
+
+  /** A course's pack: Loro's sets, the reader's own and saved ones, the bank, and the albums. */
+  async pack(userId: string | null, target: unknown): Promise<PackWire> {
+    await this.ready()
+    const targetLang = parseContract(LibraryCourseSchema, target)
+    const topics = (
+      await this.db.query<{ doc: V2Topic }>('SELECT doc FROM library_topics ORDER BY position')
+    ).rows.map((r) => r.doc)
+    const setRows = (
+      await this.db.query<SetRow>(
+        `${SET_SELECT} WHERE s.target_lang = $1 AND (s.origin = 'loro' OR s.owner_id = $2
+           OR s.id IN (SELECT item_id FROM library_saves WHERE user_id = $2 AND kind = 'set'))
+         ORDER BY s.origin DESC, s.position, s.created_at`,
+        [targetLang, userId ?? ''],
+      )
+    ).rows.filter((row) => canRead(row, userId))
+    const saved = await this.savedIds(userId, 'set')
+    const phrases = await this.phrasesOf(setRows.map((s) => s.id))
+    const sets = setRows.map((row) => toSetWire(row, userId, saved, phrases))
+    const themes = (
+      await this.db.query<{ doc: BankThemeWire }>(
+        'SELECT doc FROM library_bank_themes ORDER BY position',
+      )
+    ).rows.map((r) => r.doc)
+    const bank = (
+      await this.db.query<{
+        doc: Omit<BankPhraseWire, 'noteTranslations'>
+        note_translations: NoteTranslations
+      }>(
+        'SELECT doc, note_translations FROM library_bank WHERE target_lang = $1 ORDER BY position',
+        [targetLang],
+      )
+    ).rows.map((r) => ({ ...r.doc, noteTranslations: r.note_translations }))
+    const albumRows = (
+      await this.db.query<AlbumRow>(
+        `${ALBUM_SELECT} WHERE a.target_lang = $1 AND (a.origin = 'loro' OR a.owner_id = $2
+           OR a.id IN (SELECT item_id FROM library_saves WHERE user_id = $2 AND kind = 'album'))
+         ORDER BY a.origin DESC, a.position, a.created_at DESC`,
+        [targetLang, userId ?? ''],
+      )
+    ).rows.filter((row) => canRead(row, userId))
+    const savedAlbums = await this.savedIds(userId, 'album')
+    const albums = albumRows.map((row) => toAlbumWire(row, userId, savedAlbums))
+    const body = {
+      targetLang,
+      topics,
+      sets,
+      phrases: phrases.map(toPhraseWire),
+      bank: { themes, phrases: bank },
+      albums,
+    }
+    return {
+      version: createHash('sha256').update(JSON.stringify(body)).digest('hex').slice(0, 16),
+      ...body,
+    }
+  }
+
+  /** Public sets or albums of a course, newest first, optionally matching a search. */
+  async community(userId: string | null, query: { target?: unknown; kind?: unknown; q?: unknown }) {
+    await this.ready()
+    const targetLang = parseContract(LibraryCourseSchema, query.target)
+    const kind = parseContract(z.enum(['sets', 'albums']), query.kind ?? 'sets')
+    const q = typeof query.q === 'string' ? query.q.trim().slice(0, 60) : ''
+    const like = `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`
+    if (kind === 'sets') {
+      const rows = (
+        await this.db.query<SetRow>(
+          `${SET_SELECT} WHERE s.target_lang = $1 AND s.origin = 'user' AND s.visibility = 'public'
+             AND ($2 = '' OR s.title ILIKE $3 OR coalesce(s.description, '') ILIKE $3)
+           ORDER BY s.updated_at DESC LIMIT ${COMMUNITY_PAGE}`,
+          [targetLang, q, like],
+        )
+      ).rows
+      const saved = await this.savedIds(userId, 'set')
+      const phrases = await this.phrasesOf(rows.map((r) => r.id))
+      return {
+        sets: rows.map((row) => toSetWire(row, userId, saved, phrases)),
+        phrases: phrases.map(toPhraseWire),
+      }
+    }
+    const rows = (
+      await this.db.query<AlbumRow>(
+        `${ALBUM_SELECT} WHERE a.target_lang = $1 AND a.origin = 'user' AND a.visibility = 'public'
+           AND ($2 = '' OR a.title ILIKE $3 OR coalesce(a.description, '') ILIKE $3)
+         ORDER BY a.updated_at DESC LIMIT ${COMMUNITY_PAGE}`,
+        [targetLang, q, like],
+      )
+    ).rows.filter((row) => num(row.song_count) > 0)
+    const saved = await this.savedIds(userId, 'album')
+    return { albums: rows.map((row) => toAlbumWire(row, userId, saved)) }
+  }
+
+  async set(userId: string | null, id: unknown): Promise<{ set: SetWire; phrases: PhraseWire[] }> {
+    await this.ready()
+    const row = await this.readableSet(userId, parseContract(LibraryIdSchema, id))
+    const phrases = await this.phrasesOf([row.id])
+    return {
+      set: toSetWire(row, userId, await this.savedIds(userId, 'set'), phrases),
+      phrases: phrases.map(toPhraseWire),
+    }
+  }
+
+  async album(
+    userId: string | null,
+    id: unknown,
+  ): Promise<{ album: AlbumWire; songs: SongWire[] }> {
+    await this.ready()
+    const row = await this.readableAlbum(userId, parseContract(LibraryIdSchema, id))
+    return {
+      album: toAlbumWire(row, userId, await this.savedIds(userId, 'album')),
+      songs: await this.songsOf(row.id),
+    }
+  }
+
+  /** What a share code opens: a set with its phrases, or an album with its songs. */
+  async shared(userId: string | null, code: unknown) {
+    await this.ready()
+    const shareCode = parseContract(ShareCodeSchema, code)
+    const set = (
+      await this.db.query<{ id: string }>('SELECT id FROM library_sets WHERE share_code = $1', [
+        shareCode,
+      ])
+    ).rows[0]
+    if (set) return { kind: 'set' as const, ...(await this.set(userId, set.id)) }
+    const album = (
+      await this.db.query<{ id: string }>('SELECT id FROM library_albums WHERE share_code = $1', [
+        shareCode,
+      ])
+    ).rows[0]
+    if (album) return { kind: 'album' as const, ...(await this.album(userId, album.id)) }
+    throw new LoroError('NOT_FOUND')
+  }
+
+  async song(userId: string | null, id: unknown): Promise<SongWire> {
+    const row = (
+      await this.db.query<SongRow>('SELECT * FROM library_songs WHERE id = $1', [
+        parseContract(LibraryIdSchema, id),
+      ])
+    ).rows[0]
+    if (!row) throw new LoroError('NOT_FOUND')
+    await this.readableAlbum(userId, row.album_id)
+    return this.toSongWire(row)
+  }
+
+  /**
+   * A song's sound, for a reader who may see its album or anyone holding the signed URL the song
+   * came with (an audio element cannot send a bearer).
+   */
+  async songAudio(
+    userId: string | null,
+    id: unknown,
+    signature: { exp?: unknown; sig?: unknown } = {},
+  ): Promise<{ bytes: Buffer; contentType: string }> {
+    const song = (
+      await this.db.query<SongRow>('SELECT * FROM library_songs WHERE id = $1', [
+        parseContract(LibraryIdSchema, id),
+      ])
+    ).rows[0]
+    if (!song?.audio_id) throw new LoroError('NOT_FOUND')
+    if (!validAudioSignature(song.id, signature, this.clock.now()))
+      await this.readableAlbum(userId, song.album_id)
+    const audio = (
+      await this.db.query<{ body: Buffer; content_type: string }>(
+        'SELECT body, content_type FROM library_audio WHERE id = $1',
+        [song.audio_id],
+      )
+    ).rows[0]
+    if (!audio) throw new LoroError('NOT_FOUND')
+    return { bytes: audio.body, contentType: audio.content_type }
+  }
+
+  async cover(id: unknown): Promise<string> {
+    const coverId = parseContract(
+      LibraryIdSchema,
+      typeof id === 'string' ? id.replace(/\.svg$/, '') : id,
+    )
+    const row = (
+      await this.db.query<{ svg: string }>('SELECT svg FROM library_covers WHERE id = $1', [
+        coverId,
+      ])
+    ).rows[0]
+    if (!row) throw new LoroError('NOT_FOUND')
+    return row.svg
+  }
+
+  // ---------- writing: sets ----------
+
+  async createSet(userId: string, body: unknown): Promise<{ set: SetWire; phrases: PhraseWire[] }> {
+    await this.ready()
+    const input = parseContract(CreateSetSchema, body)
+    await this.assertKept(userId, 'sets')
+    if (input.coverId) await this.assertOwnCover(userId, input.coverId)
+    const id = newId('set-u')
+    const now = this.clock.now()
+    const topics = (await this.db.query<{ id: string }>('SELECT id FROM library_topics')).rows.map(
+      (r) => r.id,
+    )
+    const topicId =
+      input.topicId && topics.includes(input.topicId)
+        ? input.topicId
+        : ((topics.includes('everyday') ? 'everyday' : topics[0]) ?? 'everyday')
+    await this.db.transaction(async (tx) => {
+      await tx.query(
+        `INSERT INTO library_sets(id, owner_id, target_lang, native_lang, title, subtitle, description, topic_id, level, cover_icon,
+           cover_id, visibility, share_code, origin, position, created_at, updated_at)
+         VALUES ($1,$2,$3,$4,$5,NULL,$6,$7,$8,$9,$10,$11,$12,'user',0,$13,$13)`,
+        [
+          id,
+          userId,
+          input.targetLang,
+          input.nativeLang,
+          input.title,
+          blankToNull(input.description),
+          topicId,
+          input.level,
+          input.coverIcon ?? input.phrases[0]?.image[0] ?? 'forum',
+          input.coverId ?? null,
+          input.visibility,
+          newShareCode(),
+          now,
+        ],
+      )
+      await this.insertPhrases(tx, id, input.nativeLang, input.phrases, 0)
+    })
+    return this.set(userId, id)
+  }
+
+  async updateSet(
+    userId: string,
+    id: unknown,
+    body: unknown,
+  ): Promise<{ set: SetWire; phrases: PhraseWire[] }> {
+    await this.ready()
+    const row = await this.ownSet(userId, parseContract(LibraryIdSchema, id))
+    const input = parseContract(UpdateSetSchema, body)
+    if (input.coverId) await this.assertOwnCover(userId, input.coverId)
+    await this.db.transaction(async (tx) => {
+      if (input.removePhraseIds?.length) {
+        await tx.query('DELETE FROM library_phrases WHERE set_id = $1 AND id = ANY($2::text[])', [
+          row.id,
+          input.removePhraseIds,
+        ])
+      }
+      if (input.addPhrases?.length) {
+        const last = await tx.query<{ max: number | null }>(
+          'SELECT max(position) AS max FROM library_phrases WHERE set_id = $1',
+          [row.id],
+        )
+        await this.insertPhrases(
+          tx,
+          row.id,
+          row.native_lang ?? 'en-GB',
+          input.addPhrases,
+          (last.rows[0]?.max ?? -1) + 1,
+        )
+      }
+      const count = await tx.query<{ n: string }>(
+        'SELECT count(*) AS n FROM library_phrases WHERE set_id = $1',
+        [row.id],
+      )
+      if (num(count.rows[0]?.n) === 0)
+        throw new LoroError('VALIDATION_FAILED', 'A set keeps at least one phrase')
+      if (num(count.rows[0]?.n) > 40)
+        throw new LoroError('VALIDATION_FAILED', 'A set holds at most 40 phrases')
+      await tx.query(
+        `UPDATE library_sets SET title = coalesce($2, title), description = CASE WHEN $3 THEN $4 ELSE description END,
+           level = coalesce($5, level), visibility = coalesce($6, visibility),
+           cover_id = CASE WHEN $7 THEN $8 ELSE cover_id END, updated_at = $9 WHERE id = $1`,
+        [
+          row.id,
+          input.title ?? null,
+          input.description !== undefined,
+          blankToNull(input.description),
+          input.level ?? null,
+          input.visibility ?? null,
+          input.coverId !== undefined,
+          input.coverId ?? null,
+          this.clock.now(),
+        ],
+      )
+    })
+    return this.set(userId, row.id)
+  }
+
+  async deleteSet(userId: string, id: unknown): Promise<void> {
+    const row = await this.ownSet(userId, parseContract(LibraryIdSchema, id))
+    await this.db.transaction(async (tx) => {
+      await tx.query('DELETE FROM library_phrases WHERE set_id = $1', [row.id])
+      await tx.query("DELETE FROM library_saves WHERE kind = 'set' AND item_id = $1", [row.id])
+      await tx.query('DELETE FROM library_sets WHERE id = $1', [row.id])
+    })
+  }
+
+  private async insertPhrases(
+    tx: SqlConnection,
+    setId: string,
+    nativeLang: Language,
+    phrases: NewPhrase[],
+    from: number,
+  ): Promise<void> {
+    const stem = setId.replace(/^set-u-/, 'u')
+    const existing = await tx.query<{ id: string }>(
+      'SELECT id FROM library_phrases WHERE set_id = $1',
+      [setId],
+    )
+    const taken = new Set(existing.rows.map((r) => r.id))
+    let serial = 1
+    for (const [index, phrase] of phrases.entries()) {
+      while (taken.has(`${stem}-${String(serial).padStart(2, '0')}`)) serial += 1
+      const id = `${stem}-${String(serial).padStart(2, '0')}`
+      taken.add(id)
+      const bank =
+        phrase.source === 'bank' && phrase.bankId
+          ? V2_CONTENT.bank.phrases.find((b) => b.id === phrase.bankId)
+          : undefined
+      // A bank phrase keeps the bank's notes (English, with every translation); anything else keeps
+      // what came with it, written in the learner's language.
+      const notes: LibraryNotes = bank ? bank.notes : phrase.notes
+      const noteTranslations = bank
+        ? noteTranslationsOf(bank.id, V2_CONTENT.bankNoteTranslations)
+        : writtenIn(nativeLang, phrase.notes)
+      const doc = {
+        target: phrase.target,
+        translations: { [nativeLang]: phrase.native },
+        register: 'neutral',
+        region: '',
+        tags: [],
+        image: phrase.image,
+        words: {},
+        notes,
+      }
+      await tx.query(
+        'INSERT INTO library_phrases(id, set_id, position, source, doc, note_translations) VALUES ($1,$2,$3,$4,$5,$6)',
+        [
+          id,
+          setId,
+          from + index,
+          phrase.source,
+          JSON.stringify(doc),
+          JSON.stringify(noteTranslations),
+        ],
+      )
+    }
+  }
+
+  // ---------- writing: albums, saves, profile ----------
+
+  async createAlbum(
+    userId: string,
+    body: unknown,
+  ): Promise<{ album: AlbumWire; songs: SongWire[] }> {
+    await this.ready()
+    const input = parseContract(CreateAlbumSchema, body)
+    if (input.coverId) await this.assertOwnCover(userId, input.coverId)
+    const id = await this.insertAlbum(userId, input)
+    return this.album(userId, id)
+  }
+
+  private async insertAlbum(
+    userId: string,
+    input: {
+      title: string
+      description?: string | undefined
+      targetLang: Language
+      coverId?: string | undefined
+      visibility: Visibility
+    },
+  ): Promise<string> {
+    await this.assertKept(userId, 'albums')
+    const id = newId('album-u')
+    const now = this.clock.now()
+    await this.db.query(
+      `INSERT INTO library_albums(id, owner_id, target_lang, title, description, cover_id, visibility, share_code, origin, position, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'user',0,$9,$9)`,
+      [
+        id,
+        userId,
+        input.targetLang,
+        input.title,
+        blankToNull(input.description),
+        input.coverId ?? null,
+        input.visibility,
+        newShareCode(),
+        now,
+      ],
+    )
+    return id
+  }
+
+  async updateAlbum(
+    userId: string,
+    id: unknown,
+    body: unknown,
+  ): Promise<{ album: AlbumWire; songs: SongWire[] }> {
+    const row = await this.ownAlbum(userId, parseContract(LibraryIdSchema, id))
+    const input = parseContract(UpdateAlbumSchema, body)
+    if (input.coverId) await this.assertOwnCover(userId, input.coverId)
+    await this.db.transaction(async (tx) => {
+      if (input.removeSongIds?.length) {
+        await tx.query('DELETE FROM library_songs WHERE album_id = $1 AND id = ANY($2::text[])', [
+          row.id,
+          input.removeSongIds,
+        ])
+      }
+      await tx.query(
+        `UPDATE library_albums SET title = coalesce($2, title), description = CASE WHEN $3 THEN $4 ELSE description END,
+           visibility = coalesce($5, visibility), cover_id = CASE WHEN $6 THEN $7 ELSE cover_id END, updated_at = $8 WHERE id = $1`,
+        [
+          row.id,
+          input.title ?? null,
+          input.description !== undefined,
+          blankToNull(input.description),
+          input.visibility ?? null,
+          input.coverId !== undefined,
+          input.coverId ?? null,
+          this.clock.now(),
+        ],
+      )
+    })
+    return this.album(userId, row.id)
+  }
+
+  async deleteAlbum(userId: string, id: unknown): Promise<void> {
+    const row = await this.ownAlbum(userId, parseContract(LibraryIdSchema, id))
+    await this.db.transaction(async (tx) => {
+      await tx.query('DELETE FROM library_songs WHERE album_id = $1', [row.id])
+      await tx.query("DELETE FROM library_saves WHERE kind = 'album' AND item_id = $1", [row.id])
+      await tx.query('DELETE FROM library_albums WHERE id = $1', [row.id])
+    })
+  }
+
+  async save(userId: string, body: unknown): Promise<{ saved: true }> {
+    await this.ready()
+    const input = parseContract(SaveSchema, body)
+    if (input.kind === 'set') await this.readableSet(userId, input.id)
+    else await this.readableAlbum(userId, input.id)
+    await this.db.query(
+      'INSERT INTO library_saves(user_id, kind, item_id, created_at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING',
+      [userId, input.kind, input.id, this.clock.now()],
+    )
+    return { saved: true }
+  }
+
+  async unsave(userId: string, kind: unknown, id: unknown): Promise<void> {
+    const input = parseContract(SaveSchema, { kind, id })
+    await this.db.query(
+      'DELETE FROM library_saves WHERE user_id = $1 AND kind = $2 AND item_id = $3',
+      [userId, input.kind, input.id],
+    )
+  }
+
+  async profile(userId: string): Promise<{ displayName: string | null }> {
+    const row = (
+      await this.db.query<{ display_name: string }>(
+        'SELECT display_name FROM library_profiles WHERE user_id = $1',
+        [userId],
+      )
+    ).rows[0]
+    return { displayName: row?.display_name ?? null }
+  }
+
+  async setProfile(userId: string, body: unknown): Promise<{ displayName: string | null }> {
+    const input = parseContract(ProfileSchema, body)
+    await this.db.query(
+      `INSERT INTO library_profiles(user_id, display_name, updated_at) VALUES ($1,$2,$3)
+       ON CONFLICT (user_id) DO UPDATE SET display_name = EXCLUDED.display_name, updated_at = EXCLUDED.updated_at`,
+      [userId, input.displayName, this.clock.now()],
+    )
+    return { displayName: input.displayName }
+  }
+
+  // ---------- usage ----------
+
+  async usage(userId: string): Promise<UsageWire> {
+    const now = this.clock.now()
+    const day = utcDay(now)
+    const used = (
+      await this.db.query<{ kind: UsageKind; used: number }>(
+        'SELECT kind, used FROM library_usage WHERE user_id = $1 AND day = $2',
+        [userId, day],
+      )
+    ).rows
+    const daily = Object.fromEntries(
+      (['phrases', 'cover', 'song'] as const).map((kind) => [
+        kind,
+        {
+          used: used.find((u) => u.kind === kind)?.used ?? 0,
+          limit: config.libraryDailyLimit(kind),
+        },
+      ]),
+    ) as UsageWire['daily']
+    const kept = Object.fromEntries(
+      await Promise.all(
+        (['sets', 'albums', 'songs'] as const).map(async (kind) => [
+          kind,
+          { used: await this.keptCount(userId, kind), limit: config.libraryStorageLimit(kind) },
+        ]),
+      ),
+    ) as UsageWire['kept']
+    return {
+      day,
+      resetsAt: Date.parse(`${day}T00:00:00Z`) + DAY_MS,
+      daily,
+      kept,
+      writers: writersInUse(),
+    }
+  }
+
+  /** Counts one use of today's allowance, or refuses with when it resets. */
+  private async spend(userId: string, kind: UsageKind): Promise<void> {
+    const limit = config.libraryDailyLimit(kind)
+    const now = this.clock.now()
+    const day = utcDay(now)
+    const resetsAt = Date.parse(`${day}T00:00:00Z`) + DAY_MS
+    if (limit <= 0)
+      throw new LoroError('LIMIT_REACHED', `${kind} generation is off`, {
+        kind,
+        limit,
+        resets_at: resetsAt,
+      })
+    const spent = await this.db.query<{ used: number }>(
+      `INSERT INTO library_usage(user_id, kind, day, used) VALUES ($1,$2,$3,1)
+       ON CONFLICT (user_id, kind, day) DO UPDATE SET used = library_usage.used + 1 WHERE library_usage.used < $4
+       RETURNING used`,
+      [userId, kind, day, limit],
+    )
+    if (spent.rows.length === 0)
+      throw new LoroError('LIMIT_REACHED', `Daily ${kind} allowance used`, {
+        kind,
+        limit,
+        resets_at: resetsAt,
+      })
+  }
+
+  private async keptCount(userId: string, kind: KeptKind): Promise<number> {
+    const table = { sets: 'library_sets', albums: 'library_albums', songs: 'library_songs' }[kind]
+    return num(
+      (
+        await this.db.query<{ n: string }>(
+          `SELECT count(*) AS n FROM ${table} WHERE owner_id = $1`,
+          [userId],
+        )
+      ).rows[0]?.n,
+    )
+  }
+
+  private async assertKept(userId: string, kind: KeptKind): Promise<void> {
+    const limit = config.libraryStorageLimit(kind)
+    if ((await this.keptCount(userId, kind)) >= limit)
+      throw new LoroError('LIMIT_REACHED', `At most ${limit} ${kind}`, {
+        kind,
+        limit,
+        resets_at: null,
+      })
+  }
+
+  // ---------- generation ----------
+
+  async generatePhrases(userId: string, body: unknown) {
+    const request = parseContract(GeneratePhrasesSchema, body)
+    await this.spend(userId, 'phrases')
+    const ai = writer()
+    if (ai) {
+      try {
+        const phrases = await claudePhrases(ai, request)
+        return { provider: 'claude' as const, phrases, themes: [] }
+      } catch (error) {
+        this.logger.warn(
+          `phrase writer failed: ${error instanceof Error ? error.message : 'unknown'}; answering from the bank`,
+        )
+      }
+    }
+    const phrases = bankPhrases(request)
+    const themes =
+      phrases.length > 0 ? [] : V2_CONTENT.bank.themes.map((t) => ({ id: t.id, title: t.title }))
+    return { provider: 'bank' as const, phrases, themes }
+  }
+
+  async generateCover(
+    userId: string,
+    body: unknown,
+  ): Promise<{ id: string; url: string; provider: 'claude' | 'pattern' }> {
+    const request = parseContract(GenerateCoverSchema, body)
+    if (request.attachTo) {
+      if (request.kind === 'set') await this.ownSet(userId, request.attachTo)
+      else await this.ownAlbum(userId, request.attachTo)
+    }
+    await this.spend(userId, 'cover')
+    let spec: CoverSpec | null = null
+    let provider: 'claude' | 'pattern' = 'pattern'
+    const ai = writer()
+    if (ai) {
+      try {
+        spec = await claudeCover(ai, request)
+        provider = 'claude'
+      } catch (error) {
+        this.logger.warn(
+          `cover writer failed: ${error instanceof Error ? error.message : 'unknown'}; drawing a pattern`,
+        )
+      }
+    }
+    // A new pattern each time the learner asks again: the seed includes the moment.
+    spec ??= patternCover(`${request.title}:${this.clock.now()}`)
+    const id = newId('cover')
+    await this.db.query(
+      'INSERT INTO library_covers(id, owner_id, provider, svg, created_at) VALUES ($1,$2,$3,$4,$5)',
+      [id, userId, provider, renderCover(spec), this.clock.now()],
+    )
+    if (request.attachTo) {
+      const table = request.kind === 'set' ? 'library_sets' : 'library_albums'
+      await this.db.query(`UPDATE ${table} SET cover_id = $2, updated_at = $3 WHERE id = $1`, [
+        request.attachTo,
+        id,
+        this.clock.now(),
+      ])
+    }
+    return { id, url: `/library/covers/${id}.svg`, provider }
+  }
+
+  /**
+   * Starts a song from a set the learner can read. The song is saved at once as `rendering`; its
+   * lyrics and sound are written in the background, and the app polls `GET /library/songs/:id`.
+   */
+  async generateSong(userId: string, body: unknown): Promise<{ song: SongWire; album: AlbumWire }> {
+    await this.ready()
+    const request = parseContract(GenerateSongSchema, body)
+    const set = await this.readableSet(userId, request.setId)
+    const phrases = (await this.phrasesOf([set.id])).slice(0, MAX_SONG_LINES - 4)
+    if (phrases.length === 0) throw new LoroError('VALIDATION_FAILED', 'The set has no phrases')
+    await this.assertKept(userId, 'songs')
+    let albumId = request.albumId
+    if (albumId) {
+      const album = await this.ownAlbum(userId, albumId)
+      if (album.target_lang !== set.target_lang)
+        throw new LoroError('VALIDATION_FAILED', 'The album is in another language')
+    }
+    await this.spend(userId, 'song')
+    albumId ??= await this.insertAlbum(userId, {
+      title: set.title,
+      targetLang: set.target_lang,
+      visibility: 'private',
+      coverId: set.cover_id ?? undefined,
+    })
+    const position = num(
+      (
+        await this.db.query<{ n: string }>(
+          'SELECT count(*) AS n FROM library_songs WHERE album_id = $1',
+          [albumId],
+        )
+      ).rows[0]?.n,
+    )
+    const id = newId('song')
+    const title = request.title ?? set.title
+    const now = this.clock.now()
+    await this.db.query(
+      `INSERT INTO library_songs(id, album_id, owner_id, set_id, position, title, style_id, status, lyrics, lyrics_by, audio_id, audio_by,
+         duration_ms, error, created_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'rendering','[]','phrases',NULL,NULL,NULL,NULL,$8)`,
+      [id, albumId, userId, set.id, position, title, request.styleId, now],
+    )
+    await this.db.query('UPDATE library_albums SET updated_at = $2 WHERE id = $1', [albumId, now])
+    const songPhrases: SongPhrase[] = phrases.map((p) => ({
+      id: p.id,
+      target: p.doc.target,
+      native: p.doc.translations[request.nativeLang] ?? Object.values(p.doc.translations)[0] ?? '',
+    }))
+    void this.render(id, {
+      title,
+      styleId: request.styleId,
+      targetLang: set.target_lang,
+      nativeLang: request.nativeLang,
+      phrases: songPhrases,
+    })
+    return { song: await this.song(userId, id), album: (await this.album(userId, albumId)).album }
+  }
+
+  /** Writes the lyrics and the sound; never throws, the song records what went wrong. */
+  private async render(
+    id: string,
+    input: {
+      title: string
+      styleId: MusicStyleId
+      targetLang: Language
+      nativeLang: Language
+      phrases: SongPhrase[]
+    },
+  ): Promise<void> {
+    try {
+      let sections: SongSection[] | null = null
+      let lyricsBy: SongWire['lyricsBy'] = 'phrases'
+      const ai = writer()
+      if (ai) {
+        try {
+          sections = await claudeLyrics(ai, { ...input, style: input.styleId })
+          lyricsBy = 'claude'
+        } catch (error) {
+          this.logger.warn(
+            `lyrics writer failed: ${error instanceof Error ? error.message : 'unknown'}; singing the phrases`,
+          )
+        }
+      }
+      sections ??= assembleLyrics(input.phrases)
+      const lineCount = sections.reduce((n, s) => n + s.lines.length, 0)
+      let audio: {
+        bytes: Uint8Array
+        contentType: string
+        durationMs: number | null
+        lines: { startMs: number; endMs: number }[] | null
+        by: 'elevenlabs' | 'demo'
+      }
+      if (liveMusicConfigured()) {
+        const live = await composeLive({
+          sections,
+          styleId: input.styleId,
+          targetLang: input.targetLang,
+          lengthMs: Math.min(120_000, Math.max(30_000, lineCount * 5_000)),
+        })
+        audio = { ...live, durationMs: null, lines: null, by: 'elevenlabs' }
+      } else {
+        const demo = synthesizeDemo(input.styleId, lineCount, `${id}:${input.title}`)
+        audio = {
+          bytes: demo.wav,
+          contentType: 'audio/wav',
+          durationMs: demo.durationMs,
+          lines: demo.lines,
+          by: 'demo',
+        }
+      }
+      const audioId = await this.storeAudio(this.db, audio.bytes, audio.contentType)
+      await this.db.query(
+        `UPDATE library_songs SET status = 'ready', lyrics = $2, lyrics_by = $3, audio_id = $4, audio_by = $5, duration_ms = $6 WHERE id = $1`,
+        [
+          id,
+          JSON.stringify(timed(sections, audio.lines)),
+          lyricsBy,
+          audioId,
+          audio.by,
+          audio.durationMs,
+        ],
+      )
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : 'unknown'
+      this.logger.warn(`song ${id} failed: ${reason}`)
+      await this.db
+        .query("UPDATE library_songs SET status = 'failed', error = $2 WHERE id = $1", [
+          id,
+          reason.slice(0, 40),
+        ])
+        .catch(() => undefined)
+    }
+  }
+
+  // ---------- helpers ----------
+
+  private async savedIds(userId: string | null, kind: 'set' | 'album'): Promise<Set<string>> {
+    if (!userId) return new Set()
+    const rows = await this.db.query<{ item_id: string }>(
+      'SELECT item_id FROM library_saves WHERE user_id = $1 AND kind = $2',
+      [userId, kind],
+    )
+    return new Set(rows.rows.map((r) => r.item_id))
+  }
+
+  private async phrasesOf(setIds: string[]): Promise<PhraseRow[]> {
+    if (setIds.length === 0) return []
+    return (
+      await this.db.query<PhraseRow>(
+        'SELECT * FROM library_phrases WHERE set_id = ANY($1::text[]) ORDER BY set_id, position',
+        [setIds],
+      )
+    ).rows
+  }
+
+  private async songsOf(albumId: string): Promise<SongWire[]> {
+    const rows = await this.db.query<SongRow>(
+      'SELECT * FROM library_songs WHERE album_id = $1 ORDER BY position, created_at',
+      [albumId],
+    )
+    return rows.rows.map((row) => this.toSongWire(row))
+  }
+
+  private toSongWire(row: SongRow): SongWire {
+    const lost =
+      row.status === 'rendering' && this.clock.now() - num(row.created_at) > RENDER_TIMEOUT_MS
+    return {
+      id: row.id,
+      albumId: row.album_id,
+      setId: row.set_id,
+      title: row.title,
+      styleId: row.style_id,
+      status: lost ? 'failed' : row.status,
+      sections: row.lyrics,
+      lyricsBy: row.lyrics_by,
+      audioUrl: row.audio_id ? signedAudioPath(row.id, this.clock.now()) : null,
+      audioBy: row.audio_by,
+      durationMs: row.duration_ms,
+      error: lost ? 'lost' : row.error,
+      createdAt: num(row.created_at),
+    }
+  }
+
+  private async readableSet(userId: string | null, id: string): Promise<SetRow> {
+    const row = (await this.db.query<SetRow>(`${SET_SELECT} WHERE s.id = $1`, [id])).rows[0]
+    if (!row || !canRead(row, userId)) throw new LoroError('NOT_FOUND')
+    return row
+  }
+
+  private async readableAlbum(userId: string | null, id: string): Promise<AlbumRow> {
+    const row = (await this.db.query<AlbumRow>(`${ALBUM_SELECT} WHERE a.id = $1`, [id])).rows[0]
+    if (!row || !canRead(row, userId)) throw new LoroError('NOT_FOUND')
+    return row
+  }
+
+  /** The learner's own set; someone else's is not found rather than forbidden. */
+  private async ownSet(userId: string, id: string): Promise<SetRow> {
+    const row = (await this.db.query<SetRow>(`${SET_SELECT} WHERE s.id = $1`, [id])).rows[0]
+    if (row?.owner_id !== userId) throw new LoroError('NOT_FOUND')
+    return row
+  }
+
+  private async ownAlbum(userId: string, id: string): Promise<AlbumRow> {
+    const row = (await this.db.query<AlbumRow>(`${ALBUM_SELECT} WHERE a.id = $1`, [id])).rows[0]
+    if (row?.owner_id !== userId) throw new LoroError('NOT_FOUND')
+    return row
+  }
+
+  private async assertOwnCover(userId: string, coverId: string): Promise<void> {
+    const row = (
+      await this.db.query<{ owner_id: string | null }>(
+        'SELECT owner_id FROM library_covers WHERE id = $1',
+        [coverId],
+      )
+    ).rows[0]
+    if (row?.owner_id !== userId) throw new LoroError('VALIDATION_FAILED', 'Unknown cover')
+  }
+}
+
+const SET_SELECT = `SELECT s.*, p.display_name AS author FROM library_sets s LEFT JOIN library_profiles p ON p.user_id = s.owner_id`
+const ALBUM_SELECT = `SELECT a.*, p.display_name AS author,
+  (SELECT count(*) FROM library_songs so WHERE so.album_id = a.id AND so.status = 'ready') AS song_count,
+  (SELECT coalesce(sum(so.duration_ms), 0) FROM library_songs so WHERE so.album_id = a.id AND so.status = 'ready') AS duration_ms
+  FROM library_albums a LEFT JOIN library_profiles p ON p.user_id = a.owner_id`
+
+function canRead(
+  row: { origin: string; owner_id: string | null; visibility: Visibility },
+  userId: string | null,
+): boolean {
+  return (
+    row.origin === 'loro' ||
+    row.visibility !== 'private' ||
+    (userId !== null && row.owner_id === userId)
+  )
+}
+
+function ownerOf(row: { origin: string; owner_id: string | null }, userId: string | null): Owner {
+  if (row.origin === 'loro') return 'loro'
+  return userId !== null && row.owner_id === userId ? 'me' : 'other'
+}
+
+function toSetWire(
+  row: SetRow,
+  userId: string | null,
+  saved: Set<string>,
+  phrases: PhraseRow[],
+): SetWire {
+  const owner = ownerOf(row, userId)
+  return {
+    id: row.id,
+    title: row.title,
+    subtitle: row.subtitle,
+    description: row.description,
+    topicId: row.topic_id,
+    level: row.level,
+    coverIcon: row.cover_icon,
+    coverUrl: coverPath(row.cover_id),
+    targetLang: row.target_lang,
+    phraseIds: phrases.filter((p) => p.set_id === row.id).map((p) => p.id),
+    owner,
+    author: row.origin === 'loro' ? null : (row.author ?? null),
+    visibility: row.visibility,
+    shareCode: owner === 'me' || row.visibility !== 'private' ? row.share_code : null,
+    saved: saved.has(row.id),
+    createdAt: num(row.created_at),
+    updatedAt: num(row.updated_at),
+  }
+}
+
+function toAlbumWire(row: AlbumRow, userId: string | null, saved: Set<string>): AlbumWire {
+  const owner = ownerOf(row, userId)
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    coverUrl: coverPath(row.cover_id),
+    targetLang: row.target_lang,
+    owner,
+    author: row.origin === 'loro' ? null : (row.author ?? null),
+    visibility: row.visibility,
+    shareCode: owner === 'me' || row.visibility !== 'private' ? row.share_code : null,
+    saved: saved.has(row.id),
+    songCount: num(row.song_count),
+    durationMs: num(row.duration_ms),
+    createdAt: num(row.created_at),
+    updatedAt: num(row.updated_at),
+  }
+}
+
+function toPhraseWire(row: PhraseRow): PhraseWire {
+  return {
+    id: row.id,
+    setId: row.set_id,
+    ...row.doc,
+    noteTranslations: row.note_translations,
+    source: row.source,
+  }
+}
+
+/** A content id's note translations, by note kind. */
+function noteTranslationsOf(
+  id: string,
+  all: Record<string, Partial<Record<Language, { title: string; text: string }>>>,
+): NoteTranslations {
+  return Object.fromEntries(
+    (['mnemonic', 'grammar', 'pronunciation'] as const).flatMap((kind) =>
+      all[`${id}.${kind}`] ? [[kind, all[`${id}.${kind}`]]] : [],
+    ),
+  )
+}
+
+/** Notes written in the learner's language also stand as that language's version. */
+function writtenIn(nativeLang: Language, notes: LibraryNotes): NoteTranslations {
+  if (nativeLang === 'en-GB') return {}
+  return Object.fromEntries(
+    (['mnemonic', 'grammar', 'pronunciation'] as const).map((kind) => [
+      kind,
+      { [nativeLang]: { title: notes[kind].title, text: notes[kind].text } },
+    ]),
+  )
+}
+
+/** Lyrics with each line's timing, where the sound's timing is known. */
+function timed(
+  sections: SongSection[],
+  lines: { startMs: number; endMs: number }[] | null,
+): SongRow['lyrics'] {
+  let index = 0
+  return sections.map((section) => ({
+    name: section.name,
+    lines: section.lines.map((line) => {
+      const timing = lines?.[index++]
+      return { ...line, startMs: timing?.startMs ?? null, endMs: timing?.endMs ?? null }
+    }),
+  }))
+}
+
+/** A stable share code for Loro's own rows, so their links survive a reseed. */
+function shareCodeFor(id: string): string {
+  const alphabet = 'abcdefghijkmnpqrstuvwxyz23456789'
+  return Array.from(
+    createHash('sha256').update(`loro-share:${id}`).digest().subarray(0, 10),
+    (byte) => alphabet[byte % alphabet.length],
+  ).join('')
+}
+
+/** Signed song URLs last this long; the app fetches its album again for a fresh one. */
+const AUDIO_URL_TTL_MS = 12 * 3_600_000
+/** Per process unless configured, so a restart only makes the app fetch its albums again. */
+const audioSecret = config.libraryUrlSecret() ?? randomBytes(32).toString('hex')
+
+function audioSignature(songId: string, exp: number): string {
+  return createHmac('sha256', audioSecret)
+    .update(`${songId}:${exp}`)
+    .digest('base64url')
+    .slice(0, 32)
+}
+
+/** The audio path with an expiry rounded to the hour, so the same song keeps one URL for a while. */
+function signedAudioPath(songId: string, now: number): string {
+  const exp = Math.ceil((now + AUDIO_URL_TTL_MS) / 3_600_000) * 3_600_000
+  return `/library/songs/${songId}/audio?exp=${exp}&sig=${audioSignature(songId, exp)}`
+}
+
+function validAudioSignature(
+  songId: string,
+  signature: { exp?: unknown; sig?: unknown },
+  now: number,
+): boolean {
+  const exp = Number(signature.exp)
+  if (typeof signature.sig !== 'string' || !Number.isSafeInteger(exp) || exp < now) return false
+  const expected = Buffer.from(audioSignature(songId, exp))
+  const given = Buffer.from(signature.sig)
+  return given.length === expected.length && timingSafeEqual(given, expected)
+}
+
+function utcDay(now: number): string {
+  return new Date(now).toISOString().slice(0, 10)
+}
+
+export function writersInUse(): UsageWire['writers'] {
+  const ai = Boolean(config.aiApiKey()?.trim())
+  return {
+    phrases: ai ? 'claude' : 'bank',
+    cover: ai ? 'claude' : 'pattern',
+    lyrics: ai ? 'claude' : 'phrases',
+    music: liveMusicConfigured() ? 'elevenlabs' : 'demo',
+  }
+}
+
+export type { WrittenPhrase }
