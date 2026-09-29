@@ -618,6 +618,42 @@ describePostgres('the library against real PostgreSQL', () => {
     expect(await code(library.set('vic', set.id))).toBe('NOT_FOUND')
   })
 
+  it('gives a failed song back, makes it again on request, and removes it', async () => {
+    const store = vi
+      .spyOn(library as unknown as { storeAudio: () => Promise<string> }, 'storeAudio')
+      .mockRejectedValueOnce(new Error('disk full'))
+    const { song, album } = await library.generateSong('wes', {
+      setId: 'set-cafe',
+      styleId: 'modern_pop',
+      nativeLang: 'en-GB',
+    })
+    await vi.waitFor(
+      async () => {
+        expect((await library.song('wes', song.id)).status).toBe('failed')
+      },
+      { timeout: 5000 },
+    )
+    store.mockRestore()
+    expect((await library.usage('wes')).daily.song.used).toBe(0)
+    // Only its owner, and only once it failed.
+    expect(await code(library.retrySong('xan', song.id, { nativeLang: 'en-GB' }))).toBe('NOT_FOUND')
+    const again = await library.retrySong('wes', song.id, { nativeLang: 'en-GB' })
+    expect(again.status).toBe('rendering')
+    await vi.waitFor(
+      async () => {
+        expect((await library.song('wes', song.id)).status).toBe('ready')
+      },
+      { timeout: 5000 },
+    )
+    expect((await library.usage('wes')).daily.song.used).toBe(1)
+    expect(await code(library.retrySong('wes', song.id, { nativeLang: 'en-GB' }))).toBe(
+      'VALIDATION_FAILED',
+    )
+    await library.deleteSong('wes', song.id)
+    expect((await library.album('wes', album.id)).songs).toEqual([])
+    expect(await code(library.song('wes', song.id))).toBe('NOT_FOUND')
+  })
+
   it('lists the songs of a set that the reader may hear', async () => {
     const { song, album } = await library.generateSong('uma', {
       setId: 'set-sobremesa',

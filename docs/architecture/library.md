@@ -109,7 +109,10 @@ mixed in with the music ducked under it; distinct lines only, counted against th
 server's clip allowances), and the song is labelled "Spoken demo". Loro's own album songs are voiced
 the same way once, in the background, after the server starts with a voice
 (`LIBRARY_VOICE_LORO_SONGS=0` turns it off). A song is saved at once as `rendering` and made in the
-background; the app polls it. `GET /library/usage` says which writer each kind uses here.
+background; the app polls it. A song that fails (or is lost to a restart after ten minutes) gives
+the day's song back; its owner can make it again (`POST /library/songs/{id}/retry`, another of the
+day's songs) or remove it (`DELETE /library/songs/{id}`). `GET /library/usage` says which writer
+each kind uses here.
 
 The app asks the server's phrase writer only when it is Claude; otherwise the device's copy of the
 phrase bank answers the same suggestions without spending the allowance.

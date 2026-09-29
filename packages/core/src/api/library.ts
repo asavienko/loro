@@ -176,6 +176,9 @@ export const GenerateSongSchema = z.strictObject({
   albumId: LibraryIdSchema.optional(),
 })
 
+/** Trying a failed song again: the language its lines are glossed in, as when it was made. */
+export const RetrySongSchema = z.strictObject({ nativeLang: LibraryLanguageSchema })
+
 export type Visibility = z.infer<typeof VisibilitySchema>
 export type LibraryLanguage = z.infer<typeof LibraryLanguageSchema>
 export type LibraryCourse = z.infer<typeof LibraryCourseSchema>
