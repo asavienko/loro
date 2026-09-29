@@ -345,9 +345,16 @@ describePostgres('the library against real PostgreSQL', () => {
     for (const who of ['max', 'max', 'ned'])
       await library.report(who, { kind: 'set', id: set.id, reason: 'offensive' })
     expect(await listed()).toBe(true)
+    const flagged = async (userId: string) =>
+      (await library.pack(userId, 'es-ES')).sets.find((s) => s.id === set.id)?.hidden
+    expect(await flagged('lou')).toBeUndefined()
     await library.report('oli', { kind: 'set', id: set.id, reason: 'offensive' })
     expect(await listed()).toBe(false)
     expect((await library.set(null, set.id)).set.id).toBe(set.id)
+    // Only the owner is told why it left Community.
+    expect(await flagged('lou')).toBe(true)
+    await library.save('max', { kind: 'set', id: set.id })
+    expect(await flagged('max')).toBeUndefined()
   })
 
   it('speaks only the library’s own text, renders each clip once, and bounds renders a day', async () => {
