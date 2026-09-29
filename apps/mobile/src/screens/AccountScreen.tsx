@@ -2,13 +2,22 @@
 // password to remember. Signed in, the learner sees who they are, the name shown on what they share,
 // today's allowances and who makes things on this server, and can sign out. Progress on the device
 // is never touched by any of it.
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '@shared/api/client';
 import { deleteEverything, setDisplayName } from '@shared/api/library';
-import { requestCode, signInMethods, signOut as endSession, updateAccount, verifyCode } from '@shared/api/session';
+import {
+  finishProviderSignIn,
+  providerSignInAvailable,
+  requestCode,
+  signInMethods,
+  signOut as endSession,
+  startProviderSignIn,
+  updateAccount,
+  verifyCode,
+} from '@shared/api/session';
 import { remaining, useAccount } from '../state/account';
 import { lastSync } from '../state/syncHooks';
 import { useCopy } from '../state/store';
@@ -28,7 +37,26 @@ export function AccountScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const account = useAccount();
+  const { toast } = useToast();
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  // Back from a provider's sign-in page (the web): its ticket becomes a session.
+  const returned = useLocalSearchParams<{ state?: string; ticket?: string; error?: string }>();
+  const [returning, setReturning] = useState(Boolean(returned.ticket || returned.error));
+  useEffect(() => {
+    if (!returned.ticket && !returned.error) return;
+    const done = (text: string) => {
+      toast(text);
+      setReturning(false);
+      router.replace('/');
+    };
+    if (returned.error) return done(c.account.errors.generic);
+    finishProviderSignIn({ state: returned.state, ticket: returned.ticket }).then(
+      () => done(c.account.welcome),
+      (error: unknown) => done(problemText(c, error)),
+    );
+    // Only the parameters it came back with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [returned.ticket, returned.error]);
   return (
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={[styles.top, { paddingTop: insets.top + 4 }]}>
@@ -38,7 +66,7 @@ export function AccountScreen() {
         </Txt>
       </View>
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
-        {account.status === 'signedIn' ? <SignedIn /> : <SignIn onDone={close} />}
+        {returning ? <ActivityIndicator color={colors.primaryContainer} /> : account.status === 'signedIn' ? <SignedIn /> : <SignIn onDone={close} />}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -54,11 +82,15 @@ export function SignIn({ onDone, embedded = false }: { onDone: () => void; embed
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [emailOffered, setEmailOffered] = useState(true);
+  const [googleOffered, setGoogleOffered] = useState(false);
   const codeField = useRef<TextInput>(null);
 
   useEffect(() => {
     signInMethods()
-      .then((methods) => setEmailOffered(methods.email))
+      .then((methods) => {
+        setEmailOffered(methods.email);
+        setGoogleOffered(methods.google && providerSignInAvailable());
+      })
       .catch(() => {});
   }, []);
 
@@ -174,6 +206,22 @@ export function SignIn({ onDone, embedded = false }: { onDone: () => void; embed
           />
           {problem && <Problem text={problem} />}
           <Button variant="primary" icon="mail" label={busy ? c.account.sending : c.account.sendCode} disabled={busy || !email.trim() || !emailOffered} onPress={() => void send()} />
+          {googleOffered && (
+            <Button
+              variant="tonal"
+              label={c.account.google}
+              disabled={busy}
+              onPress={() => {
+                setBusy(true);
+                // The provider's page brings the browser back to the account screen with a ticket.
+                startProviderSignIn('google', `${window.location.origin}/account`).catch((error: unknown) => {
+                  // Refused: this address isn't one the server sends Google back to.
+                  setProblem(error instanceof ApiError && error.status === 422 ? c.account.errors.googleUnavailable : problemText(c, error));
+                  setBusy(false);
+                });
+              }}
+            />
+          )}
           {!embedded && <Button variant="text" label={c.account.notNow} onPress={onDone} />}
         </>
       )}
