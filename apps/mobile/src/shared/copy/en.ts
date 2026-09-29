@@ -634,6 +634,7 @@ export function makeEn(n: Plural) {
       signInToMake: 'Sign in to make sets with AI',
     },
     music: {
+      setSongs: 'Songs of this set',
       title: 'Music',
       loro: 'From Loro',
       yours: 'Your albums',
