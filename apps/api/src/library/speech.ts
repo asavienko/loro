@@ -80,6 +80,14 @@ export async function registerSpeech(
 }
 
 const DEFAULT_DAILY_RENDERS = 500
+/** Failures that say nothing about the clip itself. */
+const TRANSIENT = new Set(['capacity', 'rate_limited', 'timeout', 'cancelled'])
+const BUSY_ATTEMPTS = 3
+const BUSY_WAIT_MS = 700
+
+function failureCode(error: unknown): string {
+  return error instanceof Error && 'code' in error ? String(error.code) : 'unknown'
+}
 /** New clips one learner's phrases may have rendered a day. */
 const DEFAULT_OWNER_RENDERS = 100
 /** A clip whose render failed (a voice the provider refuses) isn't asked for again for this long. */
@@ -150,6 +158,25 @@ export class SpeechService {
     }
   }
 
+  /** The provider allows few requests at once: a busy answer waits a moment and asks again. */
+  private async synthesize(row: SpeechRow, voice: { voiceId: string; model: string }) {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await this.transport.synthesize({
+          text: row.text,
+          locale: row.lang,
+          voiceId: voice.voiceId,
+          modelId: voice.model,
+        })
+      } catch (error) {
+        const code = failureCode(error)
+        if (attempt >= BUSY_ATTEMPTS || (code !== 'capacity' && code !== 'rate_limited'))
+          throw error
+        await new Promise((resolve) => setTimeout(resolve, BUSY_WAIT_MS * attempt))
+      }
+    }
+  }
+
   private async take(who: string, day: string, limit: number): Promise<boolean> {
     const counted = await this.db.query<{ used: number }>(
       `INSERT INTO library_usage(user_id, kind, day, used) VALUES ($1, 'speech', $2, 1)
@@ -195,21 +222,19 @@ export class SpeechService {
     }
     let result
     try {
-      result = await this.transport.synthesize({
-        text: row.text,
-        locale: row.lang,
-        voiceId: voice.voiceId,
-        modelId: voice.model,
-      })
+      result = await this.synthesize(row, voice)
     } catch (error) {
-      const code = error instanceof Error && 'code' in error ? String(error.code) : 'unknown'
+      const code = failureCode(error)
       this.logger.warn(`speech render failed (${row.lang}): ${code}`)
-      // A failure doesn't use up the day's renders, and isn't retried for a while.
+      // A failure doesn't use up the day's renders. A lasting one (a voice or text the provider
+      // refuses) isn't asked for again for a while; a busy provider is asked again next time.
       for (const back of taken) await this.giveBack(back, day)
-      await this.db.query('UPDATE library_speech SET failed_at = $2 WHERE id = $1', [
-        row.id,
-        this.clock.now(),
-      ])
+      if (!TRANSIENT.has(code)) {
+        await this.db.query('UPDATE library_speech SET failed_at = $2 WHERE id = $1', [
+          row.id,
+          this.clock.now(),
+        ])
+      }
       throw new LoroError('PROVIDER_UNAVAILABLE')
     }
     if (result.provenance.provider !== 'elevenlabs') throw new LoroError('PROVIDER_UNAVAILABLE')
