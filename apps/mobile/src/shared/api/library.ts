@@ -30,6 +30,8 @@ export interface Song {
   audioUrl: string | null;
   /** `elevenlabs` (sung), or `demo`: the server's instrumental, labelled "Demo sound". */
   audioBy: 'elevenlabs' | 'demo' | null;
+  /** The lines are spoken over the sound: the server's voice over the demo, or sung. */
+  voiced: boolean;
   durationMs: number | null;
   error: string | null;
   createdAt: number;

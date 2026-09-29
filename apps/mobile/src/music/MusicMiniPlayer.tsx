@@ -29,7 +29,7 @@ export function MusicMiniPlayer() {
             {music.song.title}
           </Txt>
           <Txt variant="label" color="onNightVariant" numberOfLines={1}>
-            {music.song.audioBy === 'demo' ? `${music.album?.title ?? ''} · ${c.music.demoSound}` : (music.album?.title ?? '')}
+            {music.song.audioBy === 'demo' ? `${music.album?.title ?? ''} · ${music.song.voiced ? c.music.spokenDemo : c.music.demoSound}` : (music.album?.title ?? '')}
           </Txt>
         </View>
       </Pressable>
