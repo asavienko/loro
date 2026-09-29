@@ -1,5 +1,0 @@
-/* Loro webfonts.
-   Both faces are Google-hosted; no binaries were provided with the source screens,
-   so this design system links the CDN rather than shipping @font-face + files.
-   Ask the brand owner for licensed binaries if you need offline/self-hosted use. */
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital,wght@0,400;1,400&display=swap");
