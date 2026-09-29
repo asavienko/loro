@@ -17,6 +17,7 @@ import type { SortKey } from '@shared/state/types';
 import { isTargetRevealed } from '@shared/ui/phase';
 import { hrefOf, useShell } from '../nav/Shell';
 import { PickPhrasesSheet } from '../sheets/PickPhrasesSheet';
+import { RenameSheet } from '../sheets/RenameSheet';
 import { ReportSheet } from '../sheets/ReportSheet';
 import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
@@ -110,6 +111,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
   const [picking, setPicking] = useState(false);
   const [drawing, setDrawing] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const [renaming, setRenaming] = useState(false);
   const account = useAccount();
   const content = useContent();
   const view = findSetView(state.learner, setId);
@@ -426,6 +428,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
       </Sheet>
 
       <ReportSheet item={reporting ? { kind: 'set', id: setId } : null} onClose={() => setReporting(false)} />
+      <RenameSheet item={renaming && served ? { kind: 'set', id: served.id, title: served.title } : null} onClose={() => setRenaming(false)} />
       <Sheet open={moreOpen} title={view.title} onClose={() => setMoreOpen(false)}>
         <SheetOption
           icon="queue_play_next"
@@ -490,6 +493,14 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
         )}
         {served?.owner === 'me' && (
           <>
+            <SheetOption
+              icon="edit"
+              label={c.set.rename}
+              onPress={() => {
+                setMoreOpen(false);
+                setRenaming(true);
+              }}
+            />
             <SheetOption
               icon="auto_awesome"
               label={c.phrasesTab.makeSet}

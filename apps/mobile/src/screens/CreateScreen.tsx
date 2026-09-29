@@ -2,11 +2,12 @@
 // set, and covers for both, each with what's left of today's allowance; below, what they have made.
 // Signed out, it says what signing in gives and leads there.
 import { useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { albumsForCourse, librarySets } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
 import { AlbumCover } from '../music/AlbumCover';
+import { CoverSheet } from '../sheets/CoverSheet';
 import { remaining, useAccount } from '../state/account';
 import { useCopy, useStore } from '../state/store';
 import { Button } from '../ui/Button';
@@ -24,6 +25,7 @@ export function CreateScreen() {
   const account = useAccount();
   const target = state.learner.profile.targetLang;
   const signedIn = account.status === 'signedIn';
+  const [covering, setCovering] = useState(false);
   const usage = account.usage;
   const mySets = librarySets(target).filter((s) => s.owner === 'me');
   const myAlbums = albumsForCourse(target).filter((a) => a.owner === 'me');
@@ -76,7 +78,16 @@ export function CreateScreen() {
           tone="music"
           onPress={() => nav.makeSong()}
         />
-        <Card icon="palette" title={c.create.coverTitle} body={c.create.coverBody} note={left('cover')} writer={usage ? c.account.writer[usage.writers.cover] : undefined} tone="plain" />
+        <Card
+          icon="palette"
+          title={c.create.coverTitle}
+          body={c.create.coverBody}
+          note={left('cover')}
+          writer={usage ? c.account.writer[usage.writers.cover] : undefined}
+          tone="plain"
+          onPress={() => (signedIn ? setCovering(true) : nav.openAccount())}
+        />
+        <CoverSheet open={covering} onClose={() => setCovering(false)} />
 
         {usage && (
           <Txt variant="label" color="secondary">
