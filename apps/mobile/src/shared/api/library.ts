@@ -146,3 +146,6 @@ export const generateSong = (body: { setId: string; styleId: SongStyle; nativeLa
 
 export const reportItem = (kind: 'set' | 'album', id: string, reason: 'offensive' | 'wrong' | 'spam' | 'other') =>
   api<{ reported: true }>('/library/reports', { method: 'POST', body: { kind, id, reason }, auth: 'required' });
+
+/** Deletes everything the learner keeps in the library; their sign-in stays until they sign out. */
+export const deleteEverything = () => api<{ deleted: true }>('/library/me/delete', { method: 'POST', auth: 'required' });
