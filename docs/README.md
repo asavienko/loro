@@ -111,6 +111,7 @@ plan in the same change.
 | [sync-protocol.md](architecture/sync-protocol.md)                 | Delta sync, hybrid logical clocks, per-field LWW, conflict rules, wire format        |
 | [backend.md](architecture/backend.md)                             | Implemented NestJS seams, EC2/Postgres/S3 testing topology and feature boundaries    |
 | [api.md](architecture/api.md)                                     | The HTTP contract — every endpoint, request, response, and error                     |
+| [library.md](architecture/library.md)                             | Content from the API, accounts, sharing, AI generation and daily limits (plan 106)   |
 | [ai-services.md](architecture/ai-services.md)                     | Claude roleplay, coach notes, phrase generation; prompts, caching, guardrails, cost  |
 | [offline.md](architecture/offline.md)                             | What works with no network, prefetch policy, survival mode                           |
 | [widgets-notifications.md](architecture/widgets-notifications.md) | Lock screen widget, Live Activity, Glance widget, notification policy                |

@@ -4,11 +4,12 @@ A listening-first phrase player: hear a phrase in your language, say it in the p
 language you're learning, then rate how it went. iOS, Android and the web from one Expo app
 (plan [104](../../plans/104-prototype-react-native.md)).
 
-**Status:** every screen and sheet of the v2.0 web prototype is ported: the shell, state, storage,
-speech, Rust core bridge, navigation, onboarding, Home, the player, Explore, Library, the set page,
-the queue, Make a set (its swipe deck on react-native-gesture-handler and Reanimated) and the
-sheets. The prototype stays in Git history (`design/design-v2.0/rapid-ui-prototype`, removed after
-commit `52a0e3b`) as the reference for its behaviour.
+**Status:** every screen and sheet of the v2.0 web prototype is ported, and the app is connected
+(plan [106](../../plans/106-connected-app.md)): its content, accounts, progress, sharing and AI
+generation come from the API ([library.md](../../docs/architecture/library.md)). Five tabs: Home,
+Phrases, Music (albums of songs sung from sets, with their own player), Create and Library. The
+prototype stays in Git history (`design/design-v2.0/rapid-ui-prototype`, removed after commit
+`52a0e3b`) as the reference for its behaviour.
 
 ## Run
 
@@ -23,19 +24,27 @@ pnpm --filter @loro/mobile lint       # this app's ESLint config + typecheck sep
 pnpm --filter @loro/mobile bundle     # proves the iOS bundle compiles
 ```
 
+The app needs the API (`EXPO_PUBLIC_API_URL` in `.env`, default `http://localhost:3000/v1`) the first
+time it opens a course; after that it works offline. On the Android emulator run
+`adb reverse tcp:3000 tcp:3000`. See [library.md](../../docs/architecture/library.md#running-it-locally).
+
 Expo Go can't run it: the Rust core comes from `modules/loro-core`, a local Expo module
 (`packages/core-rs/build.sh` builds its Android libraries).
 
 ## How it's built
 
-- **Shared behaviour — `src/shared/`** (imported as `@shared/*`): content (JSON validated with zod
-  in the tests), the pure state machine (`state/machine.ts`, `chart.ts`), the append-only learner
+- **Shared behaviour — `src/shared/`** (imported as `@shared/*`): the API client, session, library
+  calls and content cache (`api/`), the content registry the downloaded packs fill (`content/`;
+  the tests install the server's seed from `content/fixture.ts`), the pure state machine (`state/machine.ts`, `chart.ts`), the append-only learner
   log and its merge, selectors for every number shown, copy in English/Bulgarian/Russian, phrase
   notes, and the Make a set generator. `state/clock.ts` is the only module that reads the time.
   `core/fsrs.ts` schedules through the Rust core's `core_call`; there is no JavaScript FSRS.
-- **The platform edge — `src/platform/`.** On iOS and Android, `metro.config.js` swaps four shared
-  modules: storage (AsyncStorage), speech (expo-speech), cues (haptics) and the Rust core (the
-  LoroCore module instead of WASM). On the web the originals run.
+- **The platform edge — `src/platform/`.** On iOS and Android, `metro.config.js` swaps six shared
+  modules: storage and the key-value store (AsyncStorage), the refresh token (expo-secure-store),
+  speech (expo-speech), cues (haptics) and the Rust core (the LoroCore module instead of WASM). On
+  the web the originals run.
+- **The connected state — `src/state/`.** The store, the account (`account.tsx`), the course's
+  content (`content.tsx`) and progress sync (`progressSync.ts`); songs play in `src/music/`.
 - **UI.** `app/` holds the routes (expo-router), `src/screens/` and `src/sheets/` the screens,
   `src/ui/` the primitives and tokens (`theme.ts`), `src/nav/Shell.tsx` navigation.
 - `pnpm --filter @loro/mobile icons` rebuilds the Material Symbols subset (TrueType, outlined and
