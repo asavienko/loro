@@ -68,6 +68,8 @@ const ALLOWED_AUDIO = new Set([
   'audio/mp4',
   'audio/aac',
   'audio/mp4a-latm',
+  // Raw 16-bit PCM (output_format=pcm_*): the library mixes spoken lines into demo songs.
+  'audio/pcm',
   'application/octet-stream',
 ])
 

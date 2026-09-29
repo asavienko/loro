@@ -34,4 +34,19 @@ describe('the demo instrumental', () => {
     for (let i = 0; i < pcm.length; i += 2) peak = Math.max(peak, Math.abs(pcm.readInt16LE(i)))
     expect(peak).toBeGreaterThan(8000)
   })
+
+  it('speaks a line over its bars when given its voice', () => {
+    const plain = synthesizeDemo('modern_pop', 2, 'v')
+    const voice = new Int16Array(4000).fill(20_000)
+    const voiced = synthesizeDemo('modern_pop', 2, 'v', [voice, null])
+    expect(voiced.durationMs).toBe(plain.durationMs)
+    expect(Buffer.from(voiced.wav).equals(Buffer.from(plain.wav))).toBe(false)
+    // The second line had no voice: the track after the first line's bars is unchanged.
+    const second = 44 + Math.floor((plain.lines[1]?.startMs ?? 0) * 22.05) * 2
+    expect(
+      Buffer.from(voiced.wav)
+        .subarray(second, second + 2000)
+        .equals(Buffer.from(plain.wav).subarray(second, second + 2000)),
+    ).toBe(true)
+  })
 })
