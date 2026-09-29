@@ -20,8 +20,6 @@ import { colors, radius, TARGET } from '../ui/theme';
 
 export function PhraseShelves() {
   const c = useCopy();
-  const nav = useNav();
-  const account = useAccount();
   const { state } = useStore();
   const target = state.learner.profile.targetLang;
   const library = librarySets(target);
@@ -30,17 +28,26 @@ export function PhraseShelves() {
 
   return (
     <View style={styles.stack}>
-      <Button
-        variant="tonal"
-        icon="auto_awesome"
-        label={account.status === 'signedIn' ? c.phrasesTab.makeSet : c.phrasesTab.signInToMake}
-        onPress={() => (account.status === 'signedIn' ? nav.makeSet() : nav.openAccount())}
-        style={styles.make}
-      />
       {mine.length > 0 && <Shelf title={c.phrasesTab.yourSets} sets={mine} />}
       {saved.length > 0 && <Shelf title={c.phrasesTab.savedSets} sets={saved} />}
       <Community />
     </View>
+  );
+}
+
+/** Making a set with AI, at the top of Phrases; signed out, the way to sign in. */
+export function MakeSetButton() {
+  const c = useCopy();
+  const nav = useNav();
+  const account = useAccount();
+  return (
+    <Button
+      variant="tonal"
+      icon="auto_awesome"
+      label={account.status === 'signedIn' ? c.phrasesTab.makeSet : c.phrasesTab.signInToMake}
+      onPress={() => (account.status === 'signedIn' ? nav.makeSet() : nav.openAccount())}
+      style={styles.make}
+    />
   );
 }
 
