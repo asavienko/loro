@@ -85,6 +85,13 @@ keeps each private, shares it by link, or publishes it for everyone.
 17. [x] Sign in with Apple beside Google wherever the server offers it (first on iOS, as the App
         Store asks of apps with Google sign-in), through the same provider flow.
 18. [x] A set's page lists the songs sung from it (`GET /v1/library/sets/:id/songs`).
+19. [x] Deleting the account itself (`POST /v1/library/me/delete-account`), as the app stores ask of
+        apps that make accounts; deleting only the library's contents keeps the day's allowance use.
+20. [x] Failed songs: the day's song comes back; the owner can make one again or remove it.
+21. [x] Owners are told when reports took their public item out of Community; the Music tab searches
+        shared albums.
+22. [x] Review pass 3 (2026-09-30): set songs filtered before paging and by reports, atomic retries,
+        refunds to the charged day, account deletion that spares others' covers, clips and tracks.
 
 ## Verification
 
