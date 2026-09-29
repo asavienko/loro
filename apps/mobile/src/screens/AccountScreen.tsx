@@ -7,14 +7,15 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '@shared/api/client';
-import { setDisplayName } from '@shared/api/library';
-import { requestCode, signInMethods, updateAccount, verifyCode } from '@shared/api/session';
+import { deleteEverything, setDisplayName } from '@shared/api/library';
+import { requestCode, signInMethods, signOut as endSession, updateAccount, verifyCode } from '@shared/api/session';
 import { remaining, useAccount } from '../state/account';
 import { lastSync } from '../state/syncHooks';
 import { useCopy } from '../state/store';
 import { Button } from '../ui/Button';
 import { field, placeholderColor } from '../ui/field';
 import { Icon } from '../ui/Icon';
+import { confirm } from '../ui/confirm';
 import { problemText, resetTime } from '../ui/problems';
 import { useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
@@ -293,6 +294,25 @@ function SignedIn() {
         label={c.account.signOut}
         onPress={() => {
           void signOut().then(() => toast(c.account.signedOut));
+        }}
+      />
+      <Button
+        variant="text"
+        icon="delete"
+        color="error"
+        label={c.account.deleteData}
+        onPress={() => {
+          void (async () => {
+            if (!(await confirm(c.account.deleteDataConfirm, c.share.delete, c.common.cancel))) return;
+            try {
+              await deleteEverything();
+              // Not the account's sign-out, which saves progress first and would put it back.
+              await endSession();
+              toast(c.account.deletedData);
+            } catch (error) {
+              toast(problemText(c, error));
+            }
+          })();
         }}
       />
     </View>
