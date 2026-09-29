@@ -19,7 +19,6 @@ const generatedSourceRoots = [
   'apps/mobile/expo-env.d.ts',
   'apps/mobile/.expo/types/router.d.ts',
   'packages/core-rs/pkg',
-  'packages/design-tokens/out',
   'packages/core-rs/bindings',
   'packages/core-rs/browser',
 ]
@@ -266,14 +265,7 @@ export function copySourceWorkspace(
 export function checkGeneratedDrift(root = ROOT) {
   const status = execFileSync(
     'git',
-    [
-      'status',
-      '--porcelain',
-      '--',
-      'packages/design-tokens/out',
-      'packages/core-rs/bindings',
-      'packages/core-rs/browser',
-    ],
+    ['status', '--porcelain', '--', 'packages/core-rs/bindings', 'packages/core-rs/browser'],
     { cwd: root, encoding: 'utf8' },
   ).trim()
   if (!status) return { code: 0, status: '' }

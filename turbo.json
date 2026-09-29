@@ -17,17 +17,12 @@
       "inputs": ["packages/core-rs/**"],
       "cache": true
     },
-    "tokens:build": {
-      "inputs": ["packages/design-tokens/tokens/**", "packages/design-tokens/src/**"],
-      "outputs": ["packages/design-tokens/out/**"],
-      "cache": true
-    },
     "content:validate": {
       "inputs": ["packages/content/**/*.json", "packages/content/src/**"],
       "cache": true
     },
     "build": {
-      "dependsOn": ["^build", "core-rs:build", "tokens:build"],
+      "dependsOn": ["^build", "core-rs:build"],
       "outputs": ["dist/**", ".expo/**", "build/**", "out/**"]
     },
     // `@loro/api` depends on `@loro/core-rs`, so `^build` reaches its build script —
@@ -37,18 +32,17 @@
       "inputs": ["src/**", "Cargo.toml", "Cargo.lock", "build.sh", "*.udl"],
       "outputs": ["pkg/**", "bindings/**", "target/release/libloro_core.*"]
     },
-    // The proof the app actually compiles. Not part of `check` — it takes minutes and
-    // needs the full RN toolchain — but CI runs it on every PR.
+    // The proof the app actually compiles. Not part of `check` — it takes minutes — but
+    // `pnpm ci:local` runs it.
     "bundle": {
-      "dependsOn": ["tokens:build"],
       "outputs": [".expo-export/**"]
     },
     "typecheck": {
-      "dependsOn": ["^build", "tokens:build"],
+      "dependsOn": ["^build"],
       "outputs": []
     },
     "test": {
-      "dependsOn": ["^build", "tokens:build", "core-rs:build"],
+      "dependsOn": ["^build", "core-rs:build"],
       "outputs": []
     },
     "test:watch": {
@@ -56,15 +50,6 @@
       "persistent": true
     },
     "lint": {
-      "outputs": []
-    },
-    // Part of `pnpm check`, not CI-only. These caught a real regression that sat
-    // unnoticed precisely because they lived in a separate job.
-    "check:a11y": {
-      "outputs": []
-    },
-    "check:contrast": {
-      "dependsOn": ["tokens:build"],
       "outputs": []
     },
     "dev": {

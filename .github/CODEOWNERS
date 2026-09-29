@@ -17,15 +17,10 @@
 # ── mobile ──
 /apps/mobile/                           @loro/mobile
 /apps/mobile/src/ui/                    @loro/mobile @loro/design
-/apps/mobile/src/features/              @loro/mobile @loro/design
+/apps/mobile/src/shared/                @loro/mobile @loro/tech-lead
 
-# Native audio and speech: the highest-skill native work in the project.
+# The Rust core's native module.
 /apps/mobile/modules/                   @loro/mobile-lead
-/apps/mobile/targets/                   @loro/mobile-lead @loro/design
-
-# Engines encode the pedagogy.
-/apps/mobile/src/engines/               @loro/tech-lead
-/packages/core/src/engines/             @loro/tech-lead
 
 # ── TWO REVIEWERS, one from each side ──
 # A merge-class mistake here is silent data loss, and it needs both the client
@@ -42,11 +37,6 @@
 # ── backend ──
 /apps/api/                              @loro/backend
 /apps/api/src/ai/                       @loro/backend @loro/tech-lead
-
-# ── design tokens ──
-# Generated output must not be hand-edited; CI drift-checks it.
-/packages/design-tokens/                @loro/design
-/packages/design-tokens/out/            @loro/design @loro/tech-lead
 
 # ── content ──
 # Needs the content lead AND a native es-ES reviewer.

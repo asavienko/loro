@@ -51,7 +51,10 @@ test('removing a remaining top-level row from a copy of README fails', () => {
 })
 
 test('“next is N” is required while N-1 is the highest assigned ID', () => {
-  const lagged = readme.replace(`next new plan is **${nextId}**`, `next new plan is **${nextId - 1}**`)
+  const lagged = readme.replace(
+    `next new plan is **${nextId}**`,
+    `next new plan is **${nextId - 1}**`,
+  )
   const errors = planIndexErrors({
     plans: discoverTopLevelPlans(join(root, 'plans')),
     assignedIds: discoverAssignedIds(join(root, 'plans')),

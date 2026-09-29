@@ -1,5 +1,0 @@
-{
-  "platforms": ["apple", "android"],
-  "apple": { "modules": ["LoroAudioSpeechModule"] },
-  "android": { "modules": ["expo.modules.loroaudiospeech.LoroAudioSpeechModule"] }
-}

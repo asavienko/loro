@@ -30,7 +30,6 @@
     "paths": {
       "@loro/core": ["./packages/core/src/index.ts"],
       "@loro/core/*": ["./packages/core/src/*"],
-      "@loro/design-tokens": ["./packages/design-tokens/out/tokens.ts"],
       "@loro/content": ["./packages/content/src/index.ts"],
       "@loro/core-rs": ["./packages/core-rs/bindings/ts/index.ts"]
     }

@@ -48,8 +48,6 @@ services:
         '8081',
       ]
     environment:
-      EXPO_PUBLIC_API_URL: http://localhost:3000/v1
-      EXPO_PUBLIC_CDN_URL: http://localhost:9000/loro-content
       EXPO_NO_TELEMETRY: '1'
     ports: ['127.0.0.1:8081:8081']
     healthcheck:

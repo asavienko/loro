@@ -45,11 +45,11 @@ export type ReviewPacket = ReturnType<typeof buildReviewPacket>
 
 export function buildReviewPacket() {
   const ui = NATIVE_LANGUAGES.map((locale) => {
-    const resources: unknown = JSON.parse(
-      readFileSync(
-        new URL(`../../../apps/mobile/src/lib/i18n/${locale}.json`, import.meta.url),
-        'utf8',
-      ),
+    // The app's strings are TypeScript modules (apps/mobile/src/shared/copy); a reviewer reads the
+    // module as written.
+    const resources = readFileSync(
+      new URL(`../../../apps/mobile/src/shared/copy/${locale}.ts`, import.meta.url),
+      'utf8',
     )
     return { locale, sha256: reviewEntrySha256(resources), resources, review: pendingReview() }
   })
