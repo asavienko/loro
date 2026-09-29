@@ -14,7 +14,7 @@ import {
   requestCode,
   signInMethods,
   signOut as endSession,
-  startProviderSignIn,
+  signInWithProvider,
   updateAccount,
   verifyCode,
 } from '@shared/api/session';
@@ -41,9 +41,11 @@ export function AccountScreen() {
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
   // Back from a provider's sign-in page (the web): its ticket becomes a session.
   const returned = useLocalSearchParams<{ state?: string; ticket?: string; error?: string }>();
-  const [returning, setReturning] = useState(Boolean(returned.ticket || returned.error));
+  const [returning, setReturning] = useState(Platform.OS === 'web' && Boolean(returned.ticket || returned.error));
   useEffect(() => {
-    if (!returned.ticket && !returned.error) return;
+    // On a phone the auth session hands the ticket to the sign-in itself; a copy of the redirect
+    // that opens this screen is ignored.
+    if (Platform.OS !== 'web' || (!returned.ticket && !returned.error)) return;
     const done = (text: string) => {
       toast(text);
       setReturning(false);
@@ -213,12 +215,22 @@ export function SignIn({ onDone, embedded = false }: { onDone: () => void; embed
               disabled={busy}
               onPress={() => {
                 setBusy(true);
-                // The provider's page brings the browser back to the account screen with a ticket.
-                startProviderSignIn('google', `${window.location.origin}/account`).catch((error: unknown) => {
-                  // Refused: this address isn't one the server sends Google back to.
-                  setProblem(error instanceof ApiError && error.status === 422 ? c.account.errors.googleUnavailable : problemText(c, error));
-                  setBusy(false);
-                });
+                // In a browser the tab leaves for Google's page and comes back to the account screen with
+                // a ticket; on a phone the page opens over the app and the account comes back here.
+                signInWithProvider('google').then(
+                  (account) => {
+                    if (account === 'left') return;
+                    setBusy(false);
+                    if (!account) return;
+                    toast(c.account.welcome, { tone: 'success' });
+                    onDone();
+                  },
+                  (error: unknown) => {
+                    // Refused: this address isn't one the server sends Google back to.
+                    setProblem(error instanceof ApiError && error.status === 422 ? c.account.errors.googleUnavailable : problemText(c, error));
+                    setBusy(false);
+                  },
+                );
               }}
             />
           )}
