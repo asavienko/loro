@@ -6,7 +6,7 @@
 //     the phrase notes and the suggestion generator. It is platform-neutral; tsconfig.json maps the
 //     same path for the type checker.
 //
-//  2. THE PLATFORM EDGE. On iOS and Android four leaf modules are swapped for native ones; on the
+//  2. THE PLATFORM EDGE. On iOS and Android six leaf modules are swapped for native ones; on the
 //     web the originals run (NATIVE below).
 //
 //  3. THE WORKSPACE. pnpm hoists packages to the repository root (.npmrc), and the Rust core's
@@ -43,6 +43,10 @@ const NATIVE = {
   [path.join(sharedRoot, 'audio/cues.ts')]: path.join(projectRoot, 'src/platform/cues.ts'),
   // The Rust core: the LoroCore native module instead of WASM (Hermes has no WebAssembly).
   [coreBrowser]: path.join(projectRoot, 'src/platform/loroCore.ts'),
+  // Content packs and account details: AsyncStorage instead of localStorage.
+  [path.join(sharedRoot, 'api/kv.ts')]: path.join(projectRoot, 'src/platform/kv.ts'),
+  // The refresh token: the Keychain / Keystore instead of localStorage.
+  [path.join(sharedRoot, 'api/secrets.ts')]: path.join(projectRoot, 'src/platform/secrets.ts'),
 };
 
 const SHARED = '@shared/';

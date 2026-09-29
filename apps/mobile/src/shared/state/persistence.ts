@@ -78,6 +78,19 @@ function knownPhrase(id: string, own: Record<string, OwnPhrase>): boolean {
   return Boolean(findContentPhrase(id)) || Boolean(own[id]);
 }
 
+/** What a served id looks like: content arrives from the API, so an id may not be installed yet. */
+const SERVED_ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+/**
+ * Progress on a phrase is kept whether or not its content is installed: served content lives on the
+ * server (plan 106), so a phrase of another course or of a set not downloaded yet is still the
+ * learner's. Only a phrase the learner wrote on this device and no longer has is dropped.
+ */
+function keptPhrase(id: string, own: Record<string, OwnPhrase>): boolean {
+  if (id.startsWith(OWN_PHRASE_PREFIX)) return Boolean(own[id]);
+  return knownPhrase(id, own) || (id.length <= 64 && SERVED_ID.test(id));
+}
+
 // ---------- v1/v2 → v3 ----------
 
 /**
@@ -192,7 +205,7 @@ function sanitizeOwnSets(value: unknown, own: Record<string, OwnPhrase>): Record
       id,
       title: clip(s.title, LIMITS.title),
       targetLang: s.targetLang as LanguageCode,
-      phraseIds: strings(s.phraseIds).map(renamed).filter((pid) => knownPhrase(pid, own)),
+      phraseIds: strings(s.phraseIds).map(renamed).filter((pid) => keptPhrase(pid, own)),
       createdAt: num(s.createdAt) ? s.createdAt : 0,
       updatedAt: num(s.updatedAt) ? s.updatedAt : 0,
       deleted: s.deleted === true,
@@ -215,7 +228,7 @@ function sanitizeLog(value: unknown, own: Record<string, OwnPhrase>): LogEntry[]
     }
     if (!str(e.phraseId) || !str(e.key)) continue;
     const phraseId = renamed(e.phraseId);
-    if (!knownPhrase(phraseId, own)) continue;
+    if (!keptPhrase(phraseId, own)) continue;
     const key = e.phraseId === phraseId ? e.key : e.key.replace(/:[^:]*$/, `:${phraseId}`);
     const setId = str(e.setId) ? e.setId : null;
     // A day no device could have stamped at that moment is dropped: replay then works it out.
@@ -237,8 +250,8 @@ function sanitizeLikes(value: unknown, own: Record<string, OwnPhrase>, sets: Rec
     const [kind, rawId] = [k.slice(0, k.indexOf(':')), k.slice(k.indexOf(':') + 1)];
     if (kind === 'phrase') {
       const id = renamed(rawId);
-      if (knownPhrase(id, own)) out[`phrase:${id}`] = { liked: like.liked, at: like.at };
-    } else if (kind === 'set' && (findSet(rawId) || sets[rawId])) {
+      if (keptPhrase(id, own)) out[`phrase:${id}`] = { liked: like.liked, at: like.at };
+    } else if (kind === 'set' && (findSet(rawId) || sets[rawId] || (!rawId.startsWith(OWN_SET_PREFIX) && SERVED_ID.test(rawId)))) {
       out[k] = { liked: like.liked, at: like.at };
     }
   }
@@ -263,7 +276,7 @@ function sanitizePending(value: unknown, learner: LearnerState): PendingRating[]
   return value.filter(isObject).flatMap((p) => {
     if (!str(p.key) || !str(p.phraseId) || !num(p.at) || !GRADES.includes(p.grade as string)) return [];
     const phraseId = renamed(p.phraseId);
-    if (!knownPhrase(phraseId, learner.ownPhrases)) return [];
+    if (!keptPhrase(phraseId, learner.ownPhrases)) return [];
     const key = p.phraseId === phraseId ? p.key : p.key.replace(/:[^:]*$/, `:${phraseId}`);
     // Saved before ratings synced between tabs: its last change is its own time.
     const changedAt = num(p.changedAt) ? p.changedAt : p.at;

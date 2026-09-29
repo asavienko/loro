@@ -223,9 +223,9 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
               <Txt variant="displaySm" face="serif" weight={600} lang={view.targetLang} accessibilityRole="header">
                 {view.title}
               </Txt>
-              {view.content && (
+              {(view.content?.subtitle ?? view.content?.description) && (
                 <Txt color="secondary" style={styles.subtitle}>
-                  {view.content.subtitle[locale]}
+                  {view.content.subtitle?.[locale] ?? view.content.description}
                 </Txt>
               )}
             </View>

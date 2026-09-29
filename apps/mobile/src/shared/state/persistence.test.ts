@@ -34,15 +34,28 @@ describe('persistence', () => {
     assert.equal(at(1.5), 1);
   });
 
-  it('drops ids the content no longer has, keeping the current phrase', () => {
+  it('queues only installed phrases, keeping the current one', () => {
     const s = load(fresh());
     const raw = JSON.parse(serializeState(s));
     raw.player.order = ['gone', ...raw.player.order];
     raw.player.index = 1;
-    raw.learner.likes['phrase:gone'] = { liked: true, at: 1 };
     const back = sanitizeState(raw, device)!;
     assert.equal(back.player.order[back.player.index], 'cafe-01');
-    assert.equal(back.learner.likes['phrase:gone'], undefined);
+    assert.ok(!back.player.order.includes('gone'));
+  });
+
+  it('keeps progress on served phrases that are not installed, and drops own ones that are gone (plan 106)', () => {
+    const raw = JSON.parse(serializeState(load(fresh())));
+    // Another course's phrase, or a shared set not downloaded yet: still the learner's.
+    raw.learner.likes['phrase:u3k9x2m1q-01'] = { liked: true, at: 1 };
+    raw.learner.likes['set:set-u-3k9x2m1q'] = { liked: true, at: 1 };
+    raw.learner.likes['phrase:mine-p-gone'] = { liked: true, at: 1 };
+    raw.learner.likes['phrase:Not An Id'] = { liked: true, at: 1 };
+    const back = sanitizeState(raw, device)!;
+    assert.equal(back.learner.likes['phrase:u3k9x2m1q-01']?.liked, true);
+    assert.equal(back.learner.likes['set:set-u-3k9x2m1q']?.liked, true);
+    assert.equal(back.learner.likes['phrase:mine-p-gone'], undefined);
+    assert.equal(back.learner.likes['phrase:Not An Id'], undefined);
   });
 
   it('migrates a v2 save: renamed ids, ratings replayed through FSRS, points kept', () => {

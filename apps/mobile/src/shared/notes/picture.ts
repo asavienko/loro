@@ -1,7 +1,7 @@
 // A picture for a phrase the learner typed (plan 105): the icons of Loro's phrases that share its
 // words — in the course language or in the learner's meaning — and of a word list for common
 // things. A phrase that matches nothing gets speech bubbles: it is, at least, something to say.
-import { BANK_PHRASES, CONTENT_PHRASES } from '../content';
+import { BANK_PHRASES, CONTENT_PHRASES, contentRevision } from '../content';
 import { contentWords, tokenize } from './text';
 
 /** Everyday words (in English, the words of most meanings) and the registry icon that draws them. */
@@ -54,13 +54,16 @@ const FALLBACK = ['forum'];
 
 type Scores = Map<string, number>;
 let index: Map<string, Scores> | null = null;
+/** The content the index was built from: installing a pack builds it again. */
+let indexRevision = -1;
 
 /**
  * Every word of Loro's phrases and their meanings, with the icons of the phrases it's in. A word in
  * many phrases says little about any one picture, so its points are shared out among them.
  */
 function wordIndex(): Map<string, Scores> {
-  if (index) return index;
+  if (index && indexRevision === contentRevision()) return index;
+  indexRevision = contentRevision();
   const phrasesWith = new Map<string, { image: readonly string[] }[]>();
   for (const phrase of [...CONTENT_PHRASES, ...BANK_PHRASES]) {
     const words = new Set([phrase.target, ...Object.values(phrase.translations)].flatMap((text) => contentWords(text ?? '')));

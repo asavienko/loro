@@ -2,6 +2,16 @@ import { createContext, useContext } from 'react';
 import type { QueueSource } from '../state/types';
 import type { Route } from './routes';
 
+/** A set or album as the share sheet needs it. */
+export interface Shareable {
+  kind: 'set' | 'album';
+  id: string;
+  title: string;
+  visibility: 'private' | 'link' | 'public';
+  shareCode: string | null;
+  owner: 'loro' | 'me' | 'other';
+}
+
 /** Everything a screen can ask the shell to do. The callbacks are stable across renders. */
 export interface Navigation {
   go: (route: Route) => void;
@@ -28,6 +38,14 @@ export interface Navigation {
    * (and suggests at once); `setId` fills one of the learner's sets instead of making a new one.
    */
   makeSet: (options?: { input?: string; setId?: string }) => void;
+  /** An album's page (plan 106), from the current tab. */
+  openAlbum: (albumId: string) => void;
+  /** Make a song from a set (plan 106), optionally for one set or into one album. */
+  makeSong: (options?: { setId?: string; albumId?: string }) => void;
+  /** Who can see a set or album of the learner's, and its link (plan 106). */
+  share: (item: Shareable) => void;
+  /** Signing in, or the account when signed in (plan 106). */
+  openAccount: () => void;
   openSettings: () => void;
   /** Settings, scrolled to its voice pickers with the first one focused (the player's voice line). */
   openVoiceSettings: () => void;

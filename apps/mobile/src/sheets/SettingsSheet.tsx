@@ -7,8 +7,10 @@ import { bestVoice, speak, voicesFor, waitForVoices } from '@shared/audio/speech
 import { copyForNative, languageLabel, languageName } from '@shared/copy'
 import { coursesFor, getLanguage, LanguageCode, NATIVE_LANGUAGES } from '@shared/content'
 import { useLatest } from '@shared/lib/useLatest'
+import { useNav } from '@shared/nav/NavContext'
 import { courseSets, findPhrase, promptOf } from '@shared/state/catalog'
 import { LIMITS, tidy } from '@shared/state/limits'
+import { useAccount } from '../state/account'
 import { useCopy, useStore } from '../state/store'
 import { Button } from '../ui/Button'
 import { Sheet, SheetOption, SheetSection } from '../ui/Sheet'
@@ -24,6 +26,8 @@ export function SettingsSheet({ open, atVoices = false, onClose }: { open: boole
   const { state, actions } = useStore()
   const { profile } = state.learner
   const { toast } = useToast()
+  const nav = useNav()
+  const account = useAccount()
 
   // A new course empties the queue (it belongs to the old one); say so, in the new UI language.
   const switchTo = (nativeLang: LanguageCode, targetLang: LanguageCode) => {
@@ -36,6 +40,15 @@ export function SettingsSheet({ open, atVoices = false, onClose }: { open: boole
 
   return (
     <Sheet open={open} title={c.settings.title} onClose={onClose}>
+      {/* The account (plan 106): who is signed in, or the way in. */}
+      <SheetSection title={c.account.title}>
+        <SheetOption
+          icon="account_circle"
+          label={account.status === 'signedIn' ? c.account.signedInAs(account.account?.email ?? '') : c.account.signIn}
+          detail={account.status === 'signedIn' ? undefined : c.account.needed}
+          onPress={nav.openAccount}
+        />
+      </SheetSection>
       <SheetSection title={c.settings.profile}>
         {/* The setting people come here for comes first. */}
         <LanguageChoice

@@ -3,6 +3,7 @@
 // the app going to the background saves at once, where the web listens for the page hiding.
 import { createContext, ReactNode, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { AppState as AppLifecycle } from 'react-native';
+import { contentRevision, onContentChange } from '@shared/content';
 import { copyForNative, Copy } from '@shared/copy';
 import { Actions, makeActions } from '@shared/state/actions';
 import { clock } from '@shared/state/clock';
@@ -26,6 +27,8 @@ interface StoreValue {
   actions: Actions;
   /** The last save that didn't reach storage, for the shell to say once. */
   saveProblem: SaveResult | null;
+  /** Changes when content from the API is installed, so every screen reads it again (plan 106). */
+  content: number;
 }
 
 const StoreContext = createContext<StoreValue | null>(null);
@@ -79,7 +82,10 @@ export function StoreProvider({ children, stored }: { children: ReactNode; store
     return () => clearInterval(id);
   }, [actions]);
 
-  const value = useMemo(() => ({ state, actions, saveProblem }), [state, actions, saveProblem]);
+  const [content, setContent] = useState(contentRevision);
+  useEffect(() => onContentChange(() => setContent(contentRevision())), []);
+
+  const value = useMemo(() => ({ state, actions, saveProblem, content }), [state, actions, saveProblem, content]);
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
 

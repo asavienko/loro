@@ -4,7 +4,7 @@
 // (сметка, сметката) — and a word Loro hasn't seen keeps its full vowels with no stress mark, which
 // its pronunciation note says. Nothing is guessed. Conventions follow the course: [ˈmɔʎɐ],
 // [kɐˈdɛ], [ˈfkusnɔ].
-import { BANK_PHRASES, CONTENT_PHRASES } from '../content';
+import { BANK_PHRASES, CONTENT_PHRASES, contentRevision } from '../content';
 import { Sound, SoundWord, Syllable, syllabify, Transcription, phraseIpa } from './sounds';
 import { BULGARIAN_NUMBER_STRESS, spellNumbers } from './numbers';
 import { Token, tokenize } from './text';
@@ -61,8 +61,11 @@ const IPA_VOWEL = /[aɐɛeiɔouɤ]/g;
 
 /** Stressed vowel (0-based) per word, from every Bulgarian transcription in the course and bank. */
 let lexicon: Map<string, number> | null = null;
+/** The content the lexicon was learned from: installing a pack learns it again. */
+let lexiconRevision = -1;
 export function stressLexicon(): Map<string, number> {
-  if (lexicon) return lexicon;
+  if (lexicon && lexiconRevision === contentRevision()) return lexicon;
+  lexiconRevision = contentRevision();
   lexicon = new Map();
   const learn = (word: string, ipa: string, vowelsBefore = 0) => {
     const mark = ipa.search(/ˈ/);

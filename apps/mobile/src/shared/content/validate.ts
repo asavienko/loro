@@ -1,15 +1,15 @@
-// Full validation of the bundled content: each file against its zod schema, then
-// the cross-file rules. It runs at build time (vite.config.ts) and in the unit
-// tests, so the app itself ships without zod and trusts content that passed here.
+// Full validation of the content the API seeds (packages/content/v2): each file against its zod
+// schema, then the cross-file rules. It runs in the unit tests, so the app ships without zod and
+// trusts content that passed here.
 import { z } from 'zod';
-import phrasesJson from './phrases.json';
-import setsJson from './sets.json';
-import topicsJson from './topics.json';
+import phrasesJson from '../../../../../packages/content/v2/phrases.json';
+import setsJson from '../../../../../packages/content/v2/sets.json';
+import topicsJson from '../../../../../packages/content/v2/topics.json';
 import languagesJson from './languages.json';
 import metaJson from './meta.json';
-import noteTranslationsJson from './note-translations.json';
-import bankJson from './bank.json';
-import bankNoteTranslationsJson from './bank-note-translations.json';
+import noteTranslationsJson from '../../../../../packages/content/v2/note-translations.json';
+import bankJson from '../../../../../packages/content/v2/bank.json';
+import bankNoteTranslationsJson from '../../../../../packages/content/v2/bank-note-translations.json';
 import { bankProblems, bankSchema, contentProblems, languageSchema, metaSchema, noteTranslationsSchema, phraseSchema, setSchema, topicSchema } from './schema';
 
 /** Every problem with the content; empty when it is valid. */

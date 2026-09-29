@@ -1,15 +1,19 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { Copy } from '@shared/copy';
 import type { Tab } from '@shared/nav/routes';
 import { useCopy } from '../state/store';
 import { Icon, IconName } from './Icon';
 import { Txt } from './Txt';
 import { colors } from './theme';
 
-const TABS: { id: Tab; icon: IconName }[] = [
-  { id: 'home', icon: 'home' },
-  { id: 'explore', icon: 'search' },
-  { id: 'library', icon: 'library_music' },
+/** Phrases and Music are two tabs of their own (plan 106): the listening loop, and songs. */
+const TABS: { id: Tab; icon: IconName; label: keyof Copy['tabs'] }[] = [
+  { id: 'home', icon: 'home', label: 'home' },
+  { id: 'explore', icon: 'forum', label: 'phrases' },
+  { id: 'music', icon: 'music_note', label: 'music' },
+  { id: 'create', icon: 'auto_awesome', label: 'create' },
+  { id: 'library', icon: 'library_music', label: 'library' },
 ];
 
 /** The tab bar (the web's src/ui/BottomNavBar.tsx), above the home indicator. */
@@ -31,7 +35,7 @@ export function TabBar({ current, onNavigate }: { current: Tab; onNavigate: (tab
             >
               <Icon name={tab.icon} fill={active} size="lg" color={active ? 'primaryContainer' : 'secondary'} />
               <Txt variant="caption" weight={active ? 700 : 500} color={active ? 'primaryContainer' : 'secondary'}>
-                {c.nav[tab.id]}
+                {c.tabs[tab.label]}
               </Txt>
             </Pressable>
           );
