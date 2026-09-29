@@ -42,6 +42,7 @@ describePostgres('the library against real PostgreSQL', () => {
     vi.stubEnv('MUSIC_PROVIDER', 'stub')
     vi.stubEnv('LIMIT_PHRASES_DAILY', '2')
     vi.stubEnv('LIMIT_SETS_KEPT', '3')
+    vi.stubEnv('LIBRARY_VOICE_LORO_SONGS', '0')
     resetWriter()
     database = new PostgresDatabase()
     expect(await database.ready()).toBe(true)
