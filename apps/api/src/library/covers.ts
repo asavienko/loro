@@ -176,16 +176,18 @@ function shapeSvg(shape: Shape): string {
 /** The one place a cover becomes SVG. */
 export function renderCover(spec: CoverSpec): string {
   const parsed = CoverSpecSchema.parse(spec)
+  // Ids unique to the cover: a page showing several inline covers must not mix their gradients.
+  const id = `cv${createHash('sha256').update(JSON.stringify(parsed)).digest('hex').slice(0, 10)}`
   const radians = (parsed.angle * Math.PI) / 180
   const x = n(50 + Math.cos(radians) * 50)
   const y = n(50 + Math.sin(radians) * 50)
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${COVER_SIZE} ${COVER_SIZE}" width="${COVER_SIZE}" height="${COVER_SIZE}">`,
-    `<defs><linearGradient id="bg" x1="${n(100 - x)}%" y1="${n(100 - y)}%" x2="${x}%" y2="${y}%">`,
+    `<defs><linearGradient id="${id}-bg" x1="${n(100 - x)}%" y1="${n(100 - y)}%" x2="${x}%" y2="${y}%">`,
     `<stop offset="0" stop-color="${parsed.background[0]}"/><stop offset="1" stop-color="${parsed.background[1]}"/>`,
-    `</linearGradient><clipPath id="c"><rect width="${COVER_SIZE}" height="${COVER_SIZE}"/></clipPath></defs>`,
-    `<rect width="${COVER_SIZE}" height="${COVER_SIZE}" fill="url(#bg)"/>`,
-    `<g clip-path="url(#c)">${parsed.shapes.map(shapeSvg).join('')}</g>`,
+    `</linearGradient><clipPath id="${id}-c"><rect width="${COVER_SIZE}" height="${COVER_SIZE}"/></clipPath></defs>`,
+    `<rect width="${COVER_SIZE}" height="${COVER_SIZE}" fill="url(#${id}-bg)"/>`,
+    `<g clip-path="url(#${id}-c)">${parsed.shapes.map(shapeSvg).join('')}</g>`,
     '</svg>',
   ].join('')
 }
