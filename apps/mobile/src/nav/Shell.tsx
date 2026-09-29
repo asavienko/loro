@@ -90,8 +90,10 @@ export function Shell({ children }: { children: ReactNode }) {
       go: (route) => router.navigate(hrefOf(route) as never),
       openSet: (setId) => {
         // A page opened from the player or Make a set (a set just made there) shows in its place.
-        if (pathRef.current === '/player' || pathRef.current === '/queue' || pathRef.current === '/make') router.dismissAll();
-        router.push({ pathname: '/set/[id]', params: { id: setId, from: tabRef.current } });
+        if ((pathRef.current === '/player' || pathRef.current === '/queue' || pathRef.current === '/make') && router.canDismiss()) router.dismissAll();
+        // A set opened from the music side belongs to Phrases.
+        const from = tabRef.current === 'music' ? 'explore' : tabRef.current;
+        router.push({ pathname: '/set/[id]', params: { id: setId, from } });
       },
       playSet: (setId, options = {}) => {
         const view = findSetView(learnerRef.current, setId);
@@ -127,8 +129,9 @@ export function Shell({ children }: { children: ReactNode }) {
         router.push({ pathname: '/make', params: { ...(options.input ? { input: options.input } : {}), ...(options.setId ? { setId: options.setId } : {}) } });
       },
       openAlbum: (albumId) => {
-        if (pathRef.current === '/song') router.dismissAll();
-        router.push({ pathname: '/album/[id]', params: { id: albumId, from: tabRef.current } });
+        if (pathRef.current === '/song' && router.canDismiss()) router.dismissAll();
+        // An album belongs to Music, wherever it was opened from.
+        router.push({ pathname: '/album/[id]', params: { id: albumId, from: 'music' } });
       },
       makeSong: (options = {}) => setSongRequest(options),
       share: (item) => setSharing(item),

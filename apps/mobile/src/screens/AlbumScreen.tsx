@@ -3,7 +3,7 @@
 // still being made shows as such and turns playable when it is ready.
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { deleteAlbum, fetchAlbum, generateCover, saveItem, unsaveItem, type AlbumDetail, type Song } from '@shared/api/library';
 import { useNav } from '@shared/nav/NavContext';
@@ -14,6 +14,7 @@ import { useContent } from '../state/content';
 import { useCopy } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
+import { confirm } from '../ui/confirm';
 import { problemText } from '../ui/problems';
 import { useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
@@ -21,17 +22,6 @@ import { colors, radius, TARGET } from '../ui/theme';
 
 /** How often a song still being made is asked about. */
 const POLL_MS = 2500;
-
-/** A yes/no question before something is lost: the browser's own dialog on the web. */
-export function confirm(message: string, yes: string, no: string): Promise<boolean> {
-  if (Platform.OS === 'web') return Promise.resolve(globalThis.confirm(message));
-  return new Promise((resolve) =>
-    Alert.alert('', message, [
-      { text: no, style: 'cancel', onPress: () => resolve(false) },
-      { text: yes, style: 'destructive', onPress: () => resolve(true) },
-    ]),
-  );
-}
 
 export function AlbumScreen({ id }: { id: string }) {
   const c = useCopy();

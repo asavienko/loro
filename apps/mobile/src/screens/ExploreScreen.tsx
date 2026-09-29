@@ -3,7 +3,7 @@
 import { useRouter } from 'expo-router';
 import { ReactNode, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
-import { Level, Phrase, Tag, TOPICS } from '@shared/content';
+import { Level, librarySets, Phrase, Tag, TOPICS } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
 import type { ExploreFilters } from '@shared/nav/routes';
 import { courseSets, coursePhrases, findSetView, phraseKey, promptOf } from '@shared/state/catalog';
@@ -14,6 +14,7 @@ import { useCopy, useNow, useStore } from '../state/store';
 import { Button, Chip } from '../ui/Button';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
+import { PhraseShelves } from './PhraseShelves';
 import { progressLabel } from '../ui/progressLabel';
 import { SetCard } from '../ui/SetCard';
 import { TONE } from '../ui/SetCover';
@@ -132,7 +133,8 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
   const inText = (p: Phrase) => matchesWords(`${p.target} ${Object.values(p.translations).join(' ')}`, words);
   const found = q || filters.tag ? coursePhrases(learner).filter(phraseMatches) : [];
   const phrases = q ? [...found.filter(inText), ...found.filter((p) => !inText(p))] : found;
-  const sets = courseSets(learner).filter((s) => {
+  // Loro's course, then the learner's own and saved sets (plan 106).
+  const sets = [...courseSets(learner), ...librarySets(learner.profile.targetLang)].filter((s) => {
     if (filters.topic && s.topicId !== filters.topic) return false;
     if (filters.level && s.level !== filters.level) return false;
     if (filters.tag && !s.phraseIds.some((id) => phrases.some((p) => p.id === id))) return false;
@@ -250,7 +252,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
 
   return (
     <View style={styles.screen}>
-      <TopBar title={c.nav.explore} onOpenSettings={nav.openSettings} />
+      <TopBar title={c.tabs.phrases} onOpenSettings={nav.openSettings} />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
         <View accessibilityRole="search" style={styles.search}>
           <View style={styles.searchIcon} pointerEvents="none">
@@ -318,6 +320,8 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
             {results}
           </>
         )}
+        {/* With nothing searched, the learner's own sets and Community follow the course. */}
+        {tiles && <PhraseShelves />}
       </ScrollView>
     </View>
   );

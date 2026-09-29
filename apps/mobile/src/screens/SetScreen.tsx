@@ -3,8 +3,10 @@
 // sort, and its phrases. Your own set grows from here.
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Platform, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Platform, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { keepOpenedSet } from '@shared/api/contentCache';
+import { deleteSet, fetchSet, generateCover, saveItem, unsaveItem } from '@shared/api/library';
 import { coursesFor, getTopic, Phrase, TopicTone } from '@shared/content';
 import { languageName } from '@shared/copy';
 import { useNav } from '@shared/nav/NavContext';
@@ -15,10 +17,14 @@ import type { SortKey } from '@shared/state/types';
 import { isTargetRevealed } from '@shared/ui/phase';
 import { hrefOf, useShell } from '../nav/Shell';
 import { PickPhrasesSheet } from '../sheets/PickPhrasesSheet';
+import { useAccount } from '../state/account';
+import { useContent } from '../state/content';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
+import { confirm } from '../ui/confirm';
+import { problemText } from '../ui/problems';
 import { progressLabel } from '../ui/progressLabel';
 import { SetCover } from '../ui/SetCover';
 import { Sheet, SheetOption } from '../ui/Sheet';
@@ -63,6 +69,19 @@ export function SetScreen({ setId }: { setId: string }) {
   const [past, setPast] = useState(false);
   const view = findSetView(state.learner, setId);
   const back = () => (router.canGoBack() ? router.back() : router.navigate(hrefOf({ name: tab }) as never));
+  // A set not installed here (a link, Community): fetched and kept, so its phrases play (plan 106).
+  const [fetching, setFetching] = useState(!view && !setId.startsWith('mine-'));
+  useEffect(() => {
+    if (!fetching) return;
+    let live = true;
+    fetchSet(setId)
+      .then((detail) => keepOpenedSet(detail))
+      .catch(() => {})
+      .finally(() => live && setFetching(false));
+    return () => {
+      live = false;
+    };
+  }, [fetching, setId]);
   return (
     <View style={styles.screen}>
       <TopBar title={past ? view?.title : undefined} onBack={back} onOpenSettings={nav.openSettings} />
@@ -73,7 +92,7 @@ export function SetScreen({ setId }: { setId: string }) {
           if (now !== past) setPast(now);
         }}
       >
-        <SetPage setId={setId} onDeleted={back} />
+        {fetching ? <ActivityIndicator color={colors.primaryContainer} style={styles.message} /> : <SetPage setId={setId} onDeleted={back} />}
       </ScrollView>
     </View>
   );
@@ -88,6 +107,9 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
   const [sortOpen, setSortOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [picking, setPicking] = useState(false);
+  const [drawing, setDrawing] = useState(false);
+  const account = useAccount();
+  const content = useContent();
   const view = findSetView(state.learner, setId);
   if (!view)
     return (
@@ -166,6 +188,45 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
   const onDueNew = () => {
     if (dueNewQueue && playing) actions.pause();
     else load('dueNew', dueAndNew);
+  };
+
+  // A set in the learner's account, or one they saved or opened (plan 106).
+  const served = view.content;
+  const drawCover = async () => {
+    if (!served) return;
+    setDrawing(true);
+    try {
+      await generateCover({ kind: 'set', title: served.title, ...(served.description ? { description: served.description } : {}), attachTo: served.id });
+      await content.refresh();
+      void account.refreshUsage();
+    } catch (error) {
+      toast(problemText(c, error));
+    } finally {
+      setDrawing(false);
+    }
+  };
+  const removeServed = async () => {
+    if (!served || !(await confirm(c.share.deleteSetConfirm(served.title), c.share.delete, c.common.cancel))) return;
+    try {
+      await deleteSet(served.id);
+      toast(c.share.deleted);
+      await content.refresh();
+      onDeleted();
+    } catch (error) {
+      toast(problemText(c, error));
+    }
+  };
+  const toggleSaved = async () => {
+    if (!served) return;
+    if (account.status !== 'signedIn') return nav.openAccount();
+    try {
+      if (served.saved) await unsaveItem('set', served.id);
+      else await saveItem('set', served.id);
+      toast(served.saved ? c.share.unsavedToast : c.share.savedToast);
+      await content.refresh();
+    } catch (error) {
+      toast(problemText(c, error));
+    }
   };
 
   // The system share sheet; a browser without one copies the link instead.
@@ -382,7 +443,68 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
           }}
         />
         {/* Your own set lives only on this device: its link would open "isn't available" for anyone else. */}
-        {view.kind === 'content' && <SheetOption icon="share" label={c.set.share} onPress={() => void share()} />}
+        {served?.owner === 'loro' && <SheetOption icon="share" label={c.set.share} onPress={() => void share()} />}
+        {/* A set in someone's account (plan 106): its owner decides who sees it; others save it. */}
+        {served && served.owner !== 'loro' && (served.owner === 'me' || served.shareCode) && (
+          <SheetOption
+            icon="share"
+            label={served.owner === 'me' ? `${c.share.share} · ${c.share[served.visibility]}` : c.share.share}
+            onPress={() => {
+              setMoreOpen(false);
+              nav.share({ kind: 'set', ...served });
+            }}
+          />
+        )}
+        {served?.owner === 'other' && (
+          <SheetOption
+            icon={served.saved ? 'bookmark_added' : 'bookmark_add'}
+            label={served.saved ? c.share.unsave : c.share.save}
+            onPress={() => {
+              setMoreOpen(false);
+              void toggleSaved();
+            }}
+          />
+        )}
+        {served && (
+          <SheetOption
+            icon="music_note"
+            label={c.music.makeSong}
+            onPress={() => {
+              setMoreOpen(false);
+              nav.makeSong({ setId });
+            }}
+          />
+        )}
+        {served?.owner === 'me' && (
+          <>
+            <SheetOption
+              icon="auto_awesome"
+              label={c.phrasesTab.makeSet}
+              onPress={() => {
+                setMoreOpen(false);
+                nav.makeSet({ setId });
+              }}
+            />
+            <SheetOption
+              icon="palette"
+              label={drawing ? c.share.coverMaking : c.share.cover}
+              disabled={drawing}
+              onPress={() => {
+                setMoreOpen(false);
+                void drawCover();
+              }}
+            />
+            <SheetOption
+              icon="delete"
+              label={c.share.delete}
+              tone="danger"
+              onPress={() => {
+                setMoreOpen(false);
+                void removeServed();
+              }}
+            />
+          </>
+        )}
         {view.kind === 'own' && (
           <>
             <SheetOption

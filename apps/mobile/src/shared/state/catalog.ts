@@ -5,6 +5,7 @@ import {
   findBankPhrase,
   findContentPhrase,
   findSet,
+  inLibrary,
   LanguageCode,
   Level,
   Phrase,
@@ -143,7 +144,12 @@ export function ownSets(learner: LearnerState): OwnSet[] {
 /** Every phrase of the current course: content in set order, then the learner's own. */
 export function coursePhrases(learner: LearnerState): Phrase[] {
   const target = learner.profile.targetLang;
-  return [...CONTENT_PHRASES.filter((p) => p.targetLang === target), ...ownPhrases(learner)];
+  // Loro's, the learner's own and saved sets'; not a shared set only opened once (plan 106).
+  const kept = (p: Phrase) => {
+    const set = findSet(p.setId);
+    return set !== undefined && inLibrary(set);
+  };
+  return [...CONTENT_PHRASES.filter((p) => p.targetLang === target && kept(p)), ...ownPhrases(learner)];
 }
 
 /** Case, accents, punctuation and spacing don't make a phrase different (search: "ano" finds "año"). */

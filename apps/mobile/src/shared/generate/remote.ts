@@ -1,21 +1,26 @@
-// The dev server's phrase writer (server/suggest.ts), when it has one. Any failure reads as "not
-// available": the caller falls back to the phrases on the device and says so. The app ships without
-// zod, so the reply is checked by hand.
+// The API's phrase writer (plan 106: POST /library/generate/phrases and /notes), for a signed-in
+// learner on a server whose writer is Claude. Any failure reads as "not available": the caller falls
+// back to the phrases on the device and says so. The app ships without zod, so the reply is checked
+// by hand.
+import { api, apiUrl } from '../api/client';
+import { fetchUsage } from '../api/library';
+import { sessionState } from '../api/session';
 import type { LanguageCode } from '../content';
+import { clock } from '../state/clock';
 import { ICON_NAMES } from '../ui/icons';
 import type { OwnNotes } from '../state/types';
 import type { SuggestRequest } from './types';
 
-export const STATUS_URL = '/api/phrases/status';
-export const SUGGEST_URL = '/api/phrases/suggest';
-export const NOTES_URL = '/api/phrases/notes';
+export const SUGGEST_URL = apiUrl('/library/generate/phrases');
+export const NOTES_URL = apiUrl('/library/generate/notes');
 
-const STATUS_TIMEOUT_MS = 3000;
 /** Writing a dozen phrases takes a while; a writer that hangs longer than this has failed. */
-const SUGGEST_TIMEOUT_MS = 45_000;
+const SUGGEST_TIMEOUT_MS = 90_000;
 /** What the server accepts as phrases not to write again. */
 const MAX_AVOID = 100;
 const MAX_TEXT = 120;
+/** How long the answer to "is Claude writing here?" is trusted. */
+const STATUS_TTL_MS = 5 * 60_000;
 
 export interface WrittenPhrase {
   target: string;
@@ -31,30 +36,31 @@ export interface WrittenNotes {
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 
-/** JSON from the server, or a throw: a static host answers these routes with its page, not JSON. */
-async function fetchJson(url: string, init: RequestInit, timeoutMs: number, signal?: AbortSignal): Promise<unknown> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  const onAbort = () => controller.abort();
-  signal?.addEventListener('abort', onAbort);
-  try {
-    const res = await fetch(url, { ...init, signal: controller.signal });
-    if (!res.ok || !res.headers.get('content-type')?.includes('application/json')) throw new Error(`status ${res.status}`);
-    return await res.json();
-  } finally {
-    clearTimeout(timer);
-    signal?.removeEventListener('abort', onAbort);
+let status: { user: string; at: number; live: Promise<boolean> } | null = null;
+
+/**
+ * Whether the AI writer answers this learner: signed in, and the server's writer is Claude. Without
+ * it the phrase bank on the device answers, the same as the server would, at no cost to the allowance.
+ */
+export function liveAvailable(): Promise<boolean> {
+  const session = sessionState();
+  if (session.status !== 'signedIn' || !session.account) return Promise.resolve(false);
+  const user = session.account.userId;
+  if (!status || status.user !== user || clock.now() - status.at > STATUS_TTL_MS) {
+    status = {
+      user,
+      at: clock.now(),
+      live: fetchUsage()
+        .then((usage) => usage.writers.phrases === 'claude' && usage.daily.phrases.used < usage.daily.phrases.limit)
+        .catch(() => false),
+    };
   }
+  return status.live;
 }
 
-let status: Promise<boolean> | null = null;
-
-/** Whether this server writes suggestions; asked once per page. */
-export function liveAvailable(): Promise<boolean> {
-  status ??= fetchJson(STATUS_URL, { method: 'GET' }, STATUS_TIMEOUT_MS)
-    .then((body) => isObject(body) && body.live === true)
-    .catch(() => false);
-  return status;
+/** After writing: the allowance may be spent now, so ask again next time. */
+function forgetStatus(): void {
+  status = null;
 }
 
 const text = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null);
@@ -99,25 +105,27 @@ export async function writeNotes(
   phrase: { target: string; native: string; targetLang: LanguageCode; nativeLang: LanguageCode },
   signal?: AbortSignal,
 ): Promise<WrittenNotes> {
-  const body = await fetchJson(NOTES_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(phrase) }, SUGGEST_TIMEOUT_MS, signal);
+  const body = await api<unknown>('/library/generate/notes', { method: 'POST', body: phrase, timeoutMs: SUGGEST_TIMEOUT_MS, signal });
+  forgetStatus();
   const notes = isObject(body) ? readNotes(body.notes) : null;
   const image = isObject(body) ? readImage(body.image) : null;
   if (!notes || !image) throw new Error('unreadable reply');
   return { notes, image };
 }
 
-/** Phrases written for the request, none of `avoid`; throws when the writer fails or answers nonsense. */
+/**
+ * Phrases written for the request, none of `avoid`; throws when the writer fails, answers nonsense,
+ * or the server answered from its phrase bank instead (the device has the same bank).
+ */
 export async function writePhrases(request: SuggestRequest, avoid: string[], signal?: AbortSignal): Promise<WrittenPhrase[]> {
-  const body = await fetchJson(
-    SUGGEST_URL,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...request, avoid: avoid.slice(-MAX_AVOID).map((a) => a.slice(0, MAX_TEXT)) }),
-    },
-    SUGGEST_TIMEOUT_MS,
+  const body = await api<unknown>('/library/generate/phrases', {
+    method: 'POST',
+    body: { ...request, avoid: avoid.slice(-MAX_AVOID).map((a) => a.slice(0, MAX_TEXT)) },
+    timeoutMs: SUGGEST_TIMEOUT_MS,
     signal,
-  );
+  });
+  forgetStatus();
+  if (isObject(body) && body.provider === 'bank') throw new Error('no writer');
   const phrases = readPhrases(body);
   if (!phrases) throw new Error('unreadable reply');
   return phrases;
