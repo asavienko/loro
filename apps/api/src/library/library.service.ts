@@ -956,32 +956,28 @@ export class LibraryService {
    */
   async deleteEverything(userId: string): Promise<{ deleted: true }> {
     await this.db.transaction(async (tx) => {
-      await tx.query(
-        'DELETE FROM library_phrases WHERE set_id IN (SELECT id FROM library_sets WHERE owner_id = $1)',
-        [userId],
-      )
-      await tx.query(
-        "DELETE FROM library_saves WHERE kind = 'set' AND item_id IN (SELECT id FROM library_sets WHERE owner_id = $1)",
-        [userId],
-      )
-      await tx.query(
-        "DELETE FROM library_saves WHERE kind = 'album' AND item_id IN (SELECT id FROM library_albums WHERE owner_id = $1)",
-        [userId],
-      )
-      await tx.query('DELETE FROM library_sets WHERE owner_id = $1', [userId])
-      await tx.query(
-        'DELETE FROM library_songs WHERE owner_id = $1 OR album_id IN (SELECT id FROM library_albums WHERE owner_id = $1)',
-        [userId],
-      )
-      await tx.query('DELETE FROM library_albums WHERE owner_id = $1', [userId])
-      await tx.query('DELETE FROM library_covers WHERE owner_id = $1', [userId])
-      await tx.query('DELETE FROM library_saves WHERE user_id = $1', [userId])
-      await tx.query('DELETE FROM library_reports WHERE user_id = $1', [userId])
-      await tx.query('DELETE FROM library_profiles WHERE user_id = $1', [userId])
-      await tx.query('DELETE FROM library_progress WHERE user_id = $1', [userId])
+      await deleteLibraryOf(tx, userId)
+    })
+    return { deleted: true }
+  }
+
+  /**
+   * Deletes the account: everything in the library, the synced rows, the song jobs, and the sign-in
+   * itself (identities, devices, sessions and refresh tokens go with the user). Signing up again
+   * starts a new account.
+   */
+  async deleteAccount(userId: string): Promise<{ deleted: true }> {
+    await this.db.transaction(async (tx) => {
+      await deleteLibraryOf(tx, userId)
       await tx.query('DELETE FROM library_usage WHERE user_id = $1', [userId])
-      await tx.query('DELETE FROM library_speech WHERE owner_id = $1', [userId])
-      await forgetUnusedAudio(tx)
+      for (const table of SYNC_TABLES)
+        await tx.query(`DELETE FROM ${table} WHERE user_id = $1`, [userId])
+      await tx.query('DELETE FROM music_jobs WHERE user_id = $1', [userId])
+      await tx.query('DELETE FROM music_lyric_documents WHERE user_id = $1', [userId])
+      await tx.query(
+        'DELETE FROM music_objects o WHERE NOT EXISTS (SELECT 1 FROM music_jobs j WHERE j.sha256 = o.sha256)',
+      )
+      await tx.query('DELETE FROM auth_users WHERE id = $1', [userId])
     })
     return { deleted: true }
   }
@@ -1422,6 +1418,50 @@ const ALBUM_SELECT = `SELECT a.*, p.display_name AS author,
   FROM library_albums a LEFT JOIN library_profiles p ON p.user_id = a.owner_id`
 
 /** Sounds nothing plays any more: no song and no phrase clip (content-addressed, so shared ones stay). */
+/** Tables of synced rows, each keyed by `user_id` (sync/sync.schema.ts). */
+const SYNC_TABLES = [
+  'sync_rows',
+  'sync_changes',
+  'sync_receipts',
+  'sync_cursors',
+  'sync_phrase_identity',
+  'sync_aliases',
+  'sync_phrase_generations',
+  'sync_heads',
+] as const
+
+/**
+ * Everything a learner keeps in the library. The day's allowance use stays: deleting your things
+ * doesn't give the day's generations back.
+ */
+async function deleteLibraryOf(tx: SqlConnection, userId: string): Promise<void> {
+  await tx.query(
+    'DELETE FROM library_phrases WHERE set_id IN (SELECT id FROM library_sets WHERE owner_id = $1)',
+    [userId],
+  )
+  await tx.query(
+    "DELETE FROM library_saves WHERE kind = 'set' AND item_id IN (SELECT id FROM library_sets WHERE owner_id = $1)",
+    [userId],
+  )
+  await tx.query(
+    "DELETE FROM library_saves WHERE kind = 'album' AND item_id IN (SELECT id FROM library_albums WHERE owner_id = $1)",
+    [userId],
+  )
+  await tx.query('DELETE FROM library_sets WHERE owner_id = $1', [userId])
+  await tx.query(
+    'DELETE FROM library_songs WHERE owner_id = $1 OR album_id IN (SELECT id FROM library_albums WHERE owner_id = $1)',
+    [userId],
+  )
+  await tx.query('DELETE FROM library_albums WHERE owner_id = $1', [userId])
+  await tx.query('DELETE FROM library_covers WHERE owner_id = $1', [userId])
+  await tx.query('DELETE FROM library_saves WHERE user_id = $1', [userId])
+  await tx.query('DELETE FROM library_reports WHERE user_id = $1', [userId])
+  await tx.query('DELETE FROM library_profiles WHERE user_id = $1', [userId])
+  await tx.query('DELETE FROM library_progress WHERE user_id = $1', [userId])
+  await tx.query('DELETE FROM library_speech WHERE owner_id = $1', [userId])
+  await forgetUnusedAudio(tx)
+}
+
 async function forgetUnusedAudio(tx: SqlConnection): Promise<void> {
   await tx.query(
     `DELETE FROM library_audio a WHERE NOT EXISTS (SELECT 1 FROM library_songs s WHERE s.audio_id = a.id)

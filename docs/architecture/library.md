@@ -45,7 +45,11 @@ after a 401. Signing out revokes the refresh token and forgets the downloaded pa
 learner's own sets); progress on the device is untouched. The display name shown on shared items is
 `POST /library/profile`. `POST /library/me/delete` deletes everything a learner keeps in the library
 (sets, albums, songs, covers, saves, reports, profile, account progress, and their phrases' clips);
-the app then signs out without saving progress back, and the progress on the device stays.
+the app then signs out without saving progress back, and the progress on the device stays. The day's
+allowance use is kept: deleting things doesn't give generations back.
+`POST /library/me/delete-account` deletes all of that and the account itself (synced rows, song
+jobs, the user with its identities, devices, sessions and refresh tokens); the app forgets anything
+it kept on the device under that account and signs out.
 
 A signed-in learner's **progress** follows them (`GET/POST /library/progress`): the device merges
 the account's copy of its learner state (union of logs, latest of each field, as two tabs merge) and

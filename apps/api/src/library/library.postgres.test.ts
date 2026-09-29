@@ -590,6 +590,32 @@ describePostgres('the library against real PostgreSQL', () => {
     expect((await progress.read('sam')).progress).toBeNull()
     expect(await library.profile('sam')).toEqual({ displayName: null })
     expect((await library.pack(null, 'es-ES')).sets.map((s) => s.id)).toContain('set-cafe')
+    // Deleting your things doesn't give the day's generations back.
+    expect((await library.usage('sam')).daily.song.used).toBe(1)
+  })
+
+  it('deletes an account with its sign-in, synced rows and allowance use', async () => {
+    await database.query('INSERT INTO auth_users(id, created_at) VALUES ($1, $2)', ['vic', now])
+    await database.query(
+      "INSERT INTO auth_identities(provider, subject, user_id) VALUES ('email', 'vic-hash', 'vic')",
+    )
+    await database.query("INSERT INTO sync_heads(user_id, revision) VALUES ('vic', 3)")
+    const phrases = (await deck('vic')).slice(0, 1)
+    const { set } = await library.createSet('vic', {
+      title: 'Gone',
+      targetLang: 'es-ES',
+      nativeLang: 'bg-BG',
+      visibility: 'private',
+      phrases,
+    })
+    await library.deleteAccount('vic')
+    const count = async (sql: string) =>
+      Number((await database.query<{ n: string }>(sql, ['vic'])).rows[0]?.n)
+    expect(await count('SELECT count(*) AS n FROM auth_users WHERE id = $1')).toBe(0)
+    expect(await count('SELECT count(*) AS n FROM auth_identities WHERE user_id = $1')).toBe(0)
+    expect(await count('SELECT count(*) AS n FROM sync_heads WHERE user_id = $1')).toBe(0)
+    expect(await count('SELECT count(*) AS n FROM library_usage WHERE user_id = $1')).toBe(0)
+    expect(await code(library.set('vic', set.id))).toBe('NOT_FOUND')
   })
 
   it('lists the songs of a set that the reader may hear', async () => {
