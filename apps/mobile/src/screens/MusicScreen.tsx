@@ -3,7 +3,7 @@
 // what others have shared in this course. Making a song starts here.
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { unreachable } from '@shared/api/client';
 import { fetchCommunityAlbums } from '@shared/api/library';
@@ -68,13 +68,14 @@ export function MusicScreen() {
         icon="groups"
         albums={community ?? []}
         width={card}
-        empty={offline ? c.community.offline : community === null ? undefined : c.community.emptyAlbums}
+        loading={community === null && !offline}
+        empty={offline ? c.community.offline : c.community.emptyAlbums}
       />
     </ScrollView>
   );
 }
 
-function Shelf({ title, albums, width, empty, icon }: { title: string; albums: Album[]; width: number; empty?: string; icon?: 'groups' }) {
+function Shelf({ title, albums, width, empty, icon, loading = false }: { title: string; albums: Album[]; width: number; empty?: string; icon?: 'groups'; loading?: boolean }) {
   const nav = useNav();
   return (
     <View style={styles.shelf}>
@@ -84,7 +85,9 @@ function Shelf({ title, albums, width, empty, icon }: { title: string; albums: A
           {title}
         </Txt>
       </View>
-      {albums.length === 0 && empty ? (
+      {loading ? (
+        <ActivityIndicator color={colors.nightAccent} style={styles.loading} />
+      ) : albums.length === 0 && empty ? (
         <Txt variant="body" color="onNightVariant" style={styles.empty}>
           {empty}
         </Txt>
@@ -107,5 +110,6 @@ const styles = StyleSheet.create({
   shelf: { paddingTop: 28, gap: 12 },
   shelfHead: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20 },
   row: { paddingHorizontal: 20, gap: 14 },
+  loading: { alignSelf: 'flex-start', marginHorizontal: 20 },
   empty: { paddingHorizontal: 20, padding: 16, marginHorizontal: 20, borderRadius: radius['2xl'], backgroundColor: colors.nightContainer },
 });
