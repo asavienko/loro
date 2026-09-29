@@ -899,6 +899,43 @@ export class LibraryService {
     return { reported: true }
   }
 
+  /**
+   * Everything a learner keeps in the library: their sets, albums, songs, covers, saves, reports,
+   * profile and account progress. Clips of their phrases that nothing plays any more go too; others'
+   * saves of their shared items are removed with them.
+   */
+  async deleteEverything(userId: string): Promise<{ deleted: true }> {
+    await this.db.transaction(async (tx) => {
+      await tx.query(
+        'DELETE FROM library_phrases WHERE set_id IN (SELECT id FROM library_sets WHERE owner_id = $1)',
+        [userId],
+      )
+      await tx.query(
+        "DELETE FROM library_saves WHERE kind = 'set' AND item_id IN (SELECT id FROM library_sets WHERE owner_id = $1)",
+        [userId],
+      )
+      await tx.query(
+        "DELETE FROM library_saves WHERE kind = 'album' AND item_id IN (SELECT id FROM library_albums WHERE owner_id = $1)",
+        [userId],
+      )
+      await tx.query('DELETE FROM library_sets WHERE owner_id = $1', [userId])
+      await tx.query(
+        'DELETE FROM library_songs WHERE owner_id = $1 OR album_id IN (SELECT id FROM library_albums WHERE owner_id = $1)',
+        [userId],
+      )
+      await tx.query('DELETE FROM library_albums WHERE owner_id = $1', [userId])
+      await tx.query('DELETE FROM library_covers WHERE owner_id = $1', [userId])
+      await tx.query('DELETE FROM library_saves WHERE user_id = $1', [userId])
+      await tx.query('DELETE FROM library_reports WHERE user_id = $1', [userId])
+      await tx.query('DELETE FROM library_profiles WHERE user_id = $1', [userId])
+      await tx.query('DELETE FROM library_progress WHERE user_id = $1', [userId])
+      await tx.query('DELETE FROM library_usage WHERE user_id = $1', [userId])
+      await tx.query('DELETE FROM library_speech WHERE owner_id = $1', [userId])
+      await forgetUnusedAudio(tx)
+    })
+    return { deleted: true }
+  }
+
   async profile(userId: string): Promise<{ displayName: string | null }> {
     const row = (
       await this.db.query<{ display_name: string }>(
