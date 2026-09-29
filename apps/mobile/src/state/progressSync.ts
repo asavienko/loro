@@ -42,6 +42,15 @@ async function unstash(userId: string): Promise<LearnerState | null> {
   }
 }
 
+/**
+ * After an account is deleted: nothing is kept on this device under it any more, and the progress
+ * here (which stays) is no longer its, so whoever signs in next on this device keeps it.
+ */
+export async function forgetAccountHere(userId: string): Promise<void> {
+  await kvRemove(stashKey(userId));
+  if ((await kvGet(OWNER_KEY)) === userId) await kvRemove(OWNER_KEY);
+}
+
 export function useProgressSync(): void {
   const { state, actions } = useStore();
   const { status, account } = useAccount();
