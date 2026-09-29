@@ -6,6 +6,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useNav } from '@shared/nav/NavContext';
 import type { LibraryView } from '@shared/nav/routes';
 import { coursePhrases, findPhrase, findSetView, ownPhrases, ownSets, SetView } from '@shared/state/catalog';
+import { librarySets } from '@shared/content';
 import { LEARNED_MIN_SUCCESSES, LEARNED_STABILITY_DAYS } from '@shared/state/memory';
 import {
   displayLearner,
@@ -47,6 +48,8 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
   const page = useRef<ScrollView>(null);
   // Ratings still in their undo window count in every list and figure here.
   const learner = displayLearner(state);
+  // Sets in the learner's account and the ones they saved (plan 106), then those on this device.
+  const yourSetIds = [...librarySets(learner.profile.targetLang).map((s) => s.id), ...ownSets(learner).map((s) => s.id)];
   const stats = learnerStats(learner, now);
   // Opened without a view: what's useful now (reviews due, then liked, then what you've started),
   // chosen once, so it doesn't switch under the learner as phrases fall due.
@@ -115,7 +118,7 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
           {segment === 'phrases' ? (
             <PhraseList ids={phraseIds[view]()} view={view} now={now} />
           ) : (
-            <SetList ids={view === 'ownSets' ? ownSets(learner).map((s) => s.id) : likedSetIds(learner)} view={view} now={now} />
+            <SetList ids={view === 'ownSets' ? yourSetIds : likedSetIds(learner)} view={view} now={now} />
           )}
           {view === 'mine' && (
             <View style={styles.actions}>
