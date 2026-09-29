@@ -654,6 +654,32 @@ describePostgres('the library against real PostgreSQL', () => {
     expect(await code(library.song('wes', song.id))).toBe('NOT_FOUND')
   })
 
+  it('lists shared albums with songs even behind a page of newer empty ones', async () => {
+    const { album, song } = await library.generateSong('yan', {
+      setId: 'set-market',
+      styleId: 'modern_pop',
+      nativeLang: 'en-GB',
+    })
+    await library.updateAlbum('yan', album.id, { title: 'Market songs', visibility: 'public' })
+    await vi.waitFor(
+      async () => {
+        expect((await library.song('yan', song.id)).status).toBe('ready')
+      },
+      { timeout: 5000 },
+    )
+    for (let n = 0; n < 50; n++)
+      await database.query(
+        `INSERT INTO library_albums(id, owner_id, target_lang, title, description, cover_id, visibility, share_code, origin, position, created_at, updated_at)
+         VALUES ($1, 'zed', 'es-ES', 'Empty', NULL, NULL, 'public', $2, 'user', 0, $3, $3)`,
+        [`album-empty-${n}`, `empty${n}`, now + 1000 + n],
+      )
+    const listed = await library.community(null, { target: 'es-ES', kind: 'albums', q: 'market' })
+    expect(listed.albums?.map((a) => a.id)).toEqual([album.id])
+    expect(
+      (await library.community(null, { target: 'es-ES', kind: 'albums' })).albums?.map((a) => a.id),
+    ).toContain(album.id)
+  })
+
   it('lists the songs of a set that the reader may hear', async () => {
     const { song, album } = await library.generateSong('uma', {
       setId: 'set-sobremesa',

@@ -521,10 +521,11 @@ export class LibraryService {
         `${ALBUM_SELECT} WHERE a.target_lang = $1 AND a.origin = 'user' AND a.visibility = 'public'
            AND (SELECT count(*) FROM library_reports r WHERE r.kind = 'album' AND r.item_id = a.id) < ${REPORTS_TO_HIDE}
            AND ($2 = '' OR a.title ILIKE $3 OR coalesce(a.description, '') ILIKE $3)
+           AND EXISTS (SELECT 1 FROM library_songs so WHERE so.album_id = a.id AND so.status = 'ready')
          ORDER BY a.updated_at DESC LIMIT ${COMMUNITY_PAGE}`,
         [targetLang, q, like],
       )
-    ).rows.filter((row) => num(row.song_count) > 0)
+    ).rows
     const saved = await this.savedIds(userId, 'album')
     return { albums: rows.map((row) => toAlbumWire(row, userId, saved)) }
   }
@@ -1474,7 +1475,6 @@ const ALBUM_SELECT = `SELECT a.*, p.display_name AS author,
   (SELECT CASE WHEN count(so.duration_ms) = count(*) THEN coalesce(sum(so.duration_ms), 0) END FROM library_songs so WHERE so.album_id = a.id AND so.status = 'ready') AS duration_ms
   FROM library_albums a LEFT JOIN library_profiles p ON p.user_id = a.owner_id`
 
-/** Sounds nothing plays any more: no song and no phrase clip (content-addressed, so shared ones stay). */
 /** Tables of synced rows, each keyed by `user_id` (sync/sync.schema.ts). */
 const SYNC_TABLES = [
   'sync_rows',
@@ -1519,6 +1519,7 @@ async function deleteLibraryOf(tx: SqlConnection, userId: string): Promise<void>
   await forgetUnusedAudio(tx)
 }
 
+/** Sounds nothing plays any more: no song and no phrase clip (content-addressed, so shared ones stay). */
 async function forgetUnusedAudio(tx: SqlConnection): Promise<void> {
   await tx.query(
     `DELETE FROM library_audio a WHERE NOT EXISTS (SELECT 1 FROM library_songs s WHERE s.audio_id = a.id)
