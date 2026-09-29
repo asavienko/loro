@@ -399,6 +399,38 @@ describePostgres('the library against real PostgreSQL', () => {
     )
     await speech.clip(others[0] ?? '')
     expect(await code(speech.clip(others[1] ?? ''))).toBe('PROVIDER_UNAVAILABLE')
+    // A refused render costs nothing and isn't retried at once.
+    vi.stubEnv('LIMIT_SPEECH_RENDERS_DAILY', '3')
+    let refused = 0
+    const failing = new SpeechService(
+      database,
+      { now: () => now },
+      {
+        synthesize: () => {
+          refused += 1
+          return Promise.reject(new Error('refused'))
+        },
+      },
+      runtime,
+    )
+    const fresh = (await library.set(null, 'set-market')).phrases.map(
+      (p) => `${utteranceId('es-ES', p.target)}.mp3`,
+    )
+    expect(await code(failing.clip(fresh[0] ?? ''))).toBe('PROVIDER_UNAVAILABLE')
+    expect(await code(failing.clip(fresh[0] ?? ''))).toBe('PROVIDER_UNAVAILABLE')
+    expect(refused).toBe(1)
+    // The refused render gave its try back: one more clip still fits today's three.
+    await speech.clip(fresh[1] ?? '')
+    expect(renders).toBe(3)
+    // Deleting songs never takes a phrase's clip with it.
+    const { album } = await library.generateSong('pia', {
+      setId: 'set-cafe',
+      styleId: 'modern_pop',
+      nativeLang: 'en-GB',
+    })
+    await library.deleteAlbum('pia', album.id)
+    await speech.clip(file)
+    expect(renders).toBe(3)
     vi.stubEnv('LIMIT_SPEECH_RENDERS_DAILY', '500')
   })
 })

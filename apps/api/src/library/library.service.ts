@@ -1262,10 +1262,11 @@ const ALBUM_SELECT = `SELECT a.*, p.display_name AS author,
   (SELECT CASE WHEN count(so.duration_ms) = count(*) THEN coalesce(sum(so.duration_ms), 0) END FROM library_songs so WHERE so.album_id = a.id AND so.status = 'ready') AS duration_ms
   FROM library_albums a LEFT JOIN library_profiles p ON p.user_id = a.owner_id`
 
-/** Song sounds no song plays any more (content-addressed, so shared sounds stay). */
+/** Sounds nothing plays any more: no song and no phrase clip (content-addressed, so shared ones stay). */
 async function forgetUnusedAudio(tx: SqlConnection): Promise<void> {
   await tx.query(
-    'DELETE FROM library_audio a WHERE NOT EXISTS (SELECT 1 FROM library_songs s WHERE s.audio_id = a.id)',
+    `DELETE FROM library_audio a WHERE NOT EXISTS (SELECT 1 FROM library_songs s WHERE s.audio_id = a.id)
+       AND NOT EXISTS (SELECT 1 FROM library_speech sp WHERE sp.audio_id = a.id)`,
   )
 }
 
