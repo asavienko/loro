@@ -23,6 +23,7 @@ import { ConnectionScreen } from '../src/screens/ConnectionScreen';
 import { Onboarding } from '../src/screens/Onboarding';
 import { AccountProvider } from '../src/state/account';
 import { ContentProvider, useContent } from '../src/state/content';
+import { useProgressSync } from '../src/state/progressSync';
 import { StoreProvider, useStore } from '../src/state/store';
 import { FONTS } from '../src/ui/fonts';
 import { UiLocaleContext } from '../src/ui/locale';
@@ -67,6 +68,7 @@ export default function RootLayout() {
 
 function App() {
   usePlaybackDriver();
+  useProgressSync();
   const { state } = useStore();
   const locale = copyForNative(state.learner.profile.nativeLang).locale;
   return (
