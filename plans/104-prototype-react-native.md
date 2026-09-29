@@ -13,13 +13,14 @@
   Explore, Library and the Settings sheet, checked on Expo web: search, topic/level/tag filters, the
   Library lists and charts, and settings that survive a reload. The Android debug build (LoroCore's
   Rust core via cargo-ndk) runs on the Pixel 8 API 36 emulator: Home and the player render, the
-  device voice speaks, and the rating previews come from FSRS. **Left:** the rest of scope 4 (the
-  set page, the queue, Make a set and the other sheets are still marked stand-ins) and 5 (the full
-  verification; iOS needs Xcode). **Blocked by:** nothing but priority. Owner request 2026-09-28:
-  "make this ui a react native app with …" (the message ends there; Expo, the repository's React
-  Native toolchain, is assumed).
+  device voice speaks, and the rating previews come from FSRS. Then (2026-09-30) the set page, the
+  queue, Make a set with its swipe deck and the remaining sheets, checked on Expo web, which
+  completes scope 4. **Left:** scope 5 (the full verification, including the new gestures on a
+  device; iOS needs Xcode). **Blocked by:** nothing but priority. Owner request 2026-09-28: "make
+  this ui a react native app with …" (the message ends there; Expo, the repository's React Native
+  toolchain, is assumed).
 - **Depends on:** archived plan [103](archive/2026-09-30/103-prototype-phrase-generator.md) (Make a
-  set logic, in `src/shared/generate/`). The stand-in screens port from the web prototype's
+  set logic, in `src/shared/generate/`). The screens were ported from the web prototype's
   `src/screens` and `src/sheets` in Git history
   (`git show 52a0e3b:design/design-v2.0/rapid-ui-prototype/src/...`). Uses
   `apps/mobile/modules/loro-core` for the Rust core on native.
