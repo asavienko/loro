@@ -60,6 +60,7 @@ account is `429 LIMIT_REACHED` (`resets_at` is null for a full account).
 | POST     | `/library/generate/{phrases,notes,cover,song}`              | 200/201/202 | Generate within the day's allowance                          |
 | GET/POST | `/library/progress`                                         | 200         | The learner's progress; a stale revision is 409              |
 | POST     | `/library/me/delete`                                        | 200         | Delete everything the learner keeps in the library           |
+| POST     | `/library/me/delete-account`                                | 200         | Delete the account with everything in it                     |
 
 ## Target transport conventions
 

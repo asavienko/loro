@@ -129,6 +129,13 @@ export class LibraryWriteController {
     return this.library.deleteEverything(request.principal.userId)
   }
 
+  /** Deletes the account itself, with everything in it; its sessions end with it. */
+  @Post('me/delete-account')
+  @HttpCode(200)
+  deleteAccount(@Req() request: AuthenticatedRequest) {
+    return this.library.deleteAccount(request.principal.userId)
+  }
+
   @Get('profile')
   @Header('Cache-Control', 'no-store')
   profile(@Req() request: AuthenticatedRequest) {
