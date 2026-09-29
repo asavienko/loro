@@ -1,40 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import {
-  BROWSABLE_THEMES,
-  MASTERY_BUCKETS,
-  countMasteryBuckets,
-  masteryBucket,
-  repsToday,
-  REPEAT_TARGET,
-  LadderRung,
-  DIFFICULTIES,
-  TAGS,
-} from './phrase.js'
-import { makePhrase } from '../testing/index.js'
-
-describe('mastery buckets', () => {
-  it('matches the blueprint (Loro.dc.html:2828)', () => {
-    expect(masteryBucket({ learned: false, reps: 0 })).toBe('new')
-    expect(masteryBucket({ learned: false, reps: 1 })).toBe('learning')
-    expect(masteryBucket({ learned: false, reps: 2 })).toBe('learning')
-    expect(masteryBucket({ learned: false, reps: 3 })).toBe('strong')
-    expect(masteryBucket({ learned: false, reps: 99 })).toBe('strong')
-  })
-
-  it('lets `learned` override the rep count', () => {
-    expect(masteryBucket({ learned: true, reps: 0 })).toBe('mastered')
-  })
-
-  it('counts every bucket in canonical order, including zeroes', () => {
-    const counts = countMasteryBuckets([
-      { learned: false, reps: 0 },
-      { learned: false, reps: 1 },
-      { learned: true, reps: 0 },
-    ])
-    expect(Object.keys(counts)).toEqual(MASTERY_BUCKETS)
-    expect(counts).toEqual({ new: 1, learning: 1, strong: 0, mastered: 1 })
-  })
-})
+import { BROWSABLE_THEMES, repsToday, REPEAT_TARGET, LadderRung } from './phrase.js'
+import { makePhrase } from './phrase.fixture.js'
 
 describe('repsToday', () => {
   it('returns the count when the day matches', () => {
@@ -64,11 +30,6 @@ describe('contracts carried over from the blueprint', () => {
     expect(LadderRung.Bent).toBeLessThan(LadderRung.Transferred)
     expect(LadderRung.Transferred).toBeLessThan(LadderRung.PressureTested)
     expect(LadderRung.PressureTested).toBeLessThan(LadderRung.Deployed)
-  })
-
-  it('has exactly three difficulties and four tags', () => {
-    expect(DIFFICULTIES).toEqual(['easy', 'med', 'hard'])
-    expect(TAGS).toEqual(['pron', 'remember', 'useful', 'words'])
   })
 
   it('keeps synthetic learner themes out of Browse', () => {

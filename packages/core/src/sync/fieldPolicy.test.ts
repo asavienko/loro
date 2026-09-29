@@ -15,7 +15,7 @@ import {
   mergeClassOf,
   type SyncEntity,
 } from './fieldPolicy.js'
-import { makePhrase } from '../testing/index.js'
+import { makePhrase } from '../domain/phrase.fixture.js'
 
 /** Fields that exist on PhraseState but are deliberately client-only. */
 const NOT_SYNCED = new Set(['id'])

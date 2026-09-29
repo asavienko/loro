@@ -1,10 +1,8 @@
 /**
  * One list of syncable phrase and settings fields: wire camelCase, SQL snake_case, merge class.
  *
- * `FIELD_POLICY` merge maps, SQL `PHRASE_COLUMN_NAMES` (drift-checked) and the mobile
- * wire→SQL dictionaries all consume this module so a fourth field cannot miss one of the
- * three former copies. Per-table `ON CONFLICT` upserts stay handwritten; this is not a
- * generic upsert helper.
+ * `FIELD_POLICY` merge maps and the sync wire shapes (`api/sync.ts`, drift-checked by the
+ * tests) both read this module, so a new field cannot miss one of them.
  *
  * Policy `SyncEntity` includes trip / trip_drop / trip_phrase for planned merge (plan 69 /
  * Q-07). Wire `SyncEntity` in `api/sync.ts` does not — those entities must not be added to
@@ -20,12 +18,6 @@ export interface SyncableColumn {
   /** Absent from the push/pull envelope. Device-only SQL that still has a merge class. */
   readonly onWire?: false
 }
-
-/**
- * Columns on `user_phrase` that are not syncable fields: identity, the write's HLC stamp,
- * and merge-owned clocks. `deleted_at` is syncable (tombstone).
- */
-export const PHRASE_STORAGE_ONLY_COLUMNS = ['id', 'user_id', 'updated_hlc', 'field_hlc'] as const
 
 export const USER_PHRASE_SYNC_FIELDS = [
   { wire: 'targetLocale', sql: 'target_locale', merge: 'lww' },
@@ -115,9 +107,6 @@ function mergePolicy(fields: readonly SyncableColumn[]): Readonly<Record<string,
   return Object.fromEntries(fields.map((field) => [field.wire, field.merge]))
 }
 
-/** Wire camelCase → SQL snake_case for every syncable phrase field, including `deletedAt`. */
-export const PHRASE_WIRE_TO_SQL = wireToSql(USER_PHRASE_SYNC_FIELDS)
-
 /** Wire camelCase → SQL for settings fields that travel on the sync envelope. */
 export const SETTINGS_WIRE_TO_SQL: Readonly<Record<string, string>> = wireToSql(
   SETTINGS_SYNC_FIELDS,
@@ -126,8 +115,6 @@ export const SETTINGS_WIRE_TO_SQL: Readonly<Record<string, string>> = wireToSql(
 
 export const USER_PHRASE_MERGE_POLICY = mergePolicy(USER_PHRASE_SYNC_FIELDS)
 export const SETTINGS_MERGE_POLICY = mergePolicy(SETTINGS_SYNC_FIELDS)
-
-export const PHRASE_SYNC_SQL_COLUMNS = USER_PHRASE_SYNC_FIELDS.map((field) => field.sql)
 
 /** Consent columns that have a merge class but are excluded from the wire envelope. */
 export const SETTINGS_DEVICE_ONLY_FIELDS = (SETTINGS_SYNC_FIELDS as readonly SyncableColumn[])
