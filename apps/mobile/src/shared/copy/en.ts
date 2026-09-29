@@ -629,6 +629,8 @@ export function makeEn(n: Plural) {
       emptySets: 'No one has shared a set in this course yet. Make one and choose Everyone.',
       emptyAlbums: 'No one has shared an album in this course yet.',
       search: 'Search shared sets',
+      searchAlbums: 'Search shared albums',
+      noAlbumsFound: (q: string) => `No shared album matches “${q}”.`,
       offline: 'Community needs a connection.',
     },
     phrasesTab: {
