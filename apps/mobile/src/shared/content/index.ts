@@ -7,6 +7,7 @@
 //
 // The arrays below are filled in place when a pack is installed, so a module that imported them
 // sees the new content; `contentRevision` changes with each install, for the store to re-render.
+import { apiUrl } from '../api/client';
 import languagesJson from './languages.json';
 import metaJson from './meta.json';
 import type { BankTheme, Language, LanguageCode, Localized, Meta, NoteTranslations, PhraseJson, SetJson, Topic, UiLocale } from './schema';
@@ -188,7 +189,8 @@ function phraseOf(p: PhraseWire, set: PhraseSet): Phrase {
     notes: p.notes,
     noteTranslations: p.noteTranslations,
     ...(p.source === 'loro' ? {} : { source: p.source, ...(p.source === 'ai' ? { notesBy: 'ai' as const } : {}) }),
-    audio: p.audio ?? null,
+    // Clips the server's voices speak (plan 106), as URLs the player can load.
+    audio: p.audio ? (Object.fromEntries(Object.entries(p.audio).map(([lang, url]) => [lang, apiUrl(url)])) as Phrase['audio']) : null,
     durationMs: p.durationMs ?? null,
     own: false,
   };

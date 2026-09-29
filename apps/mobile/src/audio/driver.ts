@@ -94,7 +94,13 @@ export function usePlaybackDriver(): void {
   const nextId = state.player.order[state.player.index + 1];
   useEffect(() => {
     const next = findPhrase(latest.current.learner, nextId);
-    for (const url of Object.values(next?.audio ?? {})) if (url) preloadClip(url);
+    if (!next) return;
+    // Only the two languages it will be heard in: each clip the server renders costs.
+    const prompt = promptOf(next, latest.current.learner.profile.nativeLang).lang;
+    for (const lang of new Set([prompt, next.targetLang])) {
+      const url = next.audio?.[lang];
+      if (url) preloadClip(url);
+    }
   }, [nextId, latest]);
 
   // Another app, a call, the lock screen: pause instead of leaving the state "playing".

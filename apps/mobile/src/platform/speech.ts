@@ -2,6 +2,7 @@
 // (its src/audio/speech.ts, whose exports this mirrors; metro.config.js swaps it in). As there,
 // speech is measured from its start to its end, so the engine's start-up never counts as the
 // phrase's length, and a voice that says nothing is reported, never papered over.
+import { createAudioPlayer } from 'expo-audio';
 import * as Speech from 'expo-speech';
 import type { LanguageCode } from '@shared/content';
 import { clock } from '@shared/state/clock';
@@ -111,13 +112,78 @@ export function waitForVoices(timeoutMs = 1500): Promise<void> {
   return Promise.race([loadVoices(), new Promise<void>((resolve) => setTimeout(resolve, timeoutMs))]);
 }
 
-/** Recorded clips come with the backend; until then there is nothing to preload. */
+/** Clips are streamed when played; the server keeps them ready. */
 export function preloadClip(_url: string): void {}
+
+/** A clip that never loads or never ends gives way after this, or twice its length. */
+const CLIP_STALL_MS = 15_000;
+
+/** A clip from the server's voice (plan 106), measured by its own length. */
+function playClip(url: string, rate: number): Playback {
+  let resolve: (r: PlaybackResult) => void = () => {};
+  const done = new Promise<PlaybackResult>((r) => (resolve = r));
+  const player = createAudioPlayer({ uri: url }, { updateInterval: 100 });
+  let settled = false;
+  const settle = (r: PlaybackResult) => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(watchdog);
+    subscription.remove();
+    player.remove();
+    resolve(r);
+  };
+  let watchdog = setTimeout(() => settle({ status: 'failed', reason: 'silent' }), CLIP_STALL_MS);
+  let started = false;
+  const subscription = player.addListener('playbackStatusUpdate', (status) => {
+    if (status.isLoaded && !started) {
+      started = true;
+      clearTimeout(watchdog);
+      watchdog = setTimeout(() => settle({ status: 'timeout' }), status.duration > 0 ? (status.duration * 2000) / rate + 3000 : CLIP_STALL_MS);
+    }
+    if (status.didJustFinish) settle({ status: 'ended', ms: (status.duration * 1000) / rate });
+  });
+  player.setPlaybackRate(rate);
+  player.play();
+  return {
+    done,
+    cancel: () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(watchdog);
+      subscription.remove();
+      player.pause();
+      player.remove();
+    },
+  };
+}
+
+/** A clip, and if it can't play, the device voice says the phrase instead. */
+function clipOrSpeech(url: string, text: string, lang: LanguageCode, rate: number): Playback {
+  let resolve: (r: PlaybackResult) => void = () => {};
+  const done = new Promise<PlaybackResult>((r) => (resolve = r));
+  let current = playClip(url, rate);
+  let cancelled = false;
+  void current.done.then((result) => {
+    if (cancelled) return;
+    if (result.status !== 'failed') return resolve(result);
+    current = speak(text, lang, rate);
+    // The driver treats a clip's length as measured; speech at another speed isn't.
+    void current.done.then((r) => !cancelled && resolve(r.status === 'ended' && rate !== 1 ? { status: 'ended', ms: null } : r));
+  });
+  return {
+    done,
+    cancel: () => {
+      cancelled = true;
+      current.cancel();
+    },
+  };
+}
 
 /** An end this soon after the call, with no start, means the engine said nothing. */
 const SILENT_END_SHARE = 0.4;
 
-export function speak(text: string, lang: LanguageCode, rate: number, _clipUrl?: string | null): Playback {
+export function speak(text: string, lang: LanguageCode, rate: number, clipUrl?: string | null): Playback {
+  if (clipUrl) return clipOrSpeech(clipUrl, text, lang, rate);
   let resolve: (r: PlaybackResult) => void = () => {};
   const done = new Promise<PlaybackResult>((r) => (resolve = r));
   if (!canSpeak(lang)) {
