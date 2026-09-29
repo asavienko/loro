@@ -4,9 +4,9 @@ A listening-first phrase player: hear a phrase in your language, say it in the p
 language you're learning, then rate how it went. iOS, Android and the web from one Expo app
 (plan [104](../../plans/104-prototype-react-native.md)).
 
-**Status:** the shell, state, storage, speech, Rust core bridge, navigation, onboarding, Home and
-the player are real. Explore, Library, the set page, the queue, Make a set and every sheet are still
-stand-ins (files marked `STAND-IN`); the v2.0 web prototype they port from is in Git history
+**Status:** the shell, state, storage, speech, Rust core bridge, navigation, onboarding, Home,
+the player, Explore, Library and Settings are real. The set page, the queue, Make a set and the
+other sheets are still stand-ins (files marked `STAND-IN`); the v2.0 web prototype they port from is in Git history
 (`design/design-v2.0/rapid-ui-prototype`, removed after commit `52a0e3b`).
 
 ## Run

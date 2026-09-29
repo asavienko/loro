@@ -14,10 +14,10 @@ and every buildable artifact — the app and the API.
 
 **The app is the v2.0 design, as an Expo app.** It replaced the earlier v1.1-based app on
 2026-09-30; that app, its design packages and the web prototype remain in Git history (last present
-at commit `52a0e3b`). Onboarding, Home and the player are built; Explore, Library, the set page, the
-queue, Make a set and the sheets are still stand-ins. Progress is stored on the device (AsyncStorage
-on native, browser storage on the web); FSRS runs in the Rust core through the `LoroCore` native
-module or WASM. See [`apps/mobile/README.md`](apps/mobile/README.md) and
+at commit `52a0e3b`). Onboarding, Home, the player, Explore, Library and Settings are built; the set
+page, the queue, Make a set and the other sheets are still stand-ins. Progress is stored on the
+device (AsyncStorage on native, browser storage on the web); FSRS runs in the Rust core through the
+`LoroCore` native module or WASM. See [`apps/mobile/README.md`](apps/mobile/README.md) and
 [plan 104](plans/104-prototype-react-native.md).
 
 The API (accounts, sync, content, reference TTS, music, phrase suggestions) is unchanged and not yet
