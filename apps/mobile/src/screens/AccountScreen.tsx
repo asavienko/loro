@@ -75,6 +75,11 @@ export function AccountScreen() {
 }
 
 /** The email-code sign-in; `embedded` (onboarding) leaves out its own Not now. */
+type Provider = 'google' | 'apple';
+// Apple first on Apple's devices, as its guidelines ask; the order is otherwise Google, Apple.
+const PROVIDERS: Provider[] = Platform.OS === 'ios' ? ['apple', 'google'] : ['google', 'apple'];
+const PROVIDER_NAMES: Record<Provider, string> = { google: 'Google', apple: 'Apple' };
+
 export function SignIn({ onDone, embedded = false }: { onDone: () => void; embedded?: boolean }) {
   const c = useCopy();
   const { toast } = useToast();
@@ -84,14 +89,15 @@ export function SignIn({ onDone, embedded = false }: { onDone: () => void; embed
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [emailOffered, setEmailOffered] = useState(true);
-  const [googleOffered, setGoogleOffered] = useState(false);
+  const [providers, setProviders] = useState<Provider[]>([]);
   const codeField = useRef<TextInput>(null);
 
   useEffect(() => {
     signInMethods()
       .then((methods) => {
         setEmailOffered(methods.email);
-        setGoogleOffered(methods.google && providerSignInAvailable());
+        if (!providerSignInAvailable()) return;
+        setProviders(PROVIDERS.filter((provider) => methods[provider]));
       })
       .catch(() => {});
   }, []);
@@ -208,16 +214,17 @@ export function SignIn({ onDone, embedded = false }: { onDone: () => void; embed
           />
           {problem && <Problem text={problem} />}
           <Button variant="primary" icon="mail" label={busy ? c.account.sending : c.account.sendCode} disabled={busy || !email.trim() || !emailOffered} onPress={() => void send()} />
-          {googleOffered && (
+          {providers.map((provider) => (
             <Button
+              key={provider}
               variant="tonal"
-              label={c.account.google}
+              label={c.account[provider]}
               disabled={busy}
               onPress={() => {
                 setBusy(true);
-                // In a browser the tab leaves for Google's page and comes back to the account screen with
-                // a ticket; on a phone the page opens over the app and the account comes back here.
-                signInWithProvider('google').then(
+                // In a browser the tab leaves for the provider's page and comes back to the account
+                // screen with a ticket; on a phone the page opens over the app and the account comes back here.
+                signInWithProvider(provider).then(
                   (account) => {
                     if (account === 'left') return;
                     setBusy(false);
@@ -226,14 +233,14 @@ export function SignIn({ onDone, embedded = false }: { onDone: () => void; embed
                     onDone();
                   },
                   (error: unknown) => {
-                    // Refused: this address isn't one the server sends Google back to.
-                    setProblem(error instanceof ApiError && error.status === 422 ? c.account.errors.googleUnavailable : problemText(c, error));
+                    // Refused: this address isn't one the server sends the provider back to.
+                    setProblem(error instanceof ApiError && error.status === 422 ? c.account.errors.providerUnavailable(PROVIDER_NAMES[provider]) : problemText(c, error));
                     setBusy(false);
                   },
                 );
               }}
             />
-          )}
+          ))}
           {!embedded && <Button variant="text" label={c.account.notNow} onPress={onDone} />}
         </>
       )}

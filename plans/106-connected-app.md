@@ -4,8 +4,8 @@
   playback)
 - **Milestone:** Main app
 - **Status:** 🟡 Started 2026-09-30 at the owner's request; scope 1–14 landed the same day.
-  **Left:** item 15 (iOS, live provider runs, Apple sign-in). **Blocked by:** nothing. Live Claude
-  writing needs `ANTHROPIC_API_KEY` and live songs need `MUSIC_PROVIDER=elevenlabs` with
+  **Left:** item 15 (iOS, live provider runs, a live Apple sign-in). **Blocked by:** nothing. Live
+  Claude writing needs `ANTHROPIC_API_KEY` and live songs need `MUSIC_PROVIDER=elevenlabs` with
   `MUSIC_API_KEY`; without them the server says it used its fallback and the app labels it (see
   _Honest fallbacks_).
 - **Owner request, 2026-09-30:** "Make the app fully usable. Make the backend fully usable. The app
@@ -76,13 +76,15 @@ keeps each private, shares it by link, or publishes it for everyone.
 14. [x] Android emulator: onboarding, the pack, covers, songs, email sign-in (Keystore), Create,
         phrase clips.
 15. [ ] Left: iOS device run; live Claude (phrases, notes, covers, lyrics) with `ANTHROPIC_API_KEY`;
-        live ElevenLabs Music songs; an Apple button (the API has the flow); moderation beyond
-        reports.
+        live ElevenLabs Music songs; a live Apple sign-in (the button shows once the server has
+        Apple credentials; none are configured locally); moderation beyond reports.
 16. [x] Google sign-in on the web (the tab leaves and returns to `/account`) and on iOS/Android (an
         auth session returning to `loro://account` / `loro-dev://account`, PKCE through
         `expo-crypto`). Checked on the Android emulator up to Google's page, a cancelled page, and a
         mismatched return; a full Google sign-in needs a real Google account.
-17. [x] A set's page lists the songs sung from it (`GET /v1/library/sets/:id/songs`).
+17. [x] Sign in with Apple beside Google wherever the server offers it (first on iOS, as the App
+        Store asks of apps with Google sign-in), through the same provider flow.
+18. [x] A set's page lists the songs sung from it (`GET /v1/library/sets/:id/songs`).
 
 ## Verification
 
