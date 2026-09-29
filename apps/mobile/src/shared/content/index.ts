@@ -76,6 +76,8 @@ export interface PhraseSet {
   saved: boolean;
   /** The learner's own public set that reports took out of Community. */
   hidden?: boolean;
+  /** In Community: how many learners keep it in their library. */
+  savedBy?: number;
 }
 
 /** An album of songs sung from phrase sets (plan 106). Its songs load when it is opened. */
@@ -92,6 +94,8 @@ export interface Album {
   saved: boolean;
   /** The learner's own public album that reports took out of Community. */
   hidden?: boolean;
+  /** In Community: how many learners keep it in their library. */
+  savedBy?: number;
   songCount: number;
   /** Null while a sung song's length is unknown, rather than a total that leaves it out. */
   durationMs: number | null;

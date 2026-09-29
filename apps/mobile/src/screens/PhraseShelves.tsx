@@ -6,12 +6,12 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { unreachable } from '@shared/api/client';
 import { keepOpenedSet } from '@shared/api/contentCache';
-import { fetchCommunitySets } from '@shared/api/library';
+import { fetchCommunitySets, type CommunitySort } from '@shared/api/library';
 import { librarySets, PhraseSet, PhraseWire } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
 import { useAccount } from '../state/account';
 import { useCopy, useStore } from '../state/store';
-import { Button } from '../ui/Button';
+import { Button, Chip } from '../ui/Button';
 import { field, placeholderColor } from '../ui/field';
 import { Icon } from '../ui/Icon';
 import { SetCover } from '../ui/SetCover';
@@ -67,7 +67,8 @@ function Shelf({ title, sets, onOpen }: { title: string; sets: PhraseSet[]; onOp
 
 function SetLine({ set, onPress }: { set: PhraseSet; onPress: () => void }) {
   const c = useCopy();
-  const byline = set.owner === 'me' ? c.share[set.visibility] : set.author ? c.share.by(set.author) : c.share.byLearner;
+  const by = set.owner === 'me' ? c.share[set.visibility] : set.author ? c.share.by(set.author) : c.share.byLearner;
+  const byline = set.savedBy ? `${by} · ${c.community.savedBy(set.savedBy)}` : by;
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={`${set.title}, ${c.common.phrases(set.phraseIds.length)}, ${byline}`} onPress={onPress} style={({ pressed }) => [styles.line, pressed && styles.pressed]}>
       <SetCover set={set} px={56} rounded={12} />
@@ -95,27 +96,40 @@ function Community() {
   const { state } = useStore();
   const target = state.learner.profile.targetLang;
   const [query, setQuery] = useState('');
+  // The search last sent and the order: both kept across visits to the tab.
+  const [searched, setSearched] = useState('');
+  const [sort, setSort] = useState<CommunitySort>('new');
   const [found, setFound] = useState<{ sets: PhraseSet[]; phrases: PhraseWire[] } | null>(null);
   const [offline, setOffline] = useState(false);
 
-  const search = useCallback(
-    (q: string) => {
-      fetchCommunitySets(target, q).then(
+  useFocusEffect(
+    useCallback(() => {
+      let live = true;
+      fetchCommunitySets(target, searched, sort).then(
         (reply) => {
+          if (!live) return;
           setFound({ sets: reply.sets.filter((s) => s.owner !== 'me'), phrases: reply.phrases });
           setOffline(false);
         },
-        (error: unknown) => setOffline(unreachable(error)),
+        (error: unknown) => live && setOffline(unreachable(error)),
       );
-    },
-    [target],
+      return () => {
+        live = false;
+      };
+    }, [target, searched, sort]),
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      search('');
-    }, [search]),
-  );
+  const search = () => {
+    const next = query.trim();
+    if (next === searched) return;
+    setFound(null);
+    setSearched(next);
+  };
+  const order = (next: CommunitySort) => {
+    if (next === sort) return;
+    setFound(null);
+    setSort(next);
+  };
 
   const open = (set: PhraseSet) => {
     if (!found) return;
@@ -133,19 +147,24 @@ function Community() {
       <TextInput
         value={query}
         onChangeText={setQuery}
-        onSubmitEditing={() => search(query.trim())}
+        onSubmitEditing={search}
+        onBlur={search}
         accessibilityLabel={c.community.search}
         placeholder={c.community.search}
         placeholderTextColor={placeholderColor}
         returnKeyType="search"
         style={field}
       />
+      <View style={styles.sort} accessibilityRole="radiogroup" accessibilityLabel={c.community.sortLabel}>
+        <Chip label={c.community.sortNew} selected={sort === 'new'} onPress={() => order('new')} />
+        <Chip label={c.community.sortPopular} selected={sort === 'popular'} onPress={() => order('popular')} />
+      </View>
       {offline ? (
         <Txt color="secondary">{c.community.offline}</Txt>
       ) : found === null ? (
         <ActivityIndicator color={colors.primaryContainer} />
       ) : found.sets.length === 0 ? (
-        <Txt color="secondary">{c.community.emptySets}</Txt>
+        <Txt color="secondary">{searched ? c.community.noSetsFound(searched) : c.community.emptySets}</Txt>
       ) : (
         found.sets.map((set) => <SetLine key={set.id} set={set} onPress={() => open(set)} />)
       )}
@@ -161,4 +180,5 @@ const styles = StyleSheet.create({
   lineText: { flex: 1, gap: 1 },
   pressed: { backgroundColor: colors.surfaceContainer },
   communityHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sort: { flexDirection: 'row', gap: 8 },
 });
