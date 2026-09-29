@@ -10,14 +10,17 @@ import { coursesFor, getLanguage, LanguageCode, NATIVE_LANGUAGES } from '@shared
 import { useNav } from '@shared/nav/NavContext';
 import { courseSets, findPhrase, promptOf } from '@shared/state/catalog';
 import { LIMITS } from '@shared/state/limits';
+import { useAccount } from '../state/account';
 import { useCopy, useStore } from '../state/store';
+import { SignIn } from './AccountScreen';
 import { Button } from '../ui/Button';
 import { Icon, IconName } from '../ui/Icon';
 import { Txt } from '../ui/Txt';
 import { colors, radius, type } from '../ui/theme';
 
-type Step = 'native' | 'name' | 'course' | 'voices' | 'loop';
-const STEPS: Step[] = ['native', 'name', 'course', 'voices', 'loop'];
+type Step = 'native' | 'name' | 'course' | 'voices' | 'account' | 'loop';
+/** Signing in comes before the loop is explained (plan 106): optional, and "Continue" skips it. */
+const STEPS: Step[] = ['native', 'name', 'course', 'voices', 'account', 'loop'];
 const LOOP_ICONS: IconName[] = ['hearing', 'record_voice_over', 'volume_up', 'task_alt'];
 
 export function Onboarding() {
@@ -25,6 +28,7 @@ export function Onboarding() {
   const nav = useNav();
   const insets = useSafeAreaInsets();
   const { state, actions } = useStore();
+  const account = useAccount();
   const { profile } = state.learner;
   const [step, setStep] = useState<Step>('native');
   const [name, setName] = useState(profile.name);
@@ -113,6 +117,17 @@ export function Onboarding() {
           />
         )}
         {step === 'voices' && <VoiceCheck />}
+        {step === 'account' &&
+          (account.status === 'signedIn' ? (
+            <View style={styles.gap}>
+              <Icon name="account_circle" size="3xl" color="primaryContainer" />
+              <Txt variant="title" face="serif" weight={600}>
+                {c.account.signedInAs(account.account?.email ?? '')}
+              </Txt>
+            </View>
+          ) : (
+            <SignIn embedded onDone={next} />
+          ))}
         {step === 'loop' && (
           <View>
             <Txt variant="title" face="serif" weight={600} accessibilityRole="header" style={styles.sectionTitle}>
@@ -134,7 +149,7 @@ export function Onboarding() {
         {step === 'loop' ? (
           <Button variant="primary" icon="play_arrow" iconFill label={c.onboarding.start} onPress={() => finish(true)} />
         ) : (
-          <Button variant="primary" label={c.onboarding.next} onPress={next} />
+          <Button variant={step === 'account' && account.status !== 'signedIn' ? 'tonal' : 'primary'} label={step === 'account' && account.status !== 'signedIn' ? c.account.notNow : c.onboarding.next} onPress={next} />
         )}
         {step === 'loop' && <Button variant="text" label={c.onboarding.skip} onPress={() => finish(false)} />}
         {at > 0 && <Button variant="text" color="secondary" label={c.common.back} onPress={() => setStep(STEPS[at - 1])} />}
