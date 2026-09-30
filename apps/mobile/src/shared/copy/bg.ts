@@ -560,8 +560,7 @@ export function makeBg(n: Plural): Copy {
     },
     tabs: {
       home: 'Начало',
-      phrases: 'Фрази',
-      music: 'Музика',
+      explore: 'Разгледай',
       create: 'Създай',
       library: 'Библиотека',
     },

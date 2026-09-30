@@ -252,7 +252,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
 
   return (
     <View style={styles.screen}>
-      <TopBar title={c.tabs.phrases} onOpenSettings={nav.openSettings} />
+      <TopBar title={c.tabs.explore} onOpenSettings={nav.openSettings} />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
         <View accessibilityRole="search" style={styles.search}>
           <View style={styles.searchIcon} pointerEvents="none">

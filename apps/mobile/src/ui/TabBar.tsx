@@ -10,7 +10,7 @@ import { colors } from './theme';
 /** Four tabs (plan 107): songs live in their sets and play in the one player; albums are in Library. */
 const TABS: { id: Tab; icon: IconName; label: keyof Copy['tabs'] }[] = [
   { id: 'home', icon: 'home', label: 'home' },
-  { id: 'explore', icon: 'forum', label: 'phrases' },
+  { id: 'explore', icon: 'explore', label: 'explore' },
   { id: 'create', icon: 'auto_awesome', label: 'create' },
   { id: 'library', icon: 'library_music', label: 'library' },
 ];
