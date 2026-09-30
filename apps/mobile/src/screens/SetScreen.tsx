@@ -16,7 +16,8 @@ import { currentPhraseId, displayLearner, isLiked, phraseProgress, PhraseProgres
 import type { SortKey } from '@shared/state/types';
 import { isTargetRevealed } from '@shared/ui/phase';
 import { hrefOf, useShell } from '../nav/Shell';
-import { SetSongs } from '../music/SetSongs';
+import { SongRow } from '../music/SongRow';
+import { useSetSongs } from '../music/useSetSongs';
 import { MoreSetsByMaker } from './MoreByMaker';
 import { PickPhrasesSheet } from '../sheets/PickPhrasesSheet';
 import { RenameSheet } from '../sheets/RenameSheet';
@@ -117,6 +118,8 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
   const account = useAccount();
   const content = useContent();
   const view = findSetView(state.learner, setId);
+  // Songs are the server's: only a set the server serves has them.
+  const setSongs = useSetSongs(view?.content ? setId : null);
   if (!view)
     return (
       <Txt color="secondary" style={styles.message}>
@@ -388,6 +391,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
             return (
               <PhraseRow
                 key={phrase.id}
+                kindIcon="forum"
                 phrase={phrase}
                 leading={String(position)}
                 detail={progressLabel(c, p, now)}
@@ -401,6 +405,16 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
             );
           })
         )}
+        {/* Its songs (plan 107): in the same list, a music note where a phrase has its phrase icon. */}
+        {setSongs.songs.map((song, i) => {
+          const album = setSongs.albums.find((a) => a.id === song.albumId);
+          return album ? <SongRow key={song.id} song={song} album={album} leading={String(sorted.length + i + 1)} /> : null;
+        })}
+        {served && (
+          <View style={styles.grow}>
+            <Button variant="tonal" icon="music_note" label={c.music.makeSong} onPress={() => nav.makeSong({ setId })} />
+          </View>
+        )}
         {/* Your own set grows from here: pick phrases without leaving the page. */}
         {view.kind === 'own' && (
           <View style={styles.grow}>
@@ -410,8 +424,6 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
         )}
       </View>
 
-      {/* The music side of a served set (plan 106): its songs, and making one. */}
-      {served && <SetSongs setId={setId} />}
       {served?.owner === 'other' && <MoreSetsByMaker key={setId} setId={setId} author={served.author} />}
 
       {view.kind === 'own' && <PickPhrasesSheet setId={picking ? setId : null} onClose={() => setPicking(false)} />}

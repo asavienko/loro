@@ -4,6 +4,7 @@ import { StyleSheet, View, ViewStyle } from 'react-native';
 import { contentRevision, findSet, getTopic, SETS, TopicTone, TOPICS } from '@shared/content';
 import type { SetView } from '@shared/state/catalog';
 import { Icon, IconName } from './Icon';
+import { ContentBadges } from './ContentBadges';
 import { RemoteCover } from './RemoteCover';
 import { colors, ColorName } from './theme';
 
@@ -40,17 +41,29 @@ export function SetCover({
   px,
   rounded = 16,
   style,
+  badges = true,
 }: {
   set: Pick<SetView, 'topicId' | 'coverIcon'> & { id?: string };
   /** The square's side; under 96 px the glyph stands alone, larger. */
   px: number;
   rounded?: number;
   style?: ViewStyle;
+  /** The phrase icon (and the song icon when songs are sung from it) in its corner (plan 107). */
+  badges?: boolean;
 }) {
-  const coverUrl = findSet(set.id)?.coverUrl;
+  const served = findSet(set.id);
+  const coverUrl = served?.coverUrl;
   const drawn = <DrawnCover set={set} px={px} rounded={rounded} style={style} />;
   // A learner's set may have a drawn cover of its own (plan 106); otherwise the topic's.
-  return coverUrl ? <RemoteCover url={coverUrl} px={px} rounded={rounded} style={style} fallback={drawn} /> : drawn;
+  const cover = coverUrl ? <RemoteCover url={coverUrl} px={px} rounded={rounded} style={style} fallback={drawn} /> : drawn;
+  if (!badges || px < 40) return cover;
+  // The cover keeps its own style (its shadow needs its background); the frame only holds the badges.
+  return (
+    <View style={{ width: px, height: px }}>
+      {cover}
+      <ContentBadges phrases songs={(served?.songCount ?? 0) > 0} px={px} />
+    </View>
+  );
 }
 
 function DrawnCover({ set, px, rounded, style }: { set: Pick<SetView, 'topicId' | 'coverIcon'> & { id?: string }; px: number; rounded: number; style?: ViewStyle }) {

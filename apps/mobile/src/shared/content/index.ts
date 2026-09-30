@@ -67,6 +67,8 @@ export interface PhraseSet {
   coverUrl: string | null;
   targetLang: LanguageCode;
   phraseIds: string[];
+  /** Songs sung from it that anyone may hear, or its maker (plan 107): its cover shows the song icon. */
+  songCount?: number;
   owner: Owner;
   /** The maker's display name, for a learner's set. */
   author: string | null;

@@ -74,7 +74,7 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
             style={styles.open}
           >
             <View>
-              <SetCover set={set ?? { topicId: null, coverIcon: 'edit_note' }} px={44} rounded={8} />
+              <SetCover set={set ?? { topicId: null, coverIcon: 'edit_note' }} px={44} rounded={8} badges={false} />
               {playing && !audioError && (
                 <View style={styles.badge}>
                   <Icon name={phase === 'rate' ? 'task_alt' : PHASE_ICONS[phase]} size={14} color="onPrimaryFixed" />

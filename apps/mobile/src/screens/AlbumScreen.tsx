@@ -292,9 +292,12 @@ function SongRow({ song, index, current, playing, onPlay, onRetry, onRemove, act
           <Txt variant="row" weight={600} color={current ? 'primaryContainer' : 'onSurface'} numberOfLines={1}>
             {song.title}
           </Txt>
-          <Txt variant="label" color="secondary" numberOfLines={1}>
-            {song.status === 'rendering' ? c.music.rendering : song.status === 'failed' ? c.music.failed : meta}
-          </Txt>
+          <View style={styles.songSecond}>
+            <Icon name="music_note" size={14} color="primaryContainer" />
+            <Txt variant="label" color="secondary" numberOfLines={1} style={{ flex: 1 }}>
+              {song.status === 'rendering' ? c.music.rendering : song.status === 'failed' ? c.music.failed : meta}
+            </Txt>
+          </View>
         </View>
         {ready && <Icon name={playing ? 'pause' : 'play_arrow'} fill color="onSurface" />}
       </Pressable>
@@ -316,6 +319,7 @@ const styles = StyleSheet.create({
   songs: { paddingTop: 20, gap: 2, paddingHorizontal: 12 },
   pad: { paddingHorizontal: 12, paddingVertical: 8 },
   songRow: { flexDirection: 'row', alignItems: 'center', borderRadius: radius.xl },
+  songSecond: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   song: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: TARGET + 12, paddingHorizontal: 8, borderRadius: radius.xl },
   songCurrent: { backgroundColor: colors.surfaceContainer },
   songPressed: { backgroundColor: colors.surfaceContainerHigh },
