@@ -72,6 +72,7 @@ export const ICON_CODEPOINTS = {
   event_available: 0xe614,
   event_busy: 0xe615,
   event_repeat: 0xeb7b,
+  explore: 0xe87a,
   family_group: 0xeef2,
   family_restroom: 0xf1a2,
   favorite: 0xe87e,
