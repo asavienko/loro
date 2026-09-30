@@ -253,6 +253,9 @@ function sanitizeLikes(value: unknown, own: Record<string, OwnPhrase>, sets: Rec
       if (keptPhrase(id, own)) out[`phrase:${id}`] = { liked: like.liked, at: like.at };
     } else if (kind === 'set' && (findSet(rawId) || sets[rawId] || (!rawId.startsWith(OWN_SET_PREFIX) && SERVED_ID.test(rawId)))) {
       out[k] = { liked: like.liked, at: like.at };
+    } else if (kind === 'song' && SERVED_ID.test(rawId)) {
+      // Songs are the server's (plan 107): kept by id, like a served set.
+      out[k] = { liked: like.liked, at: like.at };
     }
   }
   return out;

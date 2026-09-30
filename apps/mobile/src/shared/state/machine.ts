@@ -24,6 +24,7 @@ import type {
   AudioFailure,
   Grade,
   LearnerState,
+  LikeKind,
   LogEntry,
   OwnNotes,
   PendingRating,
@@ -87,7 +88,14 @@ export type AppEvent =
   | { type: 'CLEAR_QUEUE' }
   /** Undo of Clear queue or Remove: back in up next, `offset` places after whatever is playing by then. */
   | { type: 'RESTORE_UP_NEXT'; phraseIds: string[]; offset?: number }
-  | { type: 'TOGGLE_LIKE'; kind: 'phrase' | 'set'; id: string; now: number }
+  | { type: 'TOGGLE_LIKE'; kind: LikeKind; id: string; now: number }
+  /**
+   * A rating for several phrases at once, from outside the phrase loop: a song rated in the player
+   * reviews every phrase it sings (plan 107). Each gets a pending rating with the usual undo window.
+   */
+  | { type: 'RATE_PHRASES'; phraseIds: string[]; setId: string | null; grade: Grade; now: number }
+  /** Undo of RATE_PHRASES inside its window. */
+  | { type: 'UNRATE_PHRASES'; phraseIds: string[]; now: number }
   /**
    * `id`: the one the store promised its caller (so a toast can play the phrase, or a page open the
    * set, before the next render). Taken unless it's in use; otherwise the counter's next id.
@@ -458,6 +466,32 @@ function step(state: AppState, event: AppEvent): AppState {
       return {
         ...committed,
         pending: committed.pending.map((p) => (p.key === key && !p.undone ? { ...p, undone: true, changedAt: event.now } : p)),
+      };
+    }
+
+    case 'RATE_PHRASES': {
+      let next = commitDue(state, event.now);
+      for (const phraseId of new Set(event.phraseIds)) {
+        if (!findPhrase(learner, phraseId)) continue;
+        const key = keyOf(learner, phraseId);
+        const existing = next.pending.find((p) => p.key === key);
+        if (existing && !existing.undone) {
+          const changed = { ...existing, grade: event.grade, changedAt: event.now };
+          next = { ...next, pending: next.pending.map((p) => (p === existing ? changed : p)) };
+        } else {
+          const rating = { key, phraseId, setId: event.setId, grade: event.grade, at: event.now, changedAt: event.now, day: localDay(event.now) };
+          next = { ...next, pending: [...next.pending.filter((p) => p !== existing), rating] };
+        }
+      }
+      return next;
+    }
+
+    case 'UNRATE_PHRASES': {
+      const keys = new Set(event.phraseIds.filter((id) => findPhrase(learner, id)).map((id) => keyOf(learner, id)));
+      const committed = commitDue(state, event.now);
+      return {
+        ...committed,
+        pending: committed.pending.map((p) => (keys.has(p.key) && !p.undone ? { ...p, undone: true, changedAt: event.now } : p)),
       };
     }
 
