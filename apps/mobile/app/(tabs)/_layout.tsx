@@ -33,14 +33,19 @@ function BottomChrome() {
   const { state } = useStore();
   const queued = currentPhraseId(state.player) !== null;
   const music = useMusic();
+  // Each side keeps its own player docked; the other side's shows only while it is sounding, so a
+  // paused phrase loop doesn't sit on the music side, nor a paused song on the phrase side.
+  const musicSide = tab === 'music';
+  const showMusic = music.song !== null && (musicSide || music.playing);
+  const showPhrases = queued && (!musicSide || state.player.status === 'playing');
   return (
     <View style={styles.chrome}>
-      {music.song && (
+      {showMusic && (
         <View style={styles.mini}>
           <MusicMiniPlayer />
         </View>
       )}
-      {queued && (
+      {showPhrases && (
         <View style={styles.mini}>
           <MiniPlayer onOpenPlayer={() => router.push('/player')} />
         </View>
