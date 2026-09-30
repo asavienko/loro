@@ -89,6 +89,8 @@ export function parseTtsConfig(env: NodeJS.Dict<string>): {
     'es-ES': (env['TTS_VOICE_ES_ES'] ?? '').trim(),
     'bg-BG': (env['TTS_VOICE_BG_BG'] ?? '').trim(),
     'ru-RU': (env['TTS_VOICE_RU_RU'] ?? '').trim(),
+    // The prompts of English-speaking learners (plan 108): the app has no device voice any more.
+    'en-GB': (env['TTS_VOICE_EN_GB'] ?? '').trim(),
   }
   const apiKey = (env['TTS_API_KEY'] ?? '').trim()
   const model = (env['TTS_MODEL'] ?? '').trim()

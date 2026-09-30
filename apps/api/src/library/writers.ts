@@ -26,6 +26,8 @@ export interface WrittenPhrase {
   source: 'ai' | 'bank'
   /** The bank phrase it is, so its notes in other languages come with it. */
   bankId?: string
+  /** Its clips, where this server has a voice for the language (plan 108). */
+  audio?: Partial<Record<string, string>>
 }
 
 export interface SongLine {

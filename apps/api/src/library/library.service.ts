@@ -70,7 +70,7 @@ import {
 } from './writers.js'
 
 /** Bump when the seed's shape changes without the content version changing. */
-const SEED_REVISION = 5
+const SEED_REVISION = 6
 /** A song still rendering after this long was lost with its process: it reads as failed. */
 const RENDER_TIMEOUT_MS = 10 * 60_000
 const DAY_MS = 86_400_000
@@ -343,6 +343,8 @@ export class LibraryService {
           JSON.stringify(noteTranslationsOf(phrase.id, V2_CONTENT.bankNoteTranslations)),
         ],
       )
+      // Suggested and added from the bank, a bank phrase is played like any other (plan 108).
+      await registerSpeech(tx, { [phrase.targetLang]: phrase.target, ...phrase.translations }, now)
     }
   }
 
@@ -450,6 +452,7 @@ export class LibraryService {
   async pack(userId: string | null, target: unknown): Promise<PackWire> {
     await this.ready()
     const targetLang = parseContract(LibraryCourseSchema, target)
+    const tts = readTtsRuntimeConfig()
     const topics = (
       await this.db.query<{ doc: V2Topic }>('SELECT doc FROM library_topics ORDER BY position')
     ).rows.map((r) => r.doc)
@@ -478,7 +481,14 @@ export class LibraryService {
         'SELECT doc, note_translations FROM library_bank WHERE target_lang = $1 ORDER BY position',
         [targetLang],
       )
-    ).rows.map((r) => ({ ...r.doc, noteTranslations: r.note_translations }))
+    ).rows.map((r) => {
+      const audio = speechFor(tts, { [r.doc.targetLang]: r.doc.target, ...r.doc.translations })
+      return {
+        ...r.doc,
+        ...(Object.keys(audio).length > 0 ? { audio } : {}),
+        noteTranslations: r.note_translations,
+      }
+    })
     const albumRows = (
       await this.db.query<AlbumRow>(
         `${ALBUM_SELECT} WHERE a.target_lang = $1 AND (a.origin = 'loro' OR a.owner_id = $2
@@ -493,7 +503,7 @@ export class LibraryService {
       targetLang,
       topics,
       sets,
-      phrases: phrases.map((p) => toPhraseWire(p, readTtsRuntimeConfig())),
+      phrases: phrases.map((p) => toPhraseWire(p, tts)),
       bank: { themes, phrases: bank },
       albums,
     }
@@ -1194,20 +1204,44 @@ export class LibraryService {
     const ai = writer()
     if (ai) {
       try {
-        const phrases = await claudePhrases(ai, request)
+        const phrases = await this.voiced(userId, request, await claudePhrases(ai, request))
         return { provider: 'claude' as const, phrases, themes: [] }
       } catch (error) {
         this.logger.warn(
           `phrase writer failed: ${error instanceof Error ? error.message : 'unknown'}; answering from the bank`,
         )
-        // The app keeps its own bank: a writer's failure doesn't cost the learner a deck.
+        // The bank answers instead, free: a writer's failure doesn't cost the learner a deck.
         await this.refund(userId, 'phrases')
       }
     }
-    const phrases = bankPhrases(request)
+    const phrases = await this.voiced(userId, request, bankPhrases(request))
     const themes =
       phrases.length > 0 ? [] : V2_CONTENT.bank.themes.map((t) => ({ id: t.id, title: t.title }))
     return { provider: 'bank' as const, phrases, themes }
+  }
+
+  /**
+   * Suggestions with their clips (plan 108): the app plays a suggestion before it is kept, so what
+   * the writer answered is registered as speakable, its first render counted against the learner.
+   */
+  private async voiced(
+    userId: string,
+    request: { targetLang: Language; nativeLang: Language },
+    phrases: WrittenPhrase[],
+  ): Promise<WrittenPhrase[]> {
+    const tts = readTtsRuntimeConfig()
+    const texts = (p: WrittenPhrase) => ({
+      [request.targetLang]: p.target,
+      [request.nativeLang]: p.native,
+    })
+    const now = this.clock.now()
+    await this.db.transaction(async (tx) => {
+      for (const phrase of phrases) await registerSpeech(tx, texts(phrase), now, userId)
+    })
+    return phrases.map((phrase) => {
+      const audio = speechFor(tts, texts(phrase))
+      return Object.keys(audio).length > 0 ? { ...phrase, audio } : phrase
+    })
   }
 
   /** Notes for a phrase the learner wrote: Claude only, so without a key the app keeps its own. */

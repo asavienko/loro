@@ -129,6 +129,8 @@ export interface BankPhraseWire {
   image: string[]
   notes: LibraryNotes
   noteTranslations: PhraseWire['noteTranslations']
+  /** Its clips, in each language this server's voices speak (plan 108). */
+  audio?: Partial<Record<Language, string>>
 }
 
 export interface PackWire {
