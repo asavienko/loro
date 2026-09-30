@@ -32,7 +32,7 @@ export function tabOfPath(pathname: string, from: string | undefined): Tab {
   if (pathname.startsWith('/library')) return 'library';
   if (pathname.startsWith('/music')) return 'library';
   if (pathname.startsWith('/create')) return 'create';
-  const tabs: string[] = ['explore', 'library', 'create'];
+  const tabs: string[] = ['home', 'explore', 'library', 'create'];
   if (pathname.startsWith('/set/')) return from && tabs.includes(from) ? (from as Tab) : 'home';
   if (pathname.startsWith('/album/')) return from && tabs.includes(from) ? (from as Tab) : 'library';
   return 'home';

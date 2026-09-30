@@ -37,8 +37,9 @@ export function makeActions(dispatch: (event: AppEvent) => void, latest: RefObje
     clearQueue: () => dispatch({ type: 'CLEAR_QUEUE' }),
     toggleLike: (kind: LikeKind, id: string) => dispatch({ type: 'TOGGLE_LIKE', kind, id, now: now() }),
     /** Rate every phrase a song sings (plan 107); `unratePhrases` undoes it inside the window. */
-    ratePhrases: (phraseIds: string[], setId: string | null, grade: Grade) => dispatch({ type: 'RATE_PHRASES', phraseIds, setId, grade, now: now() }),
-    unratePhrases: (phraseIds: string[]) => dispatch({ type: 'UNRATE_PHRASES', phraseIds, now: now() }),
+    ratePhrases: (songId: string, phraseIds: string[], setId: string | null, grade: Grade) =>
+      dispatch({ type: 'RATE_PHRASES', songId, phraseIds, setId, grade, now: now() }),
+    unratePhrases: (songId: string) => dispatch({ type: 'UNRATE_PHRASES', songId, now: now() }),
     /**
      * Adds your own phrase and returns its id: one from the device counter as last rendered, sent
      * with the event, since the speech may take the counter's next id first (as createSet).

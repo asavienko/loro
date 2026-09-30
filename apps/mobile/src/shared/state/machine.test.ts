@@ -12,7 +12,7 @@ import { deviceNotes } from '../notes';
 import { findPhrase, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { requeuesOn } from './machine';
 import { isLiked, measuredTargetMs, pendingFor, phaseDurationMs } from './selectors';
-import { sanitizeLearner } from './persistence';
+import { sanitizeLearner, sanitizeState } from './persistence';
 import { pauseMs, RATE_HOLD_MS } from './timing';
 import { cafe, DAY, done, fresh, load, MINUTE, playPhrase, run, T0 } from './testing';
 import { isTargetRevealed } from '../ui/phase';
@@ -731,32 +731,51 @@ describe('undo after moving on', () => {
 
 describe('a song rated in the player (plan 107)', () => {
   const sung = ['cafe-01', 'cafe-02', 'cafe-03'];
+  const song = 'song-loro-cafe';
+  const ofSong = (s: ReturnType<typeof fresh>) => s.pending.filter((p) => p.songId === song && !p.undone);
 
   it('reviews every phrase it sings, from any status, with the usual window', () => {
-    let s = transition(fresh(), { type: 'RATE_PHRASES', phraseIds: [...sung, 'cafe-01', 'nope'], setId: 'set-cafe', grade: 'easy', now: T0 });
+    let s = transition(fresh(), { type: 'RATE_PHRASES', songId: song, phraseIds: [...sung, 'cafe-01', 'nope'], setId: 'set-cafe', grade: 'easy', now: T0 });
     assert.equal(s.player.status, 'idle', 'no phrase loop was needed');
-    assert.deepEqual(s.pending.map((p) => p.phraseId).sort(), [...sung].sort(), 'each phrase once; unknown ids skipped');
+    assert.deepEqual(ofSong(s).map((p) => p.phraseId).sort(), [...sung].sort(), 'each phrase once; unknown ids skipped');
     // Changed inside the window: the same ratings, a new grade.
-    s = transition(s, { type: 'RATE_PHRASES', phraseIds: sung, setId: 'set-cafe', grade: 'missed', now: T0 + MINUTE });
+    s = transition(s, { type: 'RATE_PHRASES', songId: song, phraseIds: sung, setId: 'set-cafe', grade: 'missed', now: T0 + MINUTE });
     assert.equal(s.pending.length, 3);
     assert.ok(s.pending.every((p) => p.grade === 'missed' && p.at === T0));
     s = transition(s, { type: 'COMMIT', now: T0 + RATING_WINDOW_MS });
-    const rated = s.learner.log.filter((e) => e.kind === 'rated');
-    assert.equal(rated.length, 3, 'three reviews, one per phrase');
+    assert.equal(s.learner.log.filter((e) => e.kind === 'rated').length, 3, 'three reviews, one per phrase');
   });
 
-  it('undo takes them all back inside the window', () => {
-    let s = transition(fresh(), { type: 'RATE_PHRASES', phraseIds: sung, setId: 'set-cafe', grade: 'easy', now: T0 });
-    s = transition(s, { type: 'UNRATE_PHRASES', phraseIds: sung, now: T0 + MINUTE });
-    assert.equal(s.pending.filter((p) => !p.undone).length, 0);
-    s = transition(s, { type: 'COMMIT', now: T0 + RATING_WINDOW_MS });
-    assert.equal(s.learner.log.filter((e) => e.kind === 'rated').length, 0);
+  it('leaves a phrase the loop already rated as the loop rated it, and its undo too', () => {
+    // The loop rates cafe-01 Easy; then the song is rated Hard, then undone.
+    let s = transition(load(fresh()), { type: 'RATE', grade: 'easy', now: T0 });
+    s = transition(s, { type: 'RATE_PHRASES', songId: song, phraseIds: sung, setId: 'set-cafe', grade: 'hard', now: T0 + MINUTE });
+    assert.equal(ofSong(s).length, 2, 'only the two phrases the loop had not rated');
+    assert.equal(s.pending.find((p) => p.phraseId === 'cafe-01')?.grade, 'easy');
+    s = transition(s, { type: 'UNRATE_PHRASES', songId: song, now: T0 + 2 * MINUTE });
+    assert.equal(ofSong(s).length, 0);
+    const loops = s.pending.filter((p) => !p.undone);
+    assert.deepEqual(loops.map((p) => [p.phraseId, p.grade]), [['cafe-01', 'easy']], 'the loop’s review is kept');
+  });
+
+  it('a rating the loop gives afterwards makes the phrase the loop’s', () => {
+    let s = transition(load(fresh()), { type: 'RATE_PHRASES', songId: song, phraseIds: sung, setId: 'set-cafe', grade: 'hard', now: T0 });
+    s = transition(s, { type: 'RATE', grade: 'easy', now: T0 + MINUTE });
+    s = transition(s, { type: 'UNRATE_PHRASES', songId: song, now: T0 + 2 * MINUTE });
+    assert.equal(s.pending.find((p) => p.phraseId === 'cafe-01' && !p.undone)?.grade, 'easy');
+  });
+
+  it('keeps a song rating’s origin through a save', () => {
+    const s = transition(fresh(), { type: 'RATE_PHRASES', songId: song, phraseIds: sung, setId: 'set-cafe', grade: 'easy', now: T0 });
+    const kept = sanitizeState(JSON.parse(JSON.stringify(s)), s.device);
+    assert.ok(kept);
+    assert.equal(ofSong(kept).length, 3);
   });
 
   it('likes a song like anything else, and keeps it through a save', () => {
-    const s = transition(fresh(), { type: 'TOGGLE_LIKE', kind: 'song', id: 'song-loro-cafe', now: T0 });
-    assert.equal(isLiked(s.learner, 'song', 'song-loro-cafe'), true);
+    const s = transition(fresh(), { type: 'TOGGLE_LIKE', kind: 'song', id: song, now: T0 });
+    assert.equal(isLiked(s.learner, 'song', song), true);
     const kept = sanitizeLearner(JSON.parse(JSON.stringify(s.learner)));
-    assert.equal(kept.likes['song:song-loro-cafe']?.liked, true);
+    assert.equal(kept.likes[`song:${song}`]?.liked, true);
   });
 });

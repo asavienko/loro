@@ -93,9 +93,9 @@ export type AppEvent =
    * A rating for several phrases at once, from outside the phrase loop: a song rated in the player
    * reviews every phrase it sings (plan 107). Each gets a pending rating with the usual undo window.
    */
-  | { type: 'RATE_PHRASES'; phraseIds: string[]; setId: string | null; grade: Grade; now: number }
-  /** Undo of RATE_PHRASES inside its window. */
-  | { type: 'UNRATE_PHRASES'; phraseIds: string[]; now: number }
+  | { type: 'RATE_PHRASES'; songId: string; phraseIds: string[]; setId: string | null; grade: Grade; now: number }
+  /** Undo of a song's RATE_PHRASES inside its window: only the ratings the song gave. */
+  | { type: 'UNRATE_PHRASES'; songId: string; now: number }
   /**
    * `id`: the one the store promised its caller (so a toast can play the phrase, or a page open the
    * set, before the next render). Taken unless it's in use; otherwise the counter's next id.
@@ -439,8 +439,10 @@ function step(state: AppState, event: AppEvent): AppState {
       const existing = committed.pending.find((p) => p.key === key);
       let next: AppState;
       if (existing && !existing.undone) {
-        // Inside the window: change the grade, keep the original time and window.
-        const changed = { ...existing, grade: event.grade, changedAt: event.now };
+        // Inside the window: change the grade, keep the original time and window. A song's rating
+        // the loop changes becomes the loop's.
+        const { songId: _song, ...kept } = existing;
+        const changed = { ...kept, grade: event.grade, changedAt: event.now };
         next = { ...committed, pending: committed.pending.map((p) => (p === existing ? changed : p)) };
       } else {
         // New, or rated again after an undo: a fresh rating in place of the undo's tombstone.
@@ -476,10 +478,12 @@ function step(state: AppState, event: AppEvent): AppState {
         const key = keyOf(learner, phraseId);
         const existing = next.pending.find((p) => p.key === key);
         if (existing && !existing.undone) {
+          // The song's own rating changes grade; any other (the loop's, another song's) stands.
+          if (existing.songId !== event.songId) continue;
           const changed = { ...existing, grade: event.grade, changedAt: event.now };
           next = { ...next, pending: next.pending.map((p) => (p === existing ? changed : p)) };
         } else {
-          const rating = { key, phraseId, setId: event.setId, grade: event.grade, at: event.now, changedAt: event.now, day: localDay(event.now) };
+          const rating = { key, phraseId, setId: event.setId, grade: event.grade, at: event.now, changedAt: event.now, day: localDay(event.now), songId: event.songId };
           next = { ...next, pending: [...next.pending.filter((p) => p !== existing), rating] };
         }
       }
@@ -487,11 +491,10 @@ function step(state: AppState, event: AppEvent): AppState {
     }
 
     case 'UNRATE_PHRASES': {
-      const keys = new Set(event.phraseIds.filter((id) => findPhrase(learner, id)).map((id) => keyOf(learner, id)));
       const committed = commitDue(state, event.now);
       return {
         ...committed,
-        pending: committed.pending.map((p) => (keys.has(p.key) && !p.undone ? { ...p, undone: true, changedAt: event.now } : p)),
+        pending: committed.pending.map((p) => (p.songId === event.songId && !p.undone ? { ...p, undone: true, changedAt: event.now } : p)),
       };
     }
 
