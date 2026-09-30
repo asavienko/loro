@@ -592,6 +592,8 @@ export function makeEn(n: Plural) {
     },
     share: {
       hidden: 'People reported this, so it no longer shows in Community. Anyone with the link can still open it.',
+      noName: 'Others see it as “by a learner”. Give a name to be credited.',
+      addName: 'Add your name',
       visibility: 'Who can see it',
       private: 'Only you',
       privateDetail: 'In your account, on your devices',
