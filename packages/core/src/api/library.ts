@@ -27,7 +27,17 @@ export const LIBRARY_TEXT = {
 }
 
 /** Links are how spam travels; nothing a learner names or describes here needs one. */
-const LINK = /https?:\/\/|www\.|[a-z0-9-]+\.(?:com|net|org|io|ru|xyz|info|biz|top|link|click)\b/i
+const SCHEME = /https?:\/\/|\bwww\./i
+/** A domain: a label, a common top-level domain, then the end, a space or a path. */
+const DOMAIN = /\b[a-z0-9-]{2,}\.(?:com|net|org|io|ru|xyz|info|biz|top|link|click)(?=[\s/:?#)]|$)/
+
+/**
+ * Whether text holds a link. A full stop straight before a capital starts a sentence
+ * ("Unit 3.Top phrases"), not a domain, so it counts as one with a space.
+ */
+export function hasLink(text: string): boolean {
+  return SCHEME.test(text) || DOMAIN.test(text.replace(/\.(?=[A-Z])/g, '. ').toLowerCase())
+}
 
 /** Text other learners may read (titles, descriptions, names): trimmed, bounded, without links. */
 export const shownText = (max: number, min = 0) =>
@@ -36,7 +46,7 @@ export const shownText = (max: number, min = 0) =>
     .trim()
     .min(min)
     .max(max)
-    .refine((text) => !LINK.test(text), { message: 'Links are not allowed here' })
+    .refine((text) => !hasLink(text), { message: 'Links are not allowed here' })
 
 const NoteSchema = z.strictObject({
   title: z.string().trim().min(1).max(LIBRARY_TEXT.noteTitle),

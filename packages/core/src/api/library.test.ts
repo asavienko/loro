@@ -22,5 +22,7 @@ describe('text other learners read', () => {
       UpdateSetSchema.safeParse({ description: 'Mr. Smith orders at 9.30 a.m.' }).success,
     ).toBe(true)
     expect(UpdateSetSchema.safeParse({ description: null }).success).toBe(true)
+    for (const description of ['Awww. So cute', 'Unit 3.Top phrases', 'Кафе.Ресторант.Бар'])
+      expect(UpdateSetSchema.safeParse({ description }).success, description).toBe(true)
   })
 })
