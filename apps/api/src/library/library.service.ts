@@ -70,7 +70,7 @@ import {
 } from './writers.js'
 
 /** Bump when the seed's shape changes without the content version changing. */
-const SEED_REVISION = 3
+const SEED_REVISION = 5
 /** A song still rendering after this long was lost with its process: it reads as failed. */
 const RENDER_TIMEOUT_MS = 10 * 60_000
 const DAY_MS = 86_400_000
@@ -356,7 +356,8 @@ export class LibraryService {
     )
     for (const [position, album] of albums.entries()) {
       const id = `album-loro-${album.lang.slice(0, 2)}`
-      const coverId = `cover-loro-${album.lang.slice(0, 2)}`
+      // Covers are served as immutable: a redrawn one (a new seed revision) needs a new address.
+      const coverId = `cover-loro-${album.lang.slice(0, 2)}-r${SEED_REVISION}`
       await tx.query(
         `INSERT INTO library_covers(id, owner_id, provider, svg, created_at) VALUES ($1, NULL, 'pattern', $2, $3)
          ON CONFLICT (id) DO UPDATE SET svg = EXCLUDED.svg`,
@@ -403,6 +404,12 @@ export class LibraryService {
         )
       }
     }
+    // Loro's covers from earlier revisions, which nothing wears any more.
+    await tx.query(
+      `DELETE FROM library_covers c WHERE c.id LIKE 'cover-loro-%'
+         AND NOT EXISTS (SELECT 1 FROM library_albums a WHERE a.cover_id = c.id)
+         AND NOT EXISTS (SELECT 1 FROM library_sets s WHERE s.cover_id = c.id)`,
+    )
   }
 
   private async storeAudio(
