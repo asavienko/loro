@@ -683,6 +683,13 @@ describePostgres('the library against real PostgreSQL', () => {
     })
     expect(typed.set.inbox).toBeUndefined()
     expect(typed.set.phraseIds).toHaveLength(1)
+    // Deleted, a phrase leaves every set of hers that listed it; it is hers alone to delete.
+    const listed = await library.updateSet('finn', typed.set.id, { addPhrases: [{ ref: id }] })
+    expect(listed.set.phraseIds).toContain(id)
+    expect(await code(library.deletePhrase('otto', id))).toBe('NOT_FOUND')
+    await library.deletePhrase('finn', id)
+    expect((await library.set('finn', typed.set.id)).set.phraseIds).not.toContain(id)
+    expect((await library.set('finn', a.set.id)).set.phraseIds).not.toContain(id)
   })
 
   it('gives bank phrases and written suggestions clips, English prompts included', async () => {

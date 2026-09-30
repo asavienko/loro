@@ -1103,6 +1103,22 @@ export class LibraryService {
     return this.set(userId, row.id)
   }
 
+  /** Deletes a phrase the learner holds, and every listing of it in their sets (plan 108). */
+  async deletePhrase(userId: string, phraseId: unknown): Promise<void> {
+    await this.ready()
+    const id = parseContract(PhraseIdSchema, phraseId)
+    await this.db.transaction(async (tx) => {
+      const holder = await this.holderOf(tx, id)
+      if (holder?.owner_id !== userId) throw new LoroError('NOT_FOUND')
+      await tx.query('DELETE FROM library_set_refs WHERE phrase_id = $1', [id])
+      await tx.query('DELETE FROM library_phrases WHERE id = $1', [id])
+      await tx.query('UPDATE library_sets SET updated_at = $2 WHERE id = $1', [
+        holder.set_id,
+        this.clock.now(),
+      ])
+    })
+  }
+
   /** Where a phrase is held, and whose it is. */
   private async holderOf(
     tx: SqlConnection,

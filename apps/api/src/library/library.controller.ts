@@ -191,6 +191,12 @@ export class LibraryWriteController {
     return this.library.addPhrase(request.principal.userId, body)
   }
 
+  @Delete('phrases/:id')
+  @HttpCode(204)
+  async deletePhrase(@Req() request: AuthenticatedRequest, @Param('id') id: string): Promise<void> {
+    await this.library.deletePhrase(request.principal.userId, id)
+  }
+
   @Delete('sets/:id')
   @HttpCode(204)
   async deleteSet(@Req() request: AuthenticatedRequest, @Param('id') id: string): Promise<void> {
