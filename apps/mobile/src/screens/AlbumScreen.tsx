@@ -49,7 +49,8 @@ export function AlbumScreen({ id }: { id: string }) {
   const retry = async (song: Song) => {
     setActing(song.id);
     try {
-      await retrySong(song.id, state.learner.profile.nativeLang);
+      const again = await retrySong(song.id, state.learner.profile.nativeLang);
+      if (detail) music.watch(again, detail.album);
       void account.refreshUsage();
       await load();
     } catch (error) {
