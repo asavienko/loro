@@ -6,6 +6,7 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, 
 import { apiUrl, unreachable } from '@shared/api/client';
 import { fetchSong, type Song } from '@shared/api/library';
 import { useLatest } from '@shared/lib/useLatest';
+import { clock } from '@shared/state/clock';
 import type { Album } from '@shared/content';
 import { useCopy, useStore } from '../state/store';
 import { useToast } from '../ui/Toast';
@@ -31,8 +32,9 @@ interface MusicValue {
   watch: (song: Song, album: Album) => void;
 }
 
-/** How often a song being made is asked after. */
+/** How often a song being made is asked after, and for how long at most. */
 const WATCH_MS = 5000;
+const WATCH_FOR_MS = 12 * 60_000;
 
 const MusicContext = createContext<MusicValue | null>(null);
 
@@ -59,7 +61,9 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const [queue, setQueue] = useState<Song[]>([]);
   const [index, setIndex] = useState(0);
   const wantsPlay = useRef(false);
-  const [watched, setWatched] = useState<{ song: Song; album: Album }[]>([]);
+  const [watched, setWatched] = useState<{ song: Song; album: Album; since: number }[]>([]);
+  // Songs whose ask is on its way, or already told of: each is told of once.
+  const asking = useRef(new Set<string>());
   // Each load (and stop) takes a number; a load whose song URL comes back after a newer one started
   // (or after the music stopped) plays nothing.
   const loads = useRef(0);
@@ -76,20 +80,14 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       const uri = await playableUrl(song);
       if (mine !== loads.current) return;
       if (uri === null || uri === 'offline') {
-        // Nothing to play: say why, and leave nothing that looks like it's playing.
+        // Nothing to play: say why. Whatever was playing (or nothing) stays as it was.
         toast(uri === 'offline' ? c.music.needsConnection : c.music.cantPlay);
-        wantsPlay.current = false;
-        player.pause();
-        try {
-          player.clearLockScreenControls();
-        } catch {
-          // Nothing was shown.
-        }
-        setQueue([]);
-        setAlbum(null);
-        setIndex(0);
         return;
       }
+      // The queue changes only once the song can play, so a failed tap leaves the current one alone.
+      setAlbum(from);
+      setQueue(songs);
+      setIndex(at);
       player.replace({ uri });
       wantsPlay.current = true;
       player.play();
@@ -114,9 +112,6 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       if (ready.length === 0) return;
       // One player sounds at a time.
       if (state.player.status === 'playing') actions.pause();
-      setAlbum(next);
-      setQueue(ready);
-      setIndex(start);
       void load(next, ready, start);
     },
     [actions, load, state.player.status],
@@ -126,17 +121,29 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const playLatest = useLatest(playAlbum);
   useEffect(() => {
     if (watched.length === 0) return;
+    const forget = (id: string) => setWatched((list) => list.filter((w) => w.song.id !== id));
     const timer = setInterval(() => {
-      for (const { song, album: of } of watched) {
+      for (const { song, album: of, since } of watched) {
+        if (asking.current.has(song.id)) continue;
+        // A song that takes this long was lost (the album will say so); stop asking.
+        if (clock.now() - since > WATCH_FOR_MS) {
+          forget(song.id);
+          continue;
+        }
+        asking.current.add(song.id);
         fetchSong(song.id).then(
           (now) => {
-            if (now.status === 'rendering') return;
-            setWatched((list) => list.filter((w) => w.song.id !== song.id));
+            if (now.status === 'rendering') return void asking.current.delete(song.id);
+            forget(song.id);
             if (now.status === 'ready')
               toast(c.music.songReady(now.title), { tone: 'success', action: { label: c.music.play, run: () => playLatest.current(of, [now], 0) } });
             else toast(c.music.songFailed(now.title));
           },
-          () => {},
+          (error: unknown) => {
+            // Offline: ask again later. Gone (removed, signed out) or refused: stop asking.
+            if (unreachable(error)) asking.current.delete(song.id);
+            else forget(song.id);
+          },
         );
       }
     }, WATCH_MS);
@@ -147,7 +154,6 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     (by: number) => {
       const at = index + by;
       if (at < 0 || at >= queue.length) return;
-      setIndex(at);
       void load(album, queue, at);
     },
     [album, index, queue, load],
@@ -206,7 +212,11 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       next: () => step(1),
       previous: () => (status.currentTime > 3 ? void player.seekTo(0) : step(-1)),
       seek: (seconds) => void player.seekTo(Math.max(0, seconds)),
-      watch: (song, of) => setWatched((list) => (list.some((w) => w.song.id === song.id) ? list : [...list, { song, album: of }])),
+      watch: (song, of) => {
+        // A retried song is told of again.
+        asking.current.delete(song.id);
+        setWatched((list) => (list.some((w) => w.song.id === song.id) ? list : [...list, { song, album: of, since: clock.now() }]));
+      },
       stop: () => {
         loads.current++;
         wantsPlay.current = false;
