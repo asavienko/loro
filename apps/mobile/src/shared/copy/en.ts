@@ -664,7 +664,6 @@ export function makeEn(n: Plural) {
       noSongs: 'No songs here yet.',
       loroAlbum: 'Every Loro set of this course, sung.',
       makeSong: 'Make a song',
-      renameAlbum: 'Rename album',
       album: 'Album',
       playAlbum: 'Play album',
       playSong: (title: string) => `Play ${title}`,

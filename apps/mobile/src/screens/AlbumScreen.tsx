@@ -201,7 +201,7 @@ export function AlbumScreen({ id }: { id: string }) {
         {mine ? (
           <>
             <Button variant="icon" icon="share" color="onNight" accessibilityLabel={c.share.share} onPress={() => nav.share({ kind: 'album', ...album })} />
-            <Button variant="icon" icon="edit" color="onNight" accessibilityLabel={c.music.renameAlbum} onPress={() => setRenaming(true)} />
+            <Button variant="icon" icon="edit" color="onNight" accessibilityLabel={c.createSet.editTitle} onPress={() => setRenaming(true)} />
             <Button variant="icon" icon="palette" color="onNight" accessibilityLabel={c.share.cover} disabled={drawing} onPress={() => void drawCover()} />
             <Button variant="icon" icon="delete" color="onNight" accessibilityLabel={c.share.delete} onPress={() => void remove()} />
           </>

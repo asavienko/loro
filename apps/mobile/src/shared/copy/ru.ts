@@ -639,7 +639,6 @@ export function makeRu(n: Plural): Copy {
       noSongs: 'Здесь пока нет песен.',
       loroAlbum: 'Каждый набор Loro из этого курса, спетый.',
       makeSong: 'Создать песню',
-      renameAlbum: 'Переименовать альбом',
       album: 'Альбом',
       playAlbum: 'Слушать альбом',
       playSong: (title) => `Слушать ${title}`,
