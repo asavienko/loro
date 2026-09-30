@@ -48,6 +48,18 @@ export class LibraryReadController {
     return this.library.songsOfSet(readerOf(request), id)
   }
 
+  @Get('sets/:id/more')
+  @Header('Cache-Control', 'no-store')
+  moreSetsByMaker(@Req() request: ReaderRequest, @Param('id') id: string) {
+    return this.library.moreSetsByMaker(readerOf(request), id)
+  }
+
+  @Get('albums/:id/more')
+  @Header('Cache-Control', 'no-store')
+  moreAlbumsByMaker(@Req() request: ReaderRequest, @Param('id') id: string) {
+    return this.library.moreAlbumsByMaker(readerOf(request), id)
+  }
+
   @Get('albums/:id')
   @Header('Cache-Control', 'no-store')
   album(@Req() request: ReaderRequest, @Param('id') id: string) {

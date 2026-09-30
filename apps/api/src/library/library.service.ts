@@ -75,6 +75,8 @@ const SEED_REVISION = 3
 const RENDER_TIMEOUT_MS = 10 * 60_000
 const DAY_MS = 86_400_000
 const COMMUNITY_PAGE = 50
+/** How many more of a maker's things a shared item's page offers. */
+const MORE_BY_MAKER = 12
 /** This many learners reporting a public item take it out of Community; its link still opens it. */
 const REPORTS_TO_HIDE = 3
 
@@ -623,6 +625,53 @@ export class LibraryService {
         ).rows.map((row) => toAlbumWire(row, userId, saved))
       : []
     return { songs: rows.map((row) => this.toSongWire(row)), albums }
+  }
+
+  /**
+   * The other public sets of a shared set's maker, in its course: what Community would list of
+   * theirs. Nothing for Loro's sets.
+   */
+  async moreSetsByMaker(
+    userId: string | null,
+    id: unknown,
+  ): Promise<{ sets: SetWire[]; phrases: PhraseWire[] }> {
+    await this.ready()
+    const set = await this.readableSet(userId, parseContract(LibraryIdSchema, id))
+    if (set.origin !== 'user' || !set.owner_id) return { sets: [], phrases: [] }
+    const rows = (
+      await this.db.query<SetRow>(
+        `${SET_SELECT} WHERE s.owner_id = $1 AND s.target_lang = $2 AND s.id <> $3
+           AND s.origin = 'user' AND s.visibility = 'public'
+           AND (SELECT count(*) FROM library_reports r WHERE r.kind = 'set' AND r.item_id = s.id) < ${REPORTS_TO_HIDE}
+         ORDER BY s.updated_at DESC LIMIT ${MORE_BY_MAKER}`,
+        [set.owner_id, set.target_lang, set.id],
+      )
+    ).rows
+    const saved = await this.savedIds(userId, 'set')
+    const phrases = await this.phrasesOf(rows.map((r) => r.id))
+    return {
+      sets: rows.map((row) => toSetWire(row, userId, saved, phrases)),
+      phrases: phrases.map((p) => toPhraseWire(p, readTtsRuntimeConfig())),
+    }
+  }
+
+  /** The other public albums (with a song to hear) of a shared album's maker, in its course. */
+  async moreAlbumsByMaker(userId: string | null, id: unknown): Promise<{ albums: AlbumWire[] }> {
+    await this.ready()
+    const album = await this.readableAlbum(userId, parseContract(LibraryIdSchema, id))
+    if (album.origin !== 'user' || !album.owner_id) return { albums: [] }
+    const rows = (
+      await this.db.query<AlbumRow>(
+        `${ALBUM_SELECT} WHERE a.owner_id = $1 AND a.target_lang = $2 AND a.id <> $3
+           AND a.origin = 'user' AND a.visibility = 'public'
+           AND (SELECT count(*) FROM library_reports r WHERE r.kind = 'album' AND r.item_id = a.id) < ${REPORTS_TO_HIDE}
+           AND EXISTS (SELECT 1 FROM library_songs so WHERE so.album_id = a.id AND so.status = 'ready')
+         ORDER BY a.updated_at DESC LIMIT ${MORE_BY_MAKER}`,
+        [album.owner_id, album.target_lang, album.id],
+      )
+    ).rows
+    const saved = await this.savedIds(userId, 'album')
+    return { albums: rows.map((row) => toAlbumWire(row, userId, saved)) }
   }
 
   async song(userId: string | null, id: unknown): Promise<SongWire> {
