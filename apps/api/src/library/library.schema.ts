@@ -172,6 +172,10 @@ export const LIBRARY_SPEECH_OWNERS_MIGRATION_SQL = `ALTER TABLE library_speech A
 export const LIBRARY_SONG_VOICES_MIGRATION_SQL = `ALTER TABLE library_songs ADD COLUMN IF NOT EXISTS voiced boolean NOT NULL DEFAULT false;
 `
 
+/** Community's popular order counts an item's saves. */
+export const LIBRARY_SAVE_COUNTS_MIGRATION_SQL = `CREATE INDEX IF NOT EXISTS library_saves_item ON library_saves(kind, item_id);
+`
+
 /** A set's page lists the songs sung from it. */
 export const LIBRARY_SONG_SETS_MIGRATION_SQL = `CREATE INDEX IF NOT EXISTS library_songs_set ON library_songs(set_id, status);
 `

@@ -502,10 +502,11 @@ export class LibraryService {
     await this.ready()
     const targetLang = parseContract(LibraryCourseSchema, query.target)
     const kind = parseContract(z.enum(['sets', 'albums']), query.kind ?? 'sets')
-    // Newest first, or the most saved first (ties newest first).
+    // Newest first, or the most saved first (ties newest first). A maker's own save doesn't count.
     const sort = parseContract(z.enum(['new', 'popular']), query.sort ?? 'new')
     const savesOf = (alias: string, itemKind: 'set' | 'album') =>
-      `(SELECT count(*) FROM library_saves sv WHERE sv.kind = '${itemKind}' AND sv.item_id = ${alias}.id)`
+      `(SELECT count(*) FROM library_saves sv WHERE sv.kind = '${itemKind}' AND sv.item_id = ${alias}.id
+         AND sv.user_id IS DISTINCT FROM ${alias}.owner_id)`
     const q = typeof query.q === 'string' ? query.q.trim().slice(0, 60) : ''
     const like = `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`
     if (kind === 'sets') {
@@ -1489,11 +1490,14 @@ export class LibraryService {
 
   // ---------- helpers ----------
 
-  /** How many learners keep each of these items in their library. */
+  /** How many learners (other than its maker) keep each of these items in their library. */
   private async savedBy(kind: 'set' | 'album', ids: string[]): Promise<Map<string, number>> {
     if (ids.length === 0) return new Map()
+    const table = kind === 'set' ? 'library_sets' : 'library_albums'
     const rows = await this.db.query<{ item_id: string; n: string }>(
-      'SELECT item_id, count(*) AS n FROM library_saves WHERE kind = $1 AND item_id = ANY($2::text[]) GROUP BY item_id',
+      `SELECT sv.item_id, count(*) AS n FROM library_saves sv JOIN ${table} t ON t.id = sv.item_id
+       WHERE sv.kind = $1 AND sv.item_id = ANY($2::text[]) AND sv.user_id IS DISTINCT FROM t.owner_id
+       GROUP BY sv.item_id`,
       [kind, ids],
     )
     return new Map(rows.rows.map((r) => [r.item_id, num(r.n)]))

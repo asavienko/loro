@@ -338,6 +338,8 @@ describePostgres('the library against real PostgreSQL', () => {
     now += 1000
     const newer = await make('pop2', 'Newer, unsaved')
     for (const who of ['fan1', 'fan2']) await library.save(who, { kind: 'set', id: older.id })
+    // The maker saving their own doesn't count.
+    await library.save('pop2', { kind: 'set', id: newer.id })
     const ids = async (sort?: string) =>
       (await library.community(null, { target: 'es-ES', kind: 'sets', sort })).sets
         ?.filter((s) => s.id === older.id || s.id === newer.id)
