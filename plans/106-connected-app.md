@@ -79,9 +79,9 @@ keeps each private, shares it by link, or publishes it for everyone.
         live ElevenLabs Music songs; a live Apple sign-in (the button shows once the server has
         Apple credentials; none are configured locally); moderation beyond reports. Also open: demo
         songs are stored as WAV (about 2 MB for 45 s); an MP3 encoder would cut that about sixfold,
-        but the pure-JS one (lamejs) is LGPL, a dependency decision for the owner. Bulgarian has two
-        Loro sets; more need authored, native-reviewed content (the bank's phrases would duplicate
-        what Make a set hands out).
+        but the pure-JS one (lamejs) is LGPL, a dependency decision for the owner. Bulgarian has
+        five Loro sets (three added 2026-09-30, awaiting native review); more need authored,
+        native-reviewed content.
 16. [x] Google sign-in on the web (the tab leaves and returns to `/account`) and on iOS/Android (an
         auth session returning to `loro://account` / `loro-dev://account`, PKCE through
         `expo-crypto`). Checked on the Android emulator up to Google's page, a cancelled page, and a
@@ -100,6 +100,9 @@ keeps each private, shares it by link, or publishes it for everyone.
         shown text, songs on the lock screen, each side docking its own player, web share links from
         phones (`EXPO_PUBLIC_WEB_URL`); review pass 4: ordered song loads, lock-screen resume, an
         unblockable sign-in page, owners' own saves not counted, a saves index (migration 012).
+24. [x] Three more Bulgarian sets (На пазара, Запознанство, В ресторанта), sung into Loro's
+        Bulgarian album; content version 2026-09-30.4.
+25. [x] A song that can't load (no connection) says so instead of showing Pause over silence.
 
 ## Verification
 
