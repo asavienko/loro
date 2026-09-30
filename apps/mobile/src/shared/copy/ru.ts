@@ -629,6 +629,9 @@ export function makeRu(n: Plural): Copy {
       signInToMake: 'Войдите, чтобы создавать наборы с ИИ',
     },
     music: {
+      songReady: (title: string) => `«${title}» готова`,
+      songFailed: (title: string) => `«${title}» не получилось сделать. Попробуйте ещё раз из её альбома.`,
+      play: 'Слушать',
       needsConnection: 'Для песен нужно подключение. Попробуйте снова, когда будете в сети.',
       cantPlay: 'Эту песню сейчас нельзя включить.',
       setSongs: 'Песни из этого набора',
