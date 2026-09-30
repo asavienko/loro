@@ -23,7 +23,7 @@ export interface SuggestRequest {
 
 /**
  * Where a suggestion comes from, which the card says: a phrase of the course, one of the learner's
- * own, the bundled phrase bank, or written just now by AI (not checked by a native speaker).
+ * own, Loro's phrase bank, or written just now by AI (not checked by a native speaker).
  */
 export type SuggestionSource = 'course' | 'mine' | 'bank' | 'ai';
 
@@ -45,4 +45,6 @@ export interface Suggestion {
   bankId?: string;
   /** An AI suggestion's notes, in the learner's language: the phrase added keeps them. */
   notes?: OwnNotes;
+  /** Its clips by language, from the server, to hear it before deciding. */
+  audio?: Partial<Record<LanguageCode, string>>;
 }

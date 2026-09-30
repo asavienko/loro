@@ -29,7 +29,8 @@ export function newPhrasesOf(learner: LearnerState, kept: readonly Suggestion[])
       return [{ target: card.target, native: card.native, image: [...(card.image ?? ['forum'])], notes: card.notes, source: 'ai' }];
     }
     const phrase = findPhrase(learner, card.phraseId);
-    if (!phrase) return [];
+    // A corrected card is a phrase the learner wrote: the server writes its notes and picture.
+    if (!phrase) return [{ target: card.target, native: card.native, source: 'written' }];
     return [{ target: card.target, native: card.native, image: [...phrase.image], notes: notesIn(phrase, native), source: card.source === 'course' ? 'course' : 'written' }];
   });
 }

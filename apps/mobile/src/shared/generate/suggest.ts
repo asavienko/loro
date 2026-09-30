@@ -1,22 +1,17 @@
-// One way to ask for suggestions: the AI writer when the server has one, otherwise (or when it
-// fails) the phrases on the device. The result says which, so the screen can say it too.
+// Suggestions come from the server only (plan 108): Claude where it writes, otherwise its phrase
+// bank. The result says which, so the screen can say it too; a failure is the screen's to show.
 import { coursePhrases, findSetView, promptOf, sameKey } from '../state/catalog';
 import type { LearnerState } from '../state/types';
-import { suggestLocal } from './local';
 import { WrittenPhrase, writePhrases } from './remote';
 import { DECK_SIZE, SuggestRequest, Suggestion } from './types';
 
 export interface SuggestResult {
   suggestions: Suggestion[];
-  /** Who wrote this deal: AI on the server, or the phrases on this device. */
-  writer: 'ai' | 'device';
-  /** The AI writer was asked and failed; these are the device's instead. */
-  fellBack: boolean;
+  /** Who wrote this deal: AI on the server, or the server's phrase bank. */
+  writer: 'ai' | 'bank';
 }
 
 export interface SuggestOptions {
-  /** Ask the AI writer (the server has one). */
-  live: boolean;
   /** Phrases not to offer again, by sameKey: seen in this deck, or already in the set being filled. */
   exclude: ReadonlySet<string>;
   /** The same phrases as text, for the writer. */
@@ -26,7 +21,7 @@ export interface SuggestOptions {
 
 /**
  * Written phrases as suggestions. One the course or the learner already has is offered as that
- * phrase, so adding it never makes a duplicate; the rest are marked as AI-written.
+ * phrase, so adding it never makes a duplicate; the rest are marked as AI-written or the bank's.
  */
 export function fromWritten(learner: LearnerState, written: readonly WrittenPhrase[], exclude: ReadonlySet<string>): Suggestion[] {
   const existing = new Map(coursePhrases(learner).map((p) => [sameKey(p.target), p]));
@@ -47,26 +42,20 @@ export function fromWritten(learner: LearnerState, written: readonly WrittenPhra
         phraseId: known.id,
         ...(set ? { setTitle: set.title } : {}),
         ...(known.image ? { image: known.image } : {}),
+        ...(known.audio ? { audio: known.audio } : {}),
       });
+    } else if (phrase.source === 'bank' && phrase.bankId) {
+      out.push({ key: `bank:${phrase.bankId}`, source: 'bank', target: phrase.target, native: phrase.native, image: phrase.image, bankId: phrase.bankId, ...(phrase.audio ? { audio: phrase.audio } : {}) });
     } else {
-      out.push({ key: `ai:${key}`, source: 'ai', target: phrase.target, native: phrase.native, image: phrase.image, notes: phrase.notes });
+      out.push({ key: `ai:${key}`, source: 'ai', target: phrase.target, native: phrase.native, image: phrase.image, notes: phrase.notes, ...(phrase.audio ? { audio: phrase.audio } : {}) });
     }
     if (out.length >= DECK_SIZE) break;
   }
   return out;
 }
 
-/** A deal of suggestions. Rejects only when `signal` aborts it (a newer request replaced it). */
+/** A deal of suggestions from the server. Rejects when it can't be asked, fails, or `signal` aborts it. */
 export async function suggest(learner: LearnerState, request: SuggestRequest, options: SuggestOptions): Promise<SuggestResult> {
-  const onDevice = (fellBack: boolean): SuggestResult => ({ suggestions: suggestLocal(learner, request, { exclude: options.exclude }), writer: 'device', fellBack });
-  if (!options.live) return onDevice(false);
-  try {
-    const written = await writePhrases(request, options.avoid, options.signal);
-    const suggestions = fromWritten(learner, written, options.exclude);
-    // The writer found nothing to say (a subject it declined): the device may still have something.
-    return suggestions.length > 0 ? { suggestions, writer: 'ai', fellBack: false } : onDevice(false);
-  } catch (error) {
-    if (options.signal?.aborted) throw error;
-    return onDevice(true);
-  }
+  const written = await writePhrases(request, options.avoid, options.signal);
+  return { suggestions: fromWritten(learner, written.phrases, options.exclude), writer: written.provider === 'claude' ? 'ai' : 'bank' };
 }
