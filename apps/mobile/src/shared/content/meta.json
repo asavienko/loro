@@ -1,8 +1,9 @@
 {
-  "version": "2026-09-28.3",
+  "version": "2026-09-30.4",
   "review": {
     "es-ES": "Phrases and notes revised in round 3; awaiting native Spanish review.",
     "bg-BG": "New in round 3; awaiting native Bulgarian review.",
+    "bg-BG-round-4": "Three Bulgarian sets added in round 4 (На пазара, Запознанство, В ресторанта): phrases, glosses, notes and their ru-RU versions await native Bulgarian and Russian review; their IPA and respellings are the app's own transcription.",
     "translations": "bg-BG and ru-RU prompts and word glosses await native review.",
     "notes": "bg-BG and ru-RU versions of the notes (note-translations.json) await native review.",
     "bank": "The phrase bank (bank.json) is new for Make a set; its Spanish, Bulgarian and every translation await native review.",

@@ -110,5 +110,35 @@
     "coverIcon": "directions_bus",
     "targetLang": "bg-BG",
     "phraseIds": ["bg-grad-01", "bg-grad-02", "bg-grad-03", "bg-grad-04"]
+  },
+  {
+    "id": "set-bg-pazar",
+    "title": "На пазара",
+    "subtitle": { "en": "At the market", "bg": "На пазара", "ru": "На рынке" },
+    "topicId": "everyday",
+    "level": "A1",
+    "coverIcon": "shopping_basket",
+    "targetLang": "bg-BG",
+    "phraseIds": ["bg-pazar-01", "bg-pazar-02", "bg-pazar-03", "bg-pazar-04"]
+  },
+  {
+    "id": "set-bg-zapoznanstvo",
+    "title": "Запознанство",
+    "subtitle": { "en": "Meeting people", "bg": "Запознанство", "ru": "Знакомство" },
+    "topicId": "everyday",
+    "level": "A1",
+    "coverIcon": "handshake",
+    "targetLang": "bg-BG",
+    "phraseIds": ["bg-zapoz-01", "bg-zapoz-02", "bg-zapoz-03", "bg-zapoz-04"]
+  },
+  {
+    "id": "set-bg-restorant",
+    "title": "В ресторанта",
+    "subtitle": { "en": "At the restaurant", "bg": "В ресторанта", "ru": "В ресторане" },
+    "topicId": "eating-out",
+    "level": "A2",
+    "coverIcon": "table_restaurant",
+    "targetLang": "bg-BG",
+    "phraseIds": ["bg-rest-01", "bg-rest-02", "bg-rest-03", "bg-rest-04"]
   }
 ]
