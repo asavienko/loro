@@ -2,7 +2,8 @@
 
 - **Requirement IDs:** `P3-01` (continuous playback), `AI-06` (songs made from sets)
 - **Milestone:** Main app
-- **Status:** 🟡 Started 2026-09-30 at the owner's request.
+- **Status:** 🟡 Scope 1–5 landed 2026-09-30 (web checked); left: the Android emulator run of the
+  one player.
 - **Owner request, 2026-09-30:** "Right now, the song functionality lives separately from phrases. I
   want to have it in the same player, with the same functionality and the same sets, but to
   distinguish phrases from songs, you should use a separate icon. Also, the songs have only a dark
@@ -15,15 +16,15 @@
 
 ## Scope
 
-1. [ ] State: a song can be liked (`song:<id>` likes, merged like any like); `RATE_PHRASES` and
+1. [x] State: a song can be liked (`song:<id>` likes, merged like any like); `RATE_PHRASES` and
        `UNRATE_PHRASES` rate or undo every phrase a song sings, as pending ratings with the usual
        undo window, from any player status.
-2. [ ] One player: the mini player and the full player show what plays last, a phrase or a song; a
+2. [x] One player: the mini player and the full player show what plays last, a phrase or a song; a
        song shows a music icon and has Missed / Hard / Easy (reviewing its phrases) and a heart.
-3. [ ] Light palette for everything musical: the song view, albums, a set's songs, covers' frames.
-4. [ ] No Music tab: four tabs; a set's page lists its songs (music icon) beside its phrases; albums
+3. [x] Light palette for everything musical: the song view, albums, a set's songs, covers' frames.
+4. [x] No Music tab: four tabs; a set's page lists its songs (music icon) beside its phrases; albums
        in Library; `/music` links open Library's albums.
-5. [ ] Docs: `library.md`, the design decisions, CLAUDE.md's tab list, plan 106.
+5. [x] Docs: `library.md`, the design decisions, CLAUDE.md's tab list, plan 106.
 
 ## Verification
 

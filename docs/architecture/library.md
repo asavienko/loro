@@ -24,20 +24,23 @@ its phrases stays attached. Learner progress on a phrase that is not installed (
 set not downloaded yet) is kept by `sanitizeLearner`; only the player's queue needs installed
 phrases.
 
-## Two sides: phrases and music
+## Phrases and songs: one player (plan 107)
 
-| Tab     | What it holds                                                                          |
-| ------- | -------------------------------------------------------------------------------------- |
-| Home    | The daily loop                                                                         |
-| Phrases | Loro's course, the learner's own and saved sets, Community sets, Make a set with AI    |
-| Music   | Albums of songs sung from sets, in the night palette, with their own player and lyrics |
-| Create  | Making sets, songs and covers, with today's allowance beside each                      |
-| Library | Progress: liked, due, learned phrases; the learner's sets                              |
+| Tab     | What it holds                                                                              |
+| ------- | ------------------------------------------------------------------------------------------ |
+| Home    | The daily loop, and Loro's album of the course sung                                        |
+| Phrases | Loro's course, the learner's own and saved sets, Community sets, Make a set with AI        |
+| Create  | Making sets, songs and covers, with today's allowance beside each                          |
+| Library | Progress: liked, due, learned phrases; the learner's sets; Albums (Loro's, theirs, shared) |
 
-A song never plays with the phrase loop: starting one pauses the other. Each side docks its own
-player above the tabs (the song bar on Music and albums, the phrase bar elsewhere); the other side's
-bar shows only while it is sounding. A playing song takes the lock screen and notification shade,
-and plays on with the screen locked.
+Songs live in their sets: a set's page lists its songs under its phrases, each marked with a music
+note; the set's Play plays its phrases, and a song plays when tapped. Phrases and songs share one
+player: the bar above the tabs and `/player` show what was started last (a song wears a music-note
+badge), and starting one pauses the other. A song has a heart (a `song:<id>` like) and Missed / Hard
+/ Easy, which review every phrase of the learner's course it sings (`RATE_PHRASES`, the usual window
+and undo). A playing song takes the lock screen and notification shade, and plays on with the screen
+locked. Everything is in the app's light palette, drawn covers included (light grounds; Loro's
+covers carry the seed revision in their ids, since covers are served as immutable).
 
 ## Accounts
 
