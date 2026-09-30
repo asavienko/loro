@@ -587,8 +587,7 @@ export function makeEn(n: Plural) {
     },
     tabs: {
       home: 'Home',
-      phrases: 'Phrases',
-      music: 'Music',
+      explore: 'Explore',
       create: 'Create',
       library: 'Library',
     },

@@ -562,8 +562,7 @@ export function makeRu(n: Plural): Copy {
     },
     tabs: {
       home: 'Главная',
-      phrases: 'Фразы',
-      music: 'Музыка',
+      explore: 'Обзор',
       create: 'Создать',
       library: 'Библиотека',
     },
