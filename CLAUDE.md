@@ -12,8 +12,9 @@ in the target language, rate it; FSRS schedules the next time).
 [104](plans/104-prototype-react-native.md)). It replaced the v1.1-based app on 2026-09-30. That app,
 the v1.1/v1.2/v1.3 design packages, the v2.0 web prototype, `packages/design-tokens` and the browser
 E2E/storybook/workbench suites were removed; they remain in Git history (last present at `52a0e3b`).
-Every screen and sheet of the web prototype is ported. Five tabs: Home, Phrases, Music (albums of
-songs sung from sets, their own player, night palette), Create and Library.
+Every screen and sheet of the web prototype is ported. Four tabs: Home, Phrases, Create and Library
+(plan [107](plans/107-one-player.md)): songs live in their sets (a music-note icon tells them from
+phrases) and play in the one player, rated like phrases; albums are in Library; one light palette.
 
 **The app is connected** (plan [106](plans/106-connected-app.md),
 [library.md](docs/architecture/library.md)): it ships no phrase content. It downloads each course's

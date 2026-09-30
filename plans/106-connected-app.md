@@ -3,6 +3,9 @@
 - **Requirement IDs:** `AI-06` (make a set), `F-04` (accounts and sync), `P3-01` (continuous
   playback)
 - **Milestone:** Main app
+- **Superseded in part by plan [107](107-one-player.md) (2026-09-30):** the Music tab, the night
+  palette and the separate song player gave way to one player, songs in their sets and one light
+  palette.
 - **Status:** 🟡 Started 2026-09-30 at the owner's request; scope 1–14 landed the same day.
   **Left:** item 15 (iOS, live provider runs, a live Apple sign-in). **Blocked by:** nothing. Live
   Claude writing needs `ANTHROPIC_API_KEY` and live songs need `MUSIC_PROVIDER=elevenlabs` with
