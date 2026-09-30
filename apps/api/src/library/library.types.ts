@@ -28,6 +28,8 @@ export interface SetWire {
   coverUrl: string | null
   targetLang: Language
   phraseIds: string[]
+  /** Songs sung from it that anyone may hear, or its maker: a cover shows a song icon when > 0. */
+  songCount: number
   owner: Owner
   /** The maker's display name; null for Loro or a learner who has not given one. */
   author: string | null

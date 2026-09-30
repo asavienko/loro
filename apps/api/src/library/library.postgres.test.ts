@@ -772,6 +772,10 @@ describePostgres('the library against real PostgreSQL', () => {
       { timeout: 5000 },
     )
     const loroSong = 'song-loro-sobremesa'
+    // A set's cover knows it holds songs: Loro's song counts for any reader.
+    const count = async (reader: string | null) =>
+      (await library.pack(reader, 'es-ES')).sets.find((x) => x.id === 'set-sobremesa')?.songCount
+    expect(await count(null)).toBe(1)
     expect((await library.songsOfSet('uma', 'set-sobremesa')).songs.map((s) => s.id)).toEqual([
       loroSong,
       song.id,
