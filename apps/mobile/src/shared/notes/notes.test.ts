@@ -72,10 +72,11 @@ describe('the device’s sound rules', () => {
     assert.equal(knownStress('сметката'), 0);
     assert.equal(knownStress('сметка'), 0, 'the word without its article keeps the stress');
     assert.equal(knownStress('резервацията'), 2, 'ре-зер-ВА-ци-я-та');
-    assert.equal(knownStress('струва'), null);
-    const t = transcribeBulgarian('Искам хляб, струва ли?');
-    assert.equal(t.ipa, '[ˈiskɐm ˈxʎap struva li]', 'no guessed stress; хляб devoiced before the pause');
-    assert.deepEqual(t.words.filter((w) => w.stressUnknown).map((w) => w.token.word), ['струва']);
+    assert.equal(knownStress('струва'), 0, 'learned from the course');
+    assert.equal(knownStress('трае'), null);
+    const t = transcribeBulgarian('Искам хляб, трае ли?');
+    assert.equal(t.ipa, '[ˈiskɐm ˈxʎap traɛ li]', 'no guessed stress; хляб devoiced before the pause');
+    assert.deepEqual(t.words.filter((w) => w.stressUnknown).map((w) => w.token.word), ['трае']);
     assert.equal(transcribeBulgarian('вкъщи').ipa, '[ˈfkɤʃti]', 'в before к; щ is ʃt');
     assert.equal(transcribeBulgarian('друг ден').ipa, '[ˈdruɡ ˈdɛn]', 'voiced before voiced');
   });

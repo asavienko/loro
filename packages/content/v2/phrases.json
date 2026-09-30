@@ -1178,5 +1178,327 @@
         "text": "«Тук» is short, like “took”; «спре» starts with three consonants."
       }
     }
+  },
+  {
+    "id": "bg-pazar-01",
+    "target": "Колко струва това?",
+    "translations": { "en-GB": "How much is this?", "ru-RU": "Сколько это стоит?" },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["question", "numbers"],
+    "image": ["payments", "shopping_basket"],
+    "words": {
+      "колко": { "en-GB": "how much", "ru-RU": "сколько" },
+      "струва": { "en-GB": "costs", "ru-RU": "стоит" },
+      "това": { "en-GB": "this", "ru-RU": "это" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Струва: costs, is worth",
+        "text": "«Струва» is both “costs” and “is worth”: «Струва си» means “it’s worth it”."
+      },
+      "grammar": {
+        "title": "«Това» for what you point at",
+        "text": "«Това» is “this” for anything you point at, whatever its gender."
+      },
+      "pronunciation": {
+        "title": "to-VA",
+        "ipa": "[ˈkɔlko ˈstruvɐ toˈva]",
+        "respelling": "KOL-ko STROO-va to-VA",
+        "text": "The stress in «това» falls on the last syllable."
+      }
+    }
+  },
+  {
+    "id": "bg-pazar-02",
+    "target": "Искам един килограм домати",
+    "translations": { "en-GB": "A kilo of tomatoes, please", "ru-RU": "Мне килограмм помидоров" },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["request", "food", "numbers"],
+    "image": ["scale", "nutrition"],
+    "words": {
+      "искам": { "en-GB": "I want", "ru-RU": "я хочу" },
+      "един": { "en-GB": "one, a", "ru-RU": "один" },
+      "килограм": { "en-GB": "kilogram", "ru-RU": "килограмм" },
+      "домати": { "en-GB": "tomatoes", "ru-RU": "помидоры" }
+    },
+    "notes": {
+      "mnemonic": { "title": "Домати: tomatoes", "text": "«Домат» is the tomato, with a d where English has a t." },
+      "grammar": {
+        "title": "Masculine «един»",
+        "text": "«Килограм» is masculine, so “one” is «един»; there is no “of”: «килограм домати»."
+      },
+      "pronunciation": {
+        "title": "Dark л",
+        "ipa": "[ˈiskɐm ɛˈdin kiloˈɡram doˈmati]",
+        "respelling": "EES-kam eh-DEEN kee-lo-GRAM do-MA-tee",
+        "text": "The л in «килограм» is a dark l, as in English “full”."
+      }
+    }
+  },
+  {
+    "id": "bg-pazar-03",
+    "target": "Може ли торбичка?",
+    "translations": { "en-GB": "Can I have a bag?", "ru-RU": "Можно пакет?" },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["request", "politeness"],
+    "image": ["shopping_bag"],
+    "words": {
+      "може ли": { "en-GB": "may I, can I have", "ru-RU": "можно" },
+      "торбичка": { "en-GB": "small bag", "ru-RU": "пакетик" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Торба: a bag",
+        "text": "«Торбичка» is a little «торба» (bag): -ичка makes things small, like -ie in English."
+      },
+      "grammar": {
+        "title": "«Може ли» asks politely",
+        "text": "«Може ли» + a thing asks for it politely, like “Could I have…?”."
+      },
+      "pronunciation": {
+        "title": "ж as in “pleasure”",
+        "ipa": "[ˈmɔʒɛ li torˈbit͡ʃkɐ]",
+        "respelling": "MO-zheh lee tor-BEECH-ka",
+        "text": "«ж» is the s in “pleasure”."
+      }
+    }
+  },
+  {
+    "id": "bg-pazar-04",
+    "target": "Ще платя с карта",
+    "translations": { "en-GB": "I’ll pay by card", "ru-RU": "Я заплачу картой" },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["numbers"],
+    "image": ["credit_card"],
+    "words": {
+      "ще": { "en-GB": "will", "ru-RU": "буду, -у (будущее)" },
+      "платя": { "en-GB": "pay", "ru-RU": "заплачу" },
+      "с": { "en-GB": "with, by", "ru-RU": "с, (чем)" },
+      "карта": { "en-GB": "card", "ru-RU": "карта" }
+    },
+    "notes": {
+      "mnemonic": { "title": "Карта: card", "text": "«Карта» is a card, the same word as in Spanish and Russian." },
+      "grammar": {
+        "title": "«Ще» for the future",
+        "text": "«Ще» before the verb makes the future: «ще платя», “I will pay”."
+      },
+      "pronunciation": {
+        "title": "щ is “sht”",
+        "ipa": "[ʃtɛ plɐˈtʲa s ˈkartɐ]",
+        "respelling": "shteh pla-TYA s KAR-ta",
+        "text": "«Щ» in Bulgarian is “sht”, as in “ashtray”."
+      }
+    }
+  },
+  {
+    "id": "bg-zapoz-01",
+    "target": "Как се казвате?",
+    "translations": { "en-GB": "What’s your name?", "ru-RU": "Как вас зовут?" },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["question", "social", "politeness"],
+    "image": ["badge", "person"],
+    "words": {
+      "как": { "en-GB": "how", "ru-RU": "как" },
+      "се казвате": { "en-GB": "you are called", "ru-RU": "вас зовут" }
+    },
+    "notes": {
+      "mnemonic": { "title": "Call yourself", "text": "«Как се казвате?» is literally “How do you call yourself?”." },
+      "grammar": {
+        "title": "Polite «-те»",
+        "text": "«Казвате» ends in -те, the polite “you”; to a friend say «Как се казваш?»."
+      },
+      "pronunciation": {
+        "title": "KAZ-va-te",
+        "ipa": "[ˈkak sɛ ˈkazvɐtɛ]",
+        "respelling": "KAK seh KAZ-va-teh",
+        "text": "Stress the first syllable of «казвате»."
+      }
+    }
+  },
+  {
+    "id": "bg-zapoz-02",
+    "target": "Казвам се Мария",
+    "translations": { "en-GB": "My name is Maria", "ru-RU": "Меня зовут Мария" },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["social"],
+    "image": ["badge"],
+    "words": { "казвам се": { "en-GB": "my name is", "ru-RU": "меня зовут" } },
+    "notes": {
+      "mnemonic": {
+        "title": "«Се»: oneself",
+        "text": "«Се» is “oneself”: «Казвам се Мария» is “I call myself Maria”."
+      },
+      "grammar": {
+        "title": "«Се» after the verb",
+        "text": "At the start of a sentence «се» comes after the verb: «Казвам се…», never «Се казвам…»."
+      },
+      "pronunciation": {
+        "title": "Soft а",
+        "ipa": "[ˈkazvɐm sɛ mɐˈrijɐ]",
+        "respelling": "KAZ-vam seh ma-REE-ya",
+        "text": "The unstressed а in «казвам» sounds closer to “uh”."
+      }
+    }
+  },
+  {
+    "id": "bg-zapoz-03",
+    "target": "Приятно ми е",
+    "translations": { "en-GB": "Nice to meet you", "ru-RU": "Приятно познакомиться" },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["social", "politeness"],
+    "image": ["handshake"],
+    "words": {
+      "приятно": { "en-GB": "pleasant", "ru-RU": "приятно" },
+      "ми": { "en-GB": "to me", "ru-RU": "мне" },
+      "е": { "en-GB": "is", "ru-RU": "(есть)" }
+    },
+    "notes": {
+      "mnemonic": { "title": "Pleasant to me", "text": "«Приятно ми е» is “it is pleasant to me”." },
+      "grammar": { "title": "Short «ми»", "text": "«Ми» is the short “to me”; here it comes before «е»." },
+      "pronunciation": {
+        "title": "One breath",
+        "ipa": "[priˈjatno mi ɛ]",
+        "respelling": "pree-YAT-no mee eh",
+        "text": "Say it as one word: pri-YAT-no-mi-e."
+      }
+    }
+  },
+  {
+    "id": "bg-zapoz-04",
+    "target": "Откъде сте?",
+    "translations": { "en-GB": "Where are you from?", "ru-RU": "Откуда вы?" },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["question", "social"],
+    "image": ["public", "map"],
+    "words": {
+      "откъде": { "en-GB": "where from", "ru-RU": "откуда" },
+      "сте": { "en-GB": "you are", "ru-RU": "вы (есть)" }
+    },
+    "notes": {
+      "mnemonic": { "title": "From + where", "text": "«Откъде» is «от» (from) + «къде» (where)." },
+      "grammar": {
+        "title": "«Сте»: you are",
+        "text": "«Сте» is “you are”, polite or plural; answer «Аз съм от…», “I am from…”."
+      },
+      "pronunciation": {
+        "title": "ъ as in “but”",
+        "ipa": "[otkɐˈdɛ stɛ]",
+        "respelling": "ot-kuh-DEH steh",
+        "text": "«Ъ» is the u in “but”, said short."
+      }
+    }
+  },
+  {
+    "id": "bg-rest-01",
+    "target": "Маса за двама, моля",
+    "translations": { "en-GB": "A table for two, please", "ru-RU": "Столик на двоих, пожалуйста" },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["request", "food", "politeness", "numbers"],
+    "image": ["table_restaurant", "group"],
+    "words": {
+      "маса": { "en-GB": "table", "ru-RU": "стол" },
+      "за": { "en-GB": "for", "ru-RU": "на, для" },
+      "двама": { "en-GB": "two (people)", "ru-RU": "двое" },
+      "моля": { "en-GB": "please", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "mnemonic": { "title": "Маса: mesa", "text": "«Маса» is table, like Spanish «mesa», from Latin «mensa»." },
+      "grammar": {
+        "title": "«Двама» for people",
+        "text": "«Двама» counts two men or a mixed pair; two women are «две»."
+      },
+      "pronunciation": {
+        "title": "MA-sa",
+        "ipa": "[ˈmasɐ zɐ ˈdvamɐ ˈmɔʎɐ]",
+        "respelling": "MA-sa za DVA-ma, MO-lya",
+        "text": "Stress the first syllable of «маса» and «двама»."
+      }
+    }
+  },
+  {
+    "id": "bg-rest-02",
+    "target": "Какво ще препоръчате?",
+    "translations": { "en-GB": "What would you recommend?", "ru-RU": "Что вы посоветуете?" },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["question", "food", "politeness"],
+    "image": ["restaurant_menu", "thumb_up"],
+    "words": {
+      "какво": { "en-GB": "what", "ru-RU": "что" },
+      "ще": { "en-GB": "will", "ru-RU": "(будущее)" },
+      "препоръчате": { "en-GB": "you recommend", "ru-RU": "посоветуете" }
+    },
+    "notes": {
+      "mnemonic": { "title": "Order inside", "text": "«Препоръчам» (recommend) has «поръчам» (to order) inside it." },
+      "grammar": {
+        "title": "«Ще» + polite «-те»",
+        "text": "«Ще препоръчате» is “will you recommend”, the polite form."
+      },
+      "pronunciation": {
+        "title": "kak-VO",
+        "ipa": "[kɐkˈvɔ ʃtɛ prɛpoˈrɤt͡ʃɐtɛ]",
+        "respelling": "kak-VO shteh preh-po-RUH-cha-teh",
+        "text": "The ъ in «препоръчате» is short, like the u in “but”."
+      }
+    }
+  },
+  {
+    "id": "bg-rest-03",
+    "target": "Сметката, моля",
+    "translations": { "en-GB": "The bill, please", "ru-RU": "Счёт, пожалуйста" },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["request", "food", "politeness"],
+    "image": ["receipt_long"],
+    "words": {
+      "сметката": { "en-GB": "the bill", "ru-RU": "счёт" },
+      "моля": { "en-GB": "please", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "mnemonic": { "title": "Смятам: I count", "text": "«Сметка» (bill) comes from «смятам», to count." },
+      "grammar": {
+        "title": "“The” at the end",
+        "text": "Bulgarian puts “the” on the end of the word: «сметка» → «сметката»."
+      },
+      "pronunciation": {
+        "title": "SMET-ka-ta",
+        "ipa": "[ˈsmɛtkɐtɐ ˈmɔʎɐ]",
+        "respelling": "SMET-ka-ta, MO-lya",
+        "text": "The stress stays on the first syllable when -та is added."
+      }
+    }
+  },
+  {
+    "id": "bg-rest-04",
+    "target": "Беше много вкусно",
+    "translations": { "en-GB": "It was very tasty", "ru-RU": "Было очень вкусно" },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["food", "social"],
+    "image": ["restaurant", "favorite"],
+    "words": {
+      "беше": { "en-GB": "was", "ru-RU": "было" },
+      "много": { "en-GB": "very", "ru-RU": "очень" },
+      "вкусно": { "en-GB": "tasty", "ru-RU": "вкусно" }
+    },
+    "notes": {
+      "mnemonic": { "title": "Вкус: taste", "text": "«Вкусно» comes from «вкус», taste." },
+      "grammar": { "title": "«Беше»: it was", "text": "«Беше» is “it was”; for “it is” say «Много е вкусно»." },
+      "pronunciation": {
+        "title": "в sounds like f",
+        "ipa": "[ˈbɛʃɛ ˈmnɔɡo ˈfkusno]",
+        "respelling": "BEH-sheh MNO-go FKOOS-no",
+        "text": "Before к, в sounds like f: «вкусно» is “fkusno”."
+      }
+    }
   }
 ]
