@@ -1,20 +1,30 @@
-// The song playing (plan 106): cover, where it is, the controls, and the lyrics, each line with its
-// meaning a tap away. Where the sound's timing is known (the demo sound) the line being played lights
-// up. A demo sound says so: it is the server's instrumental, never passed off as a sung recording.
+// A song in the one player (plans 106, 107): cover, where it is, the controls, a heart, and Missed /
+// Hard / Easy, which review every phrase the song sings (the same window and undo as a phrase's
+// rating). Then the lyrics, each line with its meaning a tap away; where the sound's timing is known
+// (the demo sound) the line being played lights up. A demo sound says so: it is the server's
+// instrumental, never passed off as a sung recording.
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { Song } from '@shared/api/library';
+import { easyCue, gentleCue } from '@shared/audio/cues';
 import { findSet } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
+import { formatElapsed } from '@shared/state/clock';
+import { findPhrase } from '@shared/state/catalog';
+import { RATING_WINDOW_MS } from '@shared/state/memory';
+import { isLiked, pendingFor, windowLeft } from '@shared/state/selectors';
+import type { Grade } from '@shared/state/types';
 import { AlbumCover } from '../music/AlbumCover';
 import { clockTime, useMusic } from '../music/MusicPlayer';
-import { NightStatusBar } from '../music/NightStatusBar';
-import { useCopy } from '../state/store';
+import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
+import { useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
-import { colors, radius, TARGET } from '../ui/theme';
+import { colors, radius, shadow, TARGET } from '../ui/theme';
+import { GRADES } from './grades';
 
 export function SongScreen() {
   const c = useCopy();
@@ -22,18 +32,19 @@ export function SongScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const music = useMusic();
+  const { state, actions } = useStore();
   const [meanings, setMeanings] = useState(true);
   const [barWidth, setBarWidth] = useState(0);
-  const close = () => (router.canGoBack() ? router.back() : router.replace('/music'));
+  const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
   const song = music.song;
 
   if (!song) {
     return (
       <View style={[styles.page, styles.center, { paddingTop: insets.top }]}>
-        <Txt variant="row" color="onNightVariant">
+        <Txt variant="row" color="secondary">
           {c.music.noSongs}
         </Txt>
-        <Button variant="text" color="nightAccent" label={c.common.close} onPress={close} />
+        <Button variant="text" label={c.common.close} onPress={close} />
       </View>
     );
   }
@@ -43,31 +54,50 @@ export function SongScreen() {
   const set = findSet(song.setId);
   const lines = song.sections.flatMap((section) => section.lines);
   const active = lines.findIndex((line) => line.startMs !== null && line.endMs !== null && ms >= line.startMs && ms < line.endMs);
+  const liked = isLiked(state.learner, 'song', song.id);
 
   return (
     <View style={[styles.page, { paddingTop: insets.top }]}>
-      <NightStatusBar />
       <View style={styles.top}>
-        <Button variant="icon" icon="keyboard_arrow_down" color="onNight" accessibilityLabel={c.common.close} onPress={close} />
-        <Txt variant="label" weight={700} color="onNightVariant" style={styles.topTitle} numberOfLines={1}>
-          {music.album?.title ?? c.music.nowPlaying}
-        </Txt>
+        <Button variant="icon" icon="keyboard_arrow_down" accessibilityLabel={c.common.close} onPress={close} />
+        <View style={styles.topText}>
+          <View style={styles.kind}>
+            <Icon name="music_note" size="xs" color="primaryContainer" />
+            <Txt variant="label" weight={700} color="primaryContainer">
+              {c.music.songKind}
+            </Txt>
+          </View>
+          <Txt variant="label" color="secondary" numberOfLines={1} align="center">
+            {music.album?.title ?? c.music.nowPlaying}
+          </Txt>
+        </View>
         <View style={{ width: TARGET }} />
       </View>
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}>
         <View style={styles.cover}>
-          <AlbumCover url={music.album?.coverUrl ?? null} px={240} rounded={16} />
+          <AlbumCover url={music.album?.coverUrl ?? null} px={220} rounded={20} />
         </View>
-        <Txt variant="displaySm" face="serif" weight={600} color="onNight" accessibilityRole="header">
-          {song.title}
-        </Txt>
+        <View style={styles.titleRow}>
+          <Txt variant="displaySm" face="serif" weight={600} accessibilityRole="header" style={{ flex: 1 }}>
+            {song.title}
+          </Txt>
+          <Pressable
+            accessibilityRole="togglebutton"
+            accessibilityLabel={c.music.likeSong}
+            accessibilityState={{ checked: liked }}
+            onPress={() => actions.toggleLike('song', song.id)}
+            style={styles.heart}
+          >
+            <Icon name="favorite" fill={liked} size={26} color={liked ? 'primaryContainer' : 'secondary'} />
+          </Pressable>
+        </View>
         <View style={styles.badges}>
           <Badge icon={song.audioBy === 'demo' && !song.voiced ? 'graphic_eq' : 'mic'} label={song.audioBy === 'demo' ? (song.voiced ? c.music.spokenDemo : c.music.demoSound) : c.music.sung} />
           <Badge icon="lyrics" label={c.music.lyricsBy[song.lyricsBy]} />
           <Badge icon="equalizer" label={c.music.style[song.styleId]} />
         </View>
         {song.audioBy === 'demo' && (
-          <Txt variant="label" color="onNightVariant">
+          <Txt variant="label" color="secondary">
             {song.voiced ? c.music.spokenNote : c.music.demoNote}
           </Txt>
         )}
@@ -85,33 +115,50 @@ export function SongScreen() {
           </View>
         </Pressable>
         <View style={styles.times}>
-          <Txt variant="label" color="onNightVariant">
+          <Txt variant="label" color="secondary">
             {clockTime(music.position)}
           </Txt>
-          <Txt variant="label" color="onNightVariant">
+          <Txt variant="label" color="secondary">
             {clockTime(music.duration)}
           </Txt>
         </View>
 
         <View style={styles.controls}>
-          <Button variant="icon" icon="skip_previous" color="onNight" accessibilityLabel={c.music.previous} onPress={music.previous} />
-          <Pressable accessibilityRole="button" accessibilityLabel={music.playing ? c.common.pause : c.common.play} onPress={music.toggle} style={styles.play}>
-            <Icon name={music.playing ? 'pause' : 'play_arrow'} fill size="2xl" color="night" />
+          <Pressable accessibilityRole="button" accessibilityLabel={c.music.previous} onPress={music.previous} style={styles.skip}>
+            <Icon name="skip_previous" fill size={34} />
           </Pressable>
-          <Button variant="icon" icon="skip_next" color="onNight" accessibilityLabel={c.music.next} disabled={music.index + 1 >= music.queue.length} onPress={music.next} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={music.playing ? c.common.pause : c.common.play}
+            onPress={music.toggle}
+            style={({ pressed }) => [styles.play, pressed && { transform: [{ scale: 0.95 }] }]}
+          >
+            <Icon name={music.playing ? 'pause' : 'play_arrow'} fill size={40} color="onPrimary" />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={c.music.next}
+            disabled={music.index + 1 >= music.queue.length}
+            onPress={music.next}
+            style={[styles.skip, music.index + 1 >= music.queue.length && { opacity: 0.35 }]}
+          >
+            <Icon name="skip_next" fill size={34} />
+          </Pressable>
         </View>
 
+        <SongRating song={song} />
+
         <View style={styles.lyricsHead}>
-          <Txt variant="heading" face="serif" weight={600} color="onNight" accessibilityRole="header" style={{ flex: 1 }}>
+          <Txt variant="heading" face="serif" weight={600} accessibilityRole="header" style={{ flex: 1 }}>
             {c.music.lyrics}
           </Txt>
-          <Button variant="text" color="nightAccent" icon="translate" label={meanings ? c.music.hideMeanings : c.music.showMeanings} onPress={() => setMeanings((m) => !m)} />
+          <Button variant="text" icon="translate" label={meanings ? c.music.hideMeanings : c.music.showMeanings} onPress={() => setMeanings((m) => !m)} />
         </View>
         {song.sections.map((section, s) => {
           const before = song.sections.slice(0, s).reduce((n, x) => n + x.lines.length, 0);
           return (
             <View key={`${section.name}-${s}`} style={styles.section}>
-              <Txt variant="label" weight={700} color="nightAccent">
+              <Txt variant="label" weight={700} color="primaryContainer">
                 {c.music.section[section.name].toLocaleUpperCase(c.locale)}
               </Txt>
               {section.lines.map((line, l) => {
@@ -125,11 +172,11 @@ export function SongScreen() {
                     onPress={() => line.startMs !== null && music.seek(line.startMs / 1000)}
                     style={[styles.line, on && styles.lineOn]}
                   >
-                    <Txt variant="title" face="serif" weight={on ? 700 : 500} color={on ? 'nightAccent' : 'onNight'} lang={set?.targetLang}>
+                    <Txt variant="title" face="serif" weight={on ? 700 : 500} color={on ? 'primaryContainer' : 'onSurface'} lang={set?.targetLang}>
                       {line.text}
                     </Txt>
                     {meanings && (
-                      <Txt variant="body" color="onNightVariant">
+                      <Txt variant="body" color="secondary">
                         {line.meaning}
                       </Txt>
                     )}
@@ -145,11 +192,68 @@ export function SongScreen() {
   );
 }
 
+/**
+ * Missed / Hard / Easy for a song: each reviews every phrase of this learner's course that the song
+ * sings, with the same five-minute window and undo as a phrase's rating.
+ */
+function SongRating({ song }: { song: Song }) {
+  const c = useCopy();
+  const { state, actions } = useStore();
+  const { announce } = useToast();
+  const now = useNow(1000);
+  const phraseIds = [...new Set(song.sections.flatMap((s) => s.lines).flatMap((l) => (l.phraseId ? [l.phraseId] : [])))].filter((id) => findPhrase(state.learner, id));
+  if (phraseIds.length === 0) return null;
+  const pending = pendingFor(state, phraseIds[0]);
+  const left = pending ? Math.min(RATING_WINDOW_MS, windowLeft(pending, Math.max(now, pending.at))) : 0;
+  const rated = pending && left > 0 ? pending : undefined;
+  const rate = (grade: Grade) => {
+    actions.ratePhrases(phraseIds, song.setId, grade);
+    if (grade === 'easy') easyCue();
+    else gentleCue();
+    announce(c.music.songRated(c.common.grade[grade], phraseIds.length));
+  };
+  return (
+    <View style={styles.rating}>
+      <View style={styles.ratingLine}>
+        {rated ? (
+          <>
+            <Txt style={{ flex: 1 }}>{c.music.songRated(c.common.grade[rated.grade], phraseIds.length)}</Txt>
+            <Button variant="text" label={c.player.undoFor(formatElapsed(left))} accessibilityLabel={c.player.undoLabel(formatElapsed(left))} onPress={() => actions.unratePhrases(phraseIds)} />
+          </>
+        ) : (
+          <Txt color="secondary" align="center" style={{ flex: 1 }}>
+            {c.music.rateSong(phraseIds.length)}
+          </Txt>
+        )}
+      </View>
+      <View style={styles.grades}>
+        {GRADES.map(({ grade, icon, bg, ink }) => {
+          const selected = rated?.grade === grade;
+          return (
+            <Pressable
+              key={grade}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              onPress={() => rate(grade)}
+              style={({ pressed }) => [styles.grade, { backgroundColor: bg }, selected && styles.gradeSelected, pressed && { opacity: 0.8 }]}
+            >
+              <Icon name={selected ? 'task_alt' : icon} size="sm" color={ink} />
+              <Txt weight={selected ? 700 : 600} color={ink}>
+                {c.common.grade[grade]}
+              </Txt>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 function Badge({ icon, label }: { icon: 'graphic_eq' | 'mic' | 'lyrics' | 'equalizer'; label: string }) {
   return (
     <View style={styles.badge}>
-      <Icon name={icon} size="xs" color="nightAccent" />
-      <Txt variant="label" weight={600} color="onNight">
+      <Icon name={icon} size="xs" color="primaryContainer" />
+      <Txt variant="label" weight={600}>
         {label}
       </Txt>
     </View>
@@ -157,23 +261,32 @@ function Badge({ icon, label }: { icon: 'graphic_eq' | 'mic' | 'lyrics' | 'equal
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.night },
+  page: { flex: 1, backgroundColor: colors.surface },
   center: { alignItems: 'center', justifyContent: 'center', gap: 12 },
-  top: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 },
-  topTitle: { flex: 1, textAlign: 'center' },
+  top: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, minHeight: 52, width: '100%', maxWidth: 560, alignSelf: 'center' },
+  topText: { flex: 1, alignItems: 'center' },
+  kind: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   content: { paddingHorizontal: 24, gap: 12, width: '100%', maxWidth: 560, alignSelf: 'center' },
   cover: { alignItems: 'center', paddingVertical: 12 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  heart: { width: TARGET, height: TARGET, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full, backgroundColor: colors.nightContainer },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full, backgroundColor: colors.surfaceContainer },
   bar: { height: TARGET, justifyContent: 'center' },
-  track: { height: 4, borderRadius: 2, backgroundColor: colors.nightOutline, overflow: 'hidden' },
-  fill: { height: 4, backgroundColor: colors.nightAccent },
+  track: { height: 4, borderRadius: 2, backgroundColor: colors.outlineVariant, overflow: 'hidden' },
+  fill: { height: 4, backgroundColor: colors.primaryContainer },
   times: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -8 },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 28 },
-  play: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.nightAccent, alignItems: 'center', justifyContent: 'center' },
+  skip: { width: 48, height: 48, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
+  play: { width: 64, height: 64, borderRadius: radius.full, backgroundColor: colors.primaryContainer, alignItems: 'center', justifyContent: 'center', ...shadow.float },
+  rating: { gap: 6, paddingTop: 8 },
+  ratingLine: { minHeight: TARGET, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  grades: { flexDirection: 'row', gap: 8 },
+  grade: { flex: 1, minHeight: 52, borderRadius: radius['2xl'], alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
+  gradeSelected: { borderWidth: 2, borderColor: colors.onSurface },
   lyricsHead: { flexDirection: 'row', alignItems: 'center', paddingTop: 16 },
   section: { gap: 4, paddingTop: 8 },
   line: { paddingVertical: 6, paddingHorizontal: 10, marginHorizontal: -10, borderRadius: radius.xl },
-  lineOn: { backgroundColor: colors.nightContainer },
+  lineOn: { backgroundColor: colors.primaryFixed },
   setLink: { alignSelf: 'flex-start', marginTop: 16 },
 });

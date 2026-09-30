@@ -1,6 +1,7 @@
-// Songs play here (plan 106), apart from the phrase player: an album's songs as a queue through
-// expo-audio, with where the song is so the lyrics can follow it. Only one of the two players sounds
-// at a time: a song pauses the phrase loop, and the phrase loop starting pauses the song.
+// Songs play here (plans 106, 107): an album's songs as a queue through expo-audio, with where the
+// song is so the lyrics can follow it. The phrase loop has its own engine, but the learner sees one
+// player: `front` says which of the two was started last, and the mini player and the full player
+// show that one. Only one sounds at a time: a song pauses the phrase loop, and the loop pauses it.
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { apiUrl, unreachable } from '@shared/api/client';
@@ -17,6 +18,8 @@ interface MusicValue {
   index: number;
   song: Song | null;
   playing: boolean;
+  /** The song, not the phrase loop, is what the player shows: it was started last. */
+  front: boolean;
   /** Seconds into the song, and its length once known. */
   position: number;
   duration: number;
@@ -61,6 +64,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const [queue, setQueue] = useState<Song[]>([]);
   const [index, setIndex] = useState(0);
   const wantsPlay = useRef(false);
+  const [songInFront, setSongInFront] = useState(false);
   const [watched, setWatched] = useState<{ song: Song; album: Album; since: number }[]>([]);
   // Songs whose ask is on its way, or already told of: each is told of once.
   const asking = useRef(new Set<string>());
@@ -91,6 +95,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       player.replace({ uri });
       wantsPlay.current = true;
       player.play();
+      setSongInFront(true);
       // The lock screen and notification shade show the song and control it (a no-op on the web).
       try {
         player.setActiveForLockScreen(true, {
@@ -180,6 +185,10 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const was = before.current;
     before.current = { phrases: state.player.status, song: status.playing };
+    // Whichever just started is in front (set after this render, as a start from a tap is).
+    const phrasesStarted = state.player.status === 'playing' && was.phrases !== 'playing';
+    const songStarted = status.playing && !was.song;
+    if (phrasesStarted || songStarted) void Promise.resolve().then(() => setSongInFront(!phrasesStarted));
     if (state.player.status !== 'playing' || !status.playing) return;
     if (was.phrases !== 'playing') {
       wantsPlay.current = false;
@@ -194,6 +203,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       index,
       song: queue[index] ?? null,
       playing: status.playing,
+      front: songInFront && queue[index] !== undefined,
       position: status.currentTime,
       duration: status.duration || (queue[index]?.durationMs ?? 0) / 1000,
       buffering: status.isBuffering,
@@ -207,6 +217,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
           if (state.player.status === 'playing') actions.pause();
           wantsPlay.current = true;
           player.play();
+          setSongInFront(true);
         }
       },
       next: () => step(1),
@@ -229,9 +240,10 @@ export function MusicProvider({ children }: { children: ReactNode }) {
         setQueue([]);
         setAlbum(null);
         setIndex(0);
+        setSongInFront(false);
       },
     }),
-    [album, queue, index, status.playing, status.currentTime, status.duration, status.isBuffering, playAlbum, step, player, actions, state.player.status],
+    [songInFront, album, queue, index, status.playing, status.currentTime, status.duration, status.isBuffering, playAlbum, step, player, actions, state.player.status],
   );
 
   return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;
