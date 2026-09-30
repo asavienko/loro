@@ -185,6 +185,9 @@ export function makeBg(n: Plural): Copy {
     createSet: {
       title: 'Нов набор',
       renameTitle: 'Преименувай набора',
+      editTitle: 'Име и описание',
+      description: 'Описание (по желание)',
+      descriptionHint: 'Показва се там, където другите го намират.',
       name: 'Име',
       create: 'Създай',
       created: (title) => `Създаден е „${title}“`,

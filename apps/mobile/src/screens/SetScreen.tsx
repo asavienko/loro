@@ -434,7 +434,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
       </Sheet>
 
       <ReportSheet item={reporting ? { kind: 'set', id: setId } : null} onClose={() => setReporting(false)} />
-      <RenameSheet item={renaming && served ? { kind: 'set', id: served.id, title: served.title } : null} onClose={() => setRenaming(false)} />
+      <RenameSheet item={renaming && served ? { kind: 'set', id: served.id, title: served.title, description: served.description } : null} onClose={() => setRenaming(false)} />
       <Sheet open={moreOpen} title={view.title} onClose={() => setMoreOpen(false)}>
         <SheetOption
           icon="queue_play_next"

@@ -201,6 +201,9 @@ export function makeEn(n: Plural) {
     createSet: {
       title: 'New set',
       renameTitle: 'Rename set',
+      editTitle: 'Name and description',
+      description: 'Description (optional)',
+      descriptionHint: 'Shown with it wherever others find it.',
       name: 'Name',
       create: 'Create',
       created: (title: string) => `Created ${title}`,

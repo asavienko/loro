@@ -186,6 +186,9 @@ export function makeRu(n: Plural): Copy {
     createSet: {
       title: 'Новый набор',
       renameTitle: 'Переименовать набор',
+      editTitle: 'Название и описание',
+      description: 'Описание (необязательно)',
+      descriptionHint: 'Видно там, где его находят другие.',
       name: 'Название',
       create: 'Создать',
       created: (title) => `Создан «${title}»`,

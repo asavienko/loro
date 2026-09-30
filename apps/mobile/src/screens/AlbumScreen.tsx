@@ -224,7 +224,7 @@ export function AlbumScreen({ id }: { id: string }) {
       </View>
 
       <ReportSheet item={reporting ? { kind: 'album', id: album.id } : null} onClose={() => setReporting(false)} />
-      <RenameSheet item={renaming ? { kind: 'album', id: album.id, title: album.title } : null} onClose={() => setRenaming(false)} onRenamed={() => void load()} />
+      <RenameSheet item={renaming ? { kind: 'album', id: album.id, title: album.title, description: album.description } : null} onClose={() => setRenaming(false)} onRenamed={() => void load()} />
       <View style={styles.songs}>
         {songs.length === 0 && (
           <Txt variant="body" color="onNightVariant" style={styles.pad}>
