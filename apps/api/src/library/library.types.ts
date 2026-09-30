@@ -37,6 +37,8 @@ export interface SetWire {
   /** Only the owner, or anyone for a shared or public item. */
   shareCode: string | null
   saved: boolean
+  /** The learner's "My phrases" set for the course, where phrases added on their own go (plan 108). */
+  inbox?: true
   /** Only on the reader's own public item that reports took out of Community; absent otherwise. */
   hidden?: true
   /** In Community listings: how many learners keep it in their library. */

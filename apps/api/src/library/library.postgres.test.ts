@@ -545,6 +545,146 @@ describePostgres('the library against real PostgreSQL', () => {
     expect(phrases[0]?.image.length).toBeGreaterThan(0)
   })
 
+  it('lists Loro’s phrases and the learner’s own by reference, one phrase with one progress', async () => {
+    const typed = { target: 'Tengo un gato', native: 'I have a cat', source: 'written' as const }
+    const { set, phrases } = await library.createSet('lena', {
+      title: 'Mixed',
+      targetLang: 'es-ES',
+      nativeLang: 'en-GB',
+      phrases: [{ ref: 'cafe-03' }, typed],
+    })
+    expect(set.phraseIds[0]).toBe('cafe-03')
+    expect(phrases.find((p) => p.id === 'cafe-03')?.setId).toBe('set-cafe')
+    const own = set.phraseIds[1] ?? ''
+    // Another set of hers lists her phrase: still one phrase, in the pack once.
+    const other = await library.createSet('lena', {
+      title: 'Cats',
+      targetLang: 'es-ES',
+      nativeLang: 'en-GB',
+      phrases: [{ ref: own }],
+    })
+    expect(other.set.phraseIds).toEqual([own])
+    const pack = await library.pack('lena', 'es-ES')
+    expect(pack.phrases.filter((p) => p.id === own)).toHaveLength(1)
+    expect(pack.phrases.filter((p) => p.id === 'cafe-03')).toHaveLength(1)
+    // Someone else's phrase, or one of another course, is not hers to list.
+    expect(
+      await code(
+        library.createSet('otto', {
+          title: 'Taken',
+          targetLang: 'es-ES',
+          nativeLang: 'en-GB',
+          phrases: [{ ref: own }],
+        }),
+      ),
+    ).toBe('VALIDATION_FAILED')
+    const bg = (await library.pack(null, 'bg-BG')).phrases[0]?.id ?? ''
+    expect(await code(library.updateSet('lena', set.id, { addPhrases: [{ ref: bg }] }))).toBe(
+      'VALIDATION_FAILED',
+    )
+    // Taken out of the set that holds it, her phrase moves to the one that lists it.
+    await library.updateSet('lena', set.id, { removePhraseIds: [own] })
+    const moved = await library.set('lena', other.set.id)
+    expect(moved.set.phraseIds).toEqual([own])
+    expect(moved.phrases[0]?.setId).toBe(other.set.id)
+    // Reordered, and emptied: a set may be empty.
+    await library.updateSet('lena', set.id, { addPhrases: [{ ref: 'cafe-01' }] })
+    expect(
+      (await library.updateSet('lena', set.id, { order: ['cafe-01', 'cafe-03'] })).set.phraseIds,
+    ).toEqual(['cafe-01', 'cafe-03'])
+    expect(
+      (await library.updateSet('lena', set.id, { removePhraseIds: ['cafe-01', 'cafe-03'] })).set
+        .phraseIds,
+    ).toEqual([])
+    // Loro's phrase is still Loro's.
+    expect((await library.set(null, 'set-cafe')).set.phraseIds).toContain('cafe-03')
+    // Deleting the set that now holds her phrase takes it: nothing else lists it.
+    await library.deleteSet('lena', other.set.id)
+    expect((await library.pack('lena', 'es-ES')).phrases.some((p) => p.id === own)).toBe(false)
+  })
+
+  it('uploads a device’s sets once, keeping the device’s ids', async () => {
+    const upload = {
+      id: 'mine-s-dev1.a1-2',
+      title: 'From my phone',
+      targetLang: 'es-ES',
+      nativeLang: 'bg-BG',
+      phrases: [
+        { id: 'mine-p-dev1.a1-1', target: 'Mi casa', native: 'Моята къща', source: 'written' },
+        { ref: 'cafe-02' },
+      ],
+    }
+    const first = await library.createSet('dora', upload)
+    expect(first.set.id).toBe('mine-s-dev1.a1-2')
+    expect(first.set.phraseIds).toEqual(['mine-p-dev1.a1-1', 'cafe-02'])
+    expect(first.phrases[0]?.notesBy).toBe('rules')
+    // Uploaded again (a sign-in cut short): the same set, nothing twice.
+    const again = await library.createSet('dora', upload)
+    expect(again.set.phraseIds).toEqual(first.set.phraseIds)
+    expect((await library.pack('dora', 'es-ES')).sets.filter((s) => s.owner === 'me')).toHaveLength(
+      1,
+    )
+    // A second device set with the same phrase lists it.
+    const second = await library.createSet('dora', {
+      ...upload,
+      id: 'mine-s-dev1.a1-3',
+      title: 'Also',
+      phrases: [
+        { id: 'mine-p-dev1.a1-1', target: 'Mi casa', native: 'Моята къща', source: 'written' },
+      ],
+    })
+    expect(second.set.phraseIds).toEqual(['mine-p-dev1.a1-1'])
+    // Another learner's device id that happens to match is not theirs: a new id.
+    const clash = await library.createSet('ezra', { ...upload, title: 'Clash' })
+    expect(clash.set.id).not.toBe('mine-s-dev1.a1-2')
+    expect(clash.set.phraseIds[0]).not.toBe('mine-p-dev1.a1-1')
+  })
+
+  it('keeps phrases added on their own in one “My phrases” set per course, and edits them', async () => {
+    const add = (target: string) =>
+      library.addPhrase('finn', {
+        phrase: { target, native: target, source: 'written' },
+        targetLang: 'es-ES',
+        nativeLang: 'en-GB',
+        inboxTitle: 'My phrases',
+      })
+    const [a, b] = await Promise.all([add('Hola amigo'), add('Buenas noches')])
+    expect(a.set.id).toBe(b.set.id)
+    const inbox = await library.set('finn', a.set.id)
+    expect(inbox.set.inbox).toBe(true)
+    expect(inbox.set.title).toBe('My phrases')
+    expect(inbox.set.phraseIds).toHaveLength(2)
+    const id = inbox.set.phraseIds[0] ?? ''
+    const edited = await library.editPhrase('finn', a.set.id, id, {
+      target: 'Hola, amiga',
+      native: 'Hi, friend',
+    })
+    const phrase = edited.phrases.find((p) => p.id === id)
+    expect(phrase?.target).toBe('Hola, amiga')
+    expect(phrase?.translations['en-GB']).toBe('Hi, friend')
+    expect(phrase?.notesBy).toBe('rules')
+    expect(await code(library.editPhrase('otto', a.set.id, id, { target: 'x', native: 'y' }))).toBe(
+      'NOT_FOUND',
+    )
+    // Into a set of hers, when she says which.
+    const typed = await library.addPhrase('finn', {
+      phrase: { target: 'Un café', native: 'A coffee', source: 'written' },
+      targetLang: 'es-ES',
+      nativeLang: 'en-GB',
+      setId: (
+        await library.createSet('finn', {
+          title: 'Café',
+          targetLang: 'es-ES',
+          nativeLang: 'en-GB',
+          phrases: [],
+        })
+      ).set.id,
+      inboxTitle: 'My phrases',
+    })
+    expect(typed.set.inbox).toBeUndefined()
+    expect(typed.set.phraseIds).toHaveLength(1)
+  })
+
   it('gives bank phrases and written suggestions clips, English prompts included', async () => {
     vi.stubEnv('TTS_PROVIDER', 'elevenlabs')
     vi.stubEnv('TTS_API_KEY', 'k')
