@@ -521,6 +521,51 @@ describePostgres('the library against real PostgreSQL', () => {
     vi.stubEnv('LIMIT_SPEECH_RENDERS_DAILY', '500')
   })
 
+  it('gives bank phrases and written suggestions clips, English prompts included', async () => {
+    vi.stubEnv('TTS_PROVIDER', 'elevenlabs')
+    vi.stubEnv('TTS_API_KEY', 'k')
+    vi.stubEnv('TTS_MODEL', 'm')
+    vi.stubEnv('TTS_VOICE_ES_ES', 'v-es')
+    vi.stubEnv('TTS_VOICE_EN_GB', 'v-en')
+    vi.stubEnv('LIMIT_PHRASES_DAILY', '50')
+    try {
+      const pack = await library.pack(null, 'es-ES')
+      const bank = pack.bank.phrases[0]
+      expect(Object.keys(bank?.audio ?? {}).sort()).toEqual(['en-GB', 'es-ES'])
+      expect(pack.phrases[0]?.audio?.['en-GB']).toMatch(/^\/library\/speech\/[0-9a-f]{32}\.mp3\?v=/)
+      const deck = await library.generatePhrases('suggested', {
+        mode: 'topic',
+        input: 'hotel',
+        targetLang: 'es-ES',
+        nativeLang: 'en-GB',
+        count: 2,
+      })
+      const first = deck.phrases[0]
+      expect(first?.audio?.['es-ES']).toBe(
+        speechFor(
+          {
+            provider: 'elevenlabs',
+            apiKey: 'k',
+            model: 'm',
+            outputFormat: 'mp3',
+            voices: { 'es-ES': 'v-es' },
+            stubRender: false,
+          },
+          { 'es-ES': first?.target ?? '' },
+        )['es-ES'],
+      )
+      // What was suggested may be spoken: its utterance is the library's now.
+      const spoken = await database.query<{ owner_id: string | null }>(
+        'SELECT owner_id FROM library_speech WHERE id = $1',
+        [utteranceId('en-GB', first?.native ?? '')],
+      )
+      expect(spoken.rows).toHaveLength(1)
+    } finally {
+      vi.stubEnv('TTS_PROVIDER', 'stub')
+      vi.stubEnv('LIMIT_PHRASES_DAILY', '2')
+    }
+  })
+
   it('counts a learner’s phrase clips against their own day as well as the server’s', async () => {
     vi.stubEnv('LIMIT_SPEECH_OWNER_DAILY', '1')
     const transport = {
