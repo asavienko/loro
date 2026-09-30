@@ -254,7 +254,7 @@ export function AlbumScreen({ id }: { id: string }) {
         )}
         {mine && <Button variant="tonal" icon="add" label={c.music.makeSong} onPress={() => nav.makeSong({ albumId: album.id })} style={styles.add} />}
       </View>
-      {album.owner === 'other' && <MoreAlbumsByMaker albumId={album.id} author={album.author} />}
+      {album.owner === 'other' && <MoreAlbumsByMaker key={album.id} albumId={album.id} author={album.author} />}
     </ScrollView>
   );
 }
