@@ -49,7 +49,14 @@ export async function visitProviderPage(url: string, returnTo: string, next: Pen
   // One page at a time: a second would replace the first's verifier and fail its return.
   if (pending) return 'cancelled';
   pending = next;
-  const result = await WebBrowser.openAuthSessionAsync(url, returnTo);
+  let result: WebBrowser.WebBrowserAuthSessionResult;
+  try {
+    result = await WebBrowser.openAuthSessionAsync(url, returnTo);
+  } catch (error) {
+    // The page couldn't open: the next attempt starts afresh.
+    pending = null;
+    throw error;
+  }
   if (result.type !== 'success') {
     pending = null;
     return 'cancelled';

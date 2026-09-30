@@ -2,7 +2,7 @@
 // them so the tab bar and mini-players stay under them. The phrase mini-player docks above the tab
 // bar whenever something is queued; the song mini-player, in Music's night colours, while a song is
 // loaded.
-import { Tabs, useRouter } from 'expo-router';
+import { Tabs, usePathname, useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { currentPhraseId } from '@shared/state/selectors';
 import { hrefOf, useShell } from '../../src/nav/Shell';
@@ -30,13 +30,15 @@ export default function TabsLayout() {
 function BottomChrome() {
   const router = useRouter();
   const { tab } = useShell();
+  const pathname = usePathname();
   const { state } = useStore();
   const queued = currentPhraseId(state.player) !== null;
   const music = useMusic();
   // Each side keeps its own player docked; the other side's shows only while it is sounding, so a
   // paused phrase loop doesn't sit on the music side, nor a paused song on the phrase side.
-  const musicSide = tab === 'music';
-  const showMusic = music.song !== null && (musicSide || music.playing);
+  // An album is the music side whichever tab it was opened from.
+  const musicSide = tab === 'music' || pathname.startsWith('/album/');
+  const showMusic = music.song !== null && (musicSide || music.playing || music.buffering);
   const showPhrases = queued && (!musicSide || state.player.status === 'playing');
   return (
     <View style={styles.chrome}>

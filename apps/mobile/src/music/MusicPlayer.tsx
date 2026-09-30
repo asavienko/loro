@@ -48,6 +48,9 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const [queue, setQueue] = useState<Song[]>([]);
   const [index, setIndex] = useState(0);
   const wantsPlay = useRef(false);
+  // Each load (and stop) takes a number; a load whose song URL comes back after a newer one started
+  // (or after the music stopped) plays nothing.
+  const loads = useRef(0);
 
   useEffect(() => {
     void setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true, interruptionMode: 'doNotMix' }).catch(() => {});
@@ -57,8 +60,9 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     async (from: Album | null, songs: Song[], at: number) => {
       const song = songs[at];
       if (!song) return;
+      const mine = ++loads.current;
       const uri = await playableUrl(song);
-      if (!uri) return;
+      if (!uri || mine !== loads.current) return;
       player.replace({ uri });
       wantsPlay.current = true;
       player.play();
@@ -116,13 +120,18 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     return () => subscription.remove();
   }, [player, stepRef, atEnd]);
 
-  // The phrase loop starting pauses the song.
+  // One sounds at a time. The phrase loop starting pauses the song; the song starting while the loop
+  // plays (from the lock screen or the notification) pauses the loop.
+  const before = useRef({ phrases: state.player.status, song: status.playing });
   useEffect(() => {
-    if (state.player.status === 'playing' && status.playing) {
+    const was = before.current;
+    before.current = { phrases: state.player.status, song: status.playing };
+    if (state.player.status !== 'playing' || !status.playing) return;
+    if (was.phrases !== 'playing') {
       wantsPlay.current = false;
       player.pause();
-    }
-  }, [state.player.status, status.playing, player]);
+    } else actions.pause();
+  }, [state.player.status, status.playing, player, actions]);
 
   const value = useMemo<MusicValue>(
     () => ({
@@ -150,6 +159,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       previous: () => (status.currentTime > 3 ? void player.seekTo(0) : step(-1)),
       seek: (seconds) => void player.seekTo(Math.max(0, seconds)),
       stop: () => {
+        loads.current++;
         wantsPlay.current = false;
         player.pause();
         try {

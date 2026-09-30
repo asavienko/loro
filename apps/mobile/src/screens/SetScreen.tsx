@@ -412,7 +412,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
 
       {/* The music side of a served set (plan 106): its songs, and making one. */}
       {served && <SetSongs setId={setId} />}
-      {served?.owner === 'other' && <MoreSetsByMaker setId={setId} author={served.author} />}
+      {served?.owner === 'other' && <MoreSetsByMaker key={setId} setId={setId} author={served.author} />}
 
       {view.kind === 'own' && <PickPhrasesSheet setId={picking ? setId : null} onClose={() => setPicking(false)} />}
 

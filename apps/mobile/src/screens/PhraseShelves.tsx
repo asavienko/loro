@@ -100,7 +100,8 @@ function Community() {
   const [searched, setSearched] = useState('');
   const [sort, setSort] = useState<CommunitySort>('new');
   const [found, setFound] = useState<{ sets: PhraseSet[]; phrases: PhraseWire[] } | null>(null);
-  const [offline, setOffline] = useState(false);
+  // Why the list couldn't load: no connection, or the server failed (either way no endless spinner).
+  const [problem, setProblem] = useState<'offline' | 'failed' | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -109,9 +110,9 @@ function Community() {
         (reply) => {
           if (!live) return;
           setFound({ sets: reply.sets.filter((s) => s.owner !== 'me'), phrases: reply.phrases });
-          setOffline(false);
+          setProblem(null);
         },
-        (error: unknown) => live && setOffline(unreachable(error)),
+        (error: unknown) => live && setProblem(unreachable(error) ? 'offline' : 'failed'),
       );
       return () => {
         live = false;
@@ -159,8 +160,8 @@ function Community() {
         <Chip label={c.community.sortNew} selected={sort === 'new'} onPress={() => order('new')} />
         <Chip label={c.community.sortPopular} selected={sort === 'popular'} onPress={() => order('popular')} />
       </View>
-      {offline ? (
-        <Txt color="secondary">{c.community.offline}</Txt>
+      {problem ? (
+        <Txt color="secondary">{problem === 'offline' ? c.community.offline : c.account.errors.generic}</Txt>
       ) : found === null ? (
         <ActivityIndicator color={colors.primaryContainer} />
       ) : found.sets.length === 0 ? (

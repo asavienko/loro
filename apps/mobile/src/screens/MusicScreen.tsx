@@ -30,7 +30,8 @@ export function MusicScreen() {
   const mine = albums.filter((a) => a.owner === 'me');
   const saved = albums.filter((a) => a.owner === 'other' && a.saved);
   const [community, setCommunity] = useState<Album[] | null>(null);
-  const [offline, setOffline] = useState(false);
+  // Why the list couldn't load: no connection, or the server failed (either way no endless spinner).
+  const [problem, setProblem] = useState<'offline' | 'failed' | null>(null);
   const [query, setQuery] = useState('');
   // The search last sent: refetched with the tab's focus, so a search stays put across visits.
   const [searched, setSearched] = useState('');
@@ -43,9 +44,9 @@ export function MusicScreen() {
         .then((reply) => {
           if (!live) return;
           setCommunity(reply.albums.filter((a) => a.owner !== 'me'));
-          setOffline(false);
+          setProblem(null);
         })
-        .catch((error: unknown) => live && setOffline(unreachable(error)));
+        .catch((error: unknown) => live && setProblem(unreachable(error) ? 'offline' : 'failed'));
       return () => {
         live = false;
       };
@@ -85,8 +86,8 @@ export function MusicScreen() {
         icon="groups"
         albums={community ?? []}
         width={card}
-        loading={community === null && !offline}
-        empty={offline ? c.community.offline : searched ? c.community.noAlbumsFound(searched) : c.community.emptyAlbums}
+        loading={community === null && !problem}
+        empty={problem === 'offline' ? c.community.offline : problem ? c.account.errors.generic : searched ? c.community.noAlbumsFound(searched) : c.community.emptyAlbums}
       >
         <TextInput
           value={query}
