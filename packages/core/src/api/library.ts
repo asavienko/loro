@@ -26,6 +26,18 @@ export const LIBRARY_TEXT = {
   noteText: 300,
 }
 
+/** Links are how spam travels; nothing a learner names or describes here needs one. */
+const LINK = /https?:\/\/|www\.|[a-z0-9-]+\.(?:com|net|org|io|ru|xyz|info|biz|top|link|click)\b/i
+
+/** Text other learners may read (titles, descriptions, names): trimmed, bounded, without links. */
+export const shownText = (max: number, min = 0) =>
+  z
+    .string()
+    .trim()
+    .min(min)
+    .max(max)
+    .refine((text) => !LINK.test(text), { message: 'Links are not allowed here' })
+
 const NoteSchema = z.strictObject({
   title: z.string().trim().min(1).max(LIBRARY_TEXT.noteTitle),
   text: z.string().trim().min(1).max(LIBRARY_TEXT.noteText),
@@ -59,8 +71,8 @@ export const MAX_SET_PHRASES = 40
 
 export const CreateSetSchema = z
   .strictObject({
-    title: z.string().trim().min(1).max(LIBRARY_TEXT.title),
-    description: z.string().trim().max(LIBRARY_TEXT.description).optional(),
+    title: shownText(LIBRARY_TEXT.title, 1),
+    description: shownText(LIBRARY_TEXT.description).optional(),
     targetLang: LibraryCourseSchema,
     nativeLang: LibraryLanguageSchema,
     level: LevelSchema.default('A2'),
@@ -79,8 +91,8 @@ export const CreateSetSchema = z
   })
 
 export const UpdateSetSchema = z.strictObject({
-  title: z.string().trim().min(1).max(LIBRARY_TEXT.title).optional(),
-  description: z.string().trim().max(LIBRARY_TEXT.description).nullable().optional(),
+  title: shownText(LIBRARY_TEXT.title, 1).optional(),
+  description: shownText(LIBRARY_TEXT.description).nullable().optional(),
   level: LevelSchema.optional(),
   visibility: VisibilitySchema.optional(),
   coverId: LibraryIdSchema.nullable().optional(),
@@ -90,16 +102,16 @@ export const UpdateSetSchema = z.strictObject({
 })
 
 export const CreateAlbumSchema = z.strictObject({
-  title: z.string().trim().min(1).max(LIBRARY_TEXT.title),
-  description: z.string().trim().max(LIBRARY_TEXT.description).optional(),
+  title: shownText(LIBRARY_TEXT.title, 1),
+  description: shownText(LIBRARY_TEXT.description).optional(),
   targetLang: LibraryCourseSchema,
   coverId: LibraryIdSchema.optional(),
   visibility: VisibilitySchema.default('private'),
 })
 
 export const UpdateAlbumSchema = z.strictObject({
-  title: z.string().trim().min(1).max(LIBRARY_TEXT.title).optional(),
-  description: z.string().trim().max(LIBRARY_TEXT.description).nullable().optional(),
+  title: shownText(LIBRARY_TEXT.title, 1).optional(),
+  description: shownText(LIBRARY_TEXT.description).nullable().optional(),
   visibility: VisibilitySchema.optional(),
   coverId: LibraryIdSchema.nullable().optional(),
   removeSongIds: z.array(LibraryIdSchema).max(100).optional(),
@@ -118,7 +130,7 @@ export const ReportSchema = z.strictObject({
 })
 
 export const ProfileSchema = z.strictObject({
-  displayName: z.string().trim().min(1).max(40),
+  displayName: shownText(40, 1),
 })
 
 export const SUGGEST_MODES = ['topic', 'keywords', 'text'] as const
@@ -160,8 +172,8 @@ export const GenerateNotesSchema = z
 
 export const GenerateCoverSchema = z.strictObject({
   kind: z.enum(['set', 'album']),
-  title: z.string().trim().min(1).max(LIBRARY_TEXT.title),
-  description: z.string().trim().max(200).optional(),
+  title: shownText(LIBRARY_TEXT.title, 1),
+  description: shownText(200).optional(),
   /** The learner's set or album to put the cover on once drawn. */
   attachTo: LibraryIdSchema.optional(),
 })
@@ -171,7 +183,7 @@ export const GenerateSongSchema = z.strictObject({
   setId: LibraryIdSchema,
   styleId: z.enum(MUSIC_STYLE_IDS),
   nativeLang: LibraryLanguageSchema,
-  title: z.string().trim().min(1).max(LIBRARY_TEXT.title).optional(),
+  title: shownText(LIBRARY_TEXT.title, 1).optional(),
   /** The learner's album to add it to; without one, a new album named after the set. */
   albumId: LibraryIdSchema.optional(),
 })
