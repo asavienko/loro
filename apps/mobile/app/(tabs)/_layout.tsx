@@ -33,8 +33,9 @@ function BottomChrome() {
   const { state } = useStore();
   const queued = currentPhraseId(state.player) !== null;
   const music = useMusic();
-  // One player (plan 107): its bar shows what was started last, a song or the phrase loop.
-  const showSong = music.front;
+  // One player (plan 107): its bar shows what was started last, a song or the phrase loop; a song
+  // still loaded shows when no phrase is queued.
+  const showSong = music.song !== null && (music.front || !queued);
   const showPhrases = !showSong && queued;
   return (
     <View style={styles.chrome}>

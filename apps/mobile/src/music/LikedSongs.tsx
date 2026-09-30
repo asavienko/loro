@@ -3,6 +3,7 @@
 // that has gone (removed, or made private) is left out.
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { unreachable } from '@shared/api/client';
 import { fetchAlbum, fetchSong, type Song } from '@shared/api/library';
 import { findSet } from '@shared/content';
 import { likedSongIds } from '@shared/state/selectors';
@@ -13,6 +14,9 @@ import { useToast } from '../ui/Toast';
 import { problemText } from '../ui/problems';
 import { colors, radius, TARGET } from '../ui/theme';
 import { clockTime, useMusic } from './MusicPlayer';
+
+/** Songs fetched once, kept for when the next fetch can't reach the server. */
+const seen = new Map<string, Song>();
 
 export function LikedSongs() {
   const c = useCopy();
@@ -26,7 +30,18 @@ export function LikedSongs() {
   useEffect(() => {
     let live = true;
     const wanted = key ? key.split(',') : [];
-    void Promise.all(wanted.map((id) => fetchSong(id).catch(() => null))).then((found) => {
+    void Promise.all(
+      wanted.map((id) =>
+        fetchSong(id).then(
+          (song) => {
+            seen.set(id, song);
+            return song;
+          },
+          // Offline: the copy from before. Gone: nothing.
+          (error: unknown) => (unreachable(error) ? (seen.get(id) ?? null) : null),
+        ),
+      ),
+    ).then((found) => {
       if (live) setSongs(found.filter((s): s is Song => s !== null && s.status === 'ready'));
     });
     return () => {
@@ -36,9 +51,10 @@ export function LikedSongs() {
 
   const target = state.learner.profile.targetLang;
   // This course's songs (a song whose set this device doesn't know is kept rather than guessed away).
+  // Only what is liked now: an unliked song leaves before the next fetch returns.
   const shown = (songs ?? []).filter((s) => {
     const set = findSet(s.setId);
-    return !set || set.targetLang === target;
+    return ids.includes(s.id) && (!set || set.targetLang === target);
   });
   if (ids.length === 0 || shown.length === 0) return null;
 

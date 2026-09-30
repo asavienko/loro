@@ -284,7 +284,8 @@ function sanitizePending(value: unknown, learner: LearnerState): PendingRating[]
     // Saved before ratings synced between tabs: its last change is its own time.
     const changedAt = num(p.changedAt) ? p.changedAt : p.at;
     const day = isLocalDayOf(p.day, p.at) ? { day: p.day } : {};
-    return [{ key, phraseId, setId: str(p.setId) ? p.setId : null, grade: p.grade as Grade, at: p.at, changedAt, ...(p.undone === true ? { undone: true } : {}), ...day }];
+    const song = str(p.songId) ? { songId: p.songId } : {};
+    return [{ key, phraseId, setId: str(p.setId) ? p.setId : null, grade: p.grade as Grade, at: p.at, changedAt, ...(p.undone === true ? { undone: true } : {}), ...day, ...song }];
   });
 }
 

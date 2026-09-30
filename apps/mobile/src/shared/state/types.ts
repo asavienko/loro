@@ -161,6 +161,11 @@ export interface PendingRating {
   changedAt: number;
   /** Undone inside its window: kept until the window closes so the undo reaches other tabs. */
   undone?: boolean;
+  /**
+   * Given by rating this song in the player (plan 107): its undo and its "N phrases reviewed" are the
+   * song's alone. A rating the phrase loop gives the phrase afterwards makes it the loop's.
+   */
+  songId?: string;
   /** The local day it was given, which its log entry keeps. */
   day?: LocalDay;
 }

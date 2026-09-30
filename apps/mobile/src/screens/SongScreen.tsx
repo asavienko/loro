@@ -14,8 +14,8 @@ import { useNav } from '@shared/nav/NavContext';
 import { formatElapsed } from '@shared/state/clock';
 import { findPhrase } from '@shared/state/catalog';
 import { RATING_WINDOW_MS } from '@shared/state/memory';
-import { isLiked, pendingFor, windowLeft } from '@shared/state/selectors';
-import type { Grade } from '@shared/state/types';
+import { isLiked, windowLeft } from '@shared/state/selectors';
+import type { Grade, PendingRating } from '@shared/state/types';
 import { AlbumCover } from '../music/AlbumCover';
 import { clockTime, useMusic } from '../music/MusicPlayer';
 import { useCopy, useNow, useStore } from '../state/store';
@@ -194,7 +194,8 @@ export function SongScreen() {
 
 /**
  * Missed / Hard / Easy for a song: each reviews every phrase of this learner's course that the song
- * sings, with the same five-minute window and undo as a phrase's rating.
+ * sings and that has no rating of its own waiting, with the same five-minute window and undo as a
+ * phrase's rating. What it says (the grade, how many phrases) is read from the ratings the song gave.
  */
 function SongRating({ song }: { song: Song }) {
   const c = useCopy();
@@ -203,26 +204,33 @@ function SongRating({ song }: { song: Song }) {
   const now = useNow(1000);
   const phraseIds = [...new Set(song.sections.flatMap((s) => s.lines).flatMap((l) => (l.phraseId ? [l.phraseId] : [])))].filter((id) => findPhrase(state.learner, id));
   if (phraseIds.length === 0) return null;
-  const pending = pendingFor(state, phraseIds[0]);
-  const left = pending ? Math.min(RATING_WINDOW_MS, windowLeft(pending, Math.max(now, pending.at))) : 0;
-  const rated = pending && left > 0 ? pending : undefined;
+  const open = (p: PendingRating) => !p.undone && windowLeft(p, Math.max(now, p.at)) > 0;
+  const given = state.pending.filter((p) => p.songId === song.id && open(p) && phraseIds.includes(p.phraseId));
+  // Phrases rated some other way (the loop, another song) keep that rating: the song leaves them be.
+  const ratedElsewhere = new Set(state.pending.filter((p) => p.songId !== song.id && open(p)).map((p) => p.phraseId));
+  const ratable = phraseIds.filter((id) => !ratedElsewhere.has(id));
+  const rated = given[0];
+  const left = given.length > 0 ? Math.min(RATING_WINDOW_MS, ...given.map((p) => windowLeft(p, Math.max(now, p.at)))) : 0;
+  const count = given.length > 0 ? given.length : ratable.length;
   const rate = (grade: Grade) => {
-    actions.ratePhrases(phraseIds, song.setId, grade);
+    if (ratable.length === 0 && given.length === 0) return;
+    actions.ratePhrases(song.id, phraseIds, song.setId, grade);
     if (grade === 'easy') easyCue();
     else gentleCue();
-    announce(c.music.songRated(c.common.grade[grade], phraseIds.length));
+    announce(c.music.songRated(c.common.grade[grade], count));
   };
+  if (count === 0) return null;
   return (
     <View style={styles.rating}>
       <View style={styles.ratingLine}>
         {rated ? (
           <>
-            <Txt style={{ flex: 1 }}>{c.music.songRated(c.common.grade[rated.grade], phraseIds.length)}</Txt>
-            <Button variant="text" label={c.player.undoFor(formatElapsed(left))} accessibilityLabel={c.player.undoLabel(formatElapsed(left))} onPress={() => actions.unratePhrases(phraseIds)} />
+            <Txt style={{ flex: 1 }}>{c.music.songRated(c.common.grade[rated.grade], given.length)}</Txt>
+            <Button variant="text" label={c.player.undoFor(formatElapsed(left))} accessibilityLabel={c.player.undoLabel(formatElapsed(left))} onPress={() => actions.unratePhrases(song.id)} />
           </>
         ) : (
           <Txt color="secondary" align="center" style={{ flex: 1 }}>
-            {c.music.rateSong(phraseIds.length)}
+            {c.music.rateSong(ratable.length)}
           </Txt>
         )}
       </View>
