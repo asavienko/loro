@@ -101,6 +101,8 @@ interface SetRow {
   created_at: string | number
   updated_at: string | number
   author?: string | null
+  /** Songs sung from it that anyone may hear, or its maker (SET_SELECT). */
+  song_count?: string | number
 }
 interface PhraseRow {
   id: string
@@ -1595,7 +1597,15 @@ export class LibraryService {
   }
 }
 
-const SET_SELECT = `SELECT s.*, p.display_name AS author FROM library_sets s LEFT JOIN library_profiles p ON p.user_id = s.owner_id`
+/**
+ * A set with its maker's name and how many songs are sung from it that anyone may hear, or its maker
+ * (plan 107: a cover says whether a set holds songs too).
+ */
+const SET_SELECT = `SELECT s.*, p.display_name AS author,
+  (SELECT count(*) FROM library_songs so JOIN library_albums a ON a.id = so.album_id
+    WHERE so.set_id = s.id AND so.status = 'ready'
+      AND (a.origin = 'loro' OR a.visibility = 'public' OR a.owner_id = s.owner_id)) AS song_count
+  FROM library_sets s LEFT JOIN library_profiles p ON p.user_id = s.owner_id`
 const ALBUM_SELECT = `SELECT a.*, p.display_name AS author,
   (SELECT count(*) FROM library_songs so WHERE so.album_id = a.id AND so.status = 'ready') AS song_count,
   (SELECT CASE WHEN count(so.duration_ms) = count(*) THEN coalesce(sum(so.duration_ms), 0) END FROM library_songs so WHERE so.album_id = a.id AND so.status = 'ready') AS duration_ms
@@ -1702,6 +1712,7 @@ function toSetWire(
     coverUrl: coverPath(row.cover_id),
     targetLang: row.target_lang,
     phraseIds: phrases.filter((p) => p.set_id === row.id).map((p) => p.id),
+    songCount: num(row.song_count),
     owner,
     author: row.origin === 'loro' ? null : (row.author ?? null),
     visibility: row.visibility,
