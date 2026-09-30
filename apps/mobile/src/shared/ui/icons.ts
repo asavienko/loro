@@ -75,6 +75,7 @@ export const ICON_NAMES = [
   'event_available',
   'event_busy',
   'event_repeat',
+  'explore',
   'family_group',
   'family_restroom',
   'favorite',
