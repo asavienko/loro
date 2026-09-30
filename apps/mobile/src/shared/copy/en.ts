@@ -630,6 +630,8 @@ export function makeEn(n: Plural) {
       emptyAlbums: 'No one has shared an album in this course yet.',
       search: 'Search shared sets',
       searchAlbums: 'Search shared albums',
+      moreBy: (name: string) => `More from ${name}`,
+      moreByLearner: 'More from this learner',
       sortNew: 'Newest',
       sortPopular: 'Most saved',
       sortLabel: 'Order',

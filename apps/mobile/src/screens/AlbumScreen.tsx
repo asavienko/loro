@@ -11,6 +11,7 @@ import { AlbumCover } from '../music/AlbumCover';
 import { clockTime, useMusic } from '../music/MusicPlayer';
 import { RenameSheet } from '../sheets/RenameSheet';
 import { ReportSheet } from '../sheets/ReportSheet';
+import { MoreAlbumsByMaker } from './MoreByMaker';
 import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
 import { NightStatusBar } from '../music/NightStatusBar';
@@ -253,6 +254,7 @@ export function AlbumScreen({ id }: { id: string }) {
         )}
         {mine && <Button variant="tonal" icon="add" label={c.music.makeSong} onPress={() => nav.makeSong({ albumId: album.id })} style={styles.add} />}
       </View>
+      {album.owner === 'other' && <MoreAlbumsByMaker albumId={album.id} author={album.author} />}
     </ScrollView>
   );
 }

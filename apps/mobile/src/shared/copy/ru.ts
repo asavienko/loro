@@ -605,6 +605,8 @@ export function makeRu(n: Plural): Copy {
       emptyAlbums: 'В этом курсе ещё никто не поделился альбомом.',
       search: 'Поиск по общим наборам',
       searchAlbums: 'Искать среди общих альбомов',
+      moreBy: (name: string) => `Ещё от ${name}`,
+      moreByLearner: 'Ещё от этого ученика',
       sortNew: 'Новые',
       sortPopular: 'Чаще сохраняют',
       sortLabel: 'Порядок',

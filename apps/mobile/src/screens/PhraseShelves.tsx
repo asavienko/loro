@@ -65,7 +65,7 @@ function Shelf({ title, sets, onOpen }: { title: string; sets: PhraseSet[]; onOp
   );
 }
 
-function SetLine({ set, onPress }: { set: PhraseSet; onPress: () => void }) {
+export function SetLine({ set, onPress }: { set: PhraseSet; onPress: () => void }) {
   const c = useCopy();
   const by = set.owner === 'me' ? c.share[set.visibility] : set.author ? c.share.by(set.author) : c.share.byLearner;
   const byline = set.savedBy ? `${by} · ${c.community.savedBy(set.savedBy)}` : by;

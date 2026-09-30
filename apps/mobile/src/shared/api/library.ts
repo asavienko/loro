@@ -89,6 +89,10 @@ export const fetchCommunitySets = (targetLang: LanguageCode, q = '', sort: Commu
 export const fetchCommunityAlbums = (targetLang: LanguageCode, q = '', sort: CommunitySort = 'new') =>
   api<{ albums: Album[] }>(`/library/community?kind=albums&target=${targetLang}&q=${encodeURIComponent(q)}&sort=${sort}`);
 
+/** A shared set's or album's maker's other public ones, in its course. */
+export const fetchMoreSets = (setId: string) => api<{ sets: PhraseSet[]; phrases: PhraseWire[] }>(`/library/sets/${encodeURIComponent(setId)}/more`);
+export const fetchMoreAlbums = (albumId: string) => api<{ albums: Album[] }>(`/library/albums/${encodeURIComponent(albumId)}/more`);
+
 export const fetchSet = (id: string) => api<SetDetail>(`/library/sets/${encodeURIComponent(id)}`);
 export const fetchAlbum = (id: string) => api<AlbumDetail>(`/library/albums/${encodeURIComponent(id)}`);
 export const fetchShared = (code: string) => api<Shared>(`/library/shared/${encodeURIComponent(code)}`);

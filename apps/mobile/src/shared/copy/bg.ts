@@ -603,6 +603,8 @@ export function makeBg(n: Plural): Copy {
       emptyAlbums: 'Още никой не е споделил албум в този курс.',
       search: 'Търсене в споделените набори',
       searchAlbums: 'Търсене в споделените албуми',
+      moreBy: (name: string) => `Още от ${name}`,
+      moreByLearner: 'Още от този учащ',
       sortNew: 'Най-нови',
       sortPopular: 'Най-запазвани',
       sortLabel: 'Подредба',
