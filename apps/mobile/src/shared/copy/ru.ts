@@ -624,6 +624,8 @@ export function makeRu(n: Plural): Copy {
       signInToMake: 'Войдите, чтобы создавать наборы с ИИ',
     },
     music: {
+      needsConnection: 'Для песен нужно подключение. Попробуйте снова, когда будете в сети.',
+      cantPlay: 'Эту песню сейчас нельзя включить.',
       setSongs: 'Песни из этого набора',
       title: 'Музыка',
       loro: 'От Loro',

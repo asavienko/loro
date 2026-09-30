@@ -3,11 +3,12 @@
 // at a time: a song pauses the phrase loop, and the phrase loop starting pauses the song.
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { apiUrl } from '@shared/api/client';
+import { apiUrl, unreachable } from '@shared/api/client';
 import { fetchSong, type Song } from '@shared/api/library';
 import { useLatest } from '@shared/lib/useLatest';
 import type { Album } from '@shared/content';
-import { useStore } from '../state/store';
+import { useCopy, useStore } from '../state/store';
+import { useToast } from '../ui/Toast';
 
 interface MusicValue {
   album: Album | null;
@@ -32,18 +33,23 @@ const MusicContext = createContext<MusicValue | null>(null);
 
 /**
  * A song's URL is signed and expires (and a server restart may change its key), so each play asks
- * for the song again; the one it came with serves only when the server can't be reached.
+ * for the song again. Songs stream: with no connection there is nothing to play ('offline').
  */
-async function playableUrl(song: Song): Promise<string | null> {
-  const fresh = await fetchSong(song.id).catch(() => null);
-  const url = fresh?.audioUrl ?? song.audioUrl;
-  return url ? apiUrl(url) : null;
+async function playableUrl(song: Song): Promise<string | 'offline' | null> {
+  try {
+    const fresh = await fetchSong(song.id);
+    return fresh.audioUrl ? apiUrl(fresh.audioUrl) : null;
+  } catch (error) {
+    return unreachable(error) ? 'offline' : null;
+  }
 }
 
 export function MusicProvider({ children }: { children: ReactNode }) {
   const player = useAudioPlayer(null, { updateInterval: 250 });
   const status = useAudioPlayerStatus(player);
   const { state, actions } = useStore();
+  const c = useCopy();
+  const { toast } = useToast();
   const [album, setAlbum] = useState<Album | null>(null);
   const [queue, setQueue] = useState<Song[]>([]);
   const [index, setIndex] = useState(0);
@@ -62,7 +68,22 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       if (!song) return;
       const mine = ++loads.current;
       const uri = await playableUrl(song);
-      if (!uri || mine !== loads.current) return;
+      if (mine !== loads.current) return;
+      if (uri === null || uri === 'offline') {
+        // Nothing to play: say why, and leave nothing that looks like it's playing.
+        toast(uri === 'offline' ? c.music.needsConnection : c.music.cantPlay);
+        wantsPlay.current = false;
+        player.pause();
+        try {
+          player.clearLockScreenControls();
+        } catch {
+          // Nothing was shown.
+        }
+        setQueue([]);
+        setAlbum(null);
+        setIndex(0);
+        return;
+      }
       player.replace({ uri });
       wantsPlay.current = true;
       player.play();
@@ -77,7 +98,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
         // Controls are a nicety; the song plays without them.
       }
     },
-    [player],
+    [player, toast, c],
   );
 
   const playAlbum = useCallback(
