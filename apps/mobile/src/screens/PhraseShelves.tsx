@@ -68,16 +68,17 @@ function Shelf({ title, sets, onOpen }: { title: string; sets: PhraseSet[]; onOp
 export function SetLine({ set, onPress }: { set: PhraseSet; onPress: () => void }) {
   const c = useCopy();
   const by = set.owner === 'me' ? c.share[set.visibility] : set.author ? c.share.by(set.author) : c.share.byLearner;
+  const counts = set.songCount ? `${c.common.phrases(set.phraseIds.length)} · ${c.music.songs(set.songCount)}` : c.common.phrases(set.phraseIds.length);
   const byline = set.savedBy ? `${by} · ${c.community.savedBy(set.savedBy)}` : by;
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`${set.title}, ${c.common.phrases(set.phraseIds.length)}, ${byline}`} onPress={onPress} style={({ pressed }) => [styles.line, pressed && styles.pressed]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={`${set.title}, ${counts}, ${byline}`} onPress={onPress} style={({ pressed }) => [styles.line, pressed && styles.pressed]}>
       <SetCover set={set} px={56} rounded={12} />
       <View style={styles.lineText}>
         <Txt variant="row" weight={600} numberOfLines={1} lang={set.targetLang}>
           {set.title}
         </Txt>
         <Txt variant="label" color="secondary" numberOfLines={1}>
-          {`${c.common.phrases(set.phraseIds.length)} · ${byline}`}
+          {`${counts} · ${byline}`}
         </Txt>
         {set.description && (
           <Txt variant="label" color="secondary" numberOfLines={1}>
