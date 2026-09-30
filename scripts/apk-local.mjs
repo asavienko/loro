@@ -51,9 +51,20 @@ if (!api)
   console.warn(
     'EXPO_PUBLIC_API_URL is not set: the APK will look for http://localhost:3000/v1, which a release build cannot reach. Set an HTTPS URL ending in /v1.',
   )
+// Where shared links point (https://…/shared/CODE): without it a phone shares loro:// links, which
+// open only where the app is installed.
+const web = process.env.EXPO_PUBLIC_WEB_URL || ''
+if (web) {
+  const url = new URL(web)
+  if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) {
+    throw new Error('EXPO_PUBLIC_WEB_URL must be HTTPS, without credentials/query/fragment')
+  }
+}
 env.EXPO_PUBLIC_API_URL = api
+env.EXPO_PUBLIC_WEB_URL = web
+const PUBLIC_KEYS = new Set(['EXPO_PUBLIC_API_URL', 'EXPO_PUBLIC_WEB_URL'])
 for (const key of Object.keys(env)) {
-  if (key.startsWith('EXPO_PUBLIC_') && key !== 'EXPO_PUBLIC_API_URL') delete env[key]
+  if (key.startsWith('EXPO_PUBLIC_') && !PUBLIC_KEYS.has(key)) delete env[key]
 }
 const run = (command, argv, cwd = root, capture = false) => {
   const result = spawnSync(command, argv, {

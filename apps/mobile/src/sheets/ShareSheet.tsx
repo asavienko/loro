@@ -16,8 +16,15 @@ import { useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
 
 
-/** The link that opens a shared item: the web origin in a browser, the app's scheme on a phone. */
+/** Where the web app is served, when this build knows (EXPO_PUBLIC_WEB_URL). */
+const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL || '').replace(/\/+$/, '');
+
+/**
+ * The link that opens a shared item: the web origin in a browser; on a phone the web app's address
+ * when the build knows it (it opens anywhere), else the app's own scheme (only where it's installed).
+ */
 export function shareUrl(code: string): string {
+  if (Platform.OS !== 'web' && WEB_URL) return `${WEB_URL}/shared/${code}`;
   return Linking.createURL(`/shared/${code}`);
 }
 
