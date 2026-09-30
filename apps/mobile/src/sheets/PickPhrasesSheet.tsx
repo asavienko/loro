@@ -1,12 +1,15 @@
 // Adds phrases to one of your own sets from the set itself (the web prototype's
 // src/sheets/PickPhrasesSheet.tsx): the course's phrases, found with the same word matching as
-// Explore, each with an Add / Added toggle. A toggle acts at once; Done closes the sheet.
+// Explore, each with an Add / Added toggle. A toggle changes the set in the learner's account at once
+// (plan 108); Done closes the sheet.
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { TOPICS, type Phrase } from '@shared/content';
-import { coursePhrases, findSetView, promptOf } from '@shared/state/catalog';
+import { coursePhrases, findSetView, ownSets, promptOf } from '@shared/state/catalog';
 import { matchesWords, queryWords } from '../screens/ExploreScreen';
+import { useMySets } from '../state/mySets';
 import { useCopy, useStore } from '../state/store';
+import { confirm } from '../ui/confirm';
 import { Button } from '../ui/Button';
 import { field, placeholderColor } from '../ui/field';
 import { Icon } from '../ui/Icon';
@@ -25,12 +28,20 @@ export function PickPhrasesSheet({ setId, onClose }: { setId: string | null; onC
 
 function Picker({ setId, onClose }: { setId: string; onClose: () => void }) {
   const c = useCopy();
-  const { state, actions } = useStore();
+  const { state } = useStore();
+  const my = useMySets();
   const [text, setText] = useState('');
   const { learner } = state;
   const set = findSetView(learner, setId);
   if (!set) return null;
-  const inSet = new Set(learner.ownSets[setId]?.phraseIds ?? []);
+  const inSet = new Set(set.phraseIds);
+  // A phrase this set holds and no other lists is deleted when taken out, which is said first.
+  const toggle = async (p: Phrase) => {
+    if (!inSet.has(p.id)) return void my.addToSet(setId, [p.id]);
+    const elsewhere = ownSets(learner).some((s) => s.id !== setId && s.phraseIds.includes(p.id));
+    if (p.setId === setId && !elsewhere && !(await confirm(c.phrase.removeDeletes(p.target), c.phrase.delete, c.common.cancel))) return;
+    void my.removeFromSet(setId, p.id);
+  };
   const words = queryWords(text);
 
   // Searchable as in Explore: the phrase, its translations, its set and topic, its tags.
@@ -106,7 +117,7 @@ function Picker({ setId, onClose }: { setId: string; onClose: () => void }) {
                       accessibilityLabel={`${added ? c.pickPhrases.added : c.pickPhrases.add} ${p.target}`}
                       accessibilityState={{ selected: added }}
                       aria-pressed={added}
-                      onPress={() => (added ? actions.removeFromSet(setId, p.id) : actions.addToSet(setId, [p.id]))}
+                      onPress={() => void toggle(p)}
                       style={({ pressed }) => [styles.toggle, added ? styles.on : styles.off, pressed && !added && styles.offPressed]}
                     >
                       <Icon name={added ? 'check' : 'add'} size="md" color={added ? 'inverseOnSurface' : 'onSurface'} />

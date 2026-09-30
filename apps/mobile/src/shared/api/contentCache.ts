@@ -2,7 +2,7 @@
 // and the sets it opened from a link or Community. `restoreContent` installs them before the
 // learner's state loads, so the app opens offline with its progress intact; `refreshCourse` asks the
 // API for a course's current pack and installs it.
-import { ContentPack, ExtraSets, forgetExtras, installedCourses, installedExtras, installedPack, installExtras, installPacks, LanguageCode, TARGET_LANGUAGES } from '../content';
+import { applySet, ContentPack, ExtraSets, forgetExtras, installedCourses, installedExtras, installedPack, installExtras, installPacks, LanguageCode, removeSet, TARGET_LANGUAGES } from '../content';
 import { fetchPack, type SetDetail } from './library';
 import { kvGet, kvRemove, kvSet } from './kv';
 
@@ -49,6 +49,18 @@ export async function refreshCourse(lang: LanguageCode): Promise<boolean> {
     saved.add(lang);
   }
   return !same;
+}
+
+/** A change to one of the learner's sets, shown at once and kept with the course's saved pack. */
+export async function keepSetChange(detail: SetDetail): Promise<void> {
+  const pack = applySet(detail);
+  if (pack) await kvSet(packKey(pack.targetLang), JSON.stringify(pack));
+}
+
+/** A deleted set of the learner's, gone at once and from the saved pack. */
+export async function forgetSet(id: string): Promise<void> {
+  const pack = removeSet(id);
+  if (pack) await kvSet(packKey(pack.targetLang), JSON.stringify(pack));
 }
 
 /** Keeps a set opened from outside the packs, so its phrases stay playable. */

@@ -200,9 +200,12 @@ describe('merge', () => {
   });
 
   it('likes, own phrases and the profile merge by last write; deletes win when newer', () => {
-    const a = run(fresh(), { type: 'ADD_OWN_PHRASE', target: 'Hola', native: 'Hi', now: T0 });
-    const id = Object.keys(a.learner.ownPhrases)[0];
-    const deleted = run(a, { type: 'DELETE_OWN_PHRASE', id, now: T0 + MINUTE });
+    // A phrase made on a device before plan 108, and its upload marking it deleted.
+    const id = 'mine-p-a.b-1';
+    const s0 = fresh();
+    const own = { id, targetLang: 'es-ES' as const, nativeLang: 'en-GB' as const, target: 'Hola', native: 'Hi', createdAt: T0, updatedAt: T0, deleted: false };
+    const a = { ...s0, learner: { ...s0.learner, ownPhrases: { [id]: own } } };
+    const deleted = run(a, { type: 'OWN_UPLOADED', phraseIds: [id], setIds: [], now: T0 + MINUTE });
     const liked = run(a, { type: 'TOGGLE_LIKE', kind: 'set', id: 'set-cafe', now: T0 + 2 * MINUTE });
     const merged = mergeLearner(deleted.learner, liked.learner);
     assert.equal(merged.ownPhrases[id].deleted, true);

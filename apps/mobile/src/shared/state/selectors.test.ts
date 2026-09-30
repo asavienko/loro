@@ -1,3 +1,4 @@
+import { installOwnSet, removeOwnSet } from '../content/fixture';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { chartAsMermaid, PLAYER_CHART } from './chart';
@@ -182,12 +183,14 @@ describe('the same phrase', () => {
   });
 
   it('finds a course or own phrase, but not the one being edited', () => {
-    const s = run(fresh(), { type: 'ADD_OWN_PHRASE', target: 'Hasta luego', native: 'See you', now: T0 });
+    installOwnSet('set-u-mine', [{ id: 'u-mine-01', target: 'Hasta luego', native: 'See you' }]);
+    const s = fresh();
     assert.equal(findSamePhrase(s.learner, 'la cuenta por favor')?.id, 'cafe-03');
     const own = findSamePhrase(s.learner, 'hasta LUEGO!')!;
     assert.ok(own.own);
     assert.equal(findSamePhrase(s.learner, 'Hasta luego', own.id), undefined);
     assert.equal(findSamePhrase(s.learner, '   '), undefined);
+    removeOwnSet('set-u-mine');
   });
 });
 
@@ -234,12 +237,8 @@ describe('history runs', () => {
 });
 
 describe('the current course only', () => {
-  it("a set takes only its course's phrases, and Today counts only this course", () => {
-    let s = run(fresh(), { type: 'CREATE_SET', title: 'Mixed', phraseIds: ['cafe-01', 'bg-kafene-01'], now: T0 });
-    const [set] = Object.values(s.learner.ownSets);
-    assert.deepEqual(set.phraseIds, ['cafe-01']);
-    s = run(s, { type: 'ADD_TO_SET', setId: set.id, phraseIds: ['bg-kafene-02'], now: T0 + 1 });
-    assert.deepEqual(s.learner.ownSets[set.id].phraseIds, ['cafe-01']);
+  it('Today counts only this course', () => {
+    let s = fresh();
     // A Bulgarian listen in the log while learning Spanish.
     const bg = { id: 'x.y-1', at: T0 + 5, device: 'x', kind: 'heard' as const, key: 'en-GB>bg-BG:bg-kafene-01', phraseId: 'bg-kafene-01', setId: 'set-bg-kafene', targetMs: 1000, nativeMs: 1000 };
     s = { ...s, learner: { ...s.learner, log: [...s.learner.log, bg] } };

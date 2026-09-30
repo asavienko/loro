@@ -1,52 +1,25 @@
-// Content plus the learner's own phrases and sets, seen as one catalog.
+// The content the app has installed, seen as one catalog: Loro's sets, the learner's own and saved
+// ones, all from the API (plan 108). Phrases and sets made on a device before they lived in the
+// learner's account are in learner state only until they are uploaded (state/upload.ts).
 import {
   BANK_PHRASES,
   CONTENT_PHRASES,
-  findBankPhrase,
   findContentPhrase,
   findSet,
   inLibrary,
   LanguageCode,
   Level,
+  librarySets,
   Phrase,
   PhraseSet,
   setsForCourse,
 } from '../content';
-import { deviceNotes } from '../notes';
 import { memoryKey } from './memory';
-import type { LearnerState, OwnPhrase, OwnSet } from './types';
+import type { LearnerState } from './types';
 
+/** The ids a device gave the learner's phrases and sets before they were uploaded (plan 108). */
 export const OWN_PHRASE_PREFIX = 'mine-p-';
 export const OWN_SET_PREFIX = 'mine-s-';
-
-export function ownPhraseToPhrase(own: OwnPhrase): Phrase {
-  // Its notes and picture: the bank's when it is a bank phrase, else what AI wrote for it (in the
-  // learner's language, so they also stand as that language's version), else what the device's
-  // rules work out from the phrase itself. Every phrase has all of them.
-  const bank = findBankPhrase(own.bankId);
-  const device = bank || (own.notes && own.image) ? null : deviceNotes(own);
-  const written =
-    !bank && own.notes && own.nativeLang !== 'en-GB'
-      ? Object.fromEntries(Object.entries(own.notes).map(([kind, note]) => [kind, { [own.nativeLang]: { title: note.title, text: note.text } }]))
-      : {};
-  return {
-    id: own.id,
-    setId: null,
-    targetLang: own.targetLang,
-    target: own.target,
-    translations: { [own.nativeLang]: own.native },
-    register: null,
-    tags: [],
-    words: {},
-    image: bank?.image ?? own.image ?? device!.image,
-    notes: bank?.notes ?? own.notes ?? device!.notes,
-    noteTranslations: bank?.noteTranslations ?? (own.notes ? written : device!.noteTranslations),
-    ...(bank ? {} : { notesBy: own.notes ? ('ai' as const) : ('device' as const) }),
-    audio: null,
-    durationMs: null,
-    own: true,
-  };
-}
 
 /** The phrase bank's phrase that says the same as `text` in the course language, if there is one. */
 export function bankMatch(targetLang: LanguageCode, text: string): string | undefined {
@@ -54,12 +27,8 @@ export function bankMatch(targetLang: LanguageCode, text: string): string | unde
   return key ? BANK_PHRASES.find((b) => b.targetLang === targetLang && sameKey(b.target) === key)?.id : undefined;
 }
 
-export function findPhrase(learner: LearnerState, id: string | null | undefined): Phrase | undefined {
-  if (!id) return undefined;
-  const content = findContentPhrase(id);
-  if (content) return content;
-  const own = learner.ownPhrases[id];
-  return own && !own.deleted ? ownPhraseToPhrase(own) : undefined;
+export function findPhrase(_learner: LearnerState, id: string | null | undefined): Phrase | undefined {
+  return findContentPhrase(id);
 }
 
 /** The prompt in the learner's language, falling back to whatever the phrase has. */
@@ -76,13 +45,11 @@ export function keyOf(learner: LearnerState, phraseId: string): string {
   return memoryKey(learner.profile.nativeLang, target, phraseId);
 }
 
-/** A content set or one the learner made, as the set page shows it. */
+/** A set as the set page shows it: Loro's, the learner's own, or one they saved or opened. */
 export interface SetView {
   id: string;
-  kind: 'content' | 'own';
   title: string;
   content: PhraseSet | null;
-  own: OwnSet | null;
   topicId: string | null;
   level: Level | null;
   coverIcon: string;
@@ -90,36 +57,18 @@ export interface SetView {
   phraseIds: string[];
 }
 
-export function findSetView(learner: LearnerState, id: string | null | undefined): SetView | undefined {
-  if (!id) return undefined;
+export function findSetView(_learner: LearnerState, id: string | null | undefined): SetView | undefined {
   const content = findSet(id);
-  if (content) {
-    return {
-      id,
-      kind: 'content',
-      title: content.title,
-      content,
-      own: null,
-      topicId: content.topicId,
-      level: content.level,
-      coverIcon: content.coverIcon,
-      targetLang: content.targetLang,
-      phraseIds: content.phraseIds,
-    };
-  }
-  const own = learner.ownSets[id];
-  if (!own || own.deleted) return undefined;
+  if (!content) return undefined;
   return {
-    id,
-    kind: 'own',
-    title: own.title,
-    content: null,
-    own,
-    topicId: null,
-    level: null,
-    coverIcon: 'queue_music',
-    targetLang: own.targetLang,
-    phraseIds: own.phraseIds.filter((pid) => findPhrase(learner, pid)),
+    id: content.id,
+    title: content.title,
+    content,
+    topicId: content.topicId,
+    level: content.level,
+    coverIcon: content.coverIcon,
+    targetLang: content.targetLang,
+    phraseIds: content.phraseIds,
   };
 }
 
@@ -128,28 +77,25 @@ export function courseSets(learner: LearnerState): PhraseSet[] {
   return setsForCourse(learner.profile.targetLang);
 }
 
+/** The phrases the learner holds in their own sets, in the current course: theirs to edit and delete. */
 export function ownPhrases(learner: LearnerState): Phrase[] {
-  return Object.values(learner.ownPhrases)
-    .filter((p) => !p.deleted && p.targetLang === learner.profile.targetLang)
-    .sort((a, b) => b.createdAt - a.createdAt)
-    .map(ownPhraseToPhrase);
+  return CONTENT_PHRASES.filter((p) => p.own && p.targetLang === learner.profile.targetLang);
 }
 
-export function ownSets(learner: LearnerState): OwnSet[] {
-  return Object.values(learner.ownSets)
-    .filter((s) => !s.deleted && s.targetLang === learner.profile.targetLang)
-    .sort((a, b) => b.updatedAt - a.updatedAt);
+/** The learner's own sets of the current course, their "My phrases" set among them. */
+export function ownSets(learner: LearnerState): PhraseSet[] {
+  return librarySets(learner.profile.targetLang).filter((s) => s.owner === 'me');
 }
 
-/** Every phrase of the current course: content in set order, then the learner's own. */
+/** Every phrase of the current course in the learner's library: Loro's, their own and saved sets' (plan 106). */
 export function coursePhrases(learner: LearnerState): Phrase[] {
   const target = learner.profile.targetLang;
-  // Loro's, the learner's own and saved sets'; not a shared set only opened once (plan 106).
+  // Not a shared set only opened once.
   const kept = (p: Phrase) => {
     const set = findSet(p.setId);
     return set !== undefined && inLibrary(set);
   };
-  return [...CONTENT_PHRASES.filter((p) => p.targetLang === target && kept(p)), ...ownPhrases(learner)];
+  return CONTENT_PHRASES.filter((p) => p.targetLang === target && kept(p));
 }
 
 /** Case, accents, punctuation and spacing don't make a phrase different (search: "ano" finds "año"). */

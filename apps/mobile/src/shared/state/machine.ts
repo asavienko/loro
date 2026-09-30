@@ -9,9 +9,8 @@
 // next phrases of the course — except a queue with a natural end (a review, the
 // demo, a Library list), which plays once and stops. The allowed events per status
 // are in chart.ts.
-import { bankMatch, findPhrase, keyOf, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
-import { findBankPhrase } from '../content';
-import { clip, LIMITS, sayable, tidy } from './limits';
+import { findPhrase, keyOf } from './catalog';
+import { clip, LIMITS, tidy } from './limits';
 import { canHandle } from './chart';
 import { initialPlayer, initialState } from './initial';
 import { localDay } from './clock';
@@ -26,10 +25,7 @@ import type {
   LearnerState,
   LikeKind,
   LogEntry,
-  OwnNotes,
   PendingRating,
-  PhraseOrigin,
-  PhrasePick,
   PlayerState,
   Prefs,
   Profile,
@@ -97,39 +93,12 @@ export type AppEvent =
   /** Undo of a song's RATE_PHRASES inside its window: only the ratings the song gave. */
   | { type: 'UNRATE_PHRASES'; songId: string; now: number }
   /**
-   * `id`: the one the store promised its caller (so a toast can play the phrase, or a page open the
-   * set, before the next render). Taken unless it's in use; otherwise the counter's next id.
+   * Phrases and sets made on this device, now in the learner's account under the same ids (plan
+   * 108): marked deleted here, so every device stops keeping its copy. Progress stays with the ids.
    */
-  | {
-      type: 'ADD_OWN_PHRASE';
-      target: string;
-      native: string;
-      now: number;
-      id?: string;
-      origin?: PhraseOrigin;
-      /** Where its notes come from: the bank's phrase, or notes and a picture AI wrote for it. */
-      bankId?: string;
-      notes?: OwnNotes;
-      image?: string[];
-    }
-  | { type: 'EDIT_OWN_PHRASE'; id: string; target: string; native: string; now: number }
-  /** Notes and a picture AI wrote for one of the learner's own phrases, for the text it has as `target`. */
-  | { type: 'SET_OWN_NOTES'; id: string; target: string; notes: OwnNotes; image: string[]; now: number }
-  | { type: 'DELETE_OWN_PHRASE'; id: string; now: number }
-  | { type: 'RESTORE_OWN_PHRASE'; id: string; now: number }
-  | { type: 'CREATE_SET'; title: string; phraseIds: string[]; now: number; id?: string }
-  /** `at` inserts at that position (undoing a removal); otherwise at the end. */
-  | { type: 'ADD_TO_SET'; setId: string; phraseIds: string[]; at?: number; now: number }
-  | { type: 'REMOVE_FROM_SET'; setId: string; phraseId: string; now: number }
-  | { type: 'MOVE_IN_SET'; setId: string; phraseId: string; delta: -1 | 1; now: number }
-  | { type: 'RENAME_SET'; setId: string; title: string; now: number }
-  | { type: 'DELETE_SET'; setId: string; now: number }
-  | { type: 'RESTORE_SET'; setId: string; now: number }
-  /**
-   * What the learner kept in "Make a set", saved at once: new phrases become their own, then all
-   * of them a new set named `title` (under the promised `id`), or join their set `setId`.
-   */
-  | { type: 'ADD_PICKS'; picks: PhrasePick[]; now: number; title?: string; id?: string; setId?: string }
+  | { type: 'OWN_UPLOADED'; phraseIds: string[]; setIds: string[]; now: number }
+  /** The installed content changed (a pack downloaded, a set of the learner's changed). */
+  | { type: 'CONTENT_CHANGED'; now: number }
   | { type: 'SET_PROFILE'; profile: Partial<Omit<Profile, 'updatedAt'>>; now: number }
   | { type: 'RESTORE'; state: unknown }
   /** Another tab's or device's copy; `pending` only from another tab of this browser. */
@@ -164,16 +133,33 @@ export function shuffled<T>(items: T[], seed: number): T[] {
   return out;
 }
 
-/** The bank phrase `id`, if it is one in this course language. */
-function findBankFor(targetLang: string, id: string): string | undefined {
-  return findBankPhrase(id)?.targetLang === targetLang ? id : undefined;
-}
-
 /** A new id from the instance counter: "<device>.<instance>-<n>". */
 function takeId(state: AppState): [string, AppState] {
   const seq = state.device.seq + 1;
   const { id, instance } = state.device;
   return [`${id}.${instance}-${seq.toString(36)}`, { ...state, device: { ...state.device, seq } }];
+}
+
+/**
+ * A queued phrase may be gone, even the current one: deleted on another device, or from the learner's
+ * account (plan 108). Drops what's gone; if the current phrase went, pauses on the one after it
+ * rather than "play" a phrase that no longer exists.
+ */
+function withoutGone(state: AppState, now: number): AppState {
+  const current = state.player;
+  const known = (id: string) => Boolean(findPhrase(state.learner, id));
+  if (current.order.every(known)) return state;
+  const order = current.order.filter(known);
+  const currentGone = !known(current.order[current.index]);
+  const index = Math.min(current.order.slice(0, current.index).filter(known).length, Math.max(0, order.length - 1));
+  const cleaned: PlayerState = {
+    ...(currentGone ? { ...stopClock(current, now), phase: 'native' as const, repetition: 1, targetHeard: false, cycle: current.cycle + 1 } : current),
+    status: order.length === 0 ? 'idle' : currentGone ? 'paused' : current.status,
+    order,
+    baseOrder: current.baseOrder.filter(known),
+    index,
+  };
+  return { ...state, player: order.length === 0 ? initialPlayer() : cleaned };
 }
 
 function stopClock(player: PlayerState, now: number): PlayerState {
@@ -612,167 +598,13 @@ function step(state: AppState, event: AppEvent): AppState {
       return { ...state, learner: { ...learner, likes: { ...learner.likes, [k]: { liked, at: event.now } } } };
     }
 
-    case 'ADD_OWN_PHRASE': {
-      const target = trimmed(event.target, LIMITS.phrase);
-      const native = trimmed(event.native, LIMITS.phrase);
-      if (!sayable(target) || !native) return state;
-      const [seqId, next] = takeId(state);
-      const id = event.id?.startsWith(OWN_PHRASE_PREFIX) && !learner.ownPhrases[event.id] ? event.id : `${OWN_PHRASE_PREFIX}${seqId}`;
-      const { nativeLang, targetLang } = learner.profile;
-      // A bank phrase keeps its link; a phrase typed or written by AI that the bank also has takes it
-      // (the bank's notes are reviewed content); otherwise AI's notes, when it wrote some.
-      const bankId = (event.bankId && findBankFor(targetLang, event.bankId)) || (event.notes ? undefined : bankMatch(targetLang, target));
-      const phrase = {
-        id,
-        target,
-        native,
-        nativeLang,
-        targetLang,
-        createdAt: event.now,
-        updatedAt: event.now,
-        deleted: false,
-        ...(event.origin ? { origin: event.origin } : {}),
-        ...(bankId ? { bankId } : event.notes ? { notes: event.notes, ...(event.image ? { image: event.image } : {}) } : {}),
-      };
-      return { ...next, learner: { ...next.learner, ownPhrases: { ...next.learner.ownPhrases, [id]: phrase } } };
-    }
-
-    case 'ADD_PICKS': {
-      // One event, so the new phrases and their set appear, merge and sync together.
-      let next = state;
-      const ids: string[] = [];
-      for (const pick of event.picks) {
-        if ('phraseId' in pick) {
-          if (findPhrase(learner, pick.phraseId)) ids.push(pick.phraseId);
-          continue;
-        }
-        const before = next.learner.ownPhrases;
-        next = step(next, {
-          type: 'ADD_OWN_PHRASE',
-          target: pick.target,
-          native: pick.native,
-          origin: pick.origin,
-          id: pick.id,
-          bankId: pick.bankId,
-          notes: pick.notes,
-          image: pick.image,
-          now: event.now,
-        });
-        const added = Object.keys(next.learner.ownPhrases).find((id) => !before[id]);
-        if (added) ids.push(added);
-      }
-      if (ids.length === 0) return state;
-      if (event.setId) return step(next, { type: 'ADD_TO_SET', setId: event.setId, phraseIds: ids, now: event.now });
-      return step(next, { type: 'CREATE_SET', title: event.title ?? '', phraseIds: ids, now: event.now, id: event.id });
-    }
-
-    case 'EDIT_OWN_PHRASE': {
-      // A correction keeps the phrase's id, so its history and memory stay with it.
-      const own = learner.ownPhrases[event.id];
-      const target = trimmed(event.target, LIMITS.phrase);
-      const native = trimmed(event.native, LIMITS.phrase);
-      if (!own || own.deleted || !sayable(target) || !native) return state;
-      if (target === own.target && native === own.native) return state;
-      // Notes explain the text they were written for: a new text drops them, and takes the bank's
-      // notes if the bank has it.
-      const { bankId: _bankId, notes: _notes, image: _image, ...rest } = own;
-      const bankId = bankMatch(own.targetLang, target);
-      const updated = target === own.target ? { ...own, native, updatedAt: event.now } : { ...rest, target, native, updatedAt: event.now, ...(bankId ? { bankId } : {}) };
-      return { ...state, learner: { ...learner, ownPhrases: { ...learner.ownPhrases, [own.id]: updated } } };
-    }
-
-    case 'SET_OWN_NOTES': {
-      // Written for the text the phrase still has, and only where there are none (the bank's win).
-      const own = learner.ownPhrases[event.id];
-      if (!own || own.deleted || own.target !== event.target || own.bankId || own.notes) return state;
-      const updated = { ...own, notes: event.notes, image: event.image, updatedAt: event.now };
-      return { ...state, learner: { ...learner, ownPhrases: { ...learner.ownPhrases, [own.id]: updated } } };
-    }
-
-    case 'DELETE_OWN_PHRASE': {
-      const own = learner.ownPhrases[event.id];
-      if (!own || own.deleted || event.id === currentId) return state;
-      const index = player.order.indexOf(event.id);
-      const order = player.order.filter((id) => id !== event.id);
-      const removedBefore = player.order.slice(0, player.index).filter((id) => id === event.id).length;
-      return {
-        ...state,
-        player: index === -1 ? player : { ...player, order, baseOrder: player.baseOrder.filter((id) => id !== event.id), index: player.index - removedBefore },
-        learner: {
-          ...learner,
-          ownPhrases: { ...learner.ownPhrases, [event.id]: { ...own, deleted: true, updatedAt: event.now } },
-        },
-      };
-    }
-
-    // Undo of a delete: the later timestamp wins the merge, so the restore syncs too.
-    case 'RESTORE_OWN_PHRASE': {
-      const own = learner.ownPhrases[event.id];
-      if (!own || !own.deleted) return state;
-      return { ...state, learner: { ...learner, ownPhrases: { ...learner.ownPhrases, [event.id]: { ...own, deleted: false, updatedAt: event.now } } } };
-    }
-
-    case 'RESTORE_SET': {
-      const set = learner.ownSets[event.setId];
-      if (!set || !set.deleted) return state;
-      return { ...state, learner: { ...learner, ownSets: { ...learner.ownSets, [event.setId]: { ...set, deleted: false, updatedAt: event.now } } } };
-    }
-
-    case 'CREATE_SET': {
-      const title = trimmed(event.title, LIMITS.title);
-      if (!title) return state;
-      const [seqId, next] = takeId(state);
-      const id = event.id?.startsWith(OWN_SET_PREFIX) && !learner.ownSets[event.id] ? event.id : `${OWN_SET_PREFIX}${seqId}`;
-      // A set holds one course's phrases: another course's phrase (from a page left open
-      // across a switch, or a link) would play in the wrong language pair.
-      const inCourse = (pid: string) => findPhrase(learner, pid)?.targetLang === learner.profile.targetLang;
-      const phraseIds = [...new Set(event.phraseIds.filter(inCourse))];
-      const set = {
-        id,
-        title,
-        targetLang: learner.profile.targetLang,
-        phraseIds,
-        createdAt: event.now,
-        updatedAt: event.now,
-        deleted: false,
-      };
-      return { ...next, learner: { ...next.learner, ownSets: { ...next.learner.ownSets, [id]: set } } };
-    }
-
-    case 'ADD_TO_SET':
-    case 'REMOVE_FROM_SET':
-    case 'MOVE_IN_SET':
-    case 'RENAME_SET':
-    case 'DELETE_SET': {
-      const set = learner.ownSets[event.setId];
-      if (!set || set.deleted) return state;
-      let updated = set;
-      if (event.type === 'ADD_TO_SET') {
-        const adding = [...new Set(event.phraseIds)].filter((id) => findPhrase(learner, id)?.targetLang === set.targetLang && !set.phraseIds.includes(id));
-        if (adding.length === 0) return state;
-        const at = event.at === undefined ? set.phraseIds.length : Math.max(0, Math.min(event.at, set.phraseIds.length));
-        updated = { ...set, phraseIds: [...set.phraseIds.slice(0, at), ...adding, ...set.phraseIds.slice(at)] };
-      } else if (event.type === 'MOVE_IN_SET') {
-        const from = set.phraseIds.indexOf(event.phraseId);
-        const to = from + event.delta;
-        if (from === -1 || to < 0 || to >= set.phraseIds.length) return state;
-        const phraseIds = [...set.phraseIds];
-        [phraseIds[from], phraseIds[to]] = [phraseIds[to], phraseIds[from]];
-        updated = { ...set, phraseIds };
-      } else if (event.type === 'REMOVE_FROM_SET') {
-        updated = { ...set, phraseIds: set.phraseIds.filter((id) => id !== event.phraseId) };
-      } else if (event.type === 'RENAME_SET') {
-        const title = trimmed(event.title, LIMITS.title);
-        // An unchanged name changes nothing (not even the set's place, which follows updatedAt).
-        if (!title || title === set.title) return state;
-        updated = { ...set, title };
-      } else {
-        updated = { ...set, deleted: true };
-      }
-      return {
-        ...state,
-        learner: { ...learner, ownSets: { ...learner.ownSets, [set.id]: { ...updated, updatedAt: event.now } } },
-      };
+    case 'OWN_UPLOADED': {
+      const phrases = event.phraseIds.filter((id) => learner.ownPhrases[id] && !learner.ownPhrases[id].deleted);
+      const sets = event.setIds.filter((id) => learner.ownSets[id] && !learner.ownSets[id].deleted);
+      if (phrases.length === 0 && sets.length === 0) return state;
+      const gone = <T extends { deleted: boolean; updatedAt: number }>(record: Record<string, T>, ids: string[]) =>
+        ({ ...record, ...Object.fromEntries(ids.map((id) => [id, { ...record[id], deleted: true, updatedAt: event.now }])) });
+      return { ...state, learner: { ...learner, ownPhrases: gone(learner.ownPhrases, phrases), ownSets: gone(learner.ownSets, sets) } };
     }
 
     case 'SET_PROFILE': {
@@ -813,24 +645,11 @@ function step(state: AppState, event: AppEvent): AppState {
       if (merged.profile.nativeLang !== learner.profile.nativeLang || merged.profile.targetLang !== learner.profile.targetLang) {
         return { ...state, learner: merged, player: { ...initialPlayer(), cycle: player.cycle + 1 } };
       }
-      // Another device may have deleted one of your queued phrases, even the current one
-      // (a local delete refuses that). Drop what's gone; if the current phrase went, pause
-      // on the one after it rather than "play" a phrase that no longer exists.
-      const current = state.player; // with any settings change above applied
-      const known = (id: string) => Boolean(findPhrase(merged, id));
-      if (current.order.every(known)) return { ...state, learner: merged };
-      const order = current.order.filter(known);
-      const currentGone = !known(current.order[current.index]);
-      const index = Math.min(current.order.slice(0, current.index).filter(known).length, Math.max(0, order.length - 1));
-      const cleaned: PlayerState = {
-        ...(currentGone ? { ...stopClock(current, event.now), phase: 'native' as const, repetition: 1, targetHeard: false, cycle: current.cycle + 1 } : current),
-        status: order.length === 0 ? 'idle' : currentGone ? 'paused' : current.status,
-        order,
-        baseOrder: current.baseOrder.filter(known),
-        index,
-      };
-      return { ...state, learner: merged, player: order.length === 0 ? initialPlayer() : cleaned };
+      return withoutGone({ ...state, learner: merged }, event.now);
     }
+
+    case 'CONTENT_CHANGED':
+      return withoutGone(state, event.now);
 
     case 'RESET':
       // Progress goes; the device keeps its identity so ids stay unique.

@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { afterEach, before, describe, it } from 'node:test';
 import { setTokenSource } from '../api/client';
-import { fresh, run, T0 } from '../state/testing';
+import { installOwnSet } from '../content/fixture';
+import { fresh } from '../state/testing';
 import { readPhrases, SUGGEST_URL } from './remote';
 import { fromWritten, suggest } from './suggest';
 import type { SuggestRequest } from './types';
@@ -56,7 +57,8 @@ describe('readPhrases', () => {
 
 describe('fromWritten', () => {
   it('marks new phrases as AI-written and offers known ones as themselves', () => {
-    const s = run(fresh(), { type: 'ADD_OWN_PHRASE', target: 'Tengo tos', native: 'I have a cough', now: T0 });
+    installOwnSet('set-u-tos', [{ id: 'u-tos-01', target: 'Tengo tos', native: 'I have a cough' }]);
+    const s = fresh();
     const out = fromWritten(
       s.learner,
       [
@@ -73,7 +75,7 @@ describe('fromWritten', () => {
       [
         ['ai', '¿Hay una farmacia cerca?', null],
         ['course', 'La cuenta, por favor', 'cafe-03'],
-        ['mine', 'Tengo tos', Object.keys(s.learner.ownPhrases)[0]],
+        ['mine', 'Tengo tos', 'u-tos-01'],
       ],
     );
     assert.equal(out[1].setTitle, 'Café & Mañanas');

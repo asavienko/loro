@@ -41,16 +41,16 @@ export interface Phrase {
   /** Note titles and texts in other native languages, by note kind. */
   noteTranslations: Partial<Record<keyof PhraseJson['notes'], NoteTranslations[string]>>;
   /**
-   * Who wrote the notes of a learner's phrase, when not Loro: the AI writer, or the device's rules
-   * (plan 105). Absent for Loro's phrases and bank phrases.
+   * Who wrote the notes of a learner's phrase, when not Loro: the AI writer, or the server's written
+   * rules (plan 108). Absent for Loro's phrases and bank phrases.
    */
-  notesBy?: 'ai' | 'device';
+  notesBy?: 'ai' | 'rules';
   /** Where a phrase in a learner's set came from (plan 106); absent for Loro's. */
   source?: 'ai' | 'bank' | 'course' | 'written';
   audio: PhraseJson['audio'] | null;
   /** Clip lengths from content; the device's own measurements take over once it has them. */
   durationMs: PhraseJson['durationMs'] | null;
-  /** Written by the learner on this device rather than served. */
+  /** Held in one of the learner's own sets: theirs to edit and delete. */
   own: boolean;
 }
 
@@ -80,6 +80,8 @@ export interface PhraseSet {
   hidden?: boolean;
   /** In Community: how many learners keep it in their library. */
   savedBy?: number;
+  /** The learner's "My phrases" set for the course, where phrases added on their own go (plan 108). */
+  inbox?: boolean;
 }
 
 /** An album of songs sung from phrase sets (plan 106). Its songs load when it is opened. */
@@ -111,6 +113,7 @@ export type PhraseWire = Omit<PhraseJson, 'region'> & {
   setId: string;
   noteTranslations: Phrase['noteTranslations'];
   source: 'loro' | NonNullable<Phrase['source']>;
+  notesBy?: 'ai' | 'rules';
 };
 
 export interface BankPhraseWire {
@@ -122,6 +125,8 @@ export interface BankPhraseWire {
   image: PhraseJson['image'];
   notes: PhraseJson['notes'];
   noteTranslations: Phrase['noteTranslations'];
+  /** Its clips, where the server has a voice (plan 108). */
+  audio?: Partial<Record<LanguageCode, string>>;
 }
 
 /** One course's content as the API serves it (GET /library/pack). */
@@ -198,11 +203,11 @@ function phraseOf(p: PhraseWire, set: PhraseSet): Phrase {
     image: p.image,
     notes: p.notes,
     noteTranslations: p.noteTranslations,
-    ...(p.source === 'loro' ? {} : { source: p.source, ...(p.source === 'ai' ? { notesBy: 'ai' as const } : {}) }),
+    ...(p.source === 'loro' ? {} : { source: p.source, ...(p.notesBy || p.source === 'ai' ? { notesBy: p.notesBy ?? ('ai' as const) } : {}) }),
     // Clips the server's voices speak (plan 106), as URLs the player can load.
     audio: p.audio ? (Object.fromEntries(Object.entries(p.audio).map(([lang, url]) => [lang, apiUrl(url)])) as Phrase['audio']) : null,
     durationMs: p.durationMs ?? null,
-    own: false,
+    own: set.owner === 'me',
   };
 }
 
@@ -248,6 +253,39 @@ function rebuild(): void {
 export function installPacks(next: ContentPack[]): void {
   for (const pack of next) packs.set(pack.targetLang, pack);
   rebuild();
+}
+
+/**
+ * A learner's set as the server returned it after a change (plan 108), put into its course's pack at
+ * once so the change shows before the pack is downloaded again. Returns the pack it changed.
+ */
+export function applySet(detail: { set: PhraseSet; phrases: PhraseWire[] }): ContentPack | undefined {
+  const pack = packs.get(detail.set.targetLang);
+  if (!pack) return undefined;
+  const known = new Set(pack.phrases.map((p) => p.id));
+  const held = new Set(detail.phrases.filter((p) => p.setId === detail.set.id).map((p) => p.id));
+  const others = pack.sets.filter((s) => s.id !== detail.set.id);
+  const next: ContentPack = {
+    ...pack,
+    // A new set of the learner's goes first among theirs, as the server lists the newest first.
+    sets: pack.sets.some((s) => s.id === detail.set.id) ? pack.sets.map((s) => (s.id === detail.set.id ? detail.set : s)) : [...others.filter((s) => s.owner === 'loro'), detail.set, ...others.filter((s) => s.owner !== 'loro')],
+    // The phrases the set holds now (its old ones gone), and any it lists that the pack lacked.
+    phrases: [...pack.phrases.filter((p) => p.setId !== detail.set.id || held.has(p.id)).map((p) => detail.phrases.find((d) => d.id === p.id) ?? p), ...detail.phrases.filter((p) => !known.has(p.id))],
+  };
+  packs.set(next.targetLang, next);
+  rebuild();
+  return next;
+}
+
+/** Takes a deleted set of the learner's out of its pack, with the phrases only it held. */
+export function removeSet(id: string): ContentPack | undefined {
+  const set = setById.get(id);
+  const pack = set && packs.get(set.targetLang);
+  if (!pack) return undefined;
+  const next: ContentPack = { ...pack, sets: pack.sets.filter((s) => s.id !== id), phrases: pack.phrases.filter((p) => p.setId !== id) };
+  packs.set(next.targetLang, next);
+  rebuild();
+  return next;
 }
 
 /** Adds sets opened from outside the packs (a shared link, Community), replacing older copies. */

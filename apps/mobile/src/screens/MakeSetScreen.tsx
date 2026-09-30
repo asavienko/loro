@@ -11,7 +11,7 @@ import { createSet, generateCover, updateSet } from '@shared/api/library';
 import { Playback, speak } from '@shared/audio/speech';
 import { languageName } from '@shared/copy';
 import { BANK_THEMES } from '@shared/content';
-import { added, currentCard, deal, dealt, decide, edit, lastDecision, newDeck, nextCard, picksOf, unadd, undo } from '@shared/generate/deck';
+import { added, currentCard, deal, dealt, decide, edit, lastDecision, newDeck, nextCard, unadd, undo } from '@shared/generate/deck';
 import { newPhrasesOf } from '@shared/generate/publish';
 import { defaultTitle, MakeRequest, MakeSession } from '@shared/generate/session';
 import { suggest } from '@shared/generate/suggest';
@@ -67,7 +67,7 @@ function MakeSet({ request }: { request: MakeRequest }) {
   const { makeSessionRef } = useShell();
   const closeMake = useCloseMake();
   const { toast, announce } = useToast();
-  const { state, actions } = useStore();
+  const { state } = useStore();
   const { learner } = state;
   const { nativeLang, targetLang } = learner.profile;
   const account = useAccount();
@@ -173,33 +173,8 @@ function MakeSet({ request }: { request: MakeRequest }) {
 
   const [saving, setSaving] = useState(false);
   const content = useContent();
-  // A learner's set in their account takes the phrases there; a set on the device, on the device.
+  // The set being filled is one of the learner's, in their account (plan 108).
   const intoServer = into?.content?.owner === 'me' ? into.content : undefined;
-  const toAccount = account.status === 'signedIn' && (!into || Boolean(intoServer));
-
-  const saveHere = (title: string) => {
-    const deck = session.deck;
-    if (!deck) return;
-    const kept = added(deck);
-    if (kept.length === 0) return;
-    const picks = picksOf(kept);
-    if (into) {
-      actions.savePicks(picks, { setId: into.id });
-      toast(c.make.addedInto(kept.length, into.title));
-      saved.current = true;
-      makeSessionRef.current = null;
-      close();
-      return;
-    }
-    const clean = tidy(title);
-    if (!clean) return;
-    const id = actions.savePicks(picks, { title: clean });
-    toast(account.status === 'signedIn' ? c.createSet.created(clean) : c.create.signedOutSave);
-    saved.current = true;
-    makeSessionRef.current = null;
-    // The new set's page shows in this flow's place.
-    nav.openSet(id);
-  };
 
   /** Saves to the learner's account (plan 106), drawing a cover when asked. */
   const saveToAccount = async (title: string, withCover: boolean) => {
@@ -303,9 +278,7 @@ function MakeSet({ request }: { request: MakeRequest }) {
               onTitle={(title) => update({ title })}
               onRemove={(key) => setSession((s) => ({ ...s, deck: s.deck && unadd(s.deck, key) }))}
               onBack={() => update({ step: 'deck' })}
-              onSave={(title, withCover) => (toAccount ? void saveToAccount(title, withCover) : saveHere(title))}
-              toAccount={toAccount}
-              signedOut={account.status !== 'signedIn'}
+              onSave={(title, withCover) => void saveToAccount(title, withCover)}
               saving={saving}
             />
           )}
@@ -724,8 +697,6 @@ function SaveStep({
   onRemove,
   onBack,
   onSave,
-  toAccount,
-  signedOut,
   saving,
 }: {
   session: MakeSession;
@@ -735,9 +706,6 @@ function SaveStep({
   onRemove: (key: string) => void;
   onBack: () => void;
   onSave: (title: string, withCover: boolean) => void;
-  /** Saves into the learner's account (plan 106), rather than on this device. */
-  toAccount: boolean;
-  signedOut: boolean;
   saving: boolean;
 }) {
   const [withCover, setWithCover] = useState(true);
@@ -806,7 +774,7 @@ function SaveStep({
         </View>
       </View>
 
-      {toAccount && !into && (
+      {!into && (
         <View style={styles.coverRow}>
           <Txt weight={600} style={styles.flex} nativeID="with-cover">
             {c.create.withCover}
@@ -816,16 +784,11 @@ function SaveStep({
       )}
       <Button
         variant="primary"
-        icon={toAccount ? 'account_circle' : undefined}
-        label={saving ? c.share.opening : into ? c.make.addInto(kept.length, into) : toAccount ? c.create.saveToAccount : c.createSet.create}
+        icon="account_circle"
+        label={saving ? c.share.opening : into ? c.make.addInto(kept.length, into) : c.create.saveToAccount}
         disabled={!ready || saving}
         onPress={() => onSave(session.title, withCover)}
       />
-      {signedOut && !into && (
-        <Txt variant="label" color="secondary">
-          {c.create.signedOutSave}
-        </Txt>
-      )}
       <Button variant="text" icon="arrow_back" label={c.make.backToDeck} onPress={onBack} style={styles.center} />
     </View>
   );

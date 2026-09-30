@@ -4,20 +4,19 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { languageLabel, languageName } from '@shared/copy';
-import { updateSet } from '@shared/api/library';
 import { findSet, getLanguage, getTopic } from '@shared/content';
 import { writeNotes } from '@shared/generate/remote';
 import { useNav } from '@shared/nav/NavContext';
-import { findPhrase, findSetView, promptOf } from '@shared/state/catalog';
+import { findPhrase, findSetView, ownSets, promptOf } from '@shared/state/catalog';
 import { currentPhraseId, displayLearner, isLiked, phraseProgress } from '@shared/state/selectors';
 import { useAccount } from '../state/account';
-import { useContent } from '../state/content';
+import { useMySets } from '../state/mySets';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
 import { PhraseNotesView } from '../ui/Notes';
 import { PhraseImage } from '../ui/PhraseImage';
-import { problemText } from '../ui/problems';
+import { confirm } from '../ui/confirm';
 import { progressLabel } from '../ui/progressLabel';
 import { Sheet, SheetAction, SheetActionGrid, SheetOption } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
@@ -48,7 +47,7 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
   const { toast } = useToast();
   const { state, actions } = useStore();
   const now = useNow(30_000);
-  const content = useContent();
+  const my = useMySets();
   const phrase = findPhrase(state.learner, phraseId);
   // Deleting your own phrase closes the sheet; while it slides away, the phrase is already gone.
   if (!phrase) return null;
@@ -56,13 +55,15 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
   const progress = phraseProgress(displayLearner(state), phrase.id, now);
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
   const isCurrent = currentPhraseId(state.player) === phrase.id;
-  const ownSet = ownSetId ? findSetView(state.learner, ownSetId) : undefined;
-  const served = findSet(phrase.setId);
-  const accountSet = served?.owner === 'me' ? served : undefined;
+  // The set of the learner's it was opened from, else the one of theirs that holds it (plan 108).
+  const home = findSet(phrase.setId);
+  const ownSet = findSet(ownSetId)?.owner === 'me' ? findSet(ownSetId) : home?.owner === 'me' ? home : undefined;
   const topicId = findSetView(state.learner, phrase.setId)?.topicId;
   // A phrase the learner added from suggestions says where its text came from.
-  const own = state.learner.ownPhrases[phrase.id];
-  const origin = own?.origin;
+  const origin = phrase.own && (phrase.source === 'ai' || phrase.source === 'bank') ? phrase.source : undefined;
+  // Taking out the only listing of a phrase the set holds deletes it, which is said first.
+  const listedElsewhere = ownSets(state.learner).some((s) => s.id !== ownSet?.id && s.phraseIds.includes(phrase.id));
+  const removeDeletes = ownSet !== undefined && phrase.setId === ownSet.id && !listedElsewhere;
   const status = [progressLabel(c, progress, now), progress.memory.heardCount > 0 && c.phrase.heard(progress.memory.heardCount), phrase.register && c.common.register[phrase.register]].filter(
     (item): item is string => Boolean(item),
   );
@@ -168,43 +169,27 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
       </View>
 
       <PhraseNotesView phrase={phrase} />
-      {phrase.notesBy === 'device' && <DeviceNotes phraseId={phrase.id} />}
+      {phrase.notesBy === 'rules' && <RulesNotes phraseId={phrase.id} />}
 
       {/* Rarer: arranging your own set, and correcting or deleting your own phrase. */}
       {(ownSet || phrase.own) && (
         <View style={styles.rare}>
-          {ownSet && ownSet.phraseIds.indexOf(phrase.id) > 0 && (
-            <SheetOption icon="arrow_upward" label={c.phrase.moveUp} onPress={() => actions.moveInSet(ownSet.id, phrase.id, -1)} />
-          )}
+          {ownSet && ownSet.phraseIds.indexOf(phrase.id) > 0 && <SheetOption icon="arrow_upward" label={c.phrase.moveUp} onPress={() => void my.move(ownSet, phrase.id, -1)} />}
           {ownSet && ownSet.phraseIds.indexOf(phrase.id) < ownSet.phraseIds.length - 1 && (
-            <SheetOption icon="arrow_downward" label={c.phrase.moveDown} onPress={() => actions.moveInSet(ownSet.id, phrase.id, 1)} />
+            <SheetOption icon="arrow_downward" label={c.phrase.moveDown} onPress={() => void my.move(ownSet, phrase.id, 1)} />
           )}
           {ownSet && (
             <SheetOption
               icon="playlist_remove"
               label={c.phrase.removeFromSet}
-              onPress={() => {
-                const at = state.learner.ownSets[ownSet.id]?.phraseIds.indexOf(phrase.id);
-                actions.removeFromSet(ownSet.id, phrase.id);
-                toast(c.phrase.removedFromSet, { action: { label: c.common.undo, run: () => actions.addToSet(ownSet.id, [phrase.id], at) } });
+              onPress={async () => {
+                if (removeDeletes && !(await confirm(c.phrase.removeDeletes(phrase.target), c.phrase.delete, c.common.cancel))) return;
+                const at = ownSet.phraseIds.indexOf(phrase.id);
                 onClose();
-              }}
-            />
-          )}
-          {/* A phrase of a set in the learner's account (plan 106) leaves it there. */}
-          {accountSet && accountSet.phraseIds.length > 1 && (
-            <SheetOption
-              icon="playlist_remove"
-              label={c.phrase.removeFromSet}
-              onPress={() => {
-                onClose();
-                updateSet(accountSet.id, { removePhraseIds: [phrase.id] }).then(
-                  () => {
-                    toast(c.phrase.removedFromSet);
-                    void content.refresh();
-                  },
-                  (error: unknown) => toast(problemText(c, error)),
-                );
+                if (!(await my.removeFromSet(ownSet.id, phrase.id))) return;
+                // A listed phrase comes back where it was; a deleted one is gone.
+                if (removeDeletes) toast(c.phrase.deleted);
+                else toast(c.phrase.removedFromSet, { action: { label: c.common.undo, run: () => void my.restoreToSet(ownSet, phrase.id, at) } });
               }}
             />
           )}
@@ -223,22 +208,10 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
               icon="delete"
               tone="danger"
               label={c.phrase.delete}
-              onPress={() => {
-                // Undo also puts it back in Up next, as far ahead of the playing phrase as it was.
-                const { order, index } = state.player;
-                const upNextAt = order.slice(index + 1).flatMap((id, i) => (id === phrase.id ? [i] : []));
-                actions.deleteOwnPhrase(phrase.id);
-                toast(c.phrase.deleted, {
-                  action: {
-                    label: c.common.undo,
-                    run: () => {
-                      actions.restoreOwnPhrase(phrase.id);
-                      // In order, so each copy (a missed phrase can be queued twice) lands at its old place.
-                      for (const at of upNextAt) actions.restoreUpNext([phrase.id], at);
-                    },
-                  },
-                });
+              onPress={async () => {
+                if (!(await confirm(c.phrase.deleteConfirm(phrase.target), c.phrase.delete, c.common.cancel))) return;
                 onClose();
+                if (await my.deletePhrase(phrase.id)) toast(c.phrase.deleted);
               }}
             />
           )}
@@ -249,7 +222,7 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
 }
 
 /** Where a phrase or its notes came from, as a small line with an icon. */
-function Byline({ icon, text }: { icon: 'auto_awesome' | 'library_music' | 'smartphone'; text: string }) {
+function Byline({ icon, text }: { icon: 'auto_awesome' | 'library_music' | 'menu_book'; text: string }) {
   return (
     <View style={[styles.line, styles.byline]}>
       <Icon name={icon} size="sm" color="onSurfaceVariant" />
@@ -261,36 +234,37 @@ function Byline({ icon, text }: { icon: 'auto_awesome' | 'library_music' | 'smar
 }
 
 /**
- * One of the learner's own phrases whose notes the device worked out (typed, and not in the phrase
- * bank): says so, and where the server has a writer, offers to ask it for its notes instead.
+ * A phrase of the learner's whose notes Loro's rules wrote on the server (plan 108): says so, and
+ * where the server's writer is AI, offers to ask it for its notes instead.
  */
-function DeviceNotes({ phraseId }: { phraseId: string }) {
+function RulesNotes({ phraseId }: { phraseId: string }) {
   const c = useCopy();
-  const { state, actions } = useStore();
-  const own = state.learner.ownPhrases[phraseId];
-  const live = useAccount().status === 'signedIn';
+  const { state } = useStore();
+  const account = useAccount();
+  const my = useMySets();
+  const phrase = findPhrase(state.learner, phraseId);
   const [status, setStatus] = useState<'idle' | 'writing' | 'failed'>('idle');
-  if (!own) return null;
+  if (!phrase) return null;
+  const { nativeLang } = state.learner.profile;
+  const native = promptOf(phrase, nativeLang).text;
   const write = () => {
     setStatus('writing');
-    const asked = { target: own.target, native: own.native, targetLang: own.targetLang, nativeLang: own.nativeLang };
-    writeNotes(asked).then(
-      (written) => {
-        actions.setOwnNotes(own.id, asked.target, written.notes, written.image);
-        setStatus('idle');
-      },
-      () => setStatus('failed'),
-    );
+    writeNotes({ target: phrase.target, native, targetLang: phrase.targetLang, nativeLang })
+      .then((written) => my.editPhrase(phrase.id, phrase.target, native, written))
+      .then(
+        (done) => setStatus(done ? 'idle' : 'failed'),
+        () => setStatus('failed'),
+      );
   };
   return (
     <View accessibilityLabel={c.phrase.notesTitle} style={styles.device}>
-      <Byline icon="smartphone" text={c.phrase.notesByDevice(languageName(own.targetLang, c.locale))} />
+      <Byline icon="menu_book" text={c.phrase.notesByRules(languageName(phrase.targetLang, c.locale))} />
       {status === 'failed' && (
         <Txt color="secondary" accessibilityLiveRegion="polite">
           {c.phrase.notesFailed}
         </Txt>
       )}
-      {live && (
+      {phrase.own && account.usage?.writers.phrases === 'claude' && (
         <Button
           variant="tonal"
           icon={status === 'writing' ? 'hourglass_empty' : 'auto_awesome'}

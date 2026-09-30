@@ -2,7 +2,6 @@
 // of the last decision, and corrections made on a card before adding it. Pure, like the state.
 import { sameKey } from '../state/catalog';
 import { clip, LIMITS, tidy } from '../state/limits';
-import type { PhrasePick } from '../state/types';
 import type { Suggestion } from './types';
 
 export interface Deck {
@@ -95,17 +94,3 @@ export function dealt(deck: Deck): { keys: Set<string>; texts: string[] } {
   return { keys: new Set([...deck.cards.map((c) => sameKey(c.target)), ...texts.map(sameKey)]), texts };
 }
 
-/** What to save: an existing phrase by its id, anything else as a new phrase that says where it came from. */
-export function picksOf(cards: Suggestion[]): PhrasePick[] {
-  return cards.map((card) => {
-    if (card.phraseId) return { phraseId: card.phraseId };
-    const origin = card.source === 'ai' ? 'ai' : card.source === 'bank' ? 'bank' : undefined;
-    return {
-      target: card.target,
-      native: card.native,
-      ...(origin ? { origin } : {}),
-      ...(card.bankId ? { bankId: card.bankId } : {}),
-      ...(card.notes ? { notes: card.notes, ...(card.image ? { image: [...card.image] } : {}) } : {}),
-    };
-  });
-}

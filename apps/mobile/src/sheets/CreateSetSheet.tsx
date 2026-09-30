@@ -1,10 +1,11 @@
 // Names a new set (optionally holding phrases already), or renames one of the learner's sets (the
-// web prototype's src/sheets/CreateSetSheet.tsx).
+// web prototype's src/sheets/CreateSetSheet.tsx). Their sets live in their account (plan 108).
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { useNav } from '@shared/nav/NavContext';
 import { findSetView, ownSets, sameKey } from '@shared/state/catalog';
 import { LIMITS, tidy } from '@shared/state/limits';
+import { useMySets } from '../state/mySets';
 import { useCopy, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { CharCount, charsLeft } from '../ui/CharCount';
@@ -18,20 +19,22 @@ export function CreateSetSheet({ request, onClose }: { request: { phraseIds: str
   const c = useCopy();
   const nav = useNav();
   const { toast } = useToast();
-  const { state, actions } = useStore();
+  const { state } = useStore();
+  const my = useMySets();
   const renaming = request?.rename ? findSetView(state.learner, request.rename) : undefined;
 
-  const submit = (title: string) => {
+  const submit = async (title: string) => {
     const clean = title.trim();
     if (!request || !clean) return;
-    if (renaming) {
-      actions.renameSet(renaming.id, clean);
-    } else {
-      const id = actions.createSet(clean, request.phraseIds);
-      toast(c.createSet.created(clean));
-      nav.openSet(id);
-    }
     onClose();
+    if (renaming) {
+      await my.rename(renaming.id, clean);
+      return;
+    }
+    const id = await my.createSet(clean, request.phraseIds);
+    if (!id) return;
+    toast(c.createSet.created(clean));
+    nav.openSet(id);
   };
 
   return (
@@ -44,7 +47,7 @@ export function CreateSetSheet({ request, onClose }: { request: { phraseIds: str
             .filter((s) => s.id !== renaming?.id)
             .map((s) => sameKey(s.title))}
           submitLabel={renaming ? c.common.save : c.createSet.create}
-          onSubmit={submit}
+          onSubmit={(title) => void submit(title)}
         />
       )}
     </Sheet>

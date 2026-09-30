@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 import { useNav } from '@shared/nav/NavContext';
 import { findPhrase, ownSets } from '@shared/state/catalog';
+import { useMySets } from '../state/mySets';
 import { useCopy, useStore } from '../state/store';
 import { Sheet, SheetOption } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
@@ -11,7 +12,8 @@ export function AddToSetSheet({ phraseIds, onClose }: { phraseIds: string[] | nu
   const c = useCopy();
   const nav = useNav();
   const { toast } = useToast();
-  const { state, actions } = useStore();
+  const { state } = useStore();
+  const my = useMySets();
   const sets = ownSets(state.learner);
   return (
     <Sheet open={phraseIds !== null} title={c.addToSet.title} onClose={onClose}>
@@ -38,10 +40,10 @@ export function AddToSetSheet({ phraseIds, onClose }: { phraseIds: string[] | nu
                   icon={already ? 'task_alt' : 'queue_music'}
                   label={set.title}
                   detail={already ? c.addToSet.alreadyHere : c.common.phrases(set.phraseIds.filter((id) => findPhrase(state.learner, id)).length)}
-                  onPress={() => {
-                    if (!already) actions.addToSet(set.id, phraseIds);
-                    toast(already ? c.addToSet.already(set.title) : c.addToSet.added(set.title));
+                  onPress={async () => {
                     onClose();
+                    if (already) return toast(c.addToSet.already(set.title));
+                    if (await my.addToSet(set.id, phraseIds)) toast(c.addToSet.added(set.title));
                   }}
                 />
               );
