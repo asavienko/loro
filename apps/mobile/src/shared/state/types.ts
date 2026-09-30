@@ -65,6 +65,9 @@ export type LogKind = LogEntry['kind'];
  */
 export type LocalDay = string;
 
+/** What can be liked: a phrase, a set, or a song (plan 107). A like's key is `kind:id`. */
+export type LikeKind = 'phrase' | 'set' | 'song';
+
 /** A like with its time, so a like on one device and an unlike on another merge by last write. */
 export interface Like {
   liked: boolean;

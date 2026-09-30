@@ -11,7 +11,8 @@ import { findBankPhrase } from '../content';
 import { deviceNotes } from '../notes';
 import { findPhrase, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { requeuesOn } from './machine';
-import { measuredTargetMs, pendingFor, phaseDurationMs } from './selectors';
+import { isLiked, measuredTargetMs, pendingFor, phaseDurationMs } from './selectors';
+import { sanitizeLearner } from './persistence';
 import { pauseMs, RATE_HOLD_MS } from './timing';
 import { cafe, DAY, done, fresh, load, MINUTE, playPhrase, run, T0 } from './testing';
 import { isTargetRevealed } from '../ui/phase';
@@ -725,5 +726,37 @@ describe('undo after moving on', () => {
     const after = run(s, { type: 'RATE', grade: 'hard', now: T0 + 1 });
     assert.equal(after.player.order.filter((id) => id === 'cafe-01').length, 2);
     assert.equal(requeuesOn(after.player, 'hard'), false, 'already coming back');
+  });
+});
+
+describe('a song rated in the player (plan 107)', () => {
+  const sung = ['cafe-01', 'cafe-02', 'cafe-03'];
+
+  it('reviews every phrase it sings, from any status, with the usual window', () => {
+    let s = transition(fresh(), { type: 'RATE_PHRASES', phraseIds: [...sung, 'cafe-01', 'nope'], setId: 'set-cafe', grade: 'easy', now: T0 });
+    assert.equal(s.player.status, 'idle', 'no phrase loop was needed');
+    assert.deepEqual(s.pending.map((p) => p.phraseId).sort(), [...sung].sort(), 'each phrase once; unknown ids skipped');
+    // Changed inside the window: the same ratings, a new grade.
+    s = transition(s, { type: 'RATE_PHRASES', phraseIds: sung, setId: 'set-cafe', grade: 'missed', now: T0 + MINUTE });
+    assert.equal(s.pending.length, 3);
+    assert.ok(s.pending.every((p) => p.grade === 'missed' && p.at === T0));
+    s = transition(s, { type: 'COMMIT', now: T0 + RATING_WINDOW_MS });
+    const rated = s.learner.log.filter((e) => e.kind === 'rated');
+    assert.equal(rated.length, 3, 'three reviews, one per phrase');
+  });
+
+  it('undo takes them all back inside the window', () => {
+    let s = transition(fresh(), { type: 'RATE_PHRASES', phraseIds: sung, setId: 'set-cafe', grade: 'easy', now: T0 });
+    s = transition(s, { type: 'UNRATE_PHRASES', phraseIds: sung, now: T0 + MINUTE });
+    assert.equal(s.pending.filter((p) => !p.undone).length, 0);
+    s = transition(s, { type: 'COMMIT', now: T0 + RATING_WINDOW_MS });
+    assert.equal(s.learner.log.filter((e) => e.kind === 'rated').length, 0);
+  });
+
+  it('likes a song like anything else, and keeps it through a save', () => {
+    const s = transition(fresh(), { type: 'TOGGLE_LIKE', kind: 'song', id: 'song-loro-cafe', now: T0 });
+    assert.equal(isLiked(s.learner, 'song', 'song-loro-cafe'), true);
+    const kept = sanitizeLearner(JSON.parse(JSON.stringify(s.learner)));
+    assert.equal(kept.likes['song:song-loro-cafe']?.liked, true);
   });
 });

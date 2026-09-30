@@ -5,7 +5,7 @@ import type { RefObject } from 'react';
 import { OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { clock } from './clock';
 import type { AppEvent } from './machine';
-import type { AppState, AudioFailure, Grade, LearnerState, OwnNotes, PendingRating, PhrasePick, Prefs, Profile, QueueSource } from './types';
+import type { AppState, AudioFailure, Grade, LearnerState, LikeKind, OwnNotes, PendingRating, PhrasePick, Prefs, Profile, QueueSource } from './types';
 
 const newSeed = () => Math.floor(Math.random() * 2 ** 32);
 
@@ -35,7 +35,10 @@ export function makeActions(dispatch: (event: AppEvent) => void, latest: RefObje
     enqueue: (phraseIds: string[], setId: string | null, at: 'next' | 'end') =>
       dispatch({ type: 'ENQUEUE', phraseIds, setId, at, now: now() }),
     clearQueue: () => dispatch({ type: 'CLEAR_QUEUE' }),
-    toggleLike: (kind: 'phrase' | 'set', id: string) => dispatch({ type: 'TOGGLE_LIKE', kind, id, now: now() }),
+    toggleLike: (kind: LikeKind, id: string) => dispatch({ type: 'TOGGLE_LIKE', kind, id, now: now() }),
+    /** Rate every phrase a song sings (plan 107); `unratePhrases` undoes it inside the window. */
+    ratePhrases: (phraseIds: string[], setId: string | null, grade: Grade) => dispatch({ type: 'RATE_PHRASES', phraseIds, setId, grade, now: now() }),
+    unratePhrases: (phraseIds: string[]) => dispatch({ type: 'UNRATE_PHRASES', phraseIds, now: now() }),
     /**
      * Adds your own phrase and returns its id: one from the device counter as last rendered, sent
      * with the event, since the speech may take the counter's next id first (as createSet).

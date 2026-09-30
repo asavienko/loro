@@ -23,6 +23,7 @@ import type {
   AppState,
   Grade,
   LearnerState,
+  LikeKind,
   LogEntry,
   PendingRating,
   PhraseMemory,
@@ -563,7 +564,7 @@ export function learnedPerWeek(learner: LearnerState, now: number, weeks = 8): {
 
 // ---------- likes ----------
 
-export function isLiked(learner: LearnerState, kind: 'phrase' | 'set', id: string): boolean {
+export function isLiked(learner: LearnerState, kind: LikeKind, id: string): boolean {
   return learner.likes[`${kind}:${id}`]?.liked ?? false;
 }
 
@@ -576,7 +577,7 @@ export function likedSetIds(learner: LearnerState): string[] {
   return likedIds(learner, 'set').filter((id) => findSetView(learner, id)?.targetLang === learner.profile.targetLang);
 }
 
-function likedIds(learner: LearnerState, kind: 'phrase' | 'set'): string[] {
+function likedIds(learner: LearnerState, kind: LikeKind): string[] {
   const prefix = `${kind}:`;
   return Object.entries(learner.likes)
     .filter(([k, like]) => k.startsWith(prefix) && like.liked)
