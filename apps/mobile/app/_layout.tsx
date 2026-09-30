@@ -106,7 +106,7 @@ function Gate({ onboarded }: { onboarded: boolean }) {
       <Stack.Screen name="player" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
       <Stack.Screen name="queue" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
       <Stack.Screen name="make" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="song" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: colors.night } }} />
+      <Stack.Screen name="song" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: colors.surface } }} />
       <Stack.Screen name="account" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
       <Stack.Screen name="shared/[code]" />
     </Stack>

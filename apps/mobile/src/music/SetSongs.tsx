@@ -1,5 +1,5 @@
 // The songs sung from a set (plan 106), on its page: the way from a set's phrases to hearing them
-// in a song, in Music's night colours. A song plays at once; the album opens from its cover.
+// in a song (plan 107: the one player, the light palette). A song plays at once; the album opens from its cover.
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { fetchSetSongs, type Song } from '@shared/api/library';
@@ -31,7 +31,7 @@ export function SetSongs({ setId }: { setId: string }) {
 
   return (
     <View style={styles.panel}>
-      <Txt variant="heading" face="serif" weight={600} color="onNight" accessibilityRole="header">
+      <Txt variant="heading" face="serif" weight={600} color="onSurface" accessibilityRole="header">
         {c.music.setSongs}
       </Txt>
       {found?.songs.map((song) => {
@@ -50,21 +50,21 @@ export function SetSongs({ setId }: { setId: string }) {
               style={({ pressed }) => [styles.main, pressed && styles.pressed]}
             >
               <View style={styles.text}>
-                <Txt variant="row" weight={600} color="onNight" numberOfLines={1}>
+                <Txt variant="row" weight={600} color="onSurface" numberOfLines={1}>
                   {song.title}
                 </Txt>
-                <Txt variant="label" color="onNightVariant" numberOfLines={1}>
+                <Txt variant="label" color="secondary" numberOfLines={1}>
                   {[album.owner === 'loro' ? c.music.loro : album.title, c.music.style[song.styleId], song.durationMs ? clockTime(song.durationMs / 1000) : null].filter(Boolean).join(' · ')}
                 </Txt>
               </View>
-              <Icon name={playing ? 'pause' : 'play_arrow'} fill color="nightAccent" />
+              <Icon name={playing ? 'pause' : 'play_arrow'} fill color="primaryContainer" />
             </Pressable>
           </View>
         );
       })}
       <Pressable accessibilityRole="button" onPress={() => nav.makeSong({ setId })} style={({ pressed }) => [styles.make, pressed && styles.pressed]}>
-        <Icon name="music_note" color="nightAccent" />
-        <Txt variant="body" weight={600} color="onNight">
+        <Icon name="music_note" color="primaryContainer" />
+        <Txt variant="body" weight={600} color="onSurface">
           {c.music.makeSong}
         </Txt>
       </Pressable>
@@ -73,7 +73,7 @@ export function SetSongs({ setId }: { setId: string }) {
 }
 
 const styles = StyleSheet.create({
-  panel: { backgroundColor: colors.night, borderRadius: radius['2xl'], padding: 16, gap: 8, marginHorizontal: 16, marginTop: 24 },
+  panel: { backgroundColor: colors.surface, borderRadius: radius['2xl'], padding: 16, gap: 8, marginHorizontal: 16, marginTop: 24 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: TARGET + 8, borderRadius: radius.xl },
   text: { flex: 1, gap: 1 },

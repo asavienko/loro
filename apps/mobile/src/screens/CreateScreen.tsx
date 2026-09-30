@@ -142,39 +142,37 @@ export function CreateScreen() {
   );
 }
 
-/** One kind of thing to make. Music's card wears the night colours, as everything musical does. */
+/** One kind of thing to make; a song's card is told apart by its music icon (plan 107). */
 function Card({ icon, title, body, note, writer, tone, onPress }: { icon: IconName; title: string; body: string; note?: string; writer?: string; tone: 'phrases' | 'music' | 'plain'; onPress?: () => void }) {
-  const night = tone === 'music';
   const content = (
     <>
-      <View style={[styles.cardIcon, night ? styles.cardIconNight : tone === 'phrases' ? styles.cardIconPhrases : null]}>
-        <Icon name={icon} size="xl" color={night ? 'night' : 'primaryContainer'} />
+      <View style={[styles.cardIcon, tone === 'phrases' ? styles.cardIconPhrases : tone === 'music' ? styles.cardIconMusic : null]}>
+        <Icon name={icon} size="xl" color={tone === 'music' ? 'onTertiaryFixed' : 'primaryContainer'} />
       </View>
       <View style={{ flex: 1, gap: 4 }}>
-        <Txt variant="title" face="serif" weight={600} color={night ? 'onNight' : 'onSurface'}>
+        <Txt variant="title" face="serif" weight={600}>
           {title}
         </Txt>
-        <Txt variant="body" color={night ? 'onNightVariant' : 'secondary'}>
+        <Txt variant="body" color="secondary">
           {body}
         </Txt>
         {writer && (
-          <Txt variant="label" color={night ? 'onNightVariant' : 'secondary'}>
+          <Txt variant="label" color="secondary">
             {writer}
           </Txt>
         )}
         {note && (
-          <Txt variant="label" weight={700} color={night ? 'nightAccent' : 'primaryContainer'}>
+          <Txt variant="label" weight={700} color="primaryContainer">
             {note}
           </Txt>
         )}
       </View>
-      {onPress && <Icon name="chevron_right" color={night ? 'onNight' : 'secondary'} />}
+      {onPress && <Icon name="chevron_right" color="secondary" />}
     </>
   );
-  const style = [styles.card, night && styles.cardNight];
-  if (!onPress) return <View style={style}>{content}</View>;
+  if (!onPress) return <View style={styles.card}>{content}</View>;
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`${title}. ${body}${note ? `. ${note}` : ''}`} onPress={onPress} style={({ pressed }) => [...style, pressed && styles.pressed]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={`${title}. ${body}${note ? `. ${note}` : ''}`} onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
       {content}
     </Pressable>
   );
@@ -185,10 +183,9 @@ const styles = StyleSheet.create({
   content: { padding: 20, paddingBottom: 48, gap: 14, width: '100%', maxWidth: 720, alignSelf: 'center' },
   signIn: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: radius['2xl'], backgroundColor: colors.primaryFixed },
   card: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: radius['2xl'], backgroundColor: colors.surfaceContainerLow, ...shadow.card },
-  cardNight: { backgroundColor: colors.night },
   cardIcon: { width: 52, height: 52, borderRadius: radius.xl, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceContainerHigh },
   cardIconPhrases: { backgroundColor: colors.primaryFixed },
-  cardIconNight: { backgroundColor: colors.nightAccent },
+  cardIconMusic: { backgroundColor: colors.tertiaryFixed },
   pressed: { opacity: 0.85 },
   section: { gap: 6, paddingTop: 12 },
   item: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 6, borderRadius: radius.xl },

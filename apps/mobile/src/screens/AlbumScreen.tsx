@@ -14,7 +14,6 @@ import { ReportSheet } from '../sheets/ReportSheet';
 import { MoreAlbumsByMaker } from './MoreByMaker';
 import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
-import { NightStatusBar } from '../music/NightStatusBar';
 import { useCopy, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
@@ -107,14 +106,14 @@ export function AlbumScreen({ id }: { id: string }) {
       <View style={[styles.page, styles.center, { paddingTop: insets.top }]}>
         {failed ? (
           <>
-            <Txt variant="row" color="onNight">
+            <Txt variant="row" color="onSurface">
               {c.music.loadFailed}
             </Txt>
             <Button variant="tonal" icon="refresh" label={c.connection.retry} onPress={() => void load()} />
-            <Button variant="text" color="nightAccent" label={c.common.back} onPress={back} />
+            <Button variant="text" color="primaryContainer" label={c.common.back} onPress={back} />
           </>
         ) : (
-          <ActivityIndicator color={colors.nightAccent} />
+          <ActivityIndicator color={colors.primaryContainer} />
         )}
       </View>
     );
@@ -165,33 +164,32 @@ export function AlbumScreen({ id }: { id: string }) {
 
   return (
     <ScrollView style={styles.page} contentContainerStyle={[styles.content, { paddingTop: insets.top + 4 }]}>
-      <NightStatusBar />
       <View style={styles.top}>
-        <Button variant="icon" icon="arrow_back" color="onNight" accessibilityLabel={c.common.back} onPress={back} />
+        <Button variant="icon" icon="arrow_back" color="onSurface" accessibilityLabel={c.common.back} onPress={back} />
       </View>
       <View style={styles.hero}>
         <View>
           <AlbumCover url={album.coverUrl} px={200} rounded={16} />
           {drawing && (
             <View style={styles.drawing}>
-              <ActivityIndicator color={colors.onNight} />
-              <Txt variant="label" color="onNight">
+              <ActivityIndicator color={colors.onPrimary} />
+              <Txt variant="label" color="onSurface">
                 {c.share.coverMaking}
               </Txt>
             </View>
           )}
         </View>
-        <Txt variant="label" weight={700} color="nightAccent" style={styles.kicker}>
+        <Txt variant="label" weight={700} color="primaryContainer" style={styles.kicker}>
           {c.music.album.toLocaleUpperCase(c.locale)}
         </Txt>
-        <Txt variant="displaySm" face="serif" weight={600} color="onNight" align="center" accessibilityRole="header">
+        <Txt variant="displaySm" face="serif" weight={600} color="onSurface" align="center" accessibilityRole="header">
           {album.title}
         </Txt>
-        <Txt variant="body" color="onNightVariant" align="center">
+        <Txt variant="body" color="secondary" align="center">
           {`${byline} · ${c.music.songs(album.songCount)}${album.durationMs ? ` · ${clockTime(album.durationMs / 1000)}` : ''}`}
         </Txt>
         {(album.description ?? (album.owner === 'loro' ? c.music.loroAlbum : null)) && (
-          <Txt variant="body" color="onNightVariant" align="center">
+          <Txt variant="body" color="secondary" align="center">
             {album.description ?? c.music.loroAlbum}
           </Txt>
         )}
@@ -201,10 +199,10 @@ export function AlbumScreen({ id }: { id: string }) {
         <Button variant="primary" icon="play_arrow" iconFill label={c.music.playAlbum} disabled={ready.length === 0} onPress={() => music.playAlbum(album, ready, 0)} />
         {mine ? (
           <>
-            <Button variant="icon" icon="share" color="onNight" accessibilityLabel={c.share.share} onPress={() => nav.share({ kind: 'album', ...album })} />
-            <Button variant="icon" icon="edit" color="onNight" accessibilityLabel={c.createSet.editTitle} onPress={() => setRenaming(true)} />
-            <Button variant="icon" icon="palette" color="onNight" accessibilityLabel={c.share.cover} disabled={drawing} onPress={() => void drawCover()} />
-            <Button variant="icon" icon="delete" color="onNight" accessibilityLabel={c.share.delete} onPress={() => void remove()} />
+            <Button variant="icon" icon="share" color="onSurface" accessibilityLabel={c.share.share} onPress={() => nav.share({ kind: 'album', ...album })} />
+            <Button variant="icon" icon="edit" color="onSurface" accessibilityLabel={c.createSet.editTitle} onPress={() => setRenaming(true)} />
+            <Button variant="icon" icon="palette" color="onSurface" accessibilityLabel={c.share.cover} disabled={drawing} onPress={() => void drawCover()} />
+            <Button variant="icon" icon="delete" color="onSurface" accessibilityLabel={c.share.delete} onPress={() => void remove()} />
           </>
         ) : (
           <>
@@ -213,13 +211,13 @@ export function AlbumScreen({ id }: { id: string }) {
                 variant="icon"
                 icon={album.saved ? 'bookmark_added' : 'bookmark_add'}
                 iconFill={album.saved}
-                color="onNight"
+                color="onSurface"
                 accessibilityLabel={album.saved ? c.share.unsave : c.share.save}
                 onPress={() => void toggleSaved()}
               />
             )}
-            {album.shareCode && <Button variant="icon" icon="share" color="onNight" accessibilityLabel={c.share.share} onPress={() => nav.share({ kind: 'album', ...album })} />}
-            {album.owner === 'other' && <Button variant="icon" icon="info" color="onNight" accessibilityLabel={c.share.report} onPress={() => setReporting(true)} />}
+            {album.shareCode && <Button variant="icon" icon="share" color="onSurface" accessibilityLabel={c.share.share} onPress={() => nav.share({ kind: 'album', ...album })} />}
+            {album.owner === 'other' && <Button variant="icon" icon="info" color="onSurface" accessibilityLabel={c.share.report} onPress={() => setReporting(true)} />}
           </>
         )}
       </View>
@@ -228,7 +226,7 @@ export function AlbumScreen({ id }: { id: string }) {
       <RenameSheet item={renaming ? { kind: 'album', id: album.id, title: album.title, description: album.description } : null} onClose={() => setRenaming(false)} onRenamed={() => void load()} />
       <View style={styles.songs}>
         {songs.length === 0 && (
-          <Txt variant="body" color="onNightVariant" style={styles.pad}>
+          <Txt variant="body" color="secondary" style={styles.pad}>
             {c.music.noSongs}
           </Txt>
         )}
@@ -249,7 +247,7 @@ export function AlbumScreen({ id }: { id: string }) {
           />
         ))}
         {rendering && (
-          <Txt variant="label" color="onNightVariant" style={styles.pad}>
+          <Txt variant="label" color="secondary" style={styles.pad}>
             {c.music.renderingNote}
           </Txt>
         )}
@@ -279,35 +277,35 @@ function SongRow({ song, index, current, playing, onPlay, onRetry, onRemove, act
       >
         <View style={styles.songIndex}>
           {song.status === 'rendering' ? (
-            <ActivityIndicator size="small" color={colors.nightAccent} />
+            <ActivityIndicator size="small" color={colors.primaryContainer} />
           ) : playing ? (
-            <Icon name="graphic_eq" color="nightAccent" />
+            <Icon name="graphic_eq" color="primaryContainer" />
           ) : song.status === 'failed' ? (
-            <Icon name="error" color="onNightVariant" />
+            <Icon name="error" color="secondary" />
           ) : (
-            <Txt variant="body" weight={600} color={current ? 'nightAccent' : 'onNightVariant'}>
+            <Txt variant="body" weight={600} color={current ? 'primaryContainer' : 'secondary'}>
               {index + 1}
             </Txt>
           )}
         </View>
         <View style={styles.songText}>
-          <Txt variant="row" weight={600} color={current ? 'nightAccent' : 'onNight'} numberOfLines={1}>
+          <Txt variant="row" weight={600} color={current ? 'primaryContainer' : 'onSurface'} numberOfLines={1}>
             {song.title}
           </Txt>
-          <Txt variant="label" color="onNightVariant" numberOfLines={1}>
+          <Txt variant="label" color="secondary" numberOfLines={1}>
             {song.status === 'rendering' ? c.music.rendering : song.status === 'failed' ? c.music.failed : meta}
           </Txt>
         </View>
-        {ready && <Icon name={playing ? 'pause' : 'play_arrow'} fill color="onNight" />}
+        {ready && <Icon name={playing ? 'pause' : 'play_arrow'} fill color="onSurface" />}
       </Pressable>
-      {onRetry && <Button variant="icon" icon="refresh" color="onNight" accessibilityLabel={c.music.retrySong(song.title)} disabled={acting} onPress={onRetry} />}
-      {onRemove && <Button variant="icon" icon="delete" color="onNight" accessibilityLabel={c.music.removeSong} disabled={acting} onPress={onRemove} />}
+      {onRetry && <Button variant="icon" icon="refresh" color="onSurface" accessibilityLabel={c.music.retrySong(song.title)} disabled={acting} onPress={onRetry} />}
+      {onRemove && <Button variant="icon" icon="delete" color="onSurface" accessibilityLabel={c.music.removeSong} disabled={acting} onPress={onRemove} />}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.night },
+  page: { flex: 1, backgroundColor: colors.surface },
   center: { alignItems: 'center', justifyContent: 'center', gap: 12 },
   content: { paddingBottom: 48, width: '100%', maxWidth: 720, alignSelf: 'center' },
   top: { flexDirection: 'row', paddingHorizontal: 8 },
@@ -319,8 +317,8 @@ const styles = StyleSheet.create({
   pad: { paddingHorizontal: 12, paddingVertical: 8 },
   songRow: { flexDirection: 'row', alignItems: 'center', borderRadius: radius.xl },
   song: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: TARGET + 12, paddingHorizontal: 8, borderRadius: radius.xl },
-  songCurrent: { backgroundColor: colors.nightContainer },
-  songPressed: { backgroundColor: colors.nightContainerHigh },
+  songCurrent: { backgroundColor: colors.surfaceContainer },
+  songPressed: { backgroundColor: colors.surfaceContainerHigh },
   songIndex: { width: 28, alignItems: 'center' },
   songText: { flex: 1, gap: 2 },
   add: { alignSelf: 'flex-start', marginTop: 12, marginLeft: 8 },
