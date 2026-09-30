@@ -656,6 +656,7 @@ export function makeEn(n: Plural) {
       signInToMake: 'Sign in to make sets with AI',
     },
     music: {
+      likedSongs: 'Liked songs',
       songKind: 'Song',
       likeSong: 'Like this song',
       rateSong: (n: number) => (n === 1 ? 'How did it go? Your rating reviews the phrase it sings.' : `How did it go? Your rating reviews the ${n} phrases it sings.`),

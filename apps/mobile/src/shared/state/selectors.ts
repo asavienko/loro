@@ -577,6 +577,11 @@ export function likedSetIds(learner: LearnerState): string[] {
   return likedIds(learner, 'set').filter((id) => findSetView(learner, id)?.targetLang === learner.profile.targetLang);
 }
 
+/** Liked songs, most recently liked first (plan 107); songs are the server's, fetched to show. */
+export function likedSongIds(learner: LearnerState): string[] {
+  return likedIds(learner, 'song');
+}
+
 function likedIds(learner: LearnerState, kind: LikeKind): string[] {
   const prefix = `${kind}:`;
   return Object.entries(learner.likes)

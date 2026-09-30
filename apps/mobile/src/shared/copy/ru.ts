@@ -631,6 +631,7 @@ export function makeRu(n: Plural): Copy {
       signInToMake: 'Войдите, чтобы создавать наборы с ИИ',
     },
     music: {
+      likedSongs: 'Любимые песни',
       songKind: 'Песня',
       likeSong: 'Нравится песня',
       rateSong: (n: number) => (n === 1 ? 'Как прошло? Ваша оценка повторяет фразу из песни.' : `Как прошло? Ваша оценка повторяет фразы из песни (${n}).`),
