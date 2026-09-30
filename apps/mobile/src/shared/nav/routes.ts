@@ -2,7 +2,7 @@
 // set can be shared as a link. Pure: parse and format round-trip.
 import { TOPICS, type Level, type Tag } from '../content';
 
-/** The bottom bar: Home, Phrases (the route `explore`), Create and Library (plan 107: no Music tab). */
+/** The bottom bar: Home, Explore (sets of phrases and songs), Create and Library (plan 107). */
 export type Tab = 'home' | 'explore' | 'create' | 'library';
 
 /** Library's lists; `albums` holds Loro's, the learner's and shared albums (plan 107). */

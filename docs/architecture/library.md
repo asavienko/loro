@@ -29,7 +29,7 @@ phrases.
 | Tab     | What it holds                                                                              |
 | ------- | ------------------------------------------------------------------------------------------ |
 | Home    | The daily loop, and Loro's album of the course sung                                        |
-| Phrases | Loro's course, the learner's own and saved sets, Community sets, Make a set with AI        |
+| Explore | Loro's course, the learner's own and saved sets, Community sets, Make a set with AI        |
 | Create  | Making sets, songs and covers, with today's allowance beside each                          |
 | Library | Progress: liked, due, learned phrases; the learner's sets; Albums (Loro's, theirs, shared) |
 
