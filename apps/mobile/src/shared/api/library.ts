@@ -49,6 +49,8 @@ export interface Usage {
 }
 
 export interface NewPhrase {
+  /** A phrase uploaded from this device keeps the device's id, and with it its progress (plan 108). */
+  id?: string;
   target: string;
   native: string;
   /** Without a picture and notes, the server writes both (plan 108). */
@@ -59,6 +61,9 @@ export interface NewPhrase {
   source: 'ai' | 'bank' | 'course' | 'written';
   bankId?: string;
 }
+
+/** What a learner's set lists: a phrase already in the library (Loro's or theirs) by id, or a new one it holds. */
+export type SetItem = { ref: string } | NewPhrase;
 
 export interface SetDetail {
   set: PhraseSet;
@@ -95,6 +100,8 @@ export const fetchSong = (id: string) => api<Song>(`/library/songs/${encodeURICo
 export const fetchUsage = () => api<Usage>('/library/usage', { auth: 'required' });
 
 export const createSet = (body: {
+  /** A set uploaded from this device keeps the device's id; uploading it again changes nothing. */
+  id?: string;
   title: string;
   description?: string;
   targetLang: LanguageCode;
@@ -103,13 +110,33 @@ export const createSet = (body: {
   topicId?: string;
   coverId?: string;
   visibility: Visibility;
-  phrases: NewPhrase[];
+  phrases: SetItem[];
 }) => api<SetDetail>('/library/sets', { method: 'POST', body, auth: 'required' });
 
 export const updateSet = (
   id: string,
-  body: { title?: string; description?: string | null; visibility?: Visibility; coverId?: string | null; addPhrases?: NewPhrase[]; removePhraseIds?: string[] },
+  body: {
+    title?: string;
+    description?: string | null;
+    visibility?: Visibility;
+    coverId?: string | null;
+    addPhrases?: SetItem[];
+    removePhraseIds?: string[];
+    /** The set's phrases in their new order. */
+    order?: string[];
+  },
 ) => api<SetDetail>(`/library/sets/${encodeURIComponent(id)}`, { method: 'POST', body, auth: 'required' });
+
+/** A phrase added on its own: into one of the learner's sets, or their "My phrases" set, made the first time. */
+export const addPhrase = (body: { phrase: NewPhrase; targetLang: LanguageCode; nativeLang: LanguageCode; setId?: string; inboxTitle: string }) =>
+  api<SetDetail>('/library/phrases', { method: 'POST', body, auth: 'required' });
+
+/** New words for a phrase the learner holds; the server writes its notes again unless they are sent. */
+export const editPhrase = (setId: string, phraseId: string, body: { target: string; native: string; image?: string[]; notes?: OwnNotes; notesBy?: 'ai' | 'rules' }) =>
+  api<SetDetail>(`/library/sets/${encodeURIComponent(setId)}/phrases/${encodeURIComponent(phraseId)}`, { method: 'POST', body, auth: 'required' });
+
+/** Deletes a phrase the learner holds, from every set of theirs that lists it. */
+export const deletePhrase = (id: string) => api<void>(`/library/phrases/${encodeURIComponent(id)}`, { method: 'DELETE', auth: 'required' });
 
 export const deleteSet = (id: string) => api<void>(`/library/sets/${encodeURIComponent(id)}`, { method: 'DELETE', auth: 'required' });
 

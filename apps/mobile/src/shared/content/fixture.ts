@@ -6,7 +6,7 @@ import topicsJson from '../../../../../packages/content/v2/topics.json';
 import noteTranslationsJson from '../../../../../packages/content/v2/note-translations.json';
 import bankJson from '../../../../../packages/content/v2/bank.json';
 import bankNoteTranslationsJson from '../../../../../packages/content/v2/bank-note-translations.json';
-import { ContentPack, installPacks, LanguageCode, Phrase, TARGET_LANGUAGES } from './index';
+import { applySet, ContentPack, installPacks, LanguageCode, Phrase, removeSet, TARGET_LANGUAGES } from './index';
 import type { BankJson, NoteTranslations, PhraseJson, SetJson, Topic } from './schema';
 
 export const FIXTURE = {
@@ -46,4 +46,36 @@ export function fixturePack(targetLang: LanguageCode): ContentPack {
 /** Installs every course's pack. */
 export function installFixture(): void {
   installPacks(TARGET_LANGUAGES.map(fixturePack));
+}
+
+/**
+ * A set of the learner's in their account (plan 108) put into the installed content, holding the
+ * phrases given (written by them) and listing `refs`; `removeOwnSet` takes it out again.
+ */
+export function installOwnSet(id: string, phrases: { id: string; target: string; native: string }[], refs: string[] = [], targetLang: LanguageCode = 'es-ES'): void {
+  const template = FIXTURE.phrases[0];
+  applySet({
+    set: {
+      id,
+      title: 'Mine',
+      subtitle: null,
+      description: null,
+      topicId: 'everyday',
+      level: 'A2',
+      coverIcon: 'edit_note',
+      coverUrl: null,
+      targetLang,
+      phraseIds: [...phrases.map((p) => p.id), ...refs],
+      owner: 'me',
+      author: null,
+      visibility: 'private',
+      shareCode: 'abcdefghij',
+      saved: false,
+    },
+    phrases: phrases.map((p) => ({ ...template, id: p.id, setId: id, target: p.target, translations: { 'en-GB': p.native }, noteTranslations: {}, source: 'written' as const, notesBy: 'rules' as const })),
+  });
+}
+
+export function removeOwnSet(id: string): void {
+  removeSet(id);
 }

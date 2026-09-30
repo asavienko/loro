@@ -14,6 +14,7 @@ import { findPhrase, findSetView, promptOf } from '@shared/state/catalog';
 import { formatAgo, MINUTE } from '@shared/state/clock';
 import { currentPhraseId, previouslyPlayed, sessionSummary, upNextIds } from '@shared/state/selectors';
 import { isTargetRevealed, queueTitle } from '@shared/ui/phase';
+import { useMySets } from '../state/mySets';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
@@ -31,6 +32,7 @@ export function QueueScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { state, actions } = useStore();
+  const my = useMySets();
   const { toast, announce } = useToast();
   const now = useNow(30_000);
   const onClose = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -75,10 +77,10 @@ export function QueueScreen() {
     toast(c.toast.removed, { action: { label: c.common.undo, run: () => actions.restoreUpNext([phraseId], i) } });
   };
 
-  const saveAsSet = () => {
+  const saveAsSet = async () => {
     const title = set ? `${set.title} · ${c.queue.defaultSetName}` : c.queue.defaultSetName;
-    actions.createSet(title, state.player.order);
-    toast(c.toast.saved(title));
+    // A set in the learner's account holds at most 40 phrases (plan 108): the first 40 of the queue.
+    if (await my.createSet(title, [...new Set(state.player.order)].slice(0, 40))) toast(c.toast.saved(title));
   };
 
   return (
@@ -175,7 +177,7 @@ export function QueueScreen() {
               </>
             )}
             <View style={styles.buttons}>
-              <Button variant="tonal" icon="playlist_add" label={c.queue.saveAsSet} onPress={saveAsSet} />
+              <Button variant="tonal" icon="playlist_add" label={c.queue.saveAsSet} onPress={() => void saveAsSet()} />
               {upNext.length > 0 && (
                 <Button
                   variant="tonal"

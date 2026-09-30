@@ -23,6 +23,8 @@ import { CreateSetSheet } from '../sheets/CreateSetSheet';
 import { PhraseDetailsSheet } from '../sheets/PhraseDetailsSheet';
 import { SessionSummarySheet } from '../sheets/SessionSummarySheet';
 import { SettingsSheet } from '../sheets/SettingsSheet';
+import { useQueueFollowsContent } from '../state/queueFollowsContent';
+import { useDeviceUpload } from '../state/upload';
 import { useCopy, useStore } from '../state/store';
 import { useToast } from '../ui/Toast';
 
@@ -146,6 +148,8 @@ export function Shell({ children }: { children: ReactNode }) {
 
   useCelebrations(nav);
   useSaveWarning();
+  useDeviceUpload();
+  useQueueFollowsContent();
 
   return (
     <NavContext.Provider value={nav}>

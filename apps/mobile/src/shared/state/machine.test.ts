@@ -7,8 +7,6 @@ import { derive, isLearned, RATING_WINDOW_MS } from './memory';
 import { currentPhraseId, memoryOf, phraseProgress, points, previouslyPlayed, sessionSummary, upNextIds } from './selectors';
 import { addLocalDays, HOUR, startOfLocalDay } from './clock';
 // Phase timing, one-pass queues and undo after moving on (the player's round-3 changes).
-import { findBankPhrase } from '../content';
-import { deviceNotes } from '../notes';
 import { findPhrase, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { requeuesOn } from './machine';
 import { isLiked, measuredTargetMs, pendingFor, phaseDurationMs } from './selectors';
@@ -16,6 +14,8 @@ import { sanitizeLearner, sanitizeState } from './persistence';
 import { pauseMs, RATE_HOLD_MS } from './timing';
 import { cafe, DAY, done, fresh, load, MINUTE, playPhrase, run, T0 } from './testing';
 import { isTargetRevealed } from '../ui/phase';
+import { installOwnSet, removeOwnSet } from '../content/fixture';
+import type { AppState } from './types';
 
 describe('player loop', () => {
   it('walks native → pause → target three times for a new phrase, then holds for a rating', () => {
@@ -301,161 +301,7 @@ describe('repetitions', () => {
   });
 });
 
-describe('the learner’s own phrases and sets', () => {
-  it('adds, groups, likes and deletes', () => {
-    let s = run(fresh(), { type: 'ADD_OWN_PHRASE', target: '  ¿Hay   wifi? ', native: 'Is there wifi?', now: T0 });
-    const [own] = Object.values(s.learner.ownPhrases);
-    assert.equal(own.target, '¿Hay wifi?');
-    s = run(
-      s,
-      { type: 'CREATE_SET', title: 'Travel bits', phraseIds: [own.id, 'taxi-01'], now: T0 + 1 },
-      { type: 'TOGGLE_LIKE', kind: 'phrase', id: own.id, now: T0 + 2 },
-    );
-    const [set] = Object.values(s.learner.ownSets);
-    assert.deepEqual(set.phraseIds, [own.id, 'taxi-01']);
-    assert.equal(s.learner.likes[`phrase:${own.id}`].liked, true);
-    s = run(s, { type: 'DELETE_OWN_PHRASE', id: own.id, now: T0 + 3 });
-    assert.equal(s.learner.ownPhrases[own.id].deleted, true);
-    // Undo brings it back, set membership and like intact.
-    s = run(s, { type: 'RESTORE_OWN_PHRASE', id: own.id, now: T0 + 4 }, { type: 'DELETE_SET', setId: set.id, now: T0 + 5 }, { type: 'RESTORE_SET', setId: set.id, now: T0 + 6 });
-    assert.equal(s.learner.ownPhrases[own.id].deleted, false);
-    assert.equal(s.learner.ownPhrases[own.id].updatedAt, T0 + 4);
-    assert.equal(s.learner.ownSets[set.id].deleted, false);
-    assert.deepEqual(s.learner.ownSets[set.id].phraseIds, [own.id, 'taxi-01']);
-    assert.equal(run(s, { type: 'RESTORE_SET', setId: set.id, now: T0 + 7 }), s, 'restoring a live set does nothing');
-    // Undoing a removal puts the phrase back where it was.
-    s = run(s, { type: 'REMOVE_FROM_SET', setId: set.id, phraseId: own.id, now: T0 + 8 }, { type: 'ADD_TO_SET', setId: set.id, phraseIds: [own.id], at: 0, now: T0 + 9 });
-    assert.deepEqual(s.learner.ownSets[set.id].phraseIds, [own.id, 'taxi-01']);
-    // A phrase is in a set once, however it's added.
-    s = run(s, { type: 'ADD_TO_SET', setId: set.id, phraseIds: ['cafe-01', 'cafe-01'], now: T0 + 10 });
-    assert.deepEqual(s.learner.ownSets[set.id].phraseIds, [own.id, 'taxi-01', 'cafe-01']);
-  });
-
-  it('editing your phrase keeps its id and history', () => {
-    let s = run(fresh(), { type: 'ADD_OWN_PHRASE', target: 'Hola', native: 'Hi', now: T0 });
-    const id = Object.keys(s.learner.ownPhrases)[0];
-    s = run(s, { type: 'EDIT_OWN_PHRASE', id, target: ' ¡Hola! ', native: 'Hello', now: T0 + 1 });
-    assert.deepEqual([s.learner.ownPhrases[id].target, s.learner.ownPhrases[id].native], ['¡Hola!', 'Hello']);
-    assert.equal(run(s, { type: 'EDIT_OWN_PHRASE', id, target: '', native: 'x', now: T0 + 2 }), s, 'an empty text is refused');
-  });
-
-  it('moves a phrase within your set', () => {
-    let s = run(fresh(), { type: 'CREATE_SET', title: 'Mine', phraseIds: ['cafe-01', 'cafe-02', 'cafe-03'], now: T0 });
-    const setId = Object.keys(s.learner.ownSets)[0];
-    s = run(s, { type: 'MOVE_IN_SET', setId, phraseId: 'cafe-03', delta: -1, now: T0 + 1 });
-    assert.deepEqual(s.learner.ownSets[setId].phraseIds, ['cafe-01', 'cafe-03', 'cafe-02']);
-    assert.equal(run(s, { type: 'MOVE_IN_SET', setId, phraseId: 'cafe-01', delta: -1, now: T0 + 2 }), s, 'the first cannot move up');
-  });
-
-  it('a new phrase or set gets the id promised to the caller, though the speech took the counter first', () => {
-    // The store promises the counter's next id as last rendered; a heard entry, not yet rendered,
-    // takes that number first. The new phrase and set keep the promised ids all the same.
-    let s = load(fresh());
-    const promised = (prefix: string, state: typeof s) => `${prefix}dev.tab-${(state.device.seq + 1).toString(36)}`;
-    const phraseId = promised(OWN_PHRASE_PREFIX, s);
-    s = done(done(done(s, T0 + 1), T0 + 2), T0 + 3); // the target is heard: an id from the counter
-    s = run(s, { type: 'ADD_OWN_PHRASE', target: '¿Hay wifi?', native: 'Is there wifi?', now: T0 + 4, id: phraseId });
-    assert.equal(s.learner.ownPhrases[phraseId]?.target, '¿Hay wifi?');
-    const setId = promised(OWN_SET_PREFIX, s);
-    s = done(done(done(s, T0 + 5), T0 + 6), T0 + 7);
-    s = run(s, { type: 'CREATE_SET', title: 'Travel bits', phraseIds: [phraseId], now: T0 + 8, id: setId });
-    assert.equal(s.learner.ownSets[setId]?.title, 'Travel bits');
-    // An id already in use is never reused: the counter's next one instead.
-    s = run(s, { type: 'ADD_OWN_PHRASE', target: 'Hola', native: 'Hi', now: T0 + 9, id: phraseId });
-    assert.equal(s.learner.ownPhrases[phraseId].target, '¿Hay wifi?');
-    assert.equal(Object.keys(s.learner.ownPhrases).length, 2);
-  });
-
-  it('saves what was kept in Make a set at once: new phrases, existing ones, one new set', () => {
-    let s = run(fresh(), { type: 'ADD_OWN_PHRASE', target: 'Hola', native: 'Hi', now: T0 });
-    const mine = Object.keys(s.learner.ownPhrases)[0];
-    const promised = (n: number) => `dev.tab-${(s.device.seq + n).toString(36)}`;
-    const [aiId, bankId, setId] = [`${OWN_PHRASE_PREFIX}${promised(1)}`, `${OWN_PHRASE_PREFIX}${promised(2)}`, `${OWN_SET_PREFIX}${promised(3)}`];
-    s = run(s, {
-      type: 'ADD_PICKS',
-      picks: [
-        { target: '¿Hay  farmacia? ', native: 'Is there a pharmacy?', origin: 'ai', id: aiId },
-        { phraseId: 'cafe-01' },
-        { target: 'Me duele la garganta', native: 'I have a sore throat', origin: 'bank', id: bankId },
-        { phraseId: mine },
-        { phraseId: 'nowhere-01' },
-      ],
-      title: 'Pharmacy',
-      id: setId,
-      now: T0 + 1,
-    });
-    assert.deepEqual(s.learner.ownSets[setId].phraseIds, [aiId, 'cafe-01', bankId, mine], 'in the order kept; an unknown phrase is left out');
-    assert.equal(s.learner.ownSets[setId].title, 'Pharmacy');
-    assert.equal(s.learner.ownPhrases[aiId].target, '¿Hay farmacia?');
-    assert.equal(s.learner.ownPhrases[aiId].origin, 'ai');
-    assert.equal(s.learner.ownPhrases[bankId].origin, 'bank');
-    assert.equal(s.learner.ownPhrases[mine].origin, undefined);
-    // Corrected by the learner, an AI phrase is still one no native speaker has checked.
-    s = run(s, { type: 'EDIT_OWN_PHRASE', id: aiId, target: '¿Hay una farmacia?', native: 'Is there a pharmacy?', now: T0 + 2 });
-    assert.equal(s.learner.ownPhrases[aiId].origin, 'ai');
-  });
-
-  it('Make a set can fill one of your sets instead, and saves nothing when nothing was kept', () => {
-    let s = run(fresh(), { type: 'CREATE_SET', title: 'Trip', phraseIds: ['cafe-01'], now: T0 });
-    const setId = Object.keys(s.learner.ownSets)[0];
-    s = run(s, { type: 'ADD_PICKS', picks: [{ phraseId: 'cafe-01' }, { target: 'Hola', native: 'Hi' }], setId, now: T0 + 1 });
-    const [hola] = Object.values(s.learner.ownPhrases);
-    assert.deepEqual(s.learner.ownSets[setId].phraseIds, ['cafe-01', hola.id]);
-    assert.equal(Object.keys(s.learner.ownSets).length, 1);
-    assert.equal(run(s, { type: 'ADD_PICKS', picks: [{ target: '  ', native: 'x' }], title: 'Empty', now: T0 + 2 }), s);
-    assert.equal(canHandle('playing', 'ADD_PICKS'), true, 'saving never waits for the player');
-  });
-
-  it('every own phrase has notes: the bank’s, AI’s for its text, or else the device’s (plan 105)', () => {
-    const notes = {
-      mnemonic: { title: 'Toalla, towel', text: 'Sounds alike.' },
-      grammar: { title: 'Otra', text: 'No «una» before «otra».' },
-      pronunciation: { title: 'Ll', text: 'Like y.', ipa: '[oˈtɾa toˈa.ʝa]', respelling: 'OH-trah toh-AH-yah' },
-    };
-    // Typed by hand, the bank's own phrase: it links to the bank and shows the bank's notes and picture.
-    let s = run(fresh(), { type: 'ADD_OWN_PHRASE', target: ' ¿a qué hora es el desayuno ', native: 'Breakfast?', now: T0 });
-    const typed = Object.values(s.learner.ownPhrases)[0];
-    assert.equal(typed.bankId, 'bank-hotel-es-02');
-    const shown = findPhrase(s.learner, typed.id)!;
-    assert.deepEqual(shown.notes, findBankPhrase('bank-hotel-es-02')!.notes);
-    assert.deepEqual(shown.image, findBankPhrase('bank-hotel-es-02')!.image);
-    // AI's notes for a phrase the bank lacks, kept with it; in Bulgarian they stand as Bulgarian.
-    s = run(s, { type: 'ADD_OWN_PHRASE', target: 'Otra toalla', native: 'Another towel', notes, image: ['dry_cleaning'], id: `${OWN_PHRASE_PREFIX}ai`, now: T0 + 1 });
-    assert.deepEqual(findPhrase(s.learner, `${OWN_PHRASE_PREFIX}ai`)?.notes, notes);
-    assert.deepEqual(findPhrase(s.learner, `${OWN_PHRASE_PREFIX}ai`)?.image, ['dry_cleaning']);
-    // A new text drops notes written for the old one; a native-only correction keeps them.
-    s = run(s, { type: 'EDIT_OWN_PHRASE', id: `${OWN_PHRASE_PREFIX}ai`, target: 'Otra toalla', native: 'One more towel', now: T0 + 2 });
-    assert.deepEqual(s.learner.ownPhrases[`${OWN_PHRASE_PREFIX}ai`].notes, notes);
-    s = run(s, { type: 'EDIT_OWN_PHRASE', id: `${OWN_PHRASE_PREFIX}ai`, target: 'Otra toalla limpia', native: 'Another clean towel', now: T0 + 3 });
-    assert.equal(s.learner.ownPhrases[`${OWN_PHRASE_PREFIX}ai`].notes, undefined);
-    // Until the writer writes again, the device's rules give it notes and a picture of its own.
-    const edited = findPhrase(s.learner, `${OWN_PHRASE_PREFIX}ai`)!;
-    assert.equal(edited.notesBy, 'device');
-    assert.deepEqual(edited.notes, deviceNotes({ target: 'Otra toalla limpia', native: 'Another clean towel', targetLang: 'es-ES', nativeLang: 'en-GB' }).notes);
-    assert.equal(shown.notesBy, undefined, 'a bank phrase’s notes are Loro’s own');
-    // Notes from the writer apply to the text they were written for, once.
-    assert.equal(run(s, { type: 'SET_OWN_NOTES', id: `${OWN_PHRASE_PREFIX}ai`, target: 'Otra toalla', notes, image: ['dry_cleaning'], now: T0 + 4 }), s, 'written for an older text');
-    s = run(s, { type: 'SET_OWN_NOTES', id: `${OWN_PHRASE_PREFIX}ai`, target: 'Otra toalla limpia', notes, image: ['dry_cleaning'], now: T0 + 5 });
-    assert.deepEqual(s.learner.ownPhrases[`${OWN_PHRASE_PREFIX}ai`].notes, notes);
-    assert.equal(run(s, { type: 'SET_OWN_NOTES', id: typed.id, target: typed.target, notes, image: [], now: T0 + 6 }), s, 'the bank’s notes are kept');
-    // Edited into the bank's text, it takes the bank's notes.
-    s = run(s, { type: 'EDIT_OWN_PHRASE', id: `${OWN_PHRASE_PREFIX}ai`, target: 'Llévate un paraguas', native: 'Take an umbrella', now: T0 + 7 });
-    assert.equal(s.learner.ownPhrases[`${OWN_PHRASE_PREFIX}ai`].bankId, 'bank-weather-es-06');
-    assert.equal(s.learner.ownPhrases[`${OWN_PHRASE_PREFIX}ai`].notes, undefined);
-  });
-
-  it('AI notes in the learner’s own language stand as that language’s notes', () => {
-    const s0 = fresh();
-    const bg = { ...s0, learner: { ...s0.learner, profile: { ...s0.learner.profile, nativeLang: 'bg-BG' as const } } };
-    const notes = {
-      mnemonic: { title: 'Бележка', text: 'Текст.' },
-      grammar: { title: 'Граматика', text: 'Текст.' },
-      pronunciation: { title: 'Звук', text: 'Текст.', ipa: '[ˈo.la]', respelling: 'OH-lah' },
-    };
-    const s = run(bg, { type: 'ADD_OWN_PHRASE', target: 'Hola, ¿qué tal?', native: 'Здравей', notes, image: ['waving_hand'], id: `${OWN_PHRASE_PREFIX}bg`, now: T0 });
-    assert.deepEqual(findPhrase(s.learner, `${OWN_PHRASE_PREFIX}bg`)?.noteTranslations.grammar, { 'bg-BG': { title: 'Граматика', text: 'Текст.' } });
-  });
-
+describe('the course', () => {
   it('changing course empties the queue', () => {
     const s = run(load(fresh()), { type: 'SET_PROFILE', profile: { targetLang: 'bg-BG' }, now: T0 });
     assert.equal(s.player.status, 'idle');
@@ -463,15 +309,40 @@ describe('the learner’s own phrases and sets', () => {
   });
 });
 
+/** Learner state holding phrases and a set made on this device before plan 108. */
+function withDeviceMade(s: AppState, ids: string[], setIds: string[] = []): AppState {
+  const phrase = (id: string) => ({ id, targetLang: 'es-ES' as const, nativeLang: 'en-GB' as const, target: id, native: id, createdAt: T0, updatedAt: T0, deleted: false });
+  const set = (id: string) => ({ id, title: id, targetLang: 'es-ES' as const, phraseIds: ids, createdAt: T0, updatedAt: T0, deleted: false });
+  return { ...s, learner: { ...s.learner, ownPhrases: Object.fromEntries(ids.map((id) => [id, phrase(id)])), ownSets: Object.fromEntries(setIds.map((id) => [id, set(id)])) } };
+}
+
+describe('uploaded to the account (plan 108)', () => {
+  it('marks what was uploaded deleted here, keeping its progress', () => {
+    const [first, second, setId] = [`${OWN_PHRASE_PREFIX}a`, `${OWN_PHRASE_PREFIX}b`, `${OWN_SET_PREFIX}a`];
+    // The phrase playing is uploaded too: it plays on from the account under the same id.
+    let s = load(withDeviceMade(fresh(), [first, second], [setId]));
+    const log = s.learner.log;
+    s = run(s, { type: 'OWN_UPLOADED', phraseIds: [first], setIds: [setId], now: T0 + 3 });
+    assert.equal(s.learner.ownPhrases[first].deleted, true);
+    assert.equal(s.learner.ownPhrases[first].updatedAt, T0 + 3);
+    assert.equal(s.learner.ownSets[setId].deleted, true);
+    assert.equal(s.learner.ownPhrases[second].deleted, false, 'what was not uploaded stays');
+    assert.equal(s.learner.log, log, 'progress is untouched');
+    assert.equal(run(s, { type: 'OWN_UPLOADED', phraseIds: [first], setIds: [setId], now: T0 + 4 }), s, 'uploading again changes nothing');
+  });
+});
+
 describe('merging another device', () => {
-  it("that deleted the phrase playing here pauses on the next one instead of freezing", () => {
-    let s = run(fresh(), { type: 'ADD_OWN_PHRASE', target: 'Hola', native: 'Hi', now: T0 });
-    const id = Object.keys(s.learner.ownPhrases)[0];
+  it('or the account that deleted the phrase playing here pauses on the next one instead of freezing', () => {
+    installOwnSet('set-u-hola', [{ id: 'u-hola-01', target: 'Hola', native: 'Hi' }]);
+    let s = fresh();
+    const id = 'u-hola-01';
     s = run(s, { type: 'LOAD', phraseIds: [id, 'cafe-01'], setId: null, startIndex: 0, shuffle: false, now: T0 + 1, seed: 1 });
     assert.equal(s.player.status, 'playing');
-    const remote = { ...s.learner, ownPhrases: { [id]: { ...s.learner.ownPhrases[id], deleted: true, updatedAt: T0 + 5 } } };
-    s = run(s, { type: 'MERGE_REMOTE', learner: remote, now: T0 + 6 });
-    assert.equal(s.learner.ownPhrases[id].deleted, true);
+    assert.equal(run(s, { type: 'CONTENT_CHANGED', now: T0 + 2 }), s, 'nothing gone, nothing changes');
+    // Deleted from the account: the course downloaded again no longer has it.
+    removeOwnSet('set-u-hola');
+    s = run(s, { type: 'CONTENT_CHANGED', now: T0 + 6 });
     assert.deepEqual(s.player.order, ['cafe-01']);
     assert.equal(s.player.index, 0);
     assert.equal(s.player.status, 'paused');

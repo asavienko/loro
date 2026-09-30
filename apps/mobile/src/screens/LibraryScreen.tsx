@@ -5,7 +5,7 @@ import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useNav } from '@shared/nav/NavContext';
 import type { LibraryView } from '@shared/nav/routes';
-import { coursePhrases, findPhrase, findSetView, ownPhrases, ownSets, SetView } from '@shared/state/catalog';
+import { coursePhrases, findPhrase, findSetView, ownPhrases, SetView } from '@shared/state/catalog';
 import { librarySets } from '@shared/content';
 import { LEARNED_MIN_SUCCESSES, LEARNED_STABILITY_DAYS } from '@shared/state/memory';
 import {
@@ -25,6 +25,8 @@ import {
 import type { LibraryListView } from '@shared/state/types';
 import { hrefOf } from '../nav/Shell';
 import { AlbumsView } from './AlbumsView';
+import { useAccount } from '../state/account';
+import { onDevice } from '../state/upload';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button, Chip } from '../ui/Button';
 import { RecallChart, WeeklyChart } from '../ui/Charts';
@@ -49,8 +51,11 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
   const page = useRef<ScrollView>(null);
   // Ratings still in their undo window count in every list and figure here.
   const learner = displayLearner(state);
-  // Sets in the learner's account and the ones they saved (plan 106), then those on this device.
-  const yourSetIds = [...librarySets(learner.profile.targetLang).map((s) => s.id), ...ownSets(learner).map((s) => s.id)];
+  // Sets in the learner's account and the ones they saved (plan 106).
+  const yourSetIds = librarySets(learner.profile.targetLang).map((s) => s.id);
+  // Made on this device before it lived in the account (plan 108): kept once they sign in.
+  const waiting = onDevice(state.learner);
+  const signedOut = useAccount().status !== 'signedIn';
   const stats = learnerStats(learner, now);
   // Opened without a view: what's useful now (reviews due, then liked, then what you've started),
   // chosen once, so it doesn't switch under the learner as phrases fall due.
@@ -101,6 +106,15 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
             );
           })}
         </View>
+
+        {signedOut && waiting.phrases.length + waiting.sets.length > 0 && (
+          <View style={styles.onDevice}>
+            <Txt variant="label" style={styles.onDeviceText}>
+              {c.library.onDevice(waiting.phrases.length, waiting.sets.length)}
+            </Txt>
+            <Button variant="primarySm" label={c.account.signIn} onPress={nav.openAccount} />
+          </View>
+        )}
 
         {segment === 'albums' ? (
           <AlbumsView />
@@ -229,6 +243,8 @@ function SetList({ ids, view, now }: { ids: string[]; view: LibraryView; now: nu
 }
 
 const styles = StyleSheet.create({
+  onDevice: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.xl, backgroundColor: colors.surfaceContainerLow, padding: 12 },
+  onDeviceText: { flex: 1 },
   screen: { flex: 1, backgroundColor: colors.surface },
   content: { width: '100%', maxWidth: 768, alignSelf: 'center', paddingHorizontal: PAGE_PAD, paddingTop: 16, paddingBottom: 24, gap: 12 },
   segments: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: radius.full, backgroundColor: colors.surfaceContainerLow },

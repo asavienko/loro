@@ -111,11 +111,6 @@ export interface OwnPhrase {
   image?: string[];
 }
 
-/** A phrase picked in "Make a set": one that exists, by id, or a new one to write (with the id the store promised). */
-export type PhrasePick =
-  | { phraseId: string }
-  | { target: string; native: string; origin?: PhraseOrigin; id?: string; bankId?: string; notes?: OwnNotes; image?: string[] };
-
 export interface OwnSet {
   id: string;
   title: string;

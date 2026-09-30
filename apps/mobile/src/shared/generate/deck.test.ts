@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { added, currentCard, deal, dealt, decide, edit, lastDecision, newDeck, nextCard, picksOf, shown, undo, unadd } from './deck';
+import { fresh } from '../state/testing';
+import { added, currentCard, deal, dealt, decide, edit, lastDecision, newDeck, nextCard, shown, undo, unadd } from './deck';
+import { newPhrasesOf } from './publish';
 import type { Suggestion } from './types';
 
 const ai: Suggestion = { key: 'ai:a', source: 'ai', target: '¿Hay una farmacia cerca?', native: 'Is there a pharmacy nearby?' };
@@ -36,9 +38,10 @@ describe('deck', () => {
     assert.deepEqual([card.target, card.native, card.phraseId, card.source], ['La cuenta, por favor ya', 'The bill now, please', undefined, 'course']);
     deck = edit(deck, ai.key, '¿Hay farmacia?', ai.native);
     deck = decide(decide(deck, true), true);
-    assert.deepEqual(picksOf(added(deck)), [
-      { target: 'La cuenta, por favor ya', native: 'The bill now, please' },
-      { target: '¿Hay farmacia?', native: ai.native, origin: 'ai' },
+    // Saved, both are the learner's own words: the server writes their notes (plan 108).
+    assert.deepEqual(newPhrasesOf(fresh().learner, added(deck)), [
+      { target: 'La cuenta, por favor ya', native: 'The bill now, please', source: 'written' },
+      { target: '¿Hay farmacia?', native: ai.native, source: 'written' },
     ]);
     assert.equal(edit(deck, ai.key, '', 'x'), deck, 'empty text is refused');
     assert.deepEqual(edit(deck, course.key, course.target, course.native).edits[course.key], undefined, 'the original text drops the correction');
@@ -52,23 +55,19 @@ describe('deck', () => {
     };
     const fromBank: Suggestion = { ...bank, bankId: 'bank-health-es-03', image: ['sick'] };
     const fromAi: Suggestion = { ...ai, notes, image: ['local_pharmacy'] };
-    assert.deepEqual(picksOf([fromBank, fromAi]), [
-      { target: bank.target, native: bank.native, origin: 'bank', bankId: 'bank-health-es-03' },
-      { target: ai.target, native: ai.native, origin: 'ai', notes, image: ['local_pharmacy'] },
-    ]);
+    const { learner } = fresh();
+    const [savedBank, savedAi] = newPhrasesOf(learner, [fromBank, fromAi]);
+    assert.deepEqual('ref' in savedBank ? null : [savedBank.source, savedBank.bankId], ['bank', 'bank-health-es-03']);
+    assert.deepEqual(savedAi, { target: ai.target, native: ai.native, image: ['local_pharmacy'], notes, source: 'ai' });
     const deck = edit(edit(newDeck([fromBank, fromAi]), fromBank.key, 'Me duele mucho la garganta', bank.native), fromAi.key, '¿Hay farmacia?', ai.native);
-    assert.deepEqual(picksOf([currentCard(deck)!, shown(deck, fromAi)]), [
-      { target: 'Me duele mucho la garganta', native: bank.native, origin: 'bank' },
-      { target: '¿Hay farmacia?', native: ai.native, origin: 'ai' },
+    assert.deepEqual(newPhrasesOf(learner, [currentCard(deck)!, shown(deck, fromAi)]), [
+      { target: 'Me duele mucho la garganta', native: bank.native, source: 'written' },
+      { target: '¿Hay farmacia?', native: ai.native, source: 'written' },
     ]);
   });
 
-  it('saves existing phrases by id and the rest with their origin', () => {
-    assert.deepEqual(picksOf([course, bank, ai]), [
-      { phraseId: 'cafe-03' },
-      { target: bank.target, native: bank.native, origin: 'bank' },
-      { target: ai.target, native: ai.native, origin: 'ai' },
-    ]);
+  it('saves an existing phrase by reference, keeping its one progress (plan 108)', () => {
+    assert.deepEqual(newPhrasesOf(fresh().learner, [course]), [{ ref: 'cafe-03' }]);
   });
 
   it('more cards join at the end, never twice', () => {

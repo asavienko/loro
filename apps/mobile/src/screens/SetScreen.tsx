@@ -75,7 +75,7 @@ export function SetScreen({ setId }: { setId: string }) {
   const view = findSetView(state.learner, setId);
   const back = () => (router.canGoBack() ? router.back() : router.navigate(hrefOf({ name: tab }) as never));
   // A set not installed here (a link, Community): fetched and kept, so its phrases play (plan 106).
-  const [fetching, setFetching] = useState(!view && !setId.startsWith('mine-'));
+  const [fetching, setFetching] = useState(!view);
   useEffect(() => {
     if (!fetching) return;
     let live = true;
@@ -201,6 +201,8 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
 
   // A set in the learner's account, or one they saved or opened (plan 106).
   const served = view.content;
+  /** One of the learner's own sets (plan 108): theirs to fill and arrange. */
+  const mine = served?.owner === 'me';
   const drawCover = async () => {
     if (!served) return;
     setDrawing(true);
@@ -265,7 +267,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
             <SetCover set={view} px={96} rounded={radius['2xl']} style={shadow.cover} />
             <View style={styles.headText}>
               <View style={styles.kicker}>
-                {view.kind === 'own' ? (
+                {mine ? (
                   <>
                     <Icon name="edit_note" size="xs" color="secondary" />
                     <Txt variant="label" weight={600} color="secondary">
@@ -401,7 +403,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
                 // As in the queue: the playing phrase's target stays hidden while you recall it.
                 hideTarget={isCurrent && !isTargetRevealed(player)}
                 onPlay={() => load('set', sortedIds, { startIndex: i })}
-                onMore={() => nav.showDetails(phrase.id, view.kind === 'own' ? { ownSetId: setId } : {})}
+                onMore={() => nav.showDetails(phrase.id, mine ? { ownSetId: setId } : {})}
               />
             );
           })
@@ -417,7 +419,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
           </View>
         )}
         {/* Your own set grows from here: pick phrases without leaving the page. */}
-        {view.kind === 'own' && (
+        {mine && (
           <View style={styles.grow}>
             <Button variant="tonal" icon="add" label={c.set.addPhrases} onPress={() => setPicking(true)} />
             <Button variant="tonal" icon="auto_awesome" label={c.make.fromSet} onPress={() => nav.makeSet({ setId })} />
@@ -427,7 +429,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
 
       {served?.owner === 'other' && <MoreSetsByMaker key={setId} setId={setId} author={served.author} />}
 
-      {view.kind === 'own' && <PickPhrasesSheet setId={picking ? setId : null} onClose={() => setPicking(false)} />}
+      {mine && <PickPhrasesSheet setId={picking ? setId : null} onClose={() => setPicking(false)} />}
 
       <Sheet open={sortOpen} title={c.set.sortTitle} onClose={() => setSortOpen(false)}>
         <View accessibilityRole="radiogroup" accessibilityLabel={c.set.sortTitle}>
@@ -544,30 +546,6 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
               onPress={() => {
                 setMoreOpen(false);
                 void removeServed();
-              }}
-            />
-          </>
-        )}
-        {view.kind === 'own' && (
-          <>
-            <SheetOption
-              icon="edit"
-              label={c.set.rename}
-              onPress={() => {
-                setMoreOpen(false);
-                nav.createSet([], setId);
-              }}
-            />
-            <SheetOption
-              icon="delete"
-              label={c.set.delete}
-              tone="danger"
-              onPress={() => {
-                actions.deleteSet(setId);
-                setMoreOpen(false);
-                toast(c.set.deleted, { action: { label: c.common.undo, run: () => actions.restoreSet(setId) } });
-                // Back out of the deleted set's page, so Back later can't return to it.
-                onDeleted();
               }}
             />
           </>
