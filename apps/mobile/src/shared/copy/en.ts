@@ -654,6 +654,9 @@ export function makeEn(n: Plural) {
       signInToMake: 'Sign in to make sets with AI',
     },
     music: {
+      songReady: (title: string) => `“${title}” is ready`,
+      songFailed: (title: string) => `“${title}” couldn’t be made. You can try again from its album.`,
+      play: 'Play',
       needsConnection: 'Songs need a connection. Try again when you’re online.',
       cantPlay: 'That song can’t be played right now.',
       setSongs: 'Songs of this set',

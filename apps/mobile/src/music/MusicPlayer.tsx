@@ -27,7 +27,12 @@ interface MusicValue {
   previous: () => void;
   seek: (seconds: number) => void;
   stop: () => void;
+  /** Keeps an eye on a song being made: when it's ready (or failed) the learner hears of it anywhere. */
+  watch: (song: Song, album: Album) => void;
 }
+
+/** How often a song being made is asked after. */
+const WATCH_MS = 5000;
 
 const MusicContext = createContext<MusicValue | null>(null);
 
@@ -54,6 +59,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const [queue, setQueue] = useState<Song[]>([]);
   const [index, setIndex] = useState(0);
   const wantsPlay = useRef(false);
+  const [watched, setWatched] = useState<{ song: Song; album: Album }[]>([]);
   // Each load (and stop) takes a number; a load whose song URL comes back after a newer one started
   // (or after the music stopped) plays nothing.
   const loads = useRef(0);
@@ -115,6 +121,27 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     },
     [actions, load, state.player.status],
   );
+
+  // Songs being made, asked after until each is ready or failed.
+  const playLatest = useLatest(playAlbum);
+  useEffect(() => {
+    if (watched.length === 0) return;
+    const timer = setInterval(() => {
+      for (const { song, album: of } of watched) {
+        fetchSong(song.id).then(
+          (now) => {
+            if (now.status === 'rendering') return;
+            setWatched((list) => list.filter((w) => w.song.id !== song.id));
+            if (now.status === 'ready')
+              toast(c.music.songReady(now.title), { tone: 'success', action: { label: c.music.play, run: () => playLatest.current(of, [now], 0) } });
+            else toast(c.music.songFailed(now.title));
+          },
+          () => {},
+        );
+      }
+    }, WATCH_MS);
+    return () => clearInterval(timer);
+  }, [watched, toast, c, playLatest]);
 
   const step = useCallback(
     (by: number) => {
@@ -179,6 +206,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       next: () => step(1),
       previous: () => (status.currentTime > 3 ? void player.seekTo(0) : step(-1)),
       seek: (seconds) => void player.seekTo(Math.max(0, seconds)),
+      watch: (song, of) => setWatched((list) => (list.some((w) => w.song.id === song.id) ? list : [...list, { song, album: of }])),
       stop: () => {
         loads.current++;
         wantsPlay.current = false;

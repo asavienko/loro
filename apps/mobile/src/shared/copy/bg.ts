@@ -627,6 +627,9 @@ export function makeBg(n: Plural): Copy {
       signInToMake: 'Влезте, за да създавате набори с ИИ',
     },
     music: {
+      songReady: (title: string) => `„${title}“ е готова`,
+      songFailed: (title: string) => `„${title}“ не можа да бъде направена. Можете да опитате пак от албума ѝ.`,
+      play: 'Пусни',
       needsConnection: 'Песните имат нужда от връзка. Опитайте отново, когато сте онлайн.',
       cantPlay: 'Тази песен не може да се пусне сега.',
       setSongs: 'Песни от този набор',

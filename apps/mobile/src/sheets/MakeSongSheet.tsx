@@ -6,6 +6,7 @@ import { StyleSheet, TextInput, View } from 'react-native';
 import { generateSong, SONG_STYLES, type SongStyle } from '@shared/api/library';
 import { albumsForCourse, librarySets, setsForCourse } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
+import { useMusic } from '../music/MusicPlayer';
 import { remaining, useAccount } from '../state/account';
 import { useContent } from '../state/content';
 import { useCopy, useStore } from '../state/store';
@@ -38,6 +39,7 @@ function MakeSongForm({ request, onClose }: { request: MakeSongRequest; onClose:
   const { state } = useStore();
   const content = useContent();
   const account = useAccount();
+  const music = useMusic();
   const target = state.learner.profile.targetLang;
   const sets = [...librarySets(target), ...setsForCourse(target)];
   const albums = albumsForCourse(target).filter((a) => a.owner === 'me');
@@ -62,6 +64,7 @@ function MakeSongForm({ request, onClose }: { request: MakeSongRequest; onClose:
     try {
       const made = await generateSong({ setId: chosen.id, styleId: style, nativeLang: state.learner.profile.nativeLang, ...(title.trim() ? { title: title.trim() } : {}), ...(albumId ? { albumId } : {}) });
       toast(c.create.songStarted, { tone: 'success' });
+      music.watch(made.song, made.album);
       onClose();
       void account.refreshUsage();
       await content.refresh();
