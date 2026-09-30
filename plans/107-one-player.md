@@ -25,6 +25,8 @@
 4. [x] No Music tab: four tabs; a set's page lists its songs (music icon) beside its phrases; albums
        in Library; `/music` links open Library's albums.
 5. [x] Docs: `library.md`, the design decisions, CLAUDE.md's tab list, plan 106.
+6. [x] One list (owner's follow-up, same day): a set's songs sit in its phrase list, each row with
+       its kind's icon; covers show the phrase icon, the song icon, or both (`songCount` on sets).
 
 ## Verification
 
