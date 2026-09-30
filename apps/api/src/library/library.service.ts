@@ -52,7 +52,7 @@ import type {
   UsageWire,
 } from './library.types.js'
 import { composeLive, liveMusicConfigured } from './music-live.js'
-import { registerSpeech, SpeechService, speechFor } from './speech.js'
+import { registerSpeech, registerSpeechMany, SpeechService, speechFor } from './speech.js'
 import { readTtsRuntimeConfig, type TtsRuntimeConfig } from '../tts/transport.js'
 import { synthesizeDemo } from './synth.js'
 import {
@@ -62,6 +62,7 @@ import {
   claudeCover,
   claudeLyrics,
   claudeNotes,
+  ruleNotes,
   claudePhrases,
   writer,
   type SongPhrase,
@@ -343,9 +344,13 @@ export class LibraryService {
           JSON.stringify(noteTranslationsOf(phrase.id, V2_CONTENT.bankNoteTranslations)),
         ],
       )
-      // Suggested and added from the bank, a bank phrase is played like any other (plan 108).
-      await registerSpeech(tx, { [phrase.targetLang]: phrase.target, ...phrase.translations }, now)
     }
+    // Suggested and added from the bank, a bank phrase is played like any other (plan 108).
+    await registerSpeechMany(
+      tx,
+      V2_CONTENT.bank.phrases.map((p) => ({ [p.targetLang]: p.target, ...p.translations })),
+      now,
+    )
   }
 
   /** One album per course, one song per Loro set, its lyrics the set's phrases, with the demo sound. */
@@ -776,7 +781,7 @@ export class LibraryService {
           blankToNull(input.description),
           topicId,
           input.level,
-          input.coverIcon ?? input.phrases[0]?.image[0] ?? 'forum',
+          input.coverIcon ?? input.phrases[0]?.image?.[0] ?? 'forum',
           input.coverId ?? null,
           input.visibility,
           newShareCode(),
@@ -881,20 +886,33 @@ export class LibraryService {
           ? V2_CONTENT.bank.phrases.find((b) => b.id === phrase.bankId)
           : undefined
       // A bank phrase keeps the bank's notes (English, with every translation); anything else keeps
-      // what came with it, written in the learner's language.
-      const notes: LibraryNotes = bank ? bank.notes : phrase.notes
+      // what came with it, written in the learner's language, or has them written by the rules.
+      const given =
+        phrase.notes && phrase.image
+          ? { notes: phrase.notes, image: phrase.image, notesBy: phrase.notesBy }
+          : {
+              ...ruleNotes({
+                target: phrase.target,
+                native: phrase.native,
+                targetLang,
+                nativeLang,
+              }),
+              notesBy: 'rules' as const,
+            }
+      const notes: LibraryNotes = bank ? bank.notes : given.notes
       const noteTranslations = bank
         ? noteTranslationsOf(bank.id, V2_CONTENT.bankNoteTranslations)
-        : writtenIn(nativeLang, phrase.notes)
+        : writtenIn(nativeLang, given.notes)
       const doc = {
         target: phrase.target,
         translations: { [nativeLang]: phrase.native },
         register: 'neutral',
         region: '',
         tags: [],
-        image: phrase.image,
+        image: bank ? bank.image : given.image,
         words: {},
         notes,
+        ...(!bank && given.notesBy ? { notesBy: given.notesBy } : {}),
       }
       await tx.query(
         'INSERT INTO library_phrases(id, set_id, position, source, doc, note_translations) VALUES ($1,$2,$3,$4,$5,$6)',
@@ -1235,27 +1253,35 @@ export class LibraryService {
       [request.nativeLang]: p.native,
     })
     const now = this.clock.now()
-    await this.db.transaction(async (tx) => {
-      for (const phrase of phrases) await registerSpeech(tx, texts(phrase), now, userId)
-    })
+    await this.db.transaction((tx) => registerSpeechMany(tx, phrases.map(texts), now, userId))
     return phrases.map((phrase) => {
       const audio = speechFor(tts, texts(phrase))
       return Object.keys(audio).length > 0 ? { ...phrase, audio } : phrase
     })
   }
 
-  /** Notes for a phrase the learner wrote: Claude only, so without a key the app keeps its own. */
-  async generateNotes(userId: string, body: unknown) {
+  /**
+   * Notes for a phrase the learner wrote: Claude's where it writes (from the allowance), otherwise
+   * Loro's written rules, free, labelled as such (plan 108).
+   */
+  async generateNotes(
+    userId: string,
+    body: unknown,
+  ): Promise<{ provider: 'claude' | 'rules'; image: string[]; notes: LibraryNotes }> {
     const request = parseContract(GenerateNotesSchema, body)
     const ai = writer()
-    if (!ai) throw new LoroError('PROVIDER_UNAVAILABLE', 'No notes writer is configured')
-    await this.spend(userId, 'phrases')
-    try {
-      return await claudeNotes(ai, request)
-    } catch (error) {
-      this.logger.warn(`notes writer failed: ${error instanceof Error ? error.message : 'unknown'}`)
-      throw new LoroError('PROVIDER_UNAVAILABLE', 'The notes writer failed')
+    if (ai) {
+      await this.spend(userId, 'phrases')
+      try {
+        return { provider: 'claude', ...(await claudeNotes(ai, request)) }
+      } catch (error) {
+        this.logger.warn(
+          `notes writer failed: ${error instanceof Error ? error.message : 'unknown'}; answering by the rules`,
+        )
+        await this.refund(userId, 'phrases')
+      }
     }
+    return { provider: 'rules', ...ruleNotes(request) }
   }
 
   async generateCover(

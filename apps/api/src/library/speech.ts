@@ -74,14 +74,35 @@ export async function registerSpeech(
   now: number,
   ownerId: string | null = null,
 ): Promise<void> {
-  for (const [lang, text] of Object.entries(texts)) {
-    if (!text) continue
-    await tx.query(
-      `INSERT INTO library_speech(id, lang, text, voice_id, model, audio_id, duration_ms, created_at, owner_id)
-       VALUES ($1,$2,$3,NULL,NULL,NULL,NULL,$4,$5) ON CONFLICT (id) DO NOTHING`,
-      [utteranceId(lang, text), lang, normalizeListeningText(text), now, ownerId],
-    )
-  }
+  await registerSpeechMany(tx, [texts], now, ownerId)
+}
+
+/** registerSpeech for many phrases in one statement: a seed registers the whole bank. */
+export async function registerSpeechMany(
+  tx: SqlConnection,
+  phrases: readonly Partial<Record<string, string>>[],
+  now: number,
+  ownerId: string | null = null,
+): Promise<void> {
+  const rows = new Map<string, [string, string]>()
+  for (const texts of phrases)
+    for (const [lang, text] of Object.entries(texts))
+      if (text) rows.set(utteranceId(lang, text), [lang, normalizeListeningText(text)])
+  if (rows.size === 0) return
+  const entries = [...rows]
+  await tx.query(
+    `INSERT INTO library_speech(id, lang, text, voice_id, model, audio_id, duration_ms, created_at, owner_id)
+     SELECT id, lang, text, NULL, NULL, NULL, NULL, $4, $5
+     FROM unnest($1::text[], $2::text[], $3::text[]) AS u(id, lang, text)
+     ON CONFLICT (id) DO NOTHING`,
+    [
+      entries.map(([id]) => id),
+      entries.map(([, [lang]]) => lang),
+      entries.map(([, [, text]]) => text),
+      now,
+      ownerId,
+    ],
+  )
 }
 
 const DEFAULT_DAILY_RENDERS = 500

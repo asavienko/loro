@@ -64,11 +64,16 @@ export const LibraryNotesSchema = z.strictObject({
 /** Where a phrase in a learner's set came from, shown beside it. */
 export const PhraseSourceSchema = z.enum(['ai', 'bank', 'course', 'written'])
 
+/** Who wrote a learner's phrase's notes: Claude, or Loro's written rules (plan 108). */
+export const NotesBySchema = z.enum(['ai', 'rules'])
+
 export const NewPhraseSchema = z.strictObject({
   target: z.string().trim().min(1).max(LIBRARY_TEXT.phrase),
   native: z.string().trim().min(1).max(LIBRARY_TEXT.phrase),
-  image: z.array(IconNameSchema).min(1).max(3),
-  notes: LibraryNotesSchema,
+  /** Without a picture and notes, the server writes both by its rules (plan 108). */
+  image: z.array(IconNameSchema).min(1).max(3).optional(),
+  notes: LibraryNotesSchema.optional(),
+  notesBy: NotesBySchema.optional(),
   source: PhraseSourceSchema,
   /** The phrase bank's phrase it is: the set keeps the bank's notes and their translations. */
   bankId: z

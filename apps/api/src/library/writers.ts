@@ -16,6 +16,7 @@ import { LibraryNotesSchema } from '@loro/core/api/library'
 import { z } from 'zod'
 import { config } from '../common/config.js'
 import { AnthropicMessages } from '../integrations/anthropic/messages.js'
+import { deviceNotes } from './notes/index.js'
 import { COVER_JSON_SCHEMA, COVER_SYSTEM_PROMPT, readCoverSpec, type CoverSpec } from './covers.js'
 
 export interface WrittenPhrase {
@@ -406,6 +407,36 @@ export async function claudeNotes(
   const notes = cleanNotes(result.value.notes)
   if (!notes) throw new Error('unusable notes')
   return { image: cleanImage(result.value.image), notes }
+}
+
+/**
+ * Notes and a picture worked out by Loro's written rules (plan 108, moved from the app): the phrase's
+ * sounds, a grammar rule it shows and a memory hook, in the learner's language where the rules have
+ * it. Nothing is invented; where a rule doesn't know (a Bulgarian word's stress) the note says so.
+ */
+export function ruleNotes(request: {
+  target: string
+  native: string
+  targetLang: V2Language
+  nativeLang: V2Language
+}): { image: string[]; notes: LibraryNotes } {
+  const made = deviceNotes(request)
+  const inNative = (kind: keyof LibraryNotes) => {
+    const note = made.noteTranslations[kind]?.[request.nativeLang] ?? made.notes[kind]
+    return { title: note.title, text: note.text }
+  }
+  return {
+    image: cleanImage(made.image),
+    notes: {
+      mnemonic: inNative('mnemonic'),
+      grammar: inNative('grammar'),
+      pronunciation: {
+        ...inNative('pronunciation'),
+        ipa: made.notes.pronunciation.ipa,
+        respelling: made.notes.pronunciation.respelling,
+      },
+    },
+  }
 }
 
 // ---------- lyrics ----------
