@@ -18,7 +18,7 @@ export default function TabsLayout() {
     <Tabs backBehavior="history" screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.surface } }} tabBar={() => <BottomChrome />}>
       <Tabs.Screen name="index" />
       <Tabs.Screen name="explore" />
-      <Tabs.Screen name="music" />
+      <Tabs.Screen name="music" options={{ href: null }} />
       <Tabs.Screen name="create" />
       <Tabs.Screen name="library" />
       <Tabs.Screen name="set/[id]" options={{ href: null }} />

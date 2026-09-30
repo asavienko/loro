@@ -31,9 +31,12 @@ export function SetSongs({ setId }: { setId: string }) {
 
   return (
     <View style={styles.panel}>
-      <Txt variant="heading" face="serif" weight={600} color="onSurface" accessibilityRole="header">
-        {c.music.setSongs}
-      </Txt>
+      <View style={styles.head}>
+        <Icon name="music_note" color="primaryContainer" />
+        <Txt variant="heading" face="serif" weight={600} accessibilityRole="header">
+          {c.music.setSongs}
+        </Txt>
+      </View>
       {found?.songs.map((song) => {
         const album = found.albums.find((a) => a.id === song.albumId);
         if (!album) return null;
@@ -42,6 +45,10 @@ export function SetSongs({ setId }: { setId: string }) {
           <View key={song.id} style={styles.row}>
             <Pressable accessibilityRole="button" accessibilityLabel={`${c.music.album}: ${album.title}`} onPress={() => nav.openAlbum(album.id)}>
               <AlbumCover url={album.coverUrl} px={44} rounded={8} />
+              {/* A song, not a phrase: the music-note badge the player's bar wears too. */}
+              <View style={styles.badge}>
+                <Icon name="music_note" size={12} color="onPrimaryFixed" />
+              </View>
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -54,7 +61,7 @@ export function SetSongs({ setId }: { setId: string }) {
                   {song.title}
                 </Txt>
                 <Txt variant="label" color="secondary" numberOfLines={1}>
-                  {[album.owner === 'loro' ? c.music.loro : album.title, c.music.style[song.styleId], song.durationMs ? clockTime(song.durationMs / 1000) : null].filter(Boolean).join(' · ')}
+                  {[c.music.songKind, album.owner === 'loro' ? c.music.loro : album.title, c.music.style[song.styleId], song.durationMs ? clockTime(song.durationMs / 1000) : null].filter(Boolean).join(' · ')}
                 </Txt>
               </View>
               <Icon name={playing ? 'pause' : 'play_arrow'} fill color="primaryContainer" />
@@ -73,7 +80,9 @@ export function SetSongs({ setId }: { setId: string }) {
 }
 
 const styles = StyleSheet.create({
-  panel: { backgroundColor: colors.surface, borderRadius: radius['2xl'], padding: 16, gap: 8, marginHorizontal: 16, marginTop: 24 },
+  panel: { paddingHorizontal: 16, paddingTop: 24, gap: 8 },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  badge: { position: 'absolute', right: -4, bottom: -4, width: 18, height: 18, borderRadius: radius.full, backgroundColor: colors.primaryFixed, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.surface },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: TARGET + 8, borderRadius: radius.xl },
   text: { flex: 1, gap: 1 },

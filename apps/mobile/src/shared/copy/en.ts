@@ -422,6 +422,7 @@ export function makeEn(n: Plural) {
       startedNote: 'Heard or rated at least once',
       phrasesSegment: 'Phrases',
       setsSegment: 'Sets',
+      albumsSegment: 'Albums',
       filters: {
         liked: 'Liked',
         mine: 'Mine',
@@ -431,6 +432,7 @@ export function makeEn(n: Plural) {
         learned: 'Learned',
         ownSets: 'My sets',
         likedSets: 'Liked sets',
+        albums: 'Albums',
       },
       empty: {
         liked: 'Tap the heart on a phrase to keep it here.',
@@ -663,7 +665,7 @@ export function makeEn(n: Plural) {
       play: 'Play',
       needsConnection: 'Songs need a connection. Try again when you’re online.',
       cantPlay: 'That song can’t be played right now.',
-      setSongs: 'Songs of this set',
+      setSongs: 'Songs',
       title: 'Music',
       loro: 'From Loro',
       yours: 'Your albums',

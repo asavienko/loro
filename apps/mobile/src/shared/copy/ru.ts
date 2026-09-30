@@ -396,6 +396,7 @@ export function makeRu(n: Plural): Copy {
       startedNote: 'Прослушаны или оценены хотя бы раз',
       phrasesSegment: 'Фразы',
       setsSegment: 'Наборы',
+      albumsSegment: 'Альбомы',
       filters: {
         liked: 'Отмеченные',
         mine: 'Свои',
@@ -405,6 +406,7 @@ export function makeRu(n: Plural): Copy {
         learned: 'Выученные',
         ownSets: 'Мои наборы',
         likedSets: 'Отмеченные наборы',
+        albums: 'Альбомы',
       },
       empty: {
         liked: 'Нажмите на сердечко у фразы, чтобы она была здесь.',
@@ -638,7 +640,7 @@ export function makeRu(n: Plural): Copy {
       play: 'Слушать',
       needsConnection: 'Для песен нужно подключение. Попробуйте снова, когда будете в сети.',
       cantPlay: 'Эту песню сейчас нельзя включить.',
-      setSongs: 'Песни из этого набора',
+      setSongs: 'Песни',
       title: 'Музыка',
       loro: 'От Loro',
       yours: 'Ваши альбомы',

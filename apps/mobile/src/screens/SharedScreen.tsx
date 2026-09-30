@@ -27,7 +27,7 @@ export function SharedScreen({ code }: { code: string }) {
         if (shared.kind === 'set') {
           await keepOpenedSet(shared);
           router.replace({ pathname: '/set/[id]', params: { id: shared.set.id, from: 'explore' } });
-        } else router.replace({ pathname: '/album/[id]', params: { id: shared.album.id, from: 'music' } });
+        } else router.replace({ pathname: '/album/[id]', params: { id: shared.album.id, from: 'library' } });
       },
       (error: unknown) => live && setProblem(problemText(c, error)),
     );

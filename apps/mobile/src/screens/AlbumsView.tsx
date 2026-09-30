@@ -1,27 +1,24 @@
-// The Music tab (plan 106): songs sung from phrase sets, kept apart from the phrase side by the night
-// palette. Loro's album of every set sung, the learner's own albums and the ones they saved, and
-// what others have shared in this course. Making a song starts here.
+// Albums, in Library (plan 107; the Music tab of plan 106): Loro's album of every set sung, the
+// learner's own and the ones they saved, and what others have shared in this course, with search and
+// order. Songs live in their sets and play in the one player; albums group them.
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { unreachable } from '@shared/api/client';
 import { fetchCommunityAlbums, type CommunitySort } from '@shared/api/library';
 import { Album, albumsForCourse } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
 import { AlbumCard } from '../music/AlbumCard';
-import { NightStatusBar } from '../music/NightStatusBar';
-import { useStore, useCopy } from '../state/store';
+import { useCopy, useStore } from '../state/store';
 import { Button, Chip } from '../ui/Button';
+import { field, placeholderColor } from '../ui/field';
 import { Icon } from '../ui/Icon';
-import { field } from '../ui/field';
 import { Txt } from '../ui/Txt';
-import { colors, radius, TARGET } from '../ui/theme';
+import { colors, radius } from '../ui/theme';
 
-export function MusicScreen() {
+export function AlbumsView() {
   const c = useCopy();
   const nav = useNav();
-  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const { state } = useStore();
   const target = state.learner.profile.targetLang;
@@ -33,7 +30,7 @@ export function MusicScreen() {
   // Why the list couldn't load: no connection, or the server failed (either way no endless spinner).
   const [problem, setProblem] = useState<'offline' | 'failed' | null>(null);
   const [query, setQuery] = useState('');
-  // The search last sent: refetched with the tab's focus, so a search stays put across visits.
+  // The search last sent and the order: refetched on focus, so both stay put across visits.
   const [searched, setSearched] = useState('');
   const [sort, setSort] = useState<CommunitySort>('new');
 
@@ -65,19 +62,11 @@ export function MusicScreen() {
     setSort(next);
   };
 
-  const card = Math.min(180, Math.max(132, (Math.min(width, 1024) - 56) / 2.3));
+  const card = Math.min(170, Math.max(128, (Math.min(width, 1024) - 48) / 2.3));
 
   return (
-    <ScrollView style={styles.page} contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}>
-      <NightStatusBar />
-      <View style={styles.head}>
-        <Txt variant="display" face="serif" weight={600} color="onNight" accessibilityRole="header" style={{ flex: 1 }}>
-          {c.music.title}
-        </Txt>
-        <Button variant="icon" icon="person" color="onNight" accessibilityLabel={c.settings.title} onPress={nav.openSettings} />
-      </View>
-      <Button variant="primary" icon="music_note" label={c.music.makeSong} onPress={() => nav.makeSong()} style={styles.make} />
-
+    <View style={styles.stack}>
+      <Button variant="tonal" icon="music_note" label={c.music.makeSong} onPress={() => nav.makeSong()} style={styles.make} />
       <Shelf title={c.music.loro} albums={loro} width={card} empty={c.music.empty} />
       {mine.length > 0 && <Shelf title={c.music.yours} albums={mine} width={card} />}
       {saved.length > 0 && <Shelf title={c.music.saved} albums={saved} width={card} />}
@@ -96,16 +85,16 @@ export function MusicScreen() {
           onBlur={search}
           accessibilityLabel={c.community.searchAlbums}
           placeholder={c.community.searchAlbums}
-          placeholderTextColor={colors.onNightVariant}
+          placeholderTextColor={placeholderColor}
           returnKeyType="search"
-          style={[field, styles.search]}
+          style={field}
         />
         <View style={styles.sort} accessibilityRole="radiogroup" accessibilityLabel={c.community.sortLabel}>
-          <Chip tone="night" label={c.community.sortNew} selected={sort === 'new'} onPress={() => order('new')} />
-          <Chip tone="night" label={c.community.sortPopular} selected={sort === 'popular'} onPress={() => order('popular')} />
+          <Chip label={c.community.sortNew} selected={sort === 'new'} onPress={() => order('new')} />
+          <Chip label={c.community.sortPopular} selected={sort === 'popular'} onPress={() => order('popular')} />
         </View>
       </Shelf>
-    </ScrollView>
+    </View>
   );
 }
 
@@ -114,16 +103,16 @@ function Shelf({ title, albums, width, empty, icon, loading = false, children }:
   return (
     <View style={styles.shelf}>
       <View style={styles.shelfHead}>
-        {icon && <Icon name={icon} size="md" color="nightAccent" />}
-        <Txt variant="heading" face="serif" weight={600} color="onNight" accessibilityRole="header">
+        {icon && <Icon name={icon} size="md" color="primaryContainer" />}
+        <Txt variant="heading" face="serif" weight={600} accessibilityRole="header">
           {title}
         </Txt>
       </View>
       {children}
       {loading ? (
-        <ActivityIndicator color={colors.nightAccent} style={styles.loading} />
+        <ActivityIndicator color={colors.primaryContainer} style={styles.loading} />
       ) : albums.length === 0 && empty ? (
-        <Txt variant="body" color="onNightVariant" style={styles.empty}>
+        <Txt variant="body" color="secondary" style={styles.empty}>
           {empty}
         </Txt>
       ) : (
@@ -138,16 +127,12 @@ function Shelf({ title, albums, width, empty, icon, loading = false, children }:
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.night },
-  content: { paddingBottom: 48, width: '100%', maxWidth: 1024, alignSelf: 'center' },
-  head: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, minHeight: TARGET },
-  make: { alignSelf: 'flex-start', marginHorizontal: 20, marginTop: 12 },
-  shelf: { paddingTop: 28, gap: 12 },
-  shelfHead: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20 },
-  row: { paddingHorizontal: 20, gap: 14 },
-  loading: { alignSelf: 'flex-start', marginHorizontal: 20 },
-  // On night: the edge is onNightVariant (5:1 against the field) so the box is findable.
-  sort: { flexDirection: 'row', gap: 8, paddingHorizontal: 20 },
-  search: { marginHorizontal: 20, backgroundColor: colors.nightContainer, borderColor: colors.onNightVariant, color: colors.onNight },
-  empty: { paddingHorizontal: 20, padding: 16, marginHorizontal: 20, borderRadius: radius['2xl'], backgroundColor: colors.nightContainer },
+  stack: { gap: 20 },
+  make: { alignSelf: 'flex-start' },
+  shelf: { gap: 10 },
+  shelfHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sort: { flexDirection: 'row', gap: 8 },
+  row: { gap: 14 },
+  loading: { alignSelf: 'flex-start' },
+  empty: { padding: 16, borderRadius: radius['2xl'], backgroundColor: colors.surfaceContainer },
 });

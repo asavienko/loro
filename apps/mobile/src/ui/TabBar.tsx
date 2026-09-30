@@ -7,11 +7,10 @@ import { Icon, IconName } from './Icon';
 import { Txt } from './Txt';
 import { colors } from './theme';
 
-/** Phrases and Music are two tabs of their own (plan 106): the listening loop, and songs. */
+/** Four tabs (plan 107): songs live in their sets and play in the one player; albums are in Library. */
 const TABS: { id: Tab; icon: IconName; label: keyof Copy['tabs'] }[] = [
   { id: 'home', icon: 'home', label: 'home' },
   { id: 'explore', icon: 'forum', label: 'phrases' },
-  { id: 'music', icon: 'music_note', label: 'music' },
   { id: 'create', icon: 'auto_awesome', label: 'create' },
   { id: 'library', icon: 'library_music', label: 'library' },
 ];

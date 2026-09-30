@@ -24,6 +24,7 @@ import {
 } from '@shared/state/selectors';
 import type { LibraryListView } from '@shared/state/types';
 import { hrefOf } from '../nav/Shell';
+import { AlbumsView } from './AlbumsView';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button, Chip } from '../ui/Button';
 import { RecallChart, WeeklyChart } from '../ui/Charts';
@@ -57,7 +58,7 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
     duePhraseIds(learner, now).length > 0 ? 'due' : likedPhraseIds(learner).length > 0 ? 'liked' : learningIds(learner, now).length > 0 ? 'learning' : 'liked',
   );
   const view = chosen ?? firstPhraseView;
-  const segment = SET_VIEWS.includes(view) ? 'sets' : 'phrases';
+  const segment = view === 'albums' ? 'albums' : SET_VIEWS.includes(view) ? 'sets' : 'phrases';
   const views = segment === 'sets' ? SET_VIEWS : PHRASE_VIEWS;
   const go = (next: LibraryView) => router.navigate(hrefOf({ name: 'library', view: next }) as never);
 
@@ -81,7 +82,7 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
       <TopBar title={c.nav.library} onOpenSettings={nav.openSettings} />
       <ScrollView ref={page} contentContainerStyle={styles.content}>
         <View style={styles.segments} accessibilityRole="tablist">
-          {(['phrases', 'sets'] as const).map((s) => {
+          {(['phrases', 'sets', 'albums'] as const).map((s) => {
             const on = segment === s;
             return (
               <Pressable
@@ -90,17 +91,21 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
                 accessibilityState={{ selected: on }}
                 aria-selected={on}
                 // The segment already shown keeps its view (Missed stays Missed).
-                onPress={() => !on && go(s === 'sets' ? 'ownSets' : firstPhraseView)}
+                onPress={() => !on && go(s === 'albums' ? 'albums' : s === 'sets' ? 'ownSets' : firstPhraseView)}
                 style={[styles.segment, on && styles.segmentOn]}
               >
                 <Txt weight={on ? 700 : 500} color={on ? 'onSurface' : 'secondary'}>
-                  {s === 'sets' ? c.library.setsSegment : c.library.phrasesSegment}
+                  {s === 'albums' ? c.library.albumsSegment : s === 'sets' ? c.library.setsSegment : c.library.phrasesSegment}
                 </Txt>
               </Pressable>
             );
           })}
         </View>
 
+        {segment === 'albums' ? (
+          <AlbumsView />
+        ) : (
+          <>
         {/* One line of filters that scrolls, never two or three lines of wrapped chips. */}
         <ScrollView
           horizontal
@@ -155,6 +160,8 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
           <RecallChart buckets={recallBuckets(learner, now)} />
           <WeeklyChart weeks={learnedPerWeek(learner, now)} />
         </View>
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -168,7 +175,7 @@ function PhraseList({ ids, view, now }: { ids: string[]; view: LibraryView; now:
   const empty =
     view === 'learned'
       ? c.library.empty.learned(LEARNED_STABILITY_DAYS, LEARNED_MIN_SUCCESSES)
-      : c.library.empty[view as Exclude<LibraryView, 'learned' | 'ownSets' | 'likedSets'>];
+      : c.library.empty[view as Exclude<LibraryView, 'learned' | 'ownSets' | 'likedSets' | 'albums'>];
   if (ids.length === 0) return <Txt color="secondary" style={styles.empty}>{empty}</Txt>;
   const source = { kind: 'library' as const, view: view as LibraryListView };
   return (
