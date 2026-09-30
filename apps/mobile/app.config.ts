@@ -21,7 +21,8 @@ export default (): ExpoConfig => ({
   icon: './assets/icons/icon-512.png',
   backgroundColor: '#fcf9f4',
   splash: { backgroundColor: '#fcf9f4', resizeMode: 'contain', image: './assets/icons/icon-512.png' },
-  ios: { bundleIdentifier: 'app.loro.ios', supportsTablet: true },
+  // Songs keep playing with the screen locked (the music player's lock-screen controls).
+  ios: { bundleIdentifier: 'app.loro.ios', supportsTablet: true, infoPlist: { UIBackgroundModes: ['audio'] } },
   android: {
     package: localApk ? 'app.loro.android.preview' : developmentClient ? 'app.loro.android.dev' : 'app.loro.android',
     adaptiveIcon: { foregroundImage: './assets/icons/icon-maskable-512.png', backgroundColor: '#fcf9f4' },
