@@ -9,6 +9,7 @@ import { fetchCommunityAlbums, type CommunitySort } from '@shared/api/library';
 import { Album, albumsForCourse } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
 import { AlbumCard } from '../music/AlbumCard';
+import { LikedSongs } from '../music/LikedSongs';
 import { useCopy, useStore } from '../state/store';
 import { Button, Chip } from '../ui/Button';
 import { field, placeholderColor } from '../ui/field';
@@ -67,6 +68,7 @@ export function AlbumsView() {
   return (
     <View style={styles.stack}>
       <Button variant="tonal" icon="music_note" label={c.music.makeSong} onPress={() => nav.makeSong()} style={styles.make} />
+      <LikedSongs />
       <Shelf title={c.music.loro} albums={loro} width={card} empty={c.music.empty} />
       {mine.length > 0 && <Shelf title={c.music.yours} albums={mine} width={card} />}
       {saved.length > 0 && <Shelf title={c.music.saved} albums={saved} width={card} />}
