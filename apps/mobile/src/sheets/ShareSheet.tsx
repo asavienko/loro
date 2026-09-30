@@ -6,7 +6,8 @@ import { useState } from 'react';
 import { Platform, Share, View } from 'react-native';
 import { updateAlbum, updateSet } from '@shared/api/library';
 import type { Visibility } from '@shared/content';
-import type { Shareable } from '@shared/nav/NavContext';
+import { useNav, type Shareable } from '@shared/nav/NavContext';
+import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
 import { useCopy } from '../state/store';
 import { Button } from '../ui/Button';
@@ -50,6 +51,8 @@ export function ShareSheet({ item, onClose, onChanged }: { item: Shareable | nul
   const c = useCopy();
   const { toast } = useToast();
   const content = useContent();
+  const nav = useNav();
+  const account = useAccount();
   const [visibility, setVisibility] = useState<Visibility | null>(null);
   const [busy, setBusy] = useState(false);
   const current = visibility ?? item?.visibility ?? 'private';
@@ -89,6 +92,22 @@ export function ShareSheet({ item, onClose, onChanged }: { item: Shareable | nul
       )}
       {item && (
         <View style={{ paddingHorizontal: 16, paddingTop: 12, gap: 8 }}>
+          {/* Public without a name, it shows "by a learner": say so, and where a name is given. */}
+          {item.owner === 'me' && current === 'public' && !account.account?.displayName && (
+            <View style={{ gap: 4 }}>
+              <Txt variant="body" color="secondary">
+                {c.share.noName}
+              </Txt>
+              <Button
+                variant="text"
+                label={c.share.addName}
+                onPress={() => {
+                  close();
+                  nav.openAccount();
+                }}
+              />
+            </View>
+          )}
           {item.owner === 'me' && item.hidden && current === 'public' && (
             <Txt variant="body" color="error">
               {c.share.hidden}
