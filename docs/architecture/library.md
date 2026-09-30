@@ -79,7 +79,13 @@ album once (`POST /library/reports`: offensive, wrong, spam or other); three lea
 a public item out of Community, while its link still opens it. Anyone who can read a set or album
 can save it to their library; it then comes with their pack until its owner makes it private. Only
 the owner changes or deletes something; for anyone else it is not found. Deleting removes it from
-everyone's library.
+everyone's library. Its owner is told when reports took it out of Community (`hidden` in their
+pack); nobody else sees the flag or the count, and reported albums leave a set's songs too.
+
+Community lists newest first or most saved first (`sort=popular`), each item with how many learners
+keep it (`savedBy`). A shared set's or album's page offers its maker's other public ones
+(`/library/{sets,albums}/:id/more`): the item leads to its maker, so no user id leaves the server.
+Titles, descriptions and display names refuse links (`shownText` in `@loro/core/api/library`).
 
 Song audio is served with byte ranges from `GET /library/songs/:id/audio`. An audio element cannot
 send a bearer, so a song's `audioUrl` carries a signature valid for about 12 hours
