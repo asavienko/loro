@@ -77,7 +77,11 @@ keeps each private, shares it by link, or publishes it for everyone.
         phrase clips.
 15. [ ] Left: iOS device run; live Claude (phrases, notes, covers, lyrics) with `ANTHROPIC_API_KEY`;
         live ElevenLabs Music songs; a live Apple sign-in (the button shows once the server has
-        Apple credentials; none are configured locally); moderation beyond reports.
+        Apple credentials; none are configured locally); moderation beyond reports. Also open: demo
+        songs are stored as WAV (about 2 MB for 45 s); an MP3 encoder would cut that about sixfold,
+        but the pure-JS one (lamejs) is LGPL, a dependency decision for the owner. Bulgarian has two
+        Loro sets; more need authored, native-reviewed content (the bank's phrases would duplicate
+        what Make a set hands out).
 16. [x] Google sign-in on the web (the tab leaves and returns to `/account`) and on iOS/Android (an
         auth session returning to `loro://account` / `loro-dev://account`, PKCE through
         `expo-crypto`). Checked on the Android emulator up to Google's page, a cancelled page, and a
