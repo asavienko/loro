@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { afterEach, describe, it } from 'node:test';
+import { afterEach, before, describe, it } from 'node:test';
+import { setTokenSource } from '../api/client';
 import { fresh, run, T0 } from '../state/testing';
 import { readPhrases, SUGGEST_URL } from './remote';
 import { fromWritten, suggest } from './suggest';
@@ -12,8 +13,9 @@ const NOTES = {
   pronunciation: { title: 'Soft d', text: 'Like th.', ipa: '[ˈa.ʝa]', respelling: 'AH-yah' },
 };
 /** A written phrase as the server sends it: its picture and all three notes. */
-const w = (target: string, native: string) => ({ target, native, image: ['medication'], notes: NOTES });
+const w = (target: string, native: string) => ({ target, native, image: ['medication'], notes: NOTES, source: 'ai' as const });
 const original = globalThis.fetch;
+before(() => setTokenSource({ access: async () => 'token', renew: async () => null }));
 afterEach(() => {
   globalThis.fetch = original;
 });
@@ -31,13 +33,24 @@ function server(body: unknown, init: ResponseInit = {}) {
 
 describe('readPhrases', () => {
   it('takes a list of phrases and nothing else', () => {
-    assert.deepEqual(readPhrases({ phrases: [{ ...w(' Hola ', 'Hi'), image: ['medication', 'nope'] }, w('', 'x')] }), [w('Hola', 'Hi')]);
-    // Every phrase has its notes and picture: one without is left out.
-    assert.deepEqual(readPhrases({ phrases: [{ target: 'Hola', native: 'Hi' }, { ...w('Adiós', 'Bye'), image: ['nope'] }] }), []);
-    assert.deepEqual(readPhrases({ phrases: [{ ...w('Hola', 'Hi'), notes: { ...NOTES, grammar: { title: 'x' } } }] }), []);
+    assert.deepEqual(readPhrases({ phrases: [{ ...w(' Hola ', 'Hi'), image: ['medication', 'nope'] }, w('', 'x')] })?.phrases, [{ ...w('Hola', 'Hi'), source: 'ai' }]);
+    // A phrase without its picture or whole notes is left out.
+    assert.deepEqual(readPhrases({ phrases: [{ target: 'Hola', native: 'Hi' }, { ...w('Adiós', 'Bye'), image: ['nope'] }] })?.phrases, []);
+    assert.deepEqual(readPhrases({ phrases: [{ ...w('Hola', 'Hi'), notes: { ...NOTES, grammar: { title: 'x' } } }] })?.phrases, []);
     assert.equal(readPhrases({ phrases: [{ target: 1, native: 'x' }] }), null);
     assert.equal(readPhrases('<!doctype html>'), null);
     assert.equal(readPhrases({}), null);
+  });
+
+  it('keeps who answered, a bank phrase’s id and the clips', () => {
+    const read = readPhrases({
+      provider: 'bank',
+      phrases: [{ ...w('Hola', 'Hi'), source: 'bank', bankId: 'bank-hi-01', audio: { 'es-ES': '/library/speech/a.mp3', 'en-GB': 7 } }],
+    });
+    assert.equal(read?.provider, 'bank');
+    assert.equal(read?.phrases[0].bankId, 'bank-hi-01');
+    assert.deepEqual(Object.keys(read?.phrases[0].audio ?? {}), ['es-ES']);
+    assert.match(read?.phrases[0].audio?.['es-ES'] ?? '', /^https?:\/\/.+\/library\/speech\/a\.mp3$/);
   });
 });
 
@@ -70,45 +83,34 @@ describe('fromWritten', () => {
 });
 
 describe('suggest', () => {
-  it('uses the device when the server has no writer', async () => {
-    globalThis.fetch = (() => assert.fail('no request without a writer')) as typeof fetch;
-    const result = await suggest(fresh().learner, request, { live: false, exclude: new Set(), avoid: [] });
-    assert.equal(result.writer, 'device');
-    assert.equal(result.fellBack, false);
-    assert.equal(result.suggestions[0].source, 'bank');
-  });
-
-  it('asks the writer, telling it what to avoid', async () => {
-    const sent = server({ phrases: [w('Necesito algo para la tos', 'I need something for a cough')], model: 'm' });
-    const result = await suggest(fresh().learner, request, { live: true, exclude: new Set(), avoid: ['Hola'] });
+  it('asks the server, telling it what to avoid', async () => {
+    const sent = server({ provider: 'claude', phrases: [w('Necesito algo para la tos', 'I need something for a cough')] });
+    const result = await suggest(fresh().learner, request, { exclude: new Set(), avoid: ['Hola'] });
     assert.deepEqual(sent, [{ ...request, avoid: ['Hola'] }]);
     assert.equal(result.writer, 'ai');
     assert.deepEqual(result.suggestions.map((s) => s.target), ['Necesito algo para la tos']);
   });
 
-  it('falls back to the device, and says so, when the writer fails', async () => {
-    server({ error: 'unavailable' }, { status: 502 });
-    const failed = await suggest(fresh().learner, request, { live: true, exclude: new Set(), avoid: [] });
-    assert.equal(failed.writer, 'device');
-    assert.equal(failed.fellBack, true);
-    assert.ok(failed.suggestions.length > 0);
-    // A static host answers with its page: not a writer either.
-    globalThis.fetch = (async () => new Response('<!doctype html>', { status: 200, headers: { 'Content-Type': 'text/html' } })) as typeof fetch;
-    assert.equal((await suggest(fresh().learner, request, { live: true, exclude: new Set(), avoid: [] })).fellBack, true);
+  it('keeps the bank’s answer as the bank’s phrases', async () => {
+    server({ provider: 'bank', phrases: [{ ...w('¿Tiene algo para la tos?', 'Have you got something for a cough?'), source: 'bank', bankId: 'bank-pharmacy-es-01' }] });
+    const result = await suggest(fresh().learner, request, { exclude: new Set(), avoid: [] });
+    assert.equal(result.writer, 'bank');
+    assert.deepEqual(result.suggestions.map((s) => [s.source, s.bankId]), [['bank', 'bank-pharmacy-es-01']]);
   });
 
-  it('an empty answer is not a failure: the device offers what it has', async () => {
-    server({ phrases: [] });
-    const result = await suggest(fresh().learner, request, { live: true, exclude: new Set(), avoid: [] });
-    assert.equal(result.writer, 'device');
-    assert.equal(result.fellBack, false);
+  it('fails when the server fails or answers nonsense: the device has no phrases of its own', async () => {
+    server({ error: 'unavailable' }, { status: 502 });
+    await assert.rejects(suggest(fresh().learner, request, { exclude: new Set(), avoid: [] }));
+    // A static host answers with its page: not a writer either.
+    globalThis.fetch = (async () => new Response('<!doctype html>', { status: 200, headers: { 'Content-Type': 'text/html' } })) as typeof fetch;
+    await assert.rejects(suggest(fresh().learner, request, { exclude: new Set(), avoid: [] }));
   });
 
   it('a request replaced by a newer one rejects instead of answering late', async () => {
     globalThis.fetch = ((_url: string, options: RequestInit) =>
       new Promise((_, reject) => options.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError'))))) as typeof fetch;
     const controller = new AbortController();
-    const pending = suggest(fresh().learner, request, { live: true, exclude: new Set(), avoid: [], signal: controller.signal });
+    const pending = suggest(fresh().learner, request, { exclude: new Set(), avoid: [], signal: controller.signal });
     controller.abort();
     await assert.rejects(pending);
   });

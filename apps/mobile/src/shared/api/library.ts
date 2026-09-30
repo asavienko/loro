@@ -1,6 +1,6 @@
 // The library's routes (plan 106): what the app reads, makes and shares. Shapes mirror the API's
 // apps/api/src/library/library.types.ts; the app reads them without zod, as it reads its content.
-import type { Album, BankTheme, ContentPack, LanguageCode, PhraseSet, PhraseWire, Visibility } from '../content';
+import type { Album, ContentPack, LanguageCode, PhraseSet, PhraseWire, Visibility } from '../content';
 import type { OwnNotes } from '../state/types';
 import { api } from './client';
 
@@ -48,20 +48,14 @@ export interface Usage {
   writers: { phrases: 'claude' | 'bank'; cover: 'claude' | 'pattern'; lyrics: 'claude' | 'phrases'; music: 'elevenlabs' | 'demo' };
 }
 
-export interface WrittenPhrase {
-  target: string;
-  native: string;
-  image: string[];
-  notes: OwnNotes;
-  source: 'ai' | 'bank';
-  bankId?: string;
-}
-
 export interface NewPhrase {
   target: string;
   native: string;
-  image: string[];
-  notes: OwnNotes;
+  /** Without a picture and notes, the server writes both (plan 108). */
+  image?: string[];
+  notes?: OwnNotes;
+  /** Who wrote the notes sent: Claude, or the server's rules. */
+  notesBy?: 'ai' | 'rules';
   source: 'ai' | 'bank' | 'course' | 'written';
   bankId?: string;
 }
@@ -133,18 +127,6 @@ export const unsaveItem = (kind: 'set' | 'album', id: string) =>
 
 export const setDisplayName = (displayName: string) =>
   api<{ displayName: string | null }>('/library/profile', { method: 'POST', body: { displayName }, auth: 'required' });
-
-export const generatePhrases = (
-  body: { mode: 'topic' | 'keywords' | 'text'; input: string; targetLang: LanguageCode; nativeLang: LanguageCode; count?: number; avoid?: string[] },
-  signal?: AbortSignal,
-) =>
-  api<{ provider: 'claude' | 'bank'; phrases: WrittenPhrase[]; themes: Pick<BankTheme, 'id' | 'title'>[] }>('/library/generate/phrases', {
-    method: 'POST',
-    body,
-    auth: 'required',
-    timeoutMs: 120_000,
-    signal,
-  });
 
 export const generateCover = (body: { kind: 'set' | 'album'; title: string; description?: string; attachTo?: string }) =>
   api<{ id: string; url: string; provider: 'claude' | 'pattern' }>('/library/generate/cover', { method: 'POST', body, auth: 'required', timeoutMs: 120_000 });

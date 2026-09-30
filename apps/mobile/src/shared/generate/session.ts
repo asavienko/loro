@@ -1,5 +1,4 @@
 // Make a set's session: what the flow holds between its steps, and the name it suggests for the set.
-// Shared by the web screen (screens/MakeSetScreen.tsx) and the React Native app's.
 import type { Copy } from '../copy';
 import { clip, LIMITS, tidy } from '../state/limits';
 import type { Deck } from './deck';
@@ -15,9 +14,8 @@ export interface MakeSession {
   /** The last request dealt, which More repeats. */
   asked: SuggestRequest | null;
   deck: Deck | null;
-  writer: 'ai' | 'device';
-  /** The AI writer failed and the device's phrases stand in: said above the cards. */
-  fellBack: boolean;
+  /** Who wrote the last deal: AI on the server, or its phrase bank. */
+  writer: 'ai' | 'bank';
   /** More found nothing new. */
   exhausted: boolean;
   step: 'ask' | 'deck' | 'save';

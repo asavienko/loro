@@ -1,12 +1,9 @@
-// The API's phrase writer (plan 106: POST /library/generate/phrases and /notes), for a signed-in
-// learner on a server whose writer is Claude. Any failure reads as "not available": the caller falls
-// back to the phrases on the device and says so. The app ships without zod, so the reply is checked
-// by hand.
+// The API's phrase and notes writers (plan 106: POST /library/generate/phrases and /notes), the only
+// place suggestions and notes come from (plan 108). The server answers with Claude where it writes,
+// otherwise with its phrase bank (phrases) or its written rules (notes), and says which. A failure
+// is the caller's to show. The app ships without zod, so the reply is checked by hand.
 import { api, apiUrl } from '../api/client';
-import { fetchUsage } from '../api/library';
-import { sessionState } from '../api/session';
 import type { LanguageCode } from '../content';
-import { clock } from '../state/clock';
 import { ICON_NAMES } from '../ui/icons';
 import type { OwnNotes } from '../state/types';
 import type { SuggestRequest } from './types';
@@ -19,49 +16,33 @@ const SUGGEST_TIMEOUT_MS = 90_000;
 /** What the server accepts as phrases not to write again. */
 const MAX_AVOID = 100;
 const MAX_TEXT = 120;
-/** How long the answer to "is Claude writing here?" is trusted. */
-const STATUS_TTL_MS = 5 * 60_000;
 
 export interface WrittenPhrase {
   target: string;
   native: string;
   image: string[];
   notes: OwnNotes;
+  /** Written by Claude just now, or a phrase of Loro's bank (by its id). */
+  source: 'ai' | 'bank';
+  bankId?: string;
+  /** Its clips by language, where the server has a voice. */
+  audio?: Partial<Record<LanguageCode, string>>;
+}
+
+export interface WrittenPhrases {
+  /** Who answered: Claude, or the server's phrase bank. */
+  provider: 'claude' | 'bank';
+  phrases: WrittenPhrase[];
 }
 
 export interface WrittenNotes {
+  /** Who wrote them: Claude, or the server's written rules. */
+  provider: 'claude' | 'rules';
   image: string[];
   notes: OwnNotes;
 }
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
-
-let status: { user: string; at: number; live: Promise<boolean> } | null = null;
-
-/**
- * Whether the AI writer answers this learner: signed in, and the server's writer is Claude. Without
- * it the phrase bank on the device answers, the same as the server would, at no cost to the allowance.
- */
-export function liveAvailable(): Promise<boolean> {
-  const session = sessionState();
-  if (session.status !== 'signedIn' || !session.account) return Promise.resolve(false);
-  const user = session.account.userId;
-  if (!status || status.user !== user || clock.now() - status.at > STATUS_TTL_MS) {
-    status = {
-      user,
-      at: clock.now(),
-      live: fetchUsage()
-        .then((usage) => usage.writers.phrases === 'claude' && usage.daily.phrases.used < usage.daily.phrases.limit)
-        .catch(() => false),
-    };
-  }
-  return status.live;
-}
-
-/** After writing: the allowance may be spent now, so ask again next time. */
-function forgetStatus(): void {
-  status = null;
-}
 
 const text = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null);
 const note = (v: unknown) => (isObject(v) && text(v.title) && text(v.text) ? { title: text(v.title)!, text: text(v.text)! } : null);
@@ -84,49 +65,56 @@ export function readImage(v: unknown): string[] | null {
   return image.length > 0 ? image : null;
 }
 
+/** Clip paths by language, as URLs the app can load. */
+export function readAudio(v: unknown): Partial<Record<LanguageCode, string>> | undefined {
+  if (!isObject(v)) return undefined;
+  const out = Object.fromEntries(Object.entries(v).flatMap(([lang, path]) => (typeof path === 'string' && path ? [[lang, apiUrl(path)]] : [])));
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 /** The reply's phrases, each with its picture and notes, or null if it isn't a list of them. */
-export function readPhrases(body: unknown): WrittenPhrase[] | null {
+export function readPhrases(body: unknown): WrittenPhrases | null {
   if (!isObject(body) || !Array.isArray(body.phrases)) return null;
-  const out: WrittenPhrase[] = [];
+  const provider = body.provider === 'bank' ? 'bank' : 'claude';
+  const phrases: WrittenPhrase[] = [];
   for (const item of body.phrases) {
     if (!isObject(item) || typeof item.target !== 'string' || typeof item.native !== 'string') return null;
     const target = item.target.trim();
     const native = item.native.trim();
     const notes = readNotes(item.notes);
     const image = readImage(item.image);
+    const bankId = item.source === 'bank' && typeof item.bankId === 'string' ? item.bankId : undefined;
+    const audio = readAudio(item.audio);
     // Every phrase has its notes and picture (plan 105): one that came without is left out.
-    if (target && native && target.length <= MAX_TEXT && native.length <= MAX_TEXT && notes && image) out.push({ target, native, image, notes });
+    if (target && native && target.length <= MAX_TEXT && native.length <= MAX_TEXT && notes && image) {
+      phrases.push({ target, native, image, notes, source: bankId ? 'bank' : 'ai', ...(bankId ? { bankId } : {}), ...(audio ? { audio } : {}) });
+    }
   }
-  return out;
+  return { provider, phrases };
 }
 
-/** Notes and a picture for a phrase the learner wrote; throws when the writer fails or answers nonsense. */
+/** Notes and a picture for a phrase the learner wrote; throws when the server can't be asked or answers nonsense. */
 export async function writeNotes(
   phrase: { target: string; native: string; targetLang: LanguageCode; nativeLang: LanguageCode },
   signal?: AbortSignal,
 ): Promise<WrittenNotes> {
-  const body = await api<unknown>('/library/generate/notes', { method: 'POST', body: phrase, timeoutMs: SUGGEST_TIMEOUT_MS, signal });
-  forgetStatus();
+  const body = await api<unknown>('/library/generate/notes', { method: 'POST', body: phrase, auth: 'required', timeoutMs: SUGGEST_TIMEOUT_MS, signal });
   const notes = isObject(body) ? readNotes(body.notes) : null;
   const image = isObject(body) ? readImage(body.image) : null;
   if (!notes || !image) throw new Error('unreadable reply');
-  return { notes, image };
+  return { provider: isObject(body) && body.provider === 'rules' ? 'rules' : 'claude', notes, image };
 }
 
-/**
- * Phrases written for the request, none of `avoid`; throws when the writer fails, answers nonsense,
- * or the server answered from its phrase bank instead (the device has the same bank).
- */
-export async function writePhrases(request: SuggestRequest, avoid: string[], signal?: AbortSignal): Promise<WrittenPhrase[]> {
+/** Phrases written for the request, none of `avoid`; throws when the server can't be asked or answers nonsense. */
+export async function writePhrases(request: SuggestRequest, avoid: string[], signal?: AbortSignal): Promise<WrittenPhrases> {
   const body = await api<unknown>('/library/generate/phrases', {
     method: 'POST',
     body: { ...request, avoid: avoid.slice(-MAX_AVOID).map((a) => a.slice(0, MAX_TEXT)) },
+    auth: 'required',
     timeoutMs: SUGGEST_TIMEOUT_MS,
     signal,
   });
-  forgetStatus();
-  if (isObject(body) && body.provider === 'bank') throw new Error('no writer');
-  const phrases = readPhrases(body);
-  if (!phrases) throw new Error('unreadable reply');
-  return phrases;
+  const written = readPhrases(body);
+  if (!written) throw new Error('unreadable reply');
+  return written;
 }

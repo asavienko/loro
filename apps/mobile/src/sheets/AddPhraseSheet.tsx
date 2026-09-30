@@ -6,10 +6,11 @@ import { useRef, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { languageName } from '@shared/copy';
 import type { LanguageCode } from '@shared/content';
-import { liveAvailable, writeNotes } from '@shared/generate/remote';
+import { writeNotes } from '@shared/generate/remote';
 import { useNav } from '@shared/nav/NavContext';
 import { bankMatch, findSamePhrase, promptOf } from '@shared/state/catalog';
 import { LIMITS, sayable, tidy } from '@shared/state/limits';
+import { useAccount } from '../state/account';
 import { useCopy, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { CharCount, charsLeft } from '../ui/CharCount';
@@ -56,6 +57,7 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
   const pathname = usePathname();
   const { toast } = useToast();
   const { state, actions } = useStore();
+  const account = useAccount();
   const [target, setTarget] = useState(initialTarget);
   const [native, setNative] = useState(initialNative);
   const nativeRef = useRef<TextInput>(null);
@@ -74,16 +76,13 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
       toast(c.addPhrase.edited);
     } else {
       const id = actions.addOwnPhrase(target, native);
-      // Its notes: the bank's when the bank has it, otherwise the writer's, asked for quietly now.
-      if (!bankMatch(targetLang, target)) {
+      // Its notes: the bank's when the bank has it, otherwise the server's, asked for quietly now.
+      if (!bankMatch(targetLang, target) && account.status === 'signedIn') {
         const asked = { target: tidy(target), native: tidy(native), targetLang, nativeLang };
-        void liveAvailable().then((live) => {
-          if (!live) return;
-          writeNotes(asked).then(
-            (written) => actions.setOwnNotes(id, asked.target, written.notes, written.image),
-            () => {},
-          );
-        });
+        writeNotes(asked).then(
+          (written) => actions.setOwnNotes(id, asked.target, written.notes, written.image),
+          () => {},
+        );
       }
       // The next step is hearing it.
       toast(c.addPhrase.added, { action: { label: c.common.play, run: () => nav.playPhraseInSet(id) } });

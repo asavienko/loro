@@ -8,12 +8,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Switch, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createSet, generateCover, updateSet } from '@shared/api/library';
-import { canSpeak, Playback, speak } from '@shared/audio/speech';
+import { Playback, speak } from '@shared/audio/speech';
 import { languageName } from '@shared/copy';
 import { BANK_THEMES } from '@shared/content';
 import { added, currentCard, deal, dealt, decide, edit, lastDecision, newDeck, nextCard, picksOf, unadd, undo } from '@shared/generate/deck';
 import { newPhrasesOf } from '@shared/generate/publish';
-import { liveAvailable } from '@shared/generate/remote';
 import { defaultTitle, MakeRequest, MakeSession } from '@shared/generate/session';
 import { suggest } from '@shared/generate/suggest';
 import { INPUT_LIMITS, SUGGEST_MODES, SuggestMode, SuggestRequest, Suggestion } from '@shared/generate/types';
@@ -71,6 +70,8 @@ function MakeSet({ request }: { request: MakeRequest }) {
   const { state, actions } = useStore();
   const { learner } = state;
   const { nativeLang, targetLang } = learner.profile;
+  const account = useAccount();
+  const signedIn = account.status === 'signedIn';
 
   const [session, setSession] = useState<MakeSession>(
     () =>
@@ -80,8 +81,7 @@ function MakeSet({ request }: { request: MakeRequest }) {
         texts: { topic: clip(tidy(request.input ?? ''), INPUT_LIMITS.topic), keywords: '', text: '' },
         asked: null,
         deck: null,
-        writer: 'device',
-        fellBack: false,
+        writer: 'bank',
         exhausted: false,
         step: 'ask',
         title: '',
@@ -106,14 +106,6 @@ function MakeSet({ request }: { request: MakeRequest }) {
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
   const into = session.setId ? findSetView(learner, session.setId) : undefined;
-  const [live, setLive] = useState<boolean | null>(null);
-  useEffect(() => {
-    let on = true;
-    void liveAvailable().then((value) => on && setLive(value));
-    return () => {
-      on = false;
-    };
-  }, []);
 
   // Which way the last card left, or where a card taken back comes from.
   const [travel, setTravel] = useState<SwipeTravel>({ direction: 1, returning: false });
@@ -130,13 +122,9 @@ function MakeSet({ request }: { request: MakeRequest }) {
     inFlight.current = controller;
     const inSet = (into?.phraseIds ?? []).map((id) => findPhrase(learner, id)?.target ?? '').filter(Boolean);
     const seen = session.deck ? dealt(session.deck) : { keys: new Set<string>(), texts: [] };
+    setPending(controller);
     try {
-      // Asked once per launch, so this answers at once after the first time.
-      const isLive = await liveAvailable();
-      if (controller.signal.aborted) return;
-      setPending(controller);
       const result = await suggest(learner, asked, {
-        live: isLive,
         exclude: new Set([...seen.keys, ...inSet.map(sameKey)]),
         avoid: [...inSet, ...seen.texts],
         signal: controller.signal,
@@ -151,15 +139,16 @@ function MakeSet({ request }: { request: MakeRequest }) {
           deck,
           asked,
           writer: result.writer,
-          fellBack: result.fellBack,
           exhausted: false,
           nothingFor: null,
           step: 'deck',
           title: s.title || defaultTitle(c, asked),
         };
       });
-    } catch {
-      // Cancelled: replaced by a newer request, or the flow closed.
+      void account.refreshUsage();
+    } catch (error) {
+      // Cancelled (replaced by a newer request, or the flow closed) says nothing; a failure says what.
+      if (!controller.signal.aborted) toast(problemText(c, error));
     } finally {
       if (inFlight.current === controller) inFlight.current = null;
       setPending((p) => (p === controller ? null : p));
@@ -183,7 +172,6 @@ function MakeSet({ request }: { request: MakeRequest }) {
   const keptCount = session.deck ? added(session.deck).length : 0;
 
   const [saving, setSaving] = useState(false);
-  const account = useAccount();
   const content = useContent();
   // A learner's set in their account takes the phrases there; a set on the device, on the device.
   const intoServer = into?.content?.owner === 'me' ? into.content : undefined;
@@ -264,17 +252,26 @@ function MakeSet({ request }: { request: MakeRequest }) {
         </View>
 
         <ScrollView style={styles.flex} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          {session.step === 'ask' && (
+          {!signedIn && (
+            <View style={styles.signIn}>
+              <Icon name="account_circle" size="2xl" color="primaryContainer" />
+              <Txt variant="row" style={styles.flex}>
+                {c.account.needed}
+              </Txt>
+              <Button variant="primarySm" label={c.account.signIn} onPress={nav.openAccount} />
+            </View>
+          )}
+          {signedIn && session.step === 'ask' && (
             <AskStep
               session={session}
-              live={live}
+              writer={account.usage?.writers.phrases ?? null}
               pending={pending}
               onChange={update}
               onAsk={askFor}
               onBackToDeck={keptCount > 0 ? () => update({ step: 'deck' }) : undefined}
             />
           )}
-          {session.step === 'deck' && session.deck && (
+          {signedIn && session.step === 'deck' && session.deck && (
             <DeckStep
               session={session}
               travel={travel}
@@ -299,7 +296,7 @@ function MakeSet({ request }: { request: MakeRequest }) {
               onSave={() => update({ step: 'save' })}
             />
           )}
-          {session.step === 'save' && session.deck && (
+          {signedIn && session.step === 'save' && session.deck && (
             <SaveStep
               session={session}
               into={into?.title}
@@ -322,14 +319,15 @@ function MakeSet({ request }: { request: MakeRequest }) {
 
 function AskStep({
   session,
-  live,
+  writer,
   pending,
   onChange,
   onAsk,
   onBackToDeck,
 }: {
   session: MakeSession;
-  live: boolean | null;
+  /** Who writes suggestions on this server, once the day's usage is known. */
+  writer: 'claude' | 'bank' | null;
   pending: AbortController | null;
   onChange: (patch: Partial<MakeSession>) => void;
   onAsk: (mode: SuggestMode, input: string) => void;
@@ -436,11 +434,11 @@ function AskStep({
         </View>
       )}
 
-      {live !== null && (
+      {writer !== null && (
         <View style={styles.byline}>
-          <Icon name={live ? 'auto_awesome' : 'library_music'} size="sm" color="secondary" />
+          <Icon name={writer === 'claude' ? 'auto_awesome' : 'library_music'} size="sm" color="secondary" />
           <Txt variant="label" color="secondary" style={styles.flex}>
-            {live ? c.make.byAi : c.make.byDevice}
+            {writer === 'claude' ? c.make.byAi : c.make.byBank}
           </Txt>
         </View>
       )}
@@ -520,11 +518,6 @@ function DeckStep({
           {c.make.addedCount(count)}
         </Txt>
       </View>
-      {session.fellBack && (
-        <Txt variant="label" color="secondary" accessibilityLiveRegion="polite" style={styles.fellBack}>
-          {c.make.fellBack}
-        </Txt>
-      )}
 
       {card ? (
         <>
@@ -625,11 +618,13 @@ function CardFace({ card, position, total, onEdit }: { card: Suggestion; positio
   useEffect(() => () => playback.current?.cancel(), []);
   const source = card.source === 'course' ? c.make.source.course(card.setTitle ?? '') : c.make.source[card.source];
 
+  // The server's clip of the suggestion as written: a corrected card has none.
+  const clipUrl = card.audio?.[targetLang];
   const listen = () => {
     // One voice at a time: the loop pauses while a suggestion is heard.
     if (state.player.status === 'playing') actions.pause();
     playback.current?.cancel();
-    playback.current = speak(card.target, targetLang, 1);
+    playback.current = speak(card.target, targetLang, 1, clipUrl);
   };
 
   return (
@@ -657,7 +652,7 @@ function CardFace({ card, position, total, onEdit }: { card: Suggestion; positio
         </View>
         {onEdit && (
           <View style={styles.cardActions}>
-            {canSpeak(targetLang) && (
+            {clipUrl && (
               <Pressable accessibilityRole="button" accessibilityLabel={c.make.listen(card.target)} onPress={listen} style={({ pressed }) => [styles.listen, pressed && styles.pressed]}>
                 <Icon name="volume_up" />
               </Pressable>
@@ -863,7 +858,7 @@ const styles = StyleSheet.create({
   byline: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
   progress: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   tabular: { fontVariant: ['tabular-nums'] },
-  fellBack: { borderRadius: radius.xl, backgroundColor: colors.surfaceContainerLow, paddingHorizontal: 12, paddingVertical: 8 },
+  signIn: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.xl, backgroundColor: colors.surfaceContainerLow, padding: 16 },
   decisions: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', gap: 20, paddingTop: 8 },
   decision: { minWidth: 64, alignItems: 'center', gap: 4, borderRadius: radius['2xl'] },
   decisionDisc: { borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },

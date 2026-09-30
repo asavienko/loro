@@ -1,15 +1,16 @@
 // A phrase's details (the web prototype's src/sheets/PhraseDetailsSheet.tsx): its picture, text,
 // sounds and real status; Play, then the frequent actions as tiles; its notes; and, rarer, arranging
 // the learner's own set and correcting or deleting their own phrase.
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { languageLabel, languageName } from '@shared/copy';
 import { updateSet } from '@shared/api/library';
 import { findSet, getLanguage, getTopic } from '@shared/content';
-import { liveAvailable, writeNotes } from '@shared/generate/remote';
+import { writeNotes } from '@shared/generate/remote';
 import { useNav } from '@shared/nav/NavContext';
 import { findPhrase, findSetView, promptOf } from '@shared/state/catalog';
 import { currentPhraseId, displayLearner, isLiked, phraseProgress } from '@shared/state/selectors';
+import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
@@ -267,15 +268,8 @@ function DeviceNotes({ phraseId }: { phraseId: string }) {
   const c = useCopy();
   const { state, actions } = useStore();
   const own = state.learner.ownPhrases[phraseId];
-  const [live, setLive] = useState(false);
+  const live = useAccount().status === 'signedIn';
   const [status, setStatus] = useState<'idle' | 'writing' | 'failed'>('idle');
-  useEffect(() => {
-    let on = true;
-    void liveAvailable().then((value) => on && setLive(value));
-    return () => {
-      on = false;
-    };
-  }, []);
   if (!own) return null;
   const write = () => {
     setStatus('writing');
