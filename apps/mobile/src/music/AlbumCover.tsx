@@ -1,10 +1,12 @@
 // An album's cover (plan 106): its drawn SVG, or a plain tile with a record when it has none.
 import { View, ViewStyle } from 'react-native';
 import { Icon } from '../ui/Icon';
+import { ContentBadges } from '../ui/ContentBadges';
 import { RemoteCover } from '../ui/RemoteCover';
 import { colors } from '../ui/theme';
 
-export function AlbumCover({ url, px, rounded = 12, style }: { url: string | null; px: number; rounded?: number; style?: ViewStyle }) {
+/** `badges`: the song icon in its corner (plan 107), an album being songs. */
+export function AlbumCover({ url, px, rounded = 12, style, badges = true }: { url: string | null; px: number; rounded?: number; style?: ViewStyle; badges?: boolean }) {
   const plain = (
     <View
       accessible={false}
@@ -13,5 +15,12 @@ export function AlbumCover({ url, px, rounded = 12, style }: { url: string | nul
       <Icon name="album" size={Math.round(px * 0.45)} color="primaryContainer" />
     </View>
   );
-  return url ? <RemoteCover url={url} px={px} rounded={rounded} style={style} fallback={plain} /> : plain;
+  const cover = url ? <RemoteCover url={url} px={px} rounded={rounded} style={style} fallback={plain} /> : plain;
+  if (!badges || px < 40) return cover;
+  return (
+    <View style={{ width: px, height: px }}>
+      {cover}
+      <ContentBadges phrases={false} songs px={px} />
+    </View>
+  );
 }

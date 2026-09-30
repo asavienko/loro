@@ -27,7 +27,7 @@ export function MusicMiniPlayer() {
           style={styles.open}
         >
           <View>
-            <AlbumCover url={music.album?.coverUrl ?? null} px={44} rounded={8} />
+            <AlbumCover url={music.album?.coverUrl ?? null} px={44} rounded={8} badges={false} />
             <View style={styles.badge}>
               <Icon name="music_note" size={14} color="onPrimaryFixed" />
             </View>
