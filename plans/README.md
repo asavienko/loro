@@ -13,7 +13,7 @@ content and API parts still apply. Re-scope a row against the current app before
 100 (UI interaction kit), 103 and 105 were archived in
 [the 2026-09-30 archive](archive/2026-09-30/README.md).
 
-The highest assigned ID is **106** and the next new plan is **107**. Recheck concurrent worktrees
+The highest assigned ID is **107** and the next new plan is **108**. Recheck concurrent worktrees
 and untracked `plans/` files before allocating; the "next is N" sentence can lag. Numbers are never
 reused; 49 remains an existing gap. When a plan finishes, archive it in the same change and list it
 only in the archive index.
@@ -207,6 +207,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [102](102-prototype-stress-fixture.md) | The v2.0 app at 20× content and a year of history: generator, dev switch, measured budgets | Design | — Ready; nothing built yet (prototype review round 3, item 65) | `apps/mobile/src/shared` |
 | [104](104-prototype-react-native.md) | The main app: the v2.0 player in Expo (`apps/mobile`), sharing state, content and copy in `src/shared` | Main app | 🟡 Onboarding, Home and the player run on the Android emulator; every prototype screen and sheet is ported (set page, queue, Make a set 2026-09-30); left: full verification on devices | archived 103/105 logic; `apps/mobile/modules/loro-core` for the native core |
 | [106](106-connected-app.md) | The connected app: sign-in, limits, AI phrases/covers/songs, server catalog with sharing, Phrases and Music tabs | Main app | 🟡 Scope 1–14 landed 2026-09-30 (Android checked); iOS, live Claude/Music runs and Google/Apple buttons remain | 104; account stack; 96 music adapter |
+| [107](107-one-player.md) | One player for phrases and songs (song icon, ratings, likes), light palette, no Music tab | Main app | 🟡 Started 2026-09-30 | 106 |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
