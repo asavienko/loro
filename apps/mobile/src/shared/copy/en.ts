@@ -558,7 +558,7 @@ export function makeEn(n: Plural) {
         offline: 'Loro can’t reach its server. Check the connection.',
         generic: 'Something went wrong. Try again.',
         full: 'Your account holds as many of these as it can. Delete one to make room.',
-        invalid: 'That couldn’t be saved: something in it is too long or missing.',
+        invalid: 'That couldn’t be saved: something in it is too long or missing, or holds a link.',
       },
       today: 'Today’s allowance',
       usage: {
