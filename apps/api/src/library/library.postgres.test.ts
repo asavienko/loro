@@ -355,6 +355,51 @@ describePostgres('the library against real PostgreSQL', () => {
     )
   })
 
+  it('offers more of a maker’s public things from one of theirs', async () => {
+    const phrases = (await deck('mia')).slice(0, 1)
+    const make = async (title: string, visibility: 'public' | 'private') =>
+      (
+        await library.createSet('mia', {
+          title,
+          targetLang: 'es-ES',
+          nativeLang: 'bg-BG',
+          visibility,
+          phrases,
+        })
+      ).set
+    const first = await make('First', 'public')
+    const second = await make('Second', 'public')
+    await make('Hidden away', 'private')
+    const more = await library.moreSetsByMaker(null, first.id)
+    expect(more.sets.map((s) => s.id)).toEqual([second.id])
+    expect(more.phrases.every((p) => p.setId === second.id)).toBe(true)
+    expect((await library.moreSetsByMaker(null, 'set-cafe')).sets).toEqual([])
+    const { album, song } = await library.generateSong('mia', {
+      setId: first.id,
+      styleId: 'modern_pop',
+      nativeLang: 'en-GB',
+    })
+    await library.updateAlbum('mia', album.id, { visibility: 'public' })
+    const other = (
+      await library.createAlbum('mia', {
+        title: 'Empty',
+        targetLang: 'es-ES',
+        visibility: 'public',
+      })
+    ).album
+    await vi.waitFor(
+      async () => {
+        expect((await library.song('mia', song.id)).status).toBe('ready')
+      },
+      { timeout: 5000 },
+    )
+    // An album with nothing to hear isn't offered.
+    expect((await library.moreAlbumsByMaker(null, other.id)).albums.map((a) => a.id)).toEqual([
+      album.id,
+    ])
+    expect((await library.moreAlbumsByMaker(null, album.id)).albums).toEqual([])
+  })
+
   it('takes a public set out of Community once three learners report it', async () => {
     const phrases = (await deck('lou')).slice(0, 1)
     const { set } = await library.createSet('lou', {
