@@ -41,7 +41,7 @@ function RenameForm({ item, onClose, onRenamed }: { item: Renaming; onClose: () 
   const cleanDescription = tidy(description);
   const change = {
     ...(clean !== item.title ? { title: clean } : {}),
-    ...(cleanDescription !== (item.description ?? '') ? { description: cleanDescription || null } : {}),
+    ...(cleanDescription !== tidy(item.description ?? '') ? { description: cleanDescription || null } : {}),
   };
   const changed = Object.keys(change).length > 0;
   const save = async () => {
