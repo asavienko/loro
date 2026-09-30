@@ -59,6 +59,8 @@ export interface PhraseWire {
   /** Note titles and texts in other native languages, by note kind. */
   noteTranslations: Partial<Record<keyof LibraryNotes, Partial<Record<Language, Note>>>>
   source: PhraseSource | 'loro'
+  /** Who wrote a learner's phrase's notes, when it isn't told by its source (plan 108). */
+  notesBy?: 'ai' | 'rules'
   /** Clips by language, where this server's voices speak it (library/speech.ts). */
   audio?: Partial<Record<Language, string>>
 }

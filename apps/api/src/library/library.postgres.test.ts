@@ -521,6 +521,30 @@ describePostgres('the library against real PostgreSQL', () => {
     vi.stubEnv('LIMIT_SPEECH_RENDERS_DAILY', '500')
   })
 
+  it('writes notes by the rules without Claude, for free, and for a typed phrase stored without them', async () => {
+    const before = await library.usage('rufus')
+    const written = await library.generateNotes('rufus', {
+      target: '¿Dónde está la estación?',
+      native: 'Где вокзал?',
+      targetLang: 'es-ES',
+      nativeLang: 'ru-RU',
+    })
+    expect(written.provider).toBe('rules')
+    expect(written.notes.pronunciation.ipa).toMatch(/^\[.+\]$/)
+    expect(written.image.length).toBeGreaterThan(0)
+    expect((await library.usage('rufus')).daily.phrases.used).toBe(before.daily.phrases.used)
+    const { phrases } = await library.createSet('rufus', {
+      title: 'Typed',
+      targetLang: 'es-ES',
+      nativeLang: 'en-GB',
+      visibility: 'private',
+      phrases: [{ target: 'Tengo un perro', native: 'I have a dog', source: 'written' }],
+    })
+    expect(phrases[0]?.notesBy).toBe('rules')
+    expect(phrases[0]?.notes.grammar.text.length).toBeGreaterThan(0)
+    expect(phrases[0]?.image.length).toBeGreaterThan(0)
+  })
+
   it('gives bank phrases and written suggestions clips, English prompts included', async () => {
     vi.stubEnv('TTS_PROVIDER', 'elevenlabs')
     vi.stubEnv('TTS_API_KEY', 'k')
