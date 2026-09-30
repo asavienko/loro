@@ -54,7 +54,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const load = useCallback(
-    async (songs: Song[], at: number) => {
+    async (from: Album | null, songs: Song[], at: number) => {
       const song = songs[at];
       if (!song) return;
       const uri = await playableUrl(song);
@@ -62,6 +62,16 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       player.replace({ uri });
       wantsPlay.current = true;
       player.play();
+      // The lock screen and notification shade show the song and control it (a no-op on the web).
+      try {
+        player.setActiveForLockScreen(true, {
+          title: song.title,
+          albumTitle: from?.title,
+          artist: from?.owner === 'loro' ? 'Loro' : (from?.author ?? undefined),
+        });
+      } catch {
+        // Controls are a nicety; the song plays without them.
+      }
     },
     [player],
   );
@@ -76,7 +86,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       setAlbum(next);
       setQueue(ready);
       setIndex(start);
-      void load(ready, start);
+      void load(next, ready, start);
     },
     [actions, load, state.player.status],
   );
@@ -86,9 +96,9 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       const at = index + by;
       if (at < 0 || at >= queue.length) return;
       setIndex(at);
-      void load(queue, at);
+      void load(album, queue, at);
     },
-    [index, queue, load],
+    [album, index, queue, load],
   );
 
   // A finished song moves on to the next, and the album ends after its last.
@@ -142,6 +152,11 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       stop: () => {
         wantsPlay.current = false;
         player.pause();
+        try {
+          player.clearLockScreenControls();
+        } catch {
+          // Nothing was shown.
+        }
         setQueue([]);
         setAlbum(null);
         setIndex(0);
