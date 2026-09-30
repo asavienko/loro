@@ -217,7 +217,7 @@ export function HomeScreen() {
           </View>
         )}
 
-        {/* The course sung (plan 106): the way to the music side, in its night colours. */}
+        {/* The course sung (plan 106): its album of songs, played in the one player (plan 107). */}
         {album && !newToLoro && <AlbumTeaser album={album} onOpen={() => nav.openAlbum(album.id)} />}
 
         {recent.length === 0 && !firstRun && <Button variant="text" icon="history" label={c.home.history} onPress={() => setHistoryOpen(true)} style={styles.start} />}
@@ -244,17 +244,17 @@ function AlbumTeaser({ album, onOpen }: { album: Album; onOpen: () => void }) {
     <Pressable accessibilityRole="button" accessibilityLabel={`${album.title}, ${c.music.songs(album.songCount)}`} onPress={onOpen} style={({ pressed }) => [styles.teaser, pressed && { opacity: 0.9 }]}>
       <AlbumCover url={album.coverUrl} px={64} rounded={10} />
       <View style={styles.flex}>
-        <Txt variant="label" weight={700} color="nightAccent">
+        <Txt variant="label" weight={700} color="primaryContainer">
           {c.music.title.toLocaleUpperCase(c.locale)}
         </Txt>
-        <Txt variant="row" weight={700} color="onNight" numberOfLines={1}>
+        <Txt variant="row" weight={700} color="onSurface" numberOfLines={1}>
           {album.title}
         </Txt>
-        <Txt variant="label" color="onNightVariant" numberOfLines={2}>
+        <Txt variant="label" color="secondary" numberOfLines={2}>
           {`${c.music.songs(album.songCount)} · ${c.music.loroAlbum}`}
         </Txt>
       </View>
-      <Icon name="chevron_right" color="onNight" />
+      <Icon name="chevron_right" color="onSurface" />
     </Pressable>
   );
 }
@@ -303,7 +303,7 @@ function HistorySheet({ open, onClose, now }: { open: boolean; onClose: () => vo
 }
 
 const styles = StyleSheet.create({
-  teaser: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: radius['2xl'], backgroundColor: colors.night },
+  teaser: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: radius['2xl'], backgroundColor: colors.surface },
   screen: { flex: 1, backgroundColor: colors.surface },
   content: { padding: 16, gap: 28, width: '100%', maxWidth: 672, alignSelf: 'center' },
   hero: { borderRadius: radius['2xl'], padding: 20, gap: 4 },

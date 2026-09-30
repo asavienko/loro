@@ -14,7 +14,7 @@ export function RemoteCover({ url, px, rounded = 16, style, fallback }: { url: s
     <View
       accessible={false}
       importantForAccessibility="no-hide-descendants"
-      style={[{ width: px, height: px, borderRadius: rounded, overflow: 'hidden', backgroundColor: colors.nightContainer }, style]}
+      style={[{ width: px, height: px, borderRadius: rounded, overflow: 'hidden', backgroundColor: colors.surfaceContainer }, style]}
     >
       <SvgUri uri={apiUrl(url)} width={px} height={px} onError={() => setFailed(true)} />
     </View>

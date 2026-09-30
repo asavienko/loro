@@ -1,5 +1,5 @@
 // More of what a shared set's or album's maker made public (plan 106), on that set's or album's
-// page: a set's page offers their sets, an album's (in the night colours) their albums.
+// page: a set's page offers their sets, an album's their albums.
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { keepOpenedSet } from '@shared/api/contentCache';
@@ -62,7 +62,7 @@ export function MoreAlbumsByMaker({ albumId, author }: { albumId: string; author
   if (!albums || albums.length === 0) return null;
   return (
     <View style={styles.albums}>
-      <Txt variant="heading" face="serif" weight={600} color="onNight" accessibilityRole="header" style={styles.pad}>
+      <Txt variant="heading" face="serif" weight={600} color="onSurface" accessibilityRole="header" style={styles.pad}>
         {author ? c.community.moreBy(author) : c.community.moreByLearner}
       </Txt>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>

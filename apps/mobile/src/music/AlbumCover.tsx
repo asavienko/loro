@@ -1,4 +1,4 @@
-// An album's cover (plan 106): its drawn SVG, or the night tile with a record when it has none.
+// An album's cover (plan 106): its drawn SVG, or a plain tile with a record when it has none.
 import { View, ViewStyle } from 'react-native';
 import { Icon } from '../ui/Icon';
 import { RemoteCover } from '../ui/RemoteCover';
@@ -8,9 +8,9 @@ export function AlbumCover({ url, px, rounded = 12, style }: { url: string | nul
   const plain = (
     <View
       accessible={false}
-      style={[{ width: px, height: px, borderRadius: rounded, backgroundColor: colors.nightContainerHigh, alignItems: 'center', justifyContent: 'center' }, style]}
+      style={[{ width: px, height: px, borderRadius: rounded, backgroundColor: colors.surfaceContainerHigh, alignItems: 'center', justifyContent: 'center' }, style]}
     >
-      <Icon name="album" size={Math.round(px * 0.45)} color="nightAccent" />
+      <Icon name="album" size={Math.round(px * 0.45)} color="primaryContainer" />
     </View>
   );
   return url ? <RemoteCover url={url} px={px} rounded={rounded} style={style} fallback={plain} /> : plain;

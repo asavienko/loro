@@ -18,10 +18,10 @@ export function AlbumCard({ album, width, onOpen }: { album: Album; width: numbe
     >
       <AlbumCover url={album.coverUrl} px={width} rounded={12} />
       <View style={styles.text}>
-        <Txt variant="body" weight={700} color="onNight" numberOfLines={1}>
+        <Txt variant="body" weight={700} color="onSurface" numberOfLines={1}>
           {album.title}
         </Txt>
-        <Txt variant="label" color="onNightVariant" numberOfLines={1}>
+        <Txt variant="label" color="secondary" numberOfLines={1}>
           {`${c.music.songs(album.songCount)} · ${byline}`}
         </Txt>
       </View>
