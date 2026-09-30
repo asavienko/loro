@@ -103,6 +103,9 @@ keeps each private, shares it by link, or publishes it for everyone.
 24. [x] Three more Bulgarian sets (На пазара, Запознанство, В ресторанта), sung into Loro's
         Bulgarian album; content version 2026-09-30.4.
 25. [x] A song that can't load (no connection) says so instead of showing Pause over silence.
+26. [x] Descriptions for the learner's sets and albums ("Name and description"); publishing without
+        a display name says it will read "by a learner" and offers to add one; a song made or
+        retried while the learner is elsewhere says when it's ready, with Play.
 
 ## Verification
 
