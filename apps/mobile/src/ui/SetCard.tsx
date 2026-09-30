@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native';
+import { findSet } from '@shared/content';
 import type { SetView } from '@shared/state/catalog';
 import type { SetProgress } from '@shared/state/selectors';
 import { useCopy } from '../state/store';
@@ -16,6 +17,8 @@ const BADGE: Record<SetProgress['status'], { bg: string; ink: ColorName }> = {
 /** A set tile (the web's src/ui/SetCard.tsx): cover, title, status and count, quick-play on the cover. */
 export function SetCard({ view, progress, onOpen, onPlay, width = 160 }: { view: SetView; progress: SetProgress; onOpen: () => void; onPlay: () => void; width?: number }) {
   const c = useCopy();
+  // Songs sung from it (plan 107), counted by the server; a set of this device has none.
+  const songs = findSet(view.id)?.songCount ?? 0;
   return (
     <View style={{ width }}>
       <Pressable accessibilityRole="button" onPress={onOpen} style={({ pressed }) => pressed && { opacity: 0.85 }}>
@@ -37,7 +40,7 @@ export function SetCard({ view, progress, onOpen, onPlay, width = 160 }: { view:
             </Txt>
           </View>
           <Txt variant="label" color="secondary">
-            {c.common.phrases(progress.total)}
+            {songs > 0 ? `${c.common.phrases(progress.total)} · ${c.music.songs(songs)}` : c.common.phrases(progress.total)}
           </Txt>
         </View>
       </Pressable>

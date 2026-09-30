@@ -302,6 +302,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
           </View>
           <Txt color="secondary" style={styles.summary}>
             {c.set.summary(progress.total, progress.learned, progress.due)}
+            {setSongs.songs.length > 0 ? ` · ${c.music.songs(setSongs.songs.length)}` : ''}
             {/* The duration moves to the next line whole rather than leaving "1×" alone there. */}
             {duration !== null && sortedIds.length > 0 && ` · ${c.set.duration(formatElapsed(duration)).replace(/ /g, '\u00a0')}`}
           </Txt>
