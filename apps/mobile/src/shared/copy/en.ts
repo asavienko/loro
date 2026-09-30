@@ -649,6 +649,8 @@ export function makeEn(n: Plural) {
       signInToMake: 'Sign in to make sets with AI',
     },
     music: {
+      needsConnection: 'Songs need a connection. Try again when you’re online.',
+      cantPlay: 'That song can’t be played right now.',
       setSongs: 'Songs of this set',
       title: 'Music',
       loro: 'From Loro',

@@ -622,6 +622,8 @@ export function makeBg(n: Plural): Copy {
       signInToMake: 'Влезте, за да създавате набори с ИИ',
     },
     music: {
+      needsConnection: 'Песните имат нужда от връзка. Опитайте отново, когато сте онлайн.',
+      cantPlay: 'Тази песен не може да се пусне сега.',
       setSongs: 'Песни от този набор',
       title: 'Музика',
       loro: 'От Loro',
