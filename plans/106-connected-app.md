@@ -96,6 +96,10 @@ keeps each private, shares it by link, or publishes it for everyone.
         shared albums.
 22. [x] Review pass 3 (2026-09-30): set songs filtered before paging and by reports, atomic retries,
         refunds to the charged day, account deletion that spares others' covers, clips and tracks.
+23. [x] Community by newest or most saved (with saved counts), "More from this learner", no links in
+        shown text, songs on the lock screen, each side docking its own player, web share links from
+        phones (`EXPO_PUBLIC_WEB_URL`); review pass 4: ordered song loads, lock-screen resume, an
+        unblockable sign-in page, owners' own saves not counted, a saves index (migration 012).
 
 ## Verification
 
