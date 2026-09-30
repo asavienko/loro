@@ -2,12 +2,13 @@
 // set can be shared as a link. Pure: parse and format round-trip.
 import { TOPICS, type Level, type Tag } from '../content';
 
-/** The bottom bar: Home, Phrases (the route `explore`), Music, Create and Library (plan 106). */
-export type Tab = 'home' | 'explore' | 'music' | 'create' | 'library';
+/** The bottom bar: Home, Phrases (the route `explore`), Create and Library (plan 107: no Music tab). */
+export type Tab = 'home' | 'explore' | 'create' | 'library';
 
-export type LibraryView = 'liked' | 'mine' | 'due' | 'learning' | 'missed' | 'learned' | 'ownSets' | 'likedSets';
+/** Library's lists; `albums` holds Loro's, the learner's and shared albums (plan 107). */
+export type LibraryView = 'liked' | 'mine' | 'due' | 'learning' | 'missed' | 'learned' | 'ownSets' | 'likedSets' | 'albums';
 
-export const LIBRARY_VIEWS: LibraryView[] = ['liked', 'mine', 'due', 'learning', 'missed', 'learned', 'ownSets', 'likedSets'];
+export const LIBRARY_VIEWS: LibraryView[] = ['liked', 'mine', 'due', 'learning', 'missed', 'learned', 'ownSets', 'likedSets', 'albums'];
 
 export interface ExploreFilters {
   q?: string;
@@ -20,14 +21,13 @@ export type Route =
   | { name: 'home' }
   | ({ name: 'explore' } & ExploreFilters)
   | { name: 'library'; view?: LibraryView }
-  | { name: 'music' }
   | { name: 'create' }
   | { name: 'set'; id: string; from: Tab }
   | { name: 'album'; id: string; from: Tab };
 
 const LEVELS: readonly string[] = ['A1', 'A2', 'B1'];
 const TAGS: readonly string[] = ['politeness', 'question', 'request', 'numbers', 'food', 'directions', 'social'];
-const TABS: readonly string[] = ['home', 'explore', 'music', 'create', 'library'];
+const TABS: readonly string[] = ['home', 'explore', 'create', 'library'];
 
 /** A malformed escape (a stray "%" in a pasted link) is kept as typed rather than throwing. */
 function safeDecode(part: string): string {
@@ -61,15 +61,16 @@ export function parseRoute(hash: string): Route {
       const view = params.get('view');
       return { name: 'library', ...(view && (LIBRARY_VIEWS as string[]).includes(view) ? { view: view as LibraryView } : {}) };
     }
+    // The Music tab's links (plan 106) open Library's albums.
     case 'music':
-      return { name: 'music' };
+      return { name: 'library', view: 'albums' };
     case 'create':
       return { name: 'create' };
     case 'set':
     case 'album': {
       if (!parts[1]) return { name: 'home' };
       const from = params.get('from');
-      const tab = from && TABS.includes(from) ? (from as Tab) : parts[0] === 'album' ? 'music' : 'home';
+      const tab = from && TABS.includes(from) ? (from as Tab) : parts[0] === 'album' ? 'library' : 'home';
       return { name: parts[0], id: parts[1], from: tab };
     }
     default:
@@ -91,8 +92,6 @@ export function formatRoute(route: Route): string {
     case 'library':
       if (route.view) params.set('view', route.view);
       return `#/library${params.size ? `?${params}` : ''}`;
-    case 'music':
-      return '#/music';
     case 'create':
       return '#/create';
     case 'set':

@@ -30,11 +30,11 @@ import { useToast } from '../ui/Toast';
 export function tabOfPath(pathname: string, from: string | undefined): Tab {
   if (pathname.startsWith('/explore')) return 'explore';
   if (pathname.startsWith('/library')) return 'library';
-  if (pathname.startsWith('/music')) return 'music';
+  if (pathname.startsWith('/music')) return 'library';
   if (pathname.startsWith('/create')) return 'create';
-  const tabs: string[] = ['explore', 'library', 'music', 'create'];
+  const tabs: string[] = ['explore', 'library', 'create'];
   if (pathname.startsWith('/set/')) return from && tabs.includes(from) ? (from as Tab) : 'home';
-  if (pathname.startsWith('/album/')) return from && tabs.includes(from) ? (from as Tab) : 'music';
+  if (pathname.startsWith('/album/')) return from && tabs.includes(from) ? (from as Tab) : 'library';
   return 'home';
 }
 
@@ -91,9 +91,7 @@ export function Shell({ children }: { children: ReactNode }) {
       openSet: (setId) => {
         // A page opened from the player or Make a set (a set just made there) shows in its place.
         if ((pathRef.current === '/player' || pathRef.current === '/queue' || pathRef.current === '/make') && router.canDismiss()) router.dismissAll();
-        // A set opened from the music side belongs to Phrases.
-        const from = tabRef.current === 'music' ? 'explore' : tabRef.current;
-        router.push({ pathname: '/set/[id]', params: { id: setId, from } });
+        router.push({ pathname: '/set/[id]', params: { id: setId, from: tabRef.current } });
       },
       playSet: (setId, options = {}) => {
         const view = findSetView(learnerRef.current, setId);
@@ -129,9 +127,9 @@ export function Shell({ children }: { children: ReactNode }) {
         router.push({ pathname: '/make', params: { ...(options.input ? { input: options.input } : {}), ...(options.setId ? { setId: options.setId } : {}) } });
       },
       openAlbum: (albumId) => {
-        if (pathRef.current === '/song' && router.canDismiss()) router.dismissAll();
-        // An album belongs to Music, wherever it was opened from.
-        router.push({ pathname: '/album/[id]', params: { id: albumId, from: 'music' } });
+        if ((pathRef.current === '/song' || pathRef.current === '/player') && router.canDismiss()) router.dismissAll();
+        // An album opens in the tab it was opened from (Library's albums, Create, a set, Home).
+        router.push({ pathname: '/album/[id]', params: { id: albumId, from: tabRef.current } });
       },
       makeSong: (options = {}) => setSongRequest(options),
       share: (item) => setSharing(item),

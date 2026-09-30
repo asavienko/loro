@@ -66,7 +66,6 @@ export function Chip({
   accessibilityLabel,
   toggle = true,
   disabled,
-  tone = 'day',
 }: {
   label: string;
   selected?: boolean;
@@ -75,10 +74,7 @@ export function Chip({
   /** False for a one-tap action (a suggested topic): no selected state is announced. */
   toggle?: boolean;
   disabled?: boolean;
-  /** Night for the music side: selected is its accent, the rest an outline on ink. */
-  tone?: 'day' | 'night';
 }) {
-  const night = tone === 'night';
   return (
     <Pressable
       accessibilityRole="button"
@@ -89,8 +85,8 @@ export function Chip({
       disabled={disabled}
       style={({ pressed }) => [chip.target, pressed && { opacity: 0.8 }, disabled && styles.disabled]}
     >
-      <View style={[chip.pill, night ? (selected ? chip.nightOn : chip.nightOff) : selected ? chip.on : chip.off]}>
-        <Txt variant="body" weight={600} color={night ? (selected ? 'night' : 'onNight') : selected ? 'inverseOnSurface' : 'onSurface'} numberOfLines={1}>
+      <View style={[chip.pill, selected ? chip.on : chip.off]}>
+        <Txt variant="body" weight={600} color={selected ? 'inverseOnSurface' : 'onSurface'} numberOfLines={1}>
           {label}
         </Txt>
       </View>
@@ -103,6 +99,4 @@ const chip = StyleSheet.create({
   pill: { minHeight: 36, paddingHorizontal: 14, borderRadius: radius.full, borderWidth: 1, justifyContent: 'center' },
   on: { backgroundColor: colors.inverseSurface, borderColor: colors.inverseSurface },
   off: { backgroundColor: colors.surfaceContainerLow, borderColor: colors.hairline },
-  nightOn: { backgroundColor: colors.nightAccent, borderColor: colors.nightAccent },
-  nightOff: { backgroundColor: colors.nightContainer, borderColor: colors.onNightVariant },
 });

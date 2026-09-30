@@ -395,6 +395,7 @@ export function makeBg(n: Plural): Copy {
       startedNote: 'Чути или оценени поне веднъж',
       phrasesSegment: 'Фрази',
       setsSegment: 'Набори',
+      albumsSegment: 'Албуми',
       filters: {
         liked: 'Харесани',
         mine: 'Мои',
@@ -404,6 +405,7 @@ export function makeBg(n: Plural): Copy {
         learned: 'Научени',
         ownSets: 'Мои набори',
         likedSets: 'Харесани набори',
+        albums: 'Албуми',
       },
       empty: {
         liked: 'Докоснете сърцето на фраза, за да я пазите тук.',
@@ -636,7 +638,7 @@ export function makeBg(n: Plural): Copy {
       play: 'Пусни',
       needsConnection: 'Песните имат нужда от връзка. Опитайте отново, когато сте онлайн.',
       cantPlay: 'Тази песен не може да се пусне сега.',
-      setSongs: 'Песни от този набор',
+      setSongs: 'Песни',
       title: 'Музика',
       loro: 'От Loro',
       yours: 'Вашите албуми',

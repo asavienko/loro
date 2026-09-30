@@ -99,7 +99,7 @@ export function AlbumScreen({ id }: { id: string }) {
     return () => clearInterval(timer);
   }, [rendering, load]);
 
-  const back = () => (router.canGoBack() ? router.back() : router.replace('/music'));
+  const back = () => (router.canGoBack() ? router.back() : router.replace({ pathname: '/library', params: { view: 'albums' } }));
 
   if (!detail) {
     return (

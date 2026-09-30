@@ -33,17 +33,6 @@ export const colors = {
   onTertiaryFixed: '#111f07',
   error: '#ba1a1a',
   errorContainer: '#ffdad6',
-  /**
-   * Music's night (plan 106): songs and albums sit on warm dark ink, so the music side never reads as
-   * the phrase side. Terracotta's light tint is its accent.
-   */
-  night: '#211b18',
-  nightContainer: '#2d2521',
-  nightContainerHigh: '#3a302b',
-  onNight: '#f6efe9',
-  onNightVariant: '#c8b8ae',
-  nightAccent: '#ffb59c',
-  nightOutline: '#54463f',
   /** The sheet and dialog backdrop: on-surface at 40%. */
   scrim: 'rgba(28,28,25,0.4)',
 } as const;
