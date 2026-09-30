@@ -179,3 +179,18 @@ export const LIBRARY_SAVE_COUNTS_MIGRATION_SQL = `CREATE INDEX IF NOT EXISTS lib
 /** A set's page lists the songs sung from it. */
 export const LIBRARY_SONG_SETS_MIGRATION_SQL = `CREATE INDEX IF NOT EXISTS library_songs_set ON library_songs(set_id, status);
 `
+
+/**
+ * Plan 108: a learner's set lists phrases held elsewhere (Loro's, or the learner's own in another
+ * set) by reference, so a phrase keeps one progress; and each learner's "My phrases" set per course.
+ */
+export const LIBRARY_SET_REFS_MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS library_set_refs (
+  set_id text NOT NULL,
+  phrase_id text NOT NULL,
+  position integer NOT NULL,
+  PRIMARY KEY (set_id, phrase_id)
+);
+CREATE INDEX IF NOT EXISTS library_set_refs_phrase ON library_set_refs(phrase_id);
+ALTER TABLE library_sets ADD COLUMN IF NOT EXISTS inbox boolean NOT NULL DEFAULT false;
+CREATE UNIQUE INDEX IF NOT EXISTS library_sets_inbox ON library_sets(owner_id, target_lang) WHERE inbox;
+`

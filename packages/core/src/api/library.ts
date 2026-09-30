@@ -13,7 +13,15 @@ export const LibraryCourseSchema = z.enum(LIBRARY_COURSES)
 /** `private`: only its owner. `link`: anyone holding its share code. `public`: listed in Community. */
 export const VisibilitySchema = z.enum(['private', 'link', 'public'])
 export const LevelSchema = z.enum(['A1', 'A2', 'B1'])
-export const LibraryIdSchema = z.string().regex(/^[a-z0-9-]{3,64}$/)
+/** The server's ids, and the ones a device gave a learner's phrases and sets before upload (plan 108). */
+export const LibraryIdSchema = z
+  .string()
+  .regex(/^[a-z0-9][a-z0-9.-]{2,95}$/)
+  .refine((id) => !id.includes('..'))
+export const PhraseIdSchema = LibraryIdSchema
+/** The id a device gave a learner's phrase or set, kept when it is uploaded so its progress stays. */
+const DevicePhraseIdSchema = z.string().regex(/^mine-p-[a-z0-9][a-z0-9.-]{2,80}$/)
+const DeviceSetIdSchema = z.string().regex(/^mine-s-[a-z0-9][a-z0-9.-]{2,80}$/)
 export const ShareCodeSchema = z.string().regex(/^[a-z0-9]{10}$/)
 export const IconNameSchema = z.string().regex(/^[a-z0-9_]{1,40}$/)
 
@@ -68,6 +76,8 @@ export const PhraseSourceSchema = z.enum(['ai', 'bank', 'course', 'written'])
 export const NotesBySchema = z.enum(['ai', 'rules'])
 
 export const NewPhraseSchema = z.strictObject({
+  /** A phrase uploaded from a device keeps the device's id (plan 108). */
+  id: DevicePhraseIdSchema.optional(),
   target: z.string().trim().min(1).max(LIBRARY_TEXT.phrase),
   native: z.string().trim().min(1).max(LIBRARY_TEXT.phrase),
   /** Without a picture and notes, the server writes both by its rules (plan 108). */
@@ -82,10 +92,21 @@ export const NewPhraseSchema = z.strictObject({
     .optional(),
 })
 
+/**
+ * A phrase already in the library, listed by a learner's set rather than copied (plan 108): one of
+ * Loro's, or one of the learner's own. It keeps one progress wherever it is listed.
+ */
+export const PhraseRefSchema = z.strictObject({ ref: PhraseIdSchema })
+
+/** What a learner's set lists: a phrase it holds, or a reference to one held elsewhere. */
+export const SetItemSchema = z.union([PhraseRefSchema, NewPhraseSchema])
+
 export const MAX_SET_PHRASES = 40
 
 export const CreateSetSchema = z
   .strictObject({
+    /** A set uploaded from a device keeps the device's id; uploading it again changes nothing. */
+    id: DeviceSetIdSchema.optional(),
     title: shownText(LIBRARY_TEXT.title, 1),
     description: shownText(LIBRARY_TEXT.description).optional(),
     targetLang: LibraryCourseSchema,
@@ -98,7 +119,8 @@ export const CreateSetSchema = z
     coverIcon: IconNameSchema.optional(),
     coverId: LibraryIdSchema.optional(),
     visibility: VisibilitySchema.default('private'),
-    phrases: z.array(NewPhraseSchema).min(1).max(MAX_SET_PHRASES),
+    /** May be empty: a new set is filled afterwards. */
+    phrases: z.array(SetItemSchema).max(MAX_SET_PHRASES),
   })
   .refine((set) => set.targetLang !== set.nativeLang, {
     message: 'A course is never in the learner’s own language',
@@ -112,9 +134,37 @@ export const UpdateSetSchema = z.strictObject({
   visibility: VisibilitySchema.optional(),
   coverId: LibraryIdSchema.nullable().optional(),
   /** Appended at the end, in order. */
-  addPhrases: z.array(NewPhraseSchema).max(MAX_SET_PHRASES).optional(),
-  removePhraseIds: z.array(LibraryIdSchema).max(MAX_SET_PHRASES).optional(),
+  addPhrases: z.array(SetItemSchema).max(MAX_SET_PHRASES).optional(),
+  removePhraseIds: z.array(PhraseIdSchema).max(MAX_SET_PHRASES).optional(),
+  /** The set's phrases in their new order, after what is added and removed. */
+  order: z.array(PhraseIdSchema).max(MAX_SET_PHRASES).optional(),
 })
+
+/** A learner's phrase with new words: notes and picture written again unless sent. */
+export const EditPhraseSchema = z.strictObject({
+  target: z.string().trim().min(1).max(LIBRARY_TEXT.phrase),
+  native: z.string().trim().min(1).max(LIBRARY_TEXT.phrase),
+  image: z.array(IconNameSchema).min(1).max(3).optional(),
+  notes: LibraryNotesSchema.optional(),
+  notesBy: NotesBySchema.optional(),
+})
+
+/**
+ * A phrase the learner adds on its own (plan 108): into one of their sets, or without one into their
+ * "My phrases" set for the course, made the first time with `inboxTitle`.
+ */
+export const AddPhraseSchema = z
+  .strictObject({
+    phrase: NewPhraseSchema,
+    targetLang: LibraryCourseSchema,
+    nativeLang: LibraryLanguageSchema,
+    setId: LibraryIdSchema.optional(),
+    inboxTitle: shownText(LIBRARY_TEXT.title, 1),
+  })
+  .refine((r) => r.targetLang !== r.nativeLang, {
+    message: 'A course is never in the learner’s own language',
+    path: ['nativeLang'],
+  })
 
 export const CreateAlbumSchema = z.strictObject({
   title: shownText(LIBRARY_TEXT.title, 1),
@@ -211,6 +261,7 @@ export type LibraryLanguage = z.infer<typeof LibraryLanguageSchema>
 export type LibraryCourse = z.infer<typeof LibraryCourseSchema>
 export type LibraryNotes = z.infer<typeof LibraryNotesSchema>
 export type NewPhrase = z.infer<typeof NewPhraseSchema>
+export type SetItem = z.infer<typeof SetItemSchema>
 export type PhraseSource = z.infer<typeof PhraseSourceSchema>
 export type CreateSetRequest = z.infer<typeof CreateSetSchema>
 export type UpdateSetRequest = z.infer<typeof UpdateSetSchema>

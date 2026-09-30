@@ -172,6 +172,25 @@ export class LibraryWriteController {
     return this.library.updateSet(request.principal.userId, id, body)
   }
 
+  /** New words for a phrase the learner holds in a set (plan 108). */
+  @Post('sets/:id/phrases/:phraseId')
+  @HttpCode(200)
+  editPhrase(
+    @Req() request: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Param('phraseId') phraseId: string,
+    @Body() body: unknown,
+  ) {
+    return this.library.editPhrase(request.principal.userId, id, phraseId, body)
+  }
+
+  /** A phrase added on its own: into a set, or the learner's "My phrases" set (plan 108). */
+  @Post('phrases')
+  @HttpCode(201)
+  addPhrase(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    return this.library.addPhrase(request.principal.userId, body)
+  }
+
   @Delete('sets/:id')
   @HttpCode(204)
   async deleteSet(@Req() request: AuthenticatedRequest, @Param('id') id: string): Promise<void> {

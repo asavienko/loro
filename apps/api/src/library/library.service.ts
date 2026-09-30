@@ -11,14 +11,18 @@ import { Inject, Injectable, Logger, Optional } from '@nestjs/common'
 import { MUSIC_STYLE_IDS, type MusicStyleId } from '@loro/core'
 import { V2_CONTENT, type V2Language, type V2Localized, type V2Topic } from '@loro/content/v2'
 import {
+  AddPhraseSchema,
   CreateAlbumSchema,
   CreateSetSchema,
+  EditPhraseSchema,
   GenerateCoverSchema,
   GenerateNotesSchema,
   GeneratePhrasesSchema,
   GenerateSongSchema,
   LibraryCourseSchema,
   LibraryIdSchema,
+  MAX_SET_PHRASES,
+  PhraseIdSchema,
   ProfileSchema,
   ReportSchema,
   RetrySongSchema,
@@ -27,7 +31,7 @@ import {
   UpdateAlbumSchema,
   UpdateSetSchema,
   type LibraryNotes,
-  type NewPhrase,
+  type SetItem,
   type Visibility,
 } from '@loro/core/api/library'
 import { z } from 'zod'
@@ -104,6 +108,8 @@ interface SetRow {
   author?: string | null
   /** Songs sung from it that anyone may hear, or its maker (SET_SELECT). */
   song_count?: string | number
+  /** The learner's "My phrases" set for its course (plan 108). */
+  inbox?: boolean
 }
 interface PhraseRow {
   id: string
@@ -114,6 +120,8 @@ interface PhraseRow {
   source: PhraseWire['source']
   doc: Omit<PhraseWire, 'id' | 'setId' | 'noteTranslations' | 'source'>
   note_translations: NoteTranslations
+  /** The set that lists it here: the one holding it, or one referring to it (plan 108). */
+  member_of: string
 }
 interface AlbumRow {
   id: string
@@ -508,7 +516,7 @@ export class LibraryService {
       targetLang,
       topics,
       sets,
-      phrases: phrases.map((p) => toPhraseWire(p, tts)),
+      phrases: uniquePhrases(phrases).map((p) => toPhraseWire(p, tts)),
       bank: { themes, phrases: bank },
       albums,
     }
@@ -554,7 +562,7 @@ export class LibraryService {
           ...toSetWire(row, userId, saved, phrases),
           savedBy: savedBy.get(row.id) ?? 0,
         })),
-        phrases: phrases.map((p) => toPhraseWire(p, readTtsRuntimeConfig())),
+        phrases: uniquePhrases(phrases).map((p) => toPhraseWire(p, readTtsRuntimeConfig())),
       }
     }
     const rows = (
@@ -586,7 +594,7 @@ export class LibraryService {
     const phrases = await this.phrasesOf([row.id])
     return {
       set: toSetWire(row, userId, await this.savedIds(userId, 'set'), phrases),
-      phrases: phrases.map((p) => toPhraseWire(p, readTtsRuntimeConfig())),
+      phrases: uniquePhrases(phrases).map((p) => toPhraseWire(p, readTtsRuntimeConfig())),
     }
   }
 
@@ -676,7 +684,7 @@ export class LibraryService {
     const phrases = await this.phrasesOf(rows.map((r) => r.id))
     return {
       sets: rows.map((row) => toSetWire(row, userId, saved, phrases)),
-      phrases: phrases.map((p) => toPhraseWire(p, readTtsRuntimeConfig())),
+      phrases: uniquePhrases(phrases).map((p) => toPhraseWire(p, readTtsRuntimeConfig())),
     }
   }
 
@@ -756,10 +764,19 @@ export class LibraryService {
   async createSet(userId: string, body: unknown): Promise<{ set: SetWire; phrases: PhraseWire[] }> {
     await this.ready()
     const input = parseContract(CreateSetSchema, body)
+    // A set uploaded from a device again (a sign-in cut short) is the one already uploaded.
+    if (input.id) {
+      const held = (
+        await this.db.query<{ owner_id: string | null }>(
+          'SELECT owner_id FROM library_sets WHERE id = $1',
+          [input.id],
+        )
+      ).rows[0]
+      if (held?.owner_id === userId) return this.set(userId, input.id)
+    }
     await this.assertKept(userId, 'sets')
     if (input.coverId) await this.assertOwnCover(userId, input.coverId)
-    const id = newId('set-u')
-    const now = this.clock.now()
+    const id = input.id && !(await this.setExists(input.id)) ? input.id : newId('set-u')
     const topics = (await this.db.query<{ id: string }>('SELECT id FROM library_topics')).rows.map(
       (r) => r.id,
     )
@@ -767,30 +784,70 @@ export class LibraryService {
       input.topicId && topics.includes(input.topicId)
         ? input.topicId
         : ((topics.includes('everyday') ? 'everyday' : topics[0]) ?? 'everyday')
+    const firstIcon = input.phrases.flatMap((item) => ('ref' in item ? [] : (item.image ?? [])))[0]
     await this.db.transaction(async (tx) => {
-      await tx.query(
-        `INSERT INTO library_sets(id, owner_id, target_lang, native_lang, title, subtitle, description, topic_id, level, cover_icon,
-           cover_id, visibility, share_code, origin, position, created_at, updated_at)
-         VALUES ($1,$2,$3,$4,$5,NULL,$6,$7,$8,$9,$10,$11,$12,'user',0,$13,$13)`,
-        [
-          id,
-          userId,
-          input.targetLang,
-          input.nativeLang,
-          input.title,
-          blankToNull(input.description),
-          topicId,
-          input.level,
-          input.coverIcon ?? input.phrases[0]?.image?.[0] ?? 'forum',
-          input.coverId ?? null,
-          input.visibility,
-          newShareCode(),
-          now,
-        ],
-      )
-      await this.insertPhrases(tx, id, input.targetLang, input.nativeLang, input.phrases, 0, userId)
+      await this.insertSet(tx, {
+        id,
+        userId,
+        targetLang: input.targetLang,
+        nativeLang: input.nativeLang,
+        title: input.title,
+        description: blankToNull(input.description),
+        topicId,
+        level: input.level,
+        coverIcon: input.coverIcon ?? firstIcon ?? 'queue_music',
+        coverId: input.coverId ?? null,
+        visibility: input.visibility,
+        inbox: false,
+      })
+      await this.insertItems(tx, id, input.targetLang, input.nativeLang, input.phrases, 0, userId)
     })
     return this.set(userId, id)
+  }
+
+  private async setExists(id: string): Promise<boolean> {
+    return (await this.db.query('SELECT 1 FROM library_sets WHERE id = $1', [id])).rows.length > 0
+  }
+
+  private async insertSet(
+    tx: SqlConnection,
+    set: {
+      id: string
+      userId: string
+      targetLang: Language
+      nativeLang: Language
+      title: string
+      description: string | null
+      topicId: string
+      level: 'A1' | 'A2' | 'B1'
+      coverIcon: string
+      coverId: string | null
+      visibility: Visibility
+      inbox: boolean
+    },
+  ): Promise<void> {
+    const now = this.clock.now()
+    await tx.query(
+      `INSERT INTO library_sets(id, owner_id, target_lang, native_lang, title, subtitle, description, topic_id, level, cover_icon,
+         cover_id, visibility, share_code, origin, position, created_at, updated_at, inbox)
+       VALUES ($1,$2,$3,$4,$5,NULL,$6,$7,$8,$9,$10,$11,$12,'user',0,$13,$13,$14)`,
+      [
+        set.id,
+        set.userId,
+        set.targetLang,
+        set.nativeLang,
+        set.title,
+        set.description,
+        set.topicId,
+        set.level,
+        set.coverIcon,
+        set.coverId,
+        set.visibility,
+        newShareCode(),
+        now,
+        set.inbox,
+      ],
+    )
   }
 
   async updateSet(
@@ -803,35 +860,21 @@ export class LibraryService {
     const input = parseContract(UpdateSetSchema, body)
     if (input.coverId) await this.assertOwnCover(userId, input.coverId)
     await this.db.transaction(async (tx) => {
-      if (input.removePhraseIds?.length) {
-        await tx.query('DELETE FROM library_phrases WHERE set_id = $1 AND id = ANY($2::text[])', [
-          row.id,
-          input.removePhraseIds,
-        ])
+      if (input.removePhraseIds?.length) await this.removeItems(tx, row.id, input.removePhraseIds)
+      if (input.addPhrases?.length) await this.appendItems(tx, row, input.addPhrases, userId)
+      if (input.order?.length) {
+        for (const [position, phraseId] of input.order.entries()) {
+          await tx.query('UPDATE library_phrases SET position = $3 WHERE set_id = $1 AND id = $2', [
+            row.id,
+            phraseId,
+            position,
+          ])
+          await tx.query(
+            'UPDATE library_set_refs SET position = $3 WHERE set_id = $1 AND phrase_id = $2',
+            [row.id, phraseId, position],
+          )
+        }
       }
-      if (input.addPhrases?.length) {
-        const last = await tx.query<{ max: number | null }>(
-          'SELECT max(position) AS max FROM library_phrases WHERE set_id = $1',
-          [row.id],
-        )
-        await this.insertPhrases(
-          tx,
-          row.id,
-          row.target_lang,
-          row.native_lang ?? 'en-GB',
-          input.addPhrases,
-          (last.rows[0]?.max ?? -1) + 1,
-          userId,
-        )
-      }
-      const count = await tx.query<{ n: string }>(
-        'SELECT count(*) AS n FROM library_phrases WHERE set_id = $1',
-        [row.id],
-      )
-      if (num(count.rows[0]?.n) === 0)
-        throw new LoroError('VALIDATION_FAILED', 'A set keeps at least one phrase')
-      if (num(count.rows[0]?.n) > 40)
-        throw new LoroError('VALIDATION_FAILED', 'A set holds at most 40 phrases')
       await tx.query(
         `UPDATE library_sets SET title = coalesce($2, title), description = CASE WHEN $3 THEN $4 ELSE description END,
            level = coalesce($5, level), visibility = coalesce($6, visibility),
@@ -852,34 +895,281 @@ export class LibraryService {
     return this.set(userId, row.id)
   }
 
+  /** Items added at the end of a learner's set, which then holds at most 40. */
+  private async appendItems(
+    tx: SqlConnection,
+    row: SetRow,
+    items: SetItem[],
+    userId: string,
+  ): Promise<void> {
+    // One change to a set at a time: two phrases added at once would take the same position and id.
+    await tx.query('SELECT 1 FROM library_sets WHERE id = $1 FOR UPDATE', [row.id])
+    const last = await tx.query<{ max: number | null }>(
+      `SELECT GREATEST((SELECT max(position) FROM library_phrases WHERE set_id = $1),
+         (SELECT max(position) FROM library_set_refs WHERE set_id = $1)) AS max`,
+      [row.id],
+    )
+    await this.insertItems(
+      tx,
+      row.id,
+      row.target_lang,
+      row.native_lang ?? 'en-GB',
+      items,
+      (last.rows[0]?.max ?? -1) + 1,
+      userId,
+    )
+    const count = await tx.query<{ n: string }>(
+      `SELECT (SELECT count(*) FROM library_phrases WHERE set_id = $1)
+         + (SELECT count(*) FROM library_set_refs WHERE set_id = $1) AS n`,
+      [row.id],
+    )
+    if (num(count.rows[0]?.n) > MAX_SET_PHRASES)
+      throw new LoroError('VALIDATION_FAILED', `A set holds at most ${MAX_SET_PHRASES} phrases`)
+  }
+
+  /**
+   * Takes phrases out of a set. A phrase the set holds that another of the learner's sets lists moves
+   * there, so it keeps its progress; otherwise it is gone.
+   */
+  private async removeItems(tx: SqlConnection, setId: string, phraseIds: string[]): Promise<void> {
+    await tx.query(
+      'DELETE FROM library_set_refs WHERE set_id = $1 AND phrase_id = ANY($2::text[])',
+      [setId, phraseIds],
+    )
+    const held = await tx.query<{ id: string }>(
+      'SELECT id FROM library_phrases WHERE set_id = $1 AND id = ANY($2::text[])',
+      [setId, phraseIds],
+    )
+    for (const { id } of held.rows) {
+      const elsewhere = (
+        await tx.query<{ set_id: string; position: number }>(
+          'SELECT set_id, position FROM library_set_refs WHERE phrase_id = $1 ORDER BY set_id LIMIT 1',
+          [id],
+        )
+      ).rows[0]
+      if (elsewhere) {
+        await tx.query('UPDATE library_phrases SET set_id = $2, position = $3 WHERE id = $1', [
+          id,
+          elsewhere.set_id,
+          elsewhere.position,
+        ])
+        await tx.query('DELETE FROM library_set_refs WHERE set_id = $1 AND phrase_id = $2', [
+          elsewhere.set_id,
+          id,
+        ])
+      } else {
+        await tx.query('DELETE FROM library_phrases WHERE id = $1', [id])
+      }
+    }
+  }
+
   async deleteSet(userId: string, id: unknown): Promise<void> {
     const row = await this.ownSet(userId, parseContract(LibraryIdSchema, id))
     await this.db.transaction(async (tx) => {
-      await tx.query('DELETE FROM library_phrases WHERE set_id = $1', [row.id])
+      const held = await tx.query<{ id: string }>(
+        'SELECT id FROM library_phrases WHERE set_id = $1',
+        [row.id],
+      )
+      await this.removeItems(
+        tx,
+        row.id,
+        held.rows.map((r) => r.id),
+      )
+      await tx.query('DELETE FROM library_set_refs WHERE set_id = $1', [row.id])
       await tx.query("DELETE FROM library_saves WHERE kind = 'set' AND item_id = $1", [row.id])
       await tx.query('DELETE FROM library_sets WHERE id = $1', [row.id])
     })
   }
 
-  private async insertPhrases(
+  /**
+   * A phrase the learner adds on its own (plan 108): into one of their sets, or into their "My
+   * phrases" set for the course, made now if they have none.
+   */
+  async addPhrase(userId: string, body: unknown): Promise<{ set: SetWire; phrases: PhraseWire[] }> {
+    await this.ready()
+    const input = parseContract(AddPhraseSchema, body)
+    const setId = input.setId ?? (await this.inboxOf(userId, input))
+    const row = await this.ownSet(userId, setId)
+    if (row.target_lang !== input.targetLang)
+      throw new LoroError('VALIDATION_FAILED', 'That set is in another course')
+    await this.db.transaction(async (tx) => {
+      await this.appendItems(tx, row, [input.phrase], userId)
+      await tx.query('UPDATE library_sets SET updated_at = $2 WHERE id = $1', [
+        row.id,
+        this.clock.now(),
+      ])
+    })
+    return this.set(userId, row.id)
+  }
+
+  /** The learner's "My phrases" set for a course, made the first time. */
+  private async inboxOf(
+    userId: string,
+    input: { targetLang: Language; nativeLang: Language; inboxTitle: string },
+  ): Promise<string> {
+    const find = async () =>
+      (
+        await this.db.query<{ id: string }>(
+          'SELECT id FROM library_sets WHERE owner_id = $1 AND target_lang = $2 AND inbox',
+          [userId, input.targetLang],
+        )
+      ).rows[0]?.id
+    const found = await find()
+    if (found) return found
+    await this.db.transaction(async (tx) => {
+      // Two phrases added at once make one set: the second waits, then finds the first's.
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`inbox:${userId}`])
+      const again = await tx.query(
+        'SELECT 1 FROM library_sets WHERE owner_id = $1 AND target_lang = $2 AND inbox',
+        [userId, input.targetLang],
+      )
+      if (again.rows.length > 0) return
+      await this.insertSet(tx, {
+        id: newId('set-u'),
+        userId,
+        targetLang: input.targetLang,
+        nativeLang: input.nativeLang,
+        title: input.inboxTitle,
+        description: null,
+        topicId: 'everyday',
+        level: 'A2',
+        coverIcon: 'edit_note',
+        coverId: null,
+        visibility: 'private',
+        inbox: true,
+      })
+    })
+    const made = await find()
+    if (!made) throw new LoroError('INTERNAL', 'The phrases set was not made')
+    return made
+  }
+
+  /** New words for a phrase the learner holds; its notes and picture are written again unless sent. */
+  async editPhrase(
+    userId: string,
+    setId: unknown,
+    phraseId: unknown,
+    body: unknown,
+  ): Promise<{ set: SetWire; phrases: PhraseWire[] }> {
+    await this.ready()
+    const row = await this.ownSet(userId, parseContract(LibraryIdSchema, setId))
+    const id = parseContract(PhraseIdSchema, phraseId)
+    const input = parseContract(EditPhraseSchema, body)
+    const phrase = (
+      await this.db.query<Pick<PhraseRow, 'doc' | 'source'>>(
+        'SELECT doc, source FROM library_phrases WHERE id = $1 AND set_id = $2',
+        [id, row.id],
+      )
+    ).rows[0]
+    if (!phrase) throw new LoroError('NOT_FOUND')
+    const nativeLang = row.native_lang ?? 'en-GB'
+    const given =
+      input.notes && input.image
+        ? { notes: input.notes, image: input.image, notesBy: input.notesBy }
+        : {
+            ...ruleNotes({
+              target: input.target,
+              native: input.native,
+              targetLang: row.target_lang,
+              nativeLang,
+            }),
+            notesBy: 'rules' as const,
+          }
+    // Stored as JSON, an undefined notesBy leaves none behind: the old one no longer applies.
+    const doc = {
+      ...phrase.doc,
+      target: input.target,
+      translations: { ...phrase.doc.translations, [nativeLang]: input.native },
+      image: given.image,
+      notes: given.notes,
+      notesBy: given.notesBy,
+    }
+    // New words are the learner's own, whatever the phrase first came from.
+    const source = input.target === phrase.doc.target ? phrase.source : 'written'
+    const now = this.clock.now()
+    await this.db.transaction(async (tx) => {
+      await tx.query(
+        'UPDATE library_phrases SET doc = $2, source = $3, note_translations = $4 WHERE id = $1',
+        [id, JSON.stringify(doc), source, JSON.stringify(writtenIn(nativeLang, given.notes))],
+      )
+      await registerSpeech(
+        tx,
+        { [row.target_lang]: input.target, [nativeLang]: input.native },
+        now,
+        userId,
+      )
+      await tx.query('UPDATE library_sets SET updated_at = $2 WHERE id = $1', [row.id, now])
+    })
+    return this.set(userId, row.id)
+  }
+
+  /** Where a phrase is held, and whose it is. */
+  private async holderOf(
+    tx: SqlConnection,
+    phraseId: string,
+  ): Promise<
+    | { set_id: string; owner_id: string | null; target_lang: Language; origin: 'loro' | 'user' }
+    | undefined
+  > {
+    return (
+      await tx.query<{
+        set_id: string
+        owner_id: string | null
+        target_lang: Language
+        origin: 'loro' | 'user'
+      }>(
+        `SELECT p.set_id, s.owner_id, s.target_lang, s.origin FROM library_phrases p
+           JOIN library_sets s ON s.id = p.set_id WHERE p.id = $1`,
+        [phraseId],
+      )
+    ).rows[0]
+  }
+
+  /**
+   * Puts items into a learner's set from position `from` on (plan 108). A reference lists one of
+   * Loro's phrases or one of the learner's own in the course. A new phrase is held by the set; one
+   * uploaded from a device keeps the device's id where it is free, and one already uploaded is
+   * listed rather than held twice.
+   */
+  private async insertItems(
     tx: SqlConnection,
     setId: string,
     targetLang: Language,
     nativeLang: Language,
-    phrases: NewPhrase[],
+    items: SetItem[],
     from: number,
     ownerId: string,
   ): Promise<void> {
-    const stem = setId.replace(/^set-u-/, 'u')
+    const stem = setId.replace(/^set-u-/, 'u').replace(/^mine-s-/, 'u')
     const existing = await tx.query<{ id: string }>(
       'SELECT id FROM library_phrases WHERE set_id = $1',
       [setId],
     )
     const taken = new Set(existing.rows.map((r) => r.id))
     let serial = 1
-    for (const [index, phrase] of phrases.entries()) {
-      while (taken.has(`${stem}-${String(serial).padStart(2, '0')}`)) serial += 1
-      const id = `${stem}-${String(serial).padStart(2, '0')}`
+    for (const [index, item] of items.entries()) {
+      const position = from + index
+      const known = 'ref' in item ? item.ref : item.id
+      const holder = known ? await this.holderOf(tx, known) : undefined
+      const listable =
+        holder?.target_lang === targetLang &&
+        (holder.origin === 'loro' || holder.owner_id === ownerId)
+      if ('ref' in item || (known && listable)) {
+        if (!known || !listable) throw new LoroError('VALIDATION_FAILED', 'Unknown phrase')
+        if (holder.set_id !== setId)
+          await tx.query(
+            `INSERT INTO library_set_refs(set_id, phrase_id, position) VALUES ($1,$2,$3)
+             ON CONFLICT (set_id, phrase_id) DO NOTHING`,
+            [setId, known, position],
+          )
+        continue
+      }
+      const phrase = item
+      let id = phrase.id && !holder ? phrase.id : ''
+      if (!id) {
+        while (taken.has(`${stem}-${String(serial).padStart(2, '0')}`)) serial += 1
+        id = `${stem}-${String(serial).padStart(2, '0')}`
+      }
       taken.add(id)
       const bank =
         phrase.source === 'bank' && phrase.bankId
@@ -916,14 +1206,7 @@ export class LibraryService {
       }
       await tx.query(
         'INSERT INTO library_phrases(id, set_id, position, source, doc, note_translations) VALUES ($1,$2,$3,$4,$5,$6)',
-        [
-          id,
-          setId,
-          from + index,
-          phrase.source,
-          JSON.stringify(doc),
-          JSON.stringify(noteTranslations),
-        ],
+        [id, setId, position, phrase.source, JSON.stringify(doc), JSON.stringify(noteTranslations)],
       )
       await registerSpeech(
         tx,
@@ -1585,8 +1868,15 @@ export class LibraryService {
     if (setIds.length === 0) return []
     return (
       await this.db.query<PhraseRow>(
-        `SELECT p.*, s.target_lang FROM library_phrases p JOIN library_sets s ON s.id = p.set_id
-         WHERE p.set_id = ANY($1::text[]) ORDER BY p.set_id, p.position`,
+        `SELECT p.*, s.target_lang, p.set_id AS member_of, p.position AS member_position
+           FROM library_phrases p JOIN library_sets s ON s.id = p.set_id
+           WHERE p.set_id = ANY($1::text[])
+         UNION ALL
+         SELECT p.*, s.target_lang, r.set_id AS member_of, r.position AS member_position
+           FROM library_set_refs r JOIN library_phrases p ON p.id = r.phrase_id
+           JOIN library_sets s ON s.id = p.set_id
+           WHERE r.set_id = ANY($1::text[])
+         ORDER BY member_of, member_position`,
         [setIds],
       )
     ).rows
@@ -1689,6 +1979,11 @@ const SYNC_TABLES = [
  */
 async function deleteLibraryOf(tx: SqlConnection, userId: string): Promise<void> {
   await tx.query(
+    `DELETE FROM library_set_refs WHERE set_id IN (SELECT id FROM library_sets WHERE owner_id = $1)
+       OR phrase_id IN (SELECT p.id FROM library_phrases p JOIN library_sets s ON s.id = p.set_id WHERE s.owner_id = $1)`,
+    [userId],
+  )
+  await tx.query(
     'DELETE FROM library_phrases WHERE set_id IN (SELECT id FROM library_sets WHERE owner_id = $1)',
     [userId],
   )
@@ -1771,16 +2066,23 @@ function toSetWire(
     coverIcon: row.cover_icon,
     coverUrl: coverPath(row.cover_id),
     targetLang: row.target_lang,
-    phraseIds: phrases.filter((p) => p.set_id === row.id).map((p) => p.id),
+    phraseIds: phrases.filter((p) => p.member_of === row.id).map((p) => p.id),
     songCount: num(row.song_count),
     owner,
     author: row.origin === 'loro' ? null : (row.author ?? null),
     visibility: row.visibility,
     shareCode: owner === 'me' || row.visibility !== 'private' ? row.share_code : null,
     saved: saved.has(row.id),
+    ...(row.inbox && owner === 'me' ? { inbox: true } : {}),
     createdAt: num(row.created_at),
     updatedAt: num(row.updated_at),
   }
+}
+
+/** Each phrase once: a set that lists another's phrase brings it again. */
+function uniquePhrases(rows: PhraseRow[]): PhraseRow[] {
+  const seen = new Set<string>()
+  return rows.filter((row) => !seen.has(row.id) && Boolean(seen.add(row.id)))
 }
 
 /** Flags the owner's public item that reports took out of Community. */
