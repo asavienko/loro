@@ -33,14 +33,16 @@ phrases.
 | Create  | Making sets, songs and covers, with today's allowance beside each                          |
 | Library | Progress: liked, due, learned phrases; the learner's sets; Albums (Loro's, theirs, shared) |
 
-Songs live in their sets: a set's page lists its songs under its phrases, each marked with a music
-note; the set's Play plays its phrases, and a song plays when tapped. Phrases and songs share one
-player: the bar above the tabs and `/player` show what was started last (a song wears a music-note
-badge), and starting one pauses the other. A song has a heart (a `song:<id>` like) and Missed / Hard
-/ Easy, which review every phrase of the learner's course it sings (`RATE_PHRASES`, the usual window
-and undo). A playing song takes the lock screen and notification shade, and plays on with the screen
-locked. Everything is in the app's light palette, drawn covers included (light grounds; Loro's
-covers carry the seed revision in their ids, since covers are served as immutable).
+Songs live in their sets: a set's page lists its phrases and its songs in one list, a phrase marked
+with the phrase icon and a song with the music note; the set's Play plays its phrases, and a song
+plays when tapped. Covers say what they hold (top left): a set the phrase icon, plus the song icon
+when songs are sung from it (`songCount` on every set); an album the song icon. Phrases and songs
+share one player: the bar above the tabs and `/player` show what was started last (a song wears a
+music-note badge), and starting one pauses the other. A song has a heart (a `song:<id>` like) and
+Missed / Hard / Easy, which review every phrase of the learner's course it sings (`RATE_PHRASES`,
+the usual window and undo). A playing song takes the lock screen and notification shade, and plays
+on with the screen locked. Everything is in the app's light palette, drawn covers included (light
+grounds; Loro's covers carry the seed revision in their ids, since covers are served as immutable).
 
 ## Accounts
 
