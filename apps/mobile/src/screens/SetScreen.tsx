@@ -501,7 +501,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
           <>
             <SheetOption
               icon="edit"
-              label={c.set.rename}
+              label={c.createSet.editTitle}
               onPress={() => {
                 setMoreOpen(false);
                 setRenaming(true);

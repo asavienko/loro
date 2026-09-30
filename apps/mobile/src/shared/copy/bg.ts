@@ -637,7 +637,6 @@ export function makeBg(n: Plural): Copy {
       noSongs: 'Още няма песни тук.',
       loroAlbum: 'Всеки набор на Loro от този курс, изпят.',
       makeSong: 'Създай песен',
-      renameAlbum: 'Преименувай албума',
       album: 'Албум',
       playAlbum: 'Пусни албума',
       playSong: (title) => `Пусни ${title}`,
