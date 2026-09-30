@@ -41,16 +41,12 @@ import { Sheet } from '../ui/Sheet';
 import { ToastOffsetContext, useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
 import { colors, ColorName, radius, shadow, TARGET } from '../ui/theme';
+import { GRADES } from './grades';
 import { useRate } from './useRate';
 
 const STEPS: Exclude<Phase, 'rate'>[] = ['native', 'pause', 'target'];
 const COVER = 200;
 
-const GRADES: { grade: Grade; icon: IconName; bg: string; ink: ColorName }[] = [
-  { grade: 'missed', icon: 'replay', bg: colors.surfaceContainerHigh, ink: 'onSurface' },
-  { grade: 'hard', icon: 'hourglass_empty', bg: colors.secondaryContainer, ink: 'onSurface' },
-  { grade: 'easy', icon: 'check', bg: colors.tertiaryFixed, ink: 'onTertiaryFixed' },
-];
 
 export function NowPlayingScreen() {
   const c = useCopy();

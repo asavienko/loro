@@ -629,6 +629,10 @@ export function makeRu(n: Plural): Copy {
       signInToMake: 'Войдите, чтобы создавать наборы с ИИ',
     },
     music: {
+      songKind: 'Песня',
+      likeSong: 'Нравится песня',
+      rateSong: (n: number) => (n === 1 ? 'Как прошло? Ваша оценка повторяет фразу из песни.' : `Как прошло? Ваша оценка повторяет фразы из песни (${n}).`),
+      songRated: (grade: string, n: number) => (n === 1 ? `${grade}: её фраза повторена.` : `${grade}: её фразы повторены (${n}).`),
       songReady: (title: string) => `«${title}» готова`,
       songFailed: (title: string) => `«${title}» не получилось сделать. Попробуйте ещё раз из её альбома.`,
       play: 'Слушать',

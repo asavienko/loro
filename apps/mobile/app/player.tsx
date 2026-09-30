@@ -1,3 +1,3 @@
-import { NowPlayingScreen } from '../src/screens/NowPlayingScreen';
+import { PlayerScreen } from '../src/screens/PlayerScreen';
 
-export default NowPlayingScreen;
+export default PlayerScreen;
