@@ -45,9 +45,11 @@ one. Set `EXPO_PUBLIC_API_URL` (HTTPS, ending in `/v1`, no credentials, query or
 server the phone can reach. Without it the APK looks for `http://localhost:3000/v1`, which a release
 build can't use (Android refuses cleartext HTTP outside debug builds), so the app opens on its
 "can't reach Loro" screen; for a local API, use the development build
-(`pnpm --filter @loro/mobile android`) instead. The runner clears every other inherited
-`EXPO_PUBLIC_*` value; ignored local environment files are excluded and Expo dotenv loading is
-disabled. No API keys or backend secrets belong in this build.
+(`pnpm --filter @loro/mobile android`) instead. `EXPO_PUBLIC_WEB_URL` (HTTPS) is where the web app
+is served: with it, shared sets and albums are sent as `https://…/shared/CODE`, which opens in any
+browser; without it a phone shares `loro://shared/CODE`, which opens only where Loro is installed.
+The runner clears every other inherited `EXPO_PUBLIC_*` value; ignored local environment files are
+excluded and Expo dotenv loading is disabled. No API keys or backend secrets belong in this build.
 
 ## Upload to GitHub
 
