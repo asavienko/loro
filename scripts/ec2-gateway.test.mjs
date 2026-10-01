@@ -412,6 +412,9 @@ test('every library route the app calls is open, by its own methods only', async
       'covers/cover-loro-es-r6.svg',
       // Plan 111: where a cover being drawn stands.
       'covers/cover-1a2b3c4d5e6f.json',
+      // The covers drawn for an item, to choose from again.
+      `covers/set/${id}`,
+      'covers/phrase/cafe-01',
       // Plan 111: a deck written in the background.
       'decks/deck-1a2b3c4d5e6f',
       'speech/0123456789abcdef0123456789abcdef.mp3',
@@ -436,6 +439,7 @@ test('every library route the app calls is open, by its own methods only', async
       'generate/song',
       'decks',
       'songs/song-1a2b3c/retry',
+      'covers/cover-1a2b3c4d5e6f/wear',
       'me/delete',
       'me/delete-account',
     ].map((p) => ['POST', p]),

@@ -102,5 +102,13 @@ describe('covers', () => {
     expect(coverImagePrompt({ kind: 'set', title: 'Tapas' })).toContain(
       'a set of everyday phrases titled "Tapas".',
     )
+    const asked = coverImagePrompt({
+      kind: 'phrase',
+      title: 'Un café',
+      prompt: 'a cat drinking coffee',
+    })
+    expect(asked).toContain('Picture: a cat drinking coffee.')
+    expect(asked).toContain('Absolutely no text')
+    expect(coverImagePrompt({ kind: 'set', title: 'Tapas' })).not.toContain('Picture:')
   })
 })
