@@ -324,6 +324,14 @@ export function makeEn(n: Plural) {
       /** The grades above the bar are icons: what each one does, and Undo once one is given. */
       rateAs: (grade: string) => `Rate it ${grade}`,
       undoGrade: (grade: string) => `Undo ${grade}`,
+      /** The end of a pass through a queue that keeps going: what happened, at the top of the player. */
+      pass: {
+        again: 'Played through — starting again',
+        next: (title: string) => `Played through — on to ${title}`,
+        nextReview: 'Played through — on to your reviews',
+        done: 'Played through — nothing new to go on with yet',
+        goOn: (title: string) => `Next set: ${title}`,
+      },
       undoFor: (time: string) => `Undo · ${time}`,
       undoLabel: (time: string) => `Undo rating (${time} left)`,
       previous: 'Previous phrase',
@@ -377,8 +385,6 @@ export function makeEn(n: Plural) {
       reload: 'Reload',
       dismiss: 'Dismiss message',
       learned: (points: number) => `Learned · +${points}`,
-      passComplete: 'Queue played through',
-      nextSet: (title: string) => `Next: ${title}`,
       removed: 'Removed from queue',
       cleared: 'Queue cleared',
       saved: (title: string) => `Saved as ${title}`,

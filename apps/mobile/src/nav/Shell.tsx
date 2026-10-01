@@ -1,15 +1,13 @@
 // The app shell (the web prototype's App.tsx Shell): the prototype's own Navigation interface over
 // expo-router, the sheets every screen can open, and the moments that get a message of their own
-// (a phrase learned, a pass through the queue, a save that didn't reach storage).
+// (a phrase learned, a save that didn't reach storage; the end of a pass is the player's: PassNotice).
 import { usePathname, useRouter, useGlobalSearchParams } from 'expo-router';
 import { createContext, ReactNode, RefObject, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { learnedCue } from '@shared/audio/cues';
 import { NavContext, Navigation, Shareable } from '@shared/nav/NavContext';
 import { formatRoute, Route, Tab } from '@shared/nav/routes';
 import { findPhrase, findSetView } from '@shared/state/catalog';
-import { clock } from '@shared/state/clock';
 import { derive, POINTS } from '@shared/state/memory';
-import { continuation, displayLearner } from '@shared/state/selectors';
 import { useLatest } from '@shared/lib/useLatest';
 import { added } from '@shared/generate/deck';
 import type { MakeSession } from '@shared/generate/session';
@@ -26,6 +24,7 @@ import { useQueueFollowsContent } from '../state/queueFollowsContent';
 import { useDeviceUpload } from '../state/upload';
 import { useCopy, useStore } from '../state/store';
 import { useToast } from '../ui/Toast';
+import { PassNoticeProvider } from './PassNotice';
 
 /** The tab a path belongs to; a set page belongs to the tab it was opened from. */
 export function tabOfPath(pathname: string, from: string | undefined): Tab {
@@ -143,7 +142,7 @@ export function Shell({ children }: { children: ReactNode }) {
   );
   const shell = useMemo(() => ({ makeSessionRef, openAdd: () => setAddOpen(true), tab }), [tab]);
 
-  useCelebrations(nav);
+  useCelebrations();
   useSaveWarning();
   useDeviceUpload();
   useQueueFollowsContent();
@@ -151,7 +150,7 @@ export function Shell({ children }: { children: ReactNode }) {
   return (
     <NavContext.Provider value={nav}>
       <ShellContext.Provider value={shell}>
-        {children}
+        <PassNoticeProvider>{children}</PassNoticeProvider>
         <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
         <SessionSummarySheet open={summaryOpen} onClose={() => setSummaryOpen(false)} />
         <PhraseDetailsSheet details={details} onClose={() => setDetails(null)} />
@@ -190,35 +189,22 @@ export function useCloseMake() {
   };
 }
 
-/** Learned bonuses and completed passes get a moment of their own (the web's useCelebrations). */
-function useCelebrations(nav: Navigation) {
+/** A learned bonus gets a moment of its own (the web's useCelebrations). */
+function useCelebrations() {
   const c = useCopy();
   const { state } = useStore();
   const { toast } = useToast();
   const learned = derive(state.learner.log).learnedBonuses.size;
-  const passes = state.player.session?.passes ?? 0;
-  const setId = state.player.setId;
-  const sessionId = state.player.session?.id;
-  const nextSet = findSetView(state.learner, setId)?.title;
-  const seen = useRef({ learned, passes, setId, sessionId });
+  const seen = useRef(learned);
   useEffect(() => {
-    if (learned > seen.current.learned) {
+    if (learned > seen.current) {
       learnedCue();
       toast(c.toast.learned(POINTS.learned), { tone: 'success' });
     }
-    if (passes > seen.current.passes) {
-      const next = continuation(displayLearner(state), state.player, clock.now());
-      const view = next?.setId ? findSetView(state.learner, next.setId) : undefined;
-      toast(c.toast.passComplete, {
-        action: { label: c.player.summary, run: nav.openSummary },
-        also: view && next ? { label: c.player.end.continueSet(view.title), run: () => nav.playSet(view.id, { phraseIds: next.phraseIds }) } : undefined,
-      });
-    }
-    if (nextSet && setId !== seen.current.setId && sessionId !== undefined && sessionId === seen.current.sessionId) toast(c.toast.nextSet(nextSet));
-    seen.current = { learned, passes, setId, sessionId };
-    // Only when these change: the pass's offer is read from the state of that moment.
+    seen.current = learned;
+    // Only when it changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [learned, passes, setId, sessionId, nextSet]);
+  }, [learned]);
 }
 
 /** A save that fails is said once, never silently dropped. */
