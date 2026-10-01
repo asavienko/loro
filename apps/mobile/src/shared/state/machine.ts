@@ -81,6 +81,8 @@ export type AppEvent =
   | { type: 'INSERT_IN_QUEUE'; position: number; phraseId: string }
   | { type: 'ENQUEUE'; phraseIds: string[]; setId: string | null; at: 'next' | 'end'; now: number }
   | { type: 'CLEAR_QUEUE' }
+  /** The bar closed while paused: the queue goes and the player rests until something is played again. */
+  | { type: 'CLOSE' }
   /** Undo of Clear queue or Remove: back in up next, `offset` places after whatever is playing by then. */
   | { type: 'RESTORE_UP_NEXT'; phraseIds: string[]; offset?: number }
   | { type: 'TOGGLE_LIKE'; kind: LikeKind; id: string; now: number }
@@ -594,6 +596,9 @@ function step(state: AppState, event: AppEvent): AppState {
         setId: player.setId === event.setId ? event.setId : null,
       });
     }
+
+    case 'CLOSE':
+      return { ...state, player: { ...initialPlayer(), cycle: player.cycle + 1 } };
 
     case 'CLEAR_QUEUE': {
       if (currentId === null) return state;
