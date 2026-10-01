@@ -20,6 +20,7 @@ import { coursesFor, installedCourses, NATIVE_LANGUAGES } from '@shared/content'
 import { openStorage, Stored } from '@shared/state/storage';
 import { Analytics } from '../src/analytics/Analytics';
 import { usePlaybackDriver } from '../src/audio/driver';
+import { LockScreen } from '../src/audio/lockScreen';
 import { MusicProvider } from '../src/music/MusicPlayer';
 import { Shell } from '../src/nav/Shell';
 import { ConnectionScreen } from '../src/screens/ConnectionScreen';
@@ -86,6 +87,7 @@ function App() {
         <StatusBar style="dark" />
         <ContentProvider targetLang={state.learner.profile.targetLang}>
           <MusicProvider>
+            <LockScreen />
             <Shell>
               <Gate onboarded={state.learner.profile.onboarded} />
             </Shell>
