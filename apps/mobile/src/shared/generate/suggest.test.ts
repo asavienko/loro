@@ -108,6 +108,33 @@ describe('suggest', () => {
     await assert.rejects(suggest(fresh().learner, request, { exclude: new Set(), avoid: [] }));
   });
 
+  it('asks again, the same way, while AI is still writing the deck', async () => {
+    const answers = [
+      { status: 202, body: { status: 'writing' } },
+      { status: 202, body: { status: 'writing' } },
+      { status: 200, body: { provider: 'claude', phrases: [w('Necesito algo para la tos', 'I need something for a cough')] } },
+    ];
+    const sent: unknown[] = [];
+    globalThis.fetch = (async (_url: string, options: RequestInit) => {
+      sent.push(JSON.parse(String(options.body)));
+      const next = answers.shift()!;
+      return new Response(JSON.stringify(next.body), { status: next.status, headers: { 'Content-Type': 'application/json' } });
+    }) as typeof fetch;
+    const result = await suggest(fresh().learner, request, { exclude: new Set(), avoid: ['Hola'] });
+    assert.equal(sent.length, 3);
+    assert.deepEqual(sent, Array(3).fill({ ...request, avoid: ['Hola'] }), 'the same request each time');
+    assert.equal(result.writer, 'ai');
+    assert.deepEqual(result.suggestions.map((s) => s.target), ['Necesito algo para la tos']);
+  });
+
+  it('stops waiting for a deck being written when the flow is closed', async () => {
+    globalThis.fetch = (async () => new Response(JSON.stringify({ status: 'writing' }), { status: 202, headers: { 'Content-Type': 'application/json' } })) as typeof fetch;
+    const controller = new AbortController();
+    const pending = suggest(fresh().learner, request, { exclude: new Set(), avoid: [], signal: controller.signal });
+    setTimeout(() => controller.abort(), 50);
+    await assert.rejects(pending, { code: 'CANCELLED' });
+  });
+
   it('a request replaced by a newer one rejects instead of answering late', async () => {
     globalThis.fetch = ((_url: string, options: RequestInit) =>
       new Promise((_, reject) => options.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError'))))) as typeof fetch;
