@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createSet, generateCover, updateSet } from '@shared/api/library';
 import { Playback, speak } from '@shared/audio/speech';
 import { languageName } from '@shared/copy';
-import { BANK_THEMES } from '@shared/content';
+import { BANK_THEMES, UiLocale } from '@shared/content';
 import { added, currentCard, deal, dealt, decide, edit, lastDecision, newDeck, nextCard, unadd, undo } from '@shared/generate/deck';
 import { newPhrasesOf } from '@shared/generate/publish';
 import { defaultTitle, MakeRequest, MakeSession } from '@shared/generate/session';
@@ -318,7 +318,7 @@ function AskStep({
   const c = useCopy();
   const nav = useNav();
   const { state } = useStore();
-  const locale = c.locale.slice(0, 2) as 'en' | 'bg' | 'ru';
+  const locale = c.locale.slice(0, 2) as UiLocale;
   const { mode, texts } = session;
   const text = texts[mode];
   const setText = (value: string) => onChange({ texts: { ...texts, [mode]: value }, nothingFor: null });

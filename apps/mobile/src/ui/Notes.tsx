@@ -26,7 +26,7 @@ export function PhraseNotesView({ phrase }: { phrase: Phrase }) {
   const [tab, setTab] = useState<NoteTab>('mnemonic');
   // On a compact screen only the open tab is named; the others are their icons.
   const { compact } = useRoom();
-  const translated = native === 'en-GB' ? undefined : phrase.noteTranslations[tab]?.[native];
+  const translated = native.startsWith('en-') ? undefined : phrase.noteTranslations[tab]?.[native];
   const note = notes[tab];
   const { title, text } = translated ?? note;
   return (

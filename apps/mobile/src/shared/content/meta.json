@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-01.6",
+  "version": "2026-10-02.1",
   "review": {
     "es-ES": "Phrases and notes revised in round 3; awaiting native Spanish review.",
     "bg-BG": "New in round 3; awaiting native Bulgarian review.",
@@ -12,7 +12,11 @@
     "en-GB": "New on 2026-10-01: the British English course (five sets) for Bulgarian and Russian speakers, written by Claude Sonnet 5.5; its phrases, glosses, notes, IPA and their bg-BG and ru-RU versions await native English, Bulgarian and Russian review.",
     "ru-RU": "New on 2026-10-01: the Russian course (five sets) for English and Bulgarian speakers, written by Claude Sonnet 5.5; its phrases, glosses, notes, IPA and their bg-BG versions await native Russian and Bulgarian review.",
     "bank-en-ru": "New on 2026-10-01: the bank's English and Russian phrases (five per theme) and their notes' translations, written by Claude Sonnet 5.5, await native review.",
-    "rules-en-ru": "New on 2026-10-01: the API's written grammar rules and sound tips for English and Russian (apps/api/src/library/notes/grammar.ts, tips.ts), written by Claude Sonnet 5.5, await native review."
+    "rules-en-ru": "New on 2026-10-01: the API's written grammar rules and sound tips for English and Russian (apps/api/src/library/notes/grammar.ts, tips.ts), written by Claude Sonnet 5.5, await native review.",
+    "pl-PL": "New on 2026-10-02: the Polish course (five sets) for English, Bulgarian, Russian and Czech speakers, and Polish as a language Loro speaks (every prompt, gloss, note, set, topic and theme in Polish, and the app's copy), written by Claude Sonnet 5.5; all await native Polish review.",
+    "cs-CZ": "New on 2026-10-02: the Czech course (five sets) for English, Bulgarian, Russian and Polish speakers, and Czech as a language Loro speaks (every prompt, gloss, note, set, topic and theme in Czech, and the app's copy), written by Claude Sonnet 5.5; all await native Czech review.",
+    "en-US": "New on 2026-10-02: the American English course (five sets) for Bulgarian, Russian, Polish and Czech speakers, and American English prompts and glosses for the other courses, written by Claude Sonnet 5.5; they await native review.",
+    "bank-pl-cs-us": "New on 2026-10-02: the bank's Polish, Czech and American English phrases (five per theme) and the bank's Polish and Czech translations and notes, written by Claude Sonnet 5.5, await native review."
   },
   "renamedPhraseIds": {
     "phrase-1": "cafe-01",

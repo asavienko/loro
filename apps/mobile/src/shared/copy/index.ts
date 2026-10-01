@@ -2,7 +2,9 @@
 // platform (Intl.DisplayNames), so they are correct and localised for free.
 import { LanguageCode, uiLocaleOf, UiLocale } from '../content';
 import { makeBg } from './bg';
+import { makeCs } from './cs';
 import { Copy, makeEn } from './en';
+import { makePl } from './pl';
 import { pluralFor } from './plural';
 import { makeRu } from './ru';
 
@@ -13,7 +15,7 @@ const cache = new Map<UiLocale, Copy>();
 export function copyFor(locale: UiLocale): Copy {
   let copy = cache.get(locale);
   if (!copy) {
-    const make = locale === 'bg' ? makeBg : locale === 'ru' ? makeRu : makeEn;
+    const make = { en: makeEn, bg: makeBg, ru: makeRu, pl: makePl, cs: makeCs }[locale];
     copy = make(pluralFor(locale));
     cache.set(locale, copy);
   }
@@ -26,7 +28,7 @@ export function copyForNative(native: LanguageCode): Copy {
 
 /**
  * "Spanish", "испанский", "испански" — in the UI language, as it is written
- * inside a sentence (Bulgarian and Russian don't capitalise language names).
+ * inside a sentence (Bulgarian, Russian, Polish and Czech don't capitalise language names).
  */
 export function languageName(code: LanguageCode, uiLocale: string): string {
   try {
@@ -50,7 +52,12 @@ export function greeting(target: LanguageCode, name: string): string {
       return who ? `Здравей, ${who}!` : 'Здравей!';
     case 'ru-RU':
       return who ? `Привет, ${who}!` : 'Привет!';
+    case 'pl-PL':
+      return who ? `Cześć, ${who}!` : 'Cześć!';
+    case 'cs-CZ':
+      return who ? `Ahoj, ${who}!` : 'Ahoj!';
     case 'en-GB':
+    case 'en-US':
       return who ? `Hello, ${who}!` : 'Hello!';
     default:
       return who ? `¡Hola, ${who}!` : '¡Hola!';
