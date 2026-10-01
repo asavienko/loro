@@ -44,10 +44,14 @@ ssh -N -L 127.0.0.1:13000:127.0.0.1:3000 ec2-user@HOST
 curl --fail http://127.0.0.1:13000/v1/health/ready
 ```
 
-The script builds WASM and the linux/amd64 image locally (working-tree changes included), streams it
-over SSH, takes a PostgreSQL dump, starts a candidate, swaps it in and re-checks readiness; a failed
-check restores the previous container. Cutover has brief downtime. The previous container is kept as
-`loro-api-previous`; roll back by redeploying its image tag:
+The script builds WASM and the linux/amd64 image locally (working-tree changes included) and checks
+it against a throwaway PostgreSQL (`scripts/ci-api-image.sh`), streams it over SSH, takes a
+PostgreSQL dump, starts a candidate, swaps it in and re-checks; a failed check restores the previous
+container. The candidate and the new container must pass readiness **and** serve
+`GET /v1/library/pack?target=es-ES`: the first library request seeds Loro's content into the
+database, so a seed that fails stops the release before cutover. Cutover has brief downtime. The
+previous container is kept as `loro-api-previous` (restored to readiness only, since an older image
+may predate the library); roll back by redeploying its image tag:
 
 ```bash
 ssh ec2-user@HOST 'sudo bash -s -- loro-api:PREVIOUS_TAG' < scripts/ec2-release.sh
