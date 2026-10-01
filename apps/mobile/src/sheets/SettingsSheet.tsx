@@ -12,6 +12,7 @@ import { useNav } from '@shared/nav/NavContext'
 import { courseSets, findPhrase, promptOf } from '@shared/state/catalog'
 import { LIMITS, tidy } from '@shared/state/limits'
 import { analyticsAvailable, setSharingUsage, sharingUsage } from '../analytics/posthog'
+import { signedInLabel } from '../screens/AccountScreen'
 import { useAccount } from '../state/account'
 import { useCopy, useStore } from '../state/store'
 import { Button } from '../ui/Button'
@@ -62,7 +63,7 @@ export function SettingsSheet({ open, atVoices = false, onClose }: { open: boole
       <SheetSection title={c.account.title}>
         <SheetOption
           icon="account_circle"
-          label={account.status === 'signedIn' ? c.account.signedInAs(account.account?.email ?? '') : c.account.signIn}
+          label={account.status === 'signedIn' ? signedInLabel(c, account.account) : c.account.signIn}
           detail={account.status === 'signedIn' ? undefined : c.account.needed}
           onPress={nav.openAccount}
         />

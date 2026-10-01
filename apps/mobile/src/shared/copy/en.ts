@@ -542,6 +542,7 @@ export function makeEn(n: Plural) {
       resend: 'Send a new code',
       changeEmail: 'Use another email',
       signedInAs: (email: string) => `Signed in as ${email}`,
+      signedInWith: (provider: string) => `Signed in with ${provider}`,
       signOut: 'Sign out',
       deleteData: 'Delete my Loro data',
       deleteDataConfirm: 'Delete your sets, albums, songs, covers and the progress kept in your account? Anyone you shared with loses them too. The progress on this device stays. This can’t be undone.',
