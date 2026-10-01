@@ -94,10 +94,10 @@ export function NowPlayingScreen() {
   const coverSet = findSetView(state.learner, phrase.setId) ?? queueSet;
   const tone = (coverSet?.topicId && getTopic(coverSet.topicId)?.tone) || 'secondary';
   const endedOnce = state.player.ended && playsOnce(state.player);
-  // The picture fills the page's width where there is room, and gives way first on a short screen or
-  // with large text.
+  // The picture runs edge to edge under the header, as tall as the room above the words allows: up
+  // to square, less on a short screen or with large text.
   const side = room.compact ? COMPACT_GUTTER : GUTTER;
-  const width = Math.min(room.width, MAX_WIDTH) - 2 * side;
+  const width = Math.min(room.width, MAX_WIDTH);
   const height = stage ?? room.height - insets.top - insets.bottom - HEADER - DOCK;
   const coaching = coaches(state.learner, now);
   const cover = playerArtSize(width, height, room.fontScale, coaching ? COACH : 0);
@@ -126,8 +126,8 @@ export function NowPlayingScreen() {
           contentContainerStyle={[styles.stageContent, gutter]}
           onLayout={(e: LayoutChangeEvent) => setStage(Math.round(e.nativeEvent.layout.height))}
         >
-          <View style={[styles.cover, cover === 0 && styles.gone]}>
-            <PhraseImage icons={phrase.image} tone={tone} width={cover} height={cover} rounded={24} style={shadow.cover} phrase={phrase} redraw />
+          <View style={[styles.cover, { marginHorizontal: -side }, cover === 0 && styles.gone]}>
+            <PhraseImage icons={phrase.image} tone={tone} width={width} height={cover} rounded={0} phrase={phrase} redraw />
           </View>
           <View style={[styles.about, cover > 0 && styles.underCover]}>
             <PhraseBlock phrase={phrase} revealed={revealed} />
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
   spring: { flexGrow: 1, minHeight: 12 },
   compactGutter: { paddingHorizontal: COMPACT_GUTTER },
   notice: { position: 'absolute', top: 4 },
-  cover: { alignItems: 'center' },
+  cover: { alignItems: 'center', marginTop: -4 },
   gone: { display: 'none' },
   about: { gap: 4 },
   underCover: { marginTop: 20 },
