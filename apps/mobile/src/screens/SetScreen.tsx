@@ -454,6 +454,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
         <SheetOption
           icon="queue_play_next"
           label={c.set.playNext}
+          disabled={sortedIds.length === 0}
           onPress={() => {
             actions.enqueue(sortedIds, setId, 'next');
             toast(c.set.addedNext);
@@ -463,6 +464,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
         <SheetOption
           icon="queue_music"
           label={c.set.addToQueue}
+          disabled={sortedIds.length === 0}
           onPress={() => {
             actions.enqueue(sortedIds, setId, 'end');
             toast(c.set.addedEnd);

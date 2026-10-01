@@ -79,10 +79,14 @@ export async function forgetSet(id: string): Promise<void> {
   if (pack) await kvSet(packKey(pack.targetLang), JSON.stringify(pack));
 }
 
-/** Keeps a set opened from outside the packs, so its phrases stay playable. */
+/**
+ * Keeps a set opened from outside the packs, so its phrases stay playable. It is open at once; a
+ * device that can't save it (storage full or refused) only fetches it again next time, so that
+ * failure never stops the set from opening.
+ */
 export async function keepOpenedSet(detail: SetDetail): Promise<void> {
   installExtras({ sets: [detail.set], phrases: detail.phrases });
-  await kvSet(EXTRAS_KEY, JSON.stringify(installedExtras()));
+  await kvSet(EXTRAS_KEY, JSON.stringify(installedExtras())).catch(() => {});
 }
 
 /**
