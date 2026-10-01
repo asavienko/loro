@@ -484,8 +484,8 @@
       "image": ["medication", "sentiment_dissatisfied"],
       "notes": {
         "mnemonic": {
-          "title": "Dolor de + body part",
-          "text": "«Dolor de» + a body part names an ache: «dolor de cabeza» (headache), «dolor de muelas» (toothache), «dolor de espalda» (backache)."
+          "title": "A cabbage for a head",
+          "text": "«Cabeza» (head) sounds like “cabbage”, and a cabbage is a head: picture one with a headache, «dolor de cabeza»."
         },
         "grammar": {
           "title": "«Para» says what it's for",
@@ -596,8 +596,8 @@
       "image": ["medication", "schedule", "repeat"],
       "notes": {
         "mnemonic": {
-          "title": "Cada means every",
-          "text": "«Cada» means “every”: the answer will sound like «cada ocho horas», every eight hours."
+          "title": "Cada, on the beat",
+          "text": "«Cada» (every) sounds like “cadence”, a steady beat: «cada ocho horas», every eight hours, like clockwork."
         },
         "grammar": {
           "title": "«Cuánto» agrees",
@@ -624,8 +624,8 @@
       "image": ["book_online", "badge"],
       "notes": {
         "mnemonic": {
-          "title": "Reserva, not reservación",
-          "text": "In Spain a booking is a «reserva»; «reservación» is mostly Latin American."
+          "title": "Held in reserve",
+          "text": "«Reserva» is something held in reserve: picture a room the hotel keeps in reserve just for García."
         },
         "grammar": {
           "title": "«A nombre de»",
@@ -708,8 +708,8 @@
       "image": ["hvac", "mode_fan_off"],
       "notes": {
         "mnemonic": {
-          "title": "Anything that won't work",
-          "text": "«No funciona» (it doesn't function) fits anything broken: the lift, the Wi-Fi, the shower."
+          "title": "Air that won’t function",
+          "text": "«Aire acondicionado» is “air conditioned”, almost letter for letter, and «no funciona» is “doesn’t function”: picture the air itself refusing to work."
         },
         "grammar": {
           "title": "«No» before the verb",
@@ -792,8 +792,8 @@
       "image": ["apparel", "straighten"],
       "notes": {
         "mnemonic": {
-          "title": "Talla, not tamaño",
-          "text": "Clothes come in a «talla»; «tamaño» is size in general, and shoes come in a «número»."
+          "title": "Talla: a taller size",
+          "text": "«Talla» (size) looks like “tall”: picture asking for a taller shirt. «Camisa» is a shirt, like the French “chemise”."
         },
         "grammar": {
           "title": "Este or esta",
@@ -904,8 +904,8 @@
       "image": ["credit_card", "point_of_sale"],
       "notes": {
         "mnemonic": {
-          "title": "Every kind of card",
-          "text": "A «tarjeta» is any small card: a bank card, a business card («tarjeta de visita»), a boarding pass («tarjeta de embarque»)."
+          "title": "Card on target",
+          "text": "«Tarjeta» (card) sounds like “target”: picture your card hitting the target as you tap the reader."
         },
         "grammar": {
           "title": "Con tarjeta, en efectivo",
@@ -960,8 +960,8 @@
       "image": ["public", "person_pin_circle"],
       "notes": {
         "mnemonic": {
-          "title": "Where from, where to",
-          "text": "«¿De dónde?» is “where from?”; «¿adónde?» is “where to?”: «¿Adónde vas?» (Where are you going?)."
+          "title": "Of where are you?",
+          "text": "«¿De dónde eres?» is word for word “Of where are you?”: picture someone made of their home town."
         },
         "grammar": {
           "title": "Ser for origin",
@@ -1296,8 +1296,8 @@
       "image": ["people", "event"],
       "notes": {
         "mnemonic": {
-          "title": "Quedar or quedarse",
-          "text": "«Quedar» is to arrange to meet; «quedarse», with «se», is to stay: «me quedo en casa» (I'm staying in)."
+          "title": "A plan that stays put",
+          "text": "«Quedar» is to remain, and also to arrange to meet: a plan you make is one that stays put. «¿Quedamos mañana?», shall we meet tomorrow?"
         },
         "grammar": {
           "title": "Present as “shall we”",
@@ -1744,8 +1744,8 @@
       "image": ["wrong_location", "map"],
       "notes": {
         "mnemonic": {
-          "title": "Losing yourself",
-          "text": "«He perdido» alone needs a thing: «he perdido la maleta». Add «me» and the thing lost is you."
+          "title": "Lost in perdition",
+          "text": "«Perdido» (lost) sounds like “perdition”: picture yourself so lost it feels like the end of the world. «Me he perdido», I’m lost."
         },
         "grammar": {
           "title": "Reflexive «perderse»",
@@ -1996,8 +1996,8 @@
       "image": ["battery_0_bar", "smartphone"],
       "notes": {
         "mnemonic": {
-          "title": "Left without",
-          "text": "«Quedarse sin» is “to be left without”, so “to run out of”: «me he quedado sin dinero», «sin gasolina», «sin batería»."
+          "title": "The sin of a flat battery",
+          "text": "«Sin» (without) sounds like “sin”: picture the sin of leaving home without charging your phone. «Sin batería», without battery."
         },
         "grammar": {
           "title": "Just happened: the perfect",
@@ -2024,8 +2024,8 @@
       "image": ["charger", "smartphone"],
       "notes": {
         "mnemonic": {
-          "title": "Móvil, not celular",
-          "text": "In Spain a mobile phone is «el móvil», just like the British “mobile”; «celular» is Latin American."
+          "title": "Loading cargo",
+          "text": "«Cargar» (to charge) looks like “cargo”: it also means to load, so picture loading your phone with power like cargo onto a ship."
         },
         "grammar": {
           "title": "o becomes ue",
@@ -2136,8 +2136,8 @@
       "image": ["woman", "family_group"],
       "notes": {
         "mnemonic": {
-          "title": "Hermano, hermana, hermanos",
-          "text": "«Hermano» is a brother, «hermana» a sister, and «hermanos» brothers and sisters together, like “siblings”."
+          "title": "Her, your sister",
+          "text": "«Hermana» (sister) starts with “her”: picture her, your sister, waving at you. A brother is «hermano»."
         },
         "grammar": {
           "title": "Un hermano, una hermana",
@@ -2579,8 +2579,8 @@
       "image": ["allergy", "pill", "block"],
       "notes": {
         "mnemonic": {
-          "title": "Two cognates",
-          "text": "«Алергия» and «пеницилин» are the English words in Cyrillic; «г» is always hard, as in “gift”."
+          "title": "Words you already know",
+          "text": "«Алергия» and «пеницилин» are “allergy” and “penicillin” in Cyrillic: sound them out letter by letter and you already know them."
         },
         "grammar": {
           "title": "Allergic «към»",
@@ -2660,8 +2660,8 @@
       "image": ["bathtub", "dry", "add"],
       "notes": {
         "mnemonic": {
-          "title": "Кърпа за баня",
-          "text": "A «кърпа» is a towel or any cloth; a bath towel is a «кърпа за баня»."
+          "title": "A carpet for a towel",
+          "text": "«Кърпа» (KUR-pa) sounds like the start of “carpet”: picture drying yourself with a small carpet."
         },
         "grammar": {
           "title": "«Може ли» + a thing",
@@ -2849,8 +2849,8 @@
       "image": ["credit_card", "point_of_sale"],
       "notes": {
         "mnemonic": {
-          "title": "Карта: card or map",
-          "text": "«Карта» is a bank card, but also a map: «карта на града», a city map."
+          "title": "Paying with a map",
+          "text": "«Карта» is a bank card and also a map, as in «карта на града», a city map: picture trying to pay with a map."
         },
         "grammar": {
           "title": "«Мога» + «да»",
@@ -3524,8 +3524,8 @@
       "image": ["wrong_location", "map"],
       "notes": {
         "mnemonic": {
-          "title": "Losing yourself",
-          "text": "Without «се», «изгубих» needs a thing: «изгубих портфейла». With «се», you are the one lost."
+          "title": "Gobbled up by the city",
+          "text": "Hear «губ» in «изгубих» as “gobble”: picture the city gobbling you up. «Изгубих се», I’m lost."
         },
         "grammar": {
           "title": "Where «се» goes",
