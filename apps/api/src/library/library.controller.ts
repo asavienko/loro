@@ -16,7 +16,7 @@ import {
 import type { Response } from 'express'
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
 import { OptionalAuthGuard, readerOf, type ReaderRequest } from './library.guard.js'
-import { LibraryService } from './library.service.js'
+import { DECK_WAIT_MS, LibraryService } from './library.service.js'
 
 /** Reading: anyone, with more for the signed-in reader (their own and saved items). */
 @Controller('library')
@@ -254,10 +254,17 @@ export class LibraryWriteController {
     return this.library.report(request.principal.userId, body)
   }
 
+  /** A deck, or `202 {status: 'writing'}` while Claude writes it: the app asks again, the same way. */
   @Post('generate/phrases')
   @HttpCode(200)
-  generatePhrases(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
-    return this.library.generatePhrases(request.principal.userId, body)
+  async generatePhrases(
+    @Req() request: AuthenticatedRequest,
+    @Body() body: unknown,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const answer = await this.library.generatePhrases(request.principal.userId, body, DECK_WAIT_MS)
+    if ('status' in answer) res.status(202).setHeader('Retry-After', '1')
+    return answer
   }
 
   @Post('generate/notes')
