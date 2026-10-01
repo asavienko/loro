@@ -59,6 +59,12 @@ assert.equal((await request('/ai/scene')).status, 404, 'AI stays private')
 const pack = await request('/library/pack?target=es-ES')
 assert.equal(pack.status, 200, 'library pack')
 assert.ok((await pack.json()).sets.length > 0, 'library seeded')
+const languages = await request('/library/languages')
+assert.equal(languages.status, 200, 'library languages')
+assert.ok(
+  (await languages.json()).languages.some((l) => l.canTarget),
+  'a course to learn',
+)
 assert.equal((await request('/library/usage')).status, 401, 'anonymous library usage denied')
 assert.equal((await request('/library/admin')).status, 404, 'unknown library route closed')
 console.log(

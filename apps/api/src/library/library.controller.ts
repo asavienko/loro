@@ -24,6 +24,13 @@ import { LibraryService } from './library.service.js'
 export class LibraryReadController {
   constructor(@Inject(LibraryService) private readonly library: LibraryService) {}
 
+  /** The languages the app offers, which a course teaches and which the app speaks (plan 108). */
+  @Get('languages')
+  @Header('Cache-Control', 'no-store')
+  languages() {
+    return this.library.languages()
+  }
+
   @Get('pack')
   @Header('Cache-Control', 'no-store')
   pack(@Req() request: ReaderRequest, @Query('target') target: unknown) {
