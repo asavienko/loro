@@ -53,8 +53,11 @@ graph TB
   on the web. There is no JavaScript FSRS; without the core (Expo Go) nothing schedules.
 - **Content.** The app ships no phrases. It downloads each course's pack from the API, keeps it for
   offline use and installs it before learner state loads.
-- **Audio.** The app plays phrases (server clips when available, else the device voice) and songs.
-  It records nothing.
+- **Audio.** The app plays phrases (the server's clips) and songs, and records nothing. On iOS and
+  Android the one player plays on with the screen locked and shows on the lock screen and at the top
+  of the notification shade (P3-11), with its grades: the `LoroMedia` Expo module
+  (`modules/loro-media`; a media3 session and foreground service on Android, Now Playing on iOS),
+  driven by `src/audio/lockScreen.ts`. A grade pressed there is the same `RATE` event as in the app.
 
 ## The API (`apps/api`)
 
