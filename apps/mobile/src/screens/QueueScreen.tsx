@@ -12,6 +12,7 @@ import { languageName } from '@shared/copy';
 import { useNav } from '@shared/nav/NavContext';
 import { findPhrase, findSetView, promptOf } from '@shared/state/catalog';
 import { formatAgo, MINUTE } from '@shared/state/clock';
+import { clip, LIMITS } from '@shared/state/limits';
 import { currentPhraseId, previouslyPlayed, sessionSummary, upNextIds } from '@shared/state/selectors';
 import { isTargetRevealed, queueTitle } from '@shared/ui/phase';
 import { useMySets } from '../state/mySets';
@@ -78,7 +79,9 @@ export function QueueScreen() {
   };
 
   const saveAsSet = async () => {
-    const title = set ? `${set.title} · ${c.queue.defaultSetName}` : c.queue.defaultSetName;
+    // The set's title is shortened so the whole name fits the account's limit (60 characters).
+    const suffix = ` · ${c.queue.defaultSetName}`;
+    const title = set ? `${clip(set.title, LIMITS.title - suffix.length)}${suffix}` : c.queue.defaultSetName;
     // A set in the learner's account holds at most 40 phrases (plan 108): the first 40 of the queue.
     if (await my.createSet(title, [...new Set(state.player.order)].slice(0, 40))) toast(c.toast.saved(title));
   };
