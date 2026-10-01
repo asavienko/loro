@@ -155,8 +155,10 @@ each kind uses here.
 
 The phrase bank and the rules' notes are free: only Claude's decks and notes spend the day's phrases
 allowance, and a Claude answer that fails gives it back while the bank or the rules answer instead.
-The app asks the server's phrase writer only when it is Claude; otherwise the device's copy of the
-phrase bank answers the same suggestions.
+Claude writes six suggestions to a deck (More asks for the next six). A deck it hasn't finished
+within 20 s is answered `202 {status: 'writing'}`, inside the EC2 gateway's 30 s; the same request
+asked again joins the deck being written (one API process holds it, five minutes once written) and
+takes it when done, so a deck is spent once. Notes for one phrase wait at most 22 s for Claude.
 
 **Covers are never markup from a model.** Claude (or the pattern drawer) produces a spec of at most
 24 circles, rectangles and paths with `#RRGGBB` colours and numeric ranges; `covers.ts` validates it
