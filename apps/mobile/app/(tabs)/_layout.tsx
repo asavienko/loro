@@ -12,6 +12,7 @@ import { useStore } from '../../src/state/store';
 import { MusicMiniPlayer, SongBarGrades } from '../../src/music/MusicMiniPlayer';
 import { useMusic } from '../../src/music/MusicPlayer';
 import { MiniPlayer, PhraseBarGrades } from '../../src/ui/MiniPlayer';
+import { BarPassCard } from '../../src/nav/PassNotice';
 import { BarShiftProvider } from '../../src/ui/barShift';
 import { TabBar } from '../../src/ui/TabBar';
 import { useReportChrome } from '../../src/ui/Toast';
@@ -46,6 +47,7 @@ export default function TabsLayout() {
         {chrome !== null && (
           <View style={[styles.over, { bottom: chrome + OVER_BAR }]} pointerEvents="box-none">
             <View style={styles.grades} pointerEvents="box-none" onLayout={(e) => setGrades(e.nativeEvent.layout.height)}>
+              <BarPassCard />
               <FrontGrades />
             </View>
           </View>
