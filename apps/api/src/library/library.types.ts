@@ -2,7 +2,7 @@
  * The library's wire shapes (plan 106). camelCase, as the app's content JSON is, so the app reads a
  * pack into the same structures it reads its content into.
  */
-import type { V2Localized, V2Topic } from '@loro/content/v2'
+import type { V2LanguageInfo, V2Localized, V2Topic } from '@loro/content/v2'
 import type { LibraryNotes, PhraseSource, Visibility } from '@loro/core/api/library'
 import type { SongSection } from './writers.js'
 
@@ -146,6 +146,12 @@ export interface PackWire {
   phrases: PhraseWire[]
   bank: { themes: BankThemeWire[]; phrases: BankPhraseWire[] }
   albums: AlbumWire[]
+}
+
+/** The languages the app offers (plan 108), and a version that changes whenever they do. */
+export interface LanguagesWire {
+  version: string
+  languages: readonly V2LanguageInfo[]
 }
 
 export type UsageKind = 'phrases' | 'cover' | 'song'

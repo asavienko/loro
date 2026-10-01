@@ -136,6 +136,15 @@ describePostgres('the library against real PostgreSQL', () => {
     ).toBe(pack.version)
   })
 
+  it('serves a pack for every course the languages name, and none for the others', async () => {
+    const { languages } = library.languages()
+    for (const language of languages) {
+      if (language.canTarget)
+        expect((await library.pack(null, language.code)).sets.length).toBeGreaterThan(0)
+      else expect(await code(library.pack(null, language.code))).toBe('VALIDATION_FAILED')
+    }
+  })
+
   it('keeps a private set to its owner, and shares a link or public one', async () => {
     const phrases = await deck('ana')
     const { set } = await library.createSet('ana', {

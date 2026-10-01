@@ -9,7 +9,13 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common'
 import { MUSIC_STYLE_IDS, type MusicStyleId } from '@loro/core'
-import { V2_CONTENT, type V2Language, type V2Localized, type V2Topic } from '@loro/content/v2'
+import {
+  V2_CONTENT,
+  V2_LANGUAGES,
+  type V2Language,
+  type V2Localized,
+  type V2Topic,
+} from '@loro/content/v2'
 import {
   AddPhraseSchema,
   CreateAlbumSchema,
@@ -46,6 +52,7 @@ import type {
   BankPhraseWire,
   BankThemeWire,
   KeptKind,
+  LanguagesWire,
   Owner,
   PackWire,
   PhraseWire,
@@ -167,6 +174,11 @@ const newId = (prefix: string) => `${prefix}-${randomBytes(8).toString('hex').sl
 const newShareCode = () => {
   const alphabet = 'abcdefghijkmnpqrstuvwxyz23456789'
   return Array.from(randomBytes(10), (byte) => alphabet[byte % alphabet.length]).join('')
+}
+/** The languages, versioned like a pack: the version changes whenever anything in them does. */
+const LANGUAGES: LanguagesWire = {
+  version: createHash('sha256').update(JSON.stringify(V2_LANGUAGES)).digest('hex').slice(0, 16),
+  languages: V2_LANGUAGES,
 }
 
 @Injectable()
@@ -459,6 +471,14 @@ export class LibraryService {
       [userId],
     )
     return new Set(rows.rows.map((r) => r.item_id))
+  }
+
+  /**
+   * The languages the app offers (plan 108): which a course teaches, which the app speaks. From the
+   * content, not the database, so it answers before the library is seeded.
+   */
+  languages(): LanguagesWire {
+    return LANGUAGES
   }
 
   /** A course's pack: Loro's sets, the reader's own and saved ones, the bank, and the albums. */
