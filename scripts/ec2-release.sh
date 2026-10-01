@@ -32,12 +32,14 @@ ready() {
   done
   return 1
 }
+# TRUST_PROXY=1: the gateway's nginx names each learner in X-Real-IP, and the API is reachable only
+# from this host (published on loopback), so auth limits key on the learner, not on nginx.
 run() {
   docker run -d --name "$1" --restart unless-stopped --read-only \
     --cap-drop ALL --security-opt no-new-privileges --pids-limit 128 \
     --memory 768m --cpus 1 --tmpfs /tmp:rw,noexec,nosuid,size=64m \
     --log-opt max-size=10m --log-opt max-file=3 \
-    "${runtime[@]}" -e NODE_ENV=production -e AI_PROVIDER=stub "${@:2}" "$image"
+    "${runtime[@]}" -e NODE_ENV=production -e AI_PROVIDER=stub -e TRUST_PROXY=1 "${@:2}" "$image"
 }
 # Candidate is never published. A failed candidate cannot stop the current service.
 docker rm -f loro-api-candidate >/dev/null 2>&1 || true

@@ -75,6 +75,9 @@ exit 0
       } else {
         assert.ok(calls.includes('rename loro-api loro-api-previous'))
         assert.ok(calls.includes('-p 127.0.0.1:3000:3000'))
+        // Behind the gateway's nginx, auth limits key on X-Real-IP; every container is told so.
+        const runs = calls.split('\n').filter((call) => call.startsWith('run -d'))
+        assert.ok(runs.length >= 2 && runs.every((call) => call.includes('-e TRUST_PROXY=1')))
         assert.equal(calls.includes('start loro-api'), scenario === 'cutover-failure')
       }
     } finally {

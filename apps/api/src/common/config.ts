@@ -81,6 +81,13 @@ export const config = {
   authIssuer: (): string => process.env['AUTH_ISSUER'] ?? 'https://api.loro.app',
 
   databaseUrl: (): string | undefined => process.env['DATABASE_URL'],
+
+  /**
+   * `1` when the API sits behind Loro's nginx (the EC2 gateway), which sets `X-Real-IP` to the
+   * learner's address: auth limits then key on it, from a loopback or private-network peer only
+   * (common/http.ts). Anything else, the default, keys them on the transport peer.
+   */
+  trustProxy: (): boolean => process.env['TRUST_PROXY'] === '1',
   allowedOrigins: (): string[] =>
     (process.env['CORS_ALLOWED_ORIGINS'] ?? '')
       .split(',')

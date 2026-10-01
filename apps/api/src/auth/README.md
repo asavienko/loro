@@ -24,7 +24,8 @@ code-exchange JWKS share `jwks.ts`. `GET /me` and `GET /auth/me` keep distinct r
   committed transaction; concurrent verification cannot consume a code twice. Delivery permits five
   requests per email and thirty authentication requests per actual transport-peer address per
   fifteen-minute window. Limits persist across application restarts; forwarded IP headers are
-  ignored.
+  ignored, except that with `TRUST_PROXY=1` (the EC2 host, behind the gateway's nginx) the
+  `X-Real-IP` nginx sets is the address, when the peer is loopback or a private network.
 - Only the configured delivery service receives the email/code. Delivery uses HTTPS, a bearer
   credential, a five-second timeout and rejects redirects; response text is neither read nor logged.
   Valid requests return the same accepted response for new and existing accounts. Email addresses
