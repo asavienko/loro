@@ -48,8 +48,6 @@ export interface Navigation {
   /** Signing in, or the account when signed in (plan 106). */
   openAccount: () => void;
   openSettings: () => void;
-  /** Settings, scrolled to its voice pickers with the first one focused (the player's voice line). */
-  openVoiceSettings: () => void;
 }
 
 export const NavContext = createContext<Navigation | null>(null);

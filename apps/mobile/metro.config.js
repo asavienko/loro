@@ -37,7 +37,7 @@ config.resolver.blockList = [
 const NATIVE = {
   // Saved progress: AsyncStorage instead of IndexedDB/localStorage.
   [path.join(sharedRoot, 'state/storage.ts')]: path.join(projectRoot, 'src/platform/storage.ts'),
-  // The device voice: expo-speech instead of the Web Speech API.
+  // Phrase clips: expo-audio instead of an HTML audio element.
   [path.join(sharedRoot, 'audio/speech.ts')]: path.join(projectRoot, 'src/platform/speech.ts'),
   // Cues: haptics instead of Web Audio tones.
   [path.join(sharedRoot, 'audio/cues.ts')]: path.join(projectRoot, 'src/platform/cues.ts'),

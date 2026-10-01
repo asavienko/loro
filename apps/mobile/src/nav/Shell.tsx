@@ -4,7 +4,6 @@
 import { usePathname, useRouter, useGlobalSearchParams } from 'expo-router';
 import { createContext, ReactNode, RefObject, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { learnedCue } from '@shared/audio/cues';
-import { setVoiceChoices } from '@shared/audio/speech';
 import { NavContext, Navigation, Shareable } from '@shared/nav/NavContext';
 import { formatRoute, Route, Tab } from '@shared/nav/routes';
 import { findPhrase, findSetView } from '@shared/state/catalog';
@@ -68,13 +67,12 @@ export function Shell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { from } = useGlobalSearchParams<{ from?: string }>();
   const { state, actions } = useStore();
-  useEffect(() => setVoiceChoices(state.prefs.voiceByLang), [state.prefs.voiceByLang]);
 
   const [details, setDetails] = useState<{ phraseId: string; ownSetId?: string } | null>(null);
   const [addTo, setAddTo] = useState<string[] | null>(null);
   const [create, setCreate] = useState<{ phraseIds: string[]; rename?: string } | null>(null);
   const [phraseForm, setPhraseForm] = useState<{ editId?: string; target?: string } | null>(null);
-  const [settings, setSettings] = useState<{ atVoices: boolean } | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [songRequest, setSongRequest] = useState<MakeSongRequest | null>(null);
@@ -136,11 +134,10 @@ export function Shell({ children }: { children: ReactNode }) {
       makeSong: (options = {}) => setSongRequest(options),
       share: (item, onChanged) => setSharing({ item, onChanged }),
       openAccount: () => {
-        setSettings(null);
+        setSettingsOpen(false);
         router.push('/account');
       },
-      openSettings: () => setSettings({ atVoices: false }),
-      openVoiceSettings: () => setSettings({ atVoices: true }),
+      openSettings: () => setSettingsOpen(true),
     }),
     [actions, router, pathRef, tabRef, learnerRef, playerRef],
   );
@@ -155,7 +152,7 @@ export function Shell({ children }: { children: ReactNode }) {
     <NavContext.Provider value={nav}>
       <ShellContext.Provider value={shell}>
         {children}
-        <SettingsSheet open={settings !== null} atVoices={settings?.atVoices ?? false} onClose={() => setSettings(null)} />
+        <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
         <SessionSummarySheet open={summaryOpen} onClose={() => setSummaryOpen(false)} />
         <PhraseDetailsSheet details={details} onClose={() => setDetails(null)} />
         <AddToSetSheet phraseIds={addTo} onClose={() => setAddTo(null)} />

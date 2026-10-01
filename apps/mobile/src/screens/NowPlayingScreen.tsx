@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router';
 import { ReactNode, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { voiceName } from '@shared/audio/speech';
 import { languageName } from '@shared/copy';
 import { getTopic, Phrase } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
@@ -69,7 +68,7 @@ export function NowPlayingScreen() {
     );
   const { status, phase, index, order, audioError } = state.player;
   const playing = status === 'playing';
-  const cannotSay = audioError?.reason === 'no-voice' && audioError.lang === phrase.targetLang;
+  const cannotSay = audioError?.reason === 'no-clip' && audioError.lang === phrase.targetLang;
   const revealed = isTargetRevealed(state.player) || (cannotSay && shownAnyway === phrase.id);
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
   const targetName = languageName(phrase.targetLang, c.locale);
@@ -108,7 +107,7 @@ export function NowPlayingScreen() {
                 <View style={styles.error} accessibilityRole="alert">
                   <View style={styles.row}>
                     <Icon name="volume_off" size="md" color="error" />
-                    <Txt style={styles.flex}>{audioError.reason === 'no-voice' ? c.player.audioError(languageName(audioError.lang, c.locale)) : c.player.audioSilent}</Txt>
+                    <Txt style={styles.flex}>{audioError.reason === 'no-clip' ? c.player.audioError(languageName(audioError.lang, c.locale)) : c.player.audioSilent}</Txt>
                   </View>
                   {cannotSay && !revealed && <Button variant="text" label={c.player.showText(targetName)} onPress={() => setShownAnyway(phrase.id)} />}
                 </View>
@@ -172,25 +171,15 @@ function PhraseBlock({ phrase, revealed }: { phrase: Phrase; revealed: boolean }
   );
 }
 
-/** The voice on the left; like, add to set and notes on the right. */
+/** Like, add to set and notes, on the right. */
 function ActionRow({ phrase, onNotes }: { phrase: Phrase; onNotes: () => void }) {
   const c = useCopy();
   const nav = useNav();
   const { state, actions } = useStore();
   const liked = isLiked(state.learner, 'phrase', phrase.id);
-  const voice = phrase.audio ? null : voiceName(phrase.targetLang);
   return (
     <View style={styles.actions}>
-      <View style={styles.flex}>
-        {voice && (
-          <Pressable accessibilityRole="button" accessibilityLabel={c.player.changeVoice(voice)} onPress={nav.openVoiceSettings} style={styles.voice}>
-            <Txt variant="label" color="onSurfaceVariant" numberOfLines={1} style={styles.voiceText}>
-              {c.player.voice(voice)}
-            </Txt>
-            <Icon name="chevron_right" size="xs" color="onSurfaceVariant" />
-          </Pressable>
-        )}
-      </View>
+      <View style={styles.flex} />
       <Pressable accessibilityRole="togglebutton" accessibilityLabel={c.phrase.likeLabel} accessibilityState={{ checked: liked }} onPress={() => actions.toggleLike('phrase', phrase.id)} style={styles.iconButton}>
         <Icon name="favorite" fill={liked} size={24} color={liked ? 'primaryContainer' : 'secondary'} />
       </Pressable>
@@ -465,8 +454,6 @@ const styles = StyleSheet.create({
   hidden: { borderBottomWidth: 2, borderStyle: 'dashed', borderColor: colors.outlineVariant, alignSelf: 'flex-start' },
   promptText: { marginTop: 4 },
   actions: { flexDirection: 'row', alignItems: 'center', minHeight: TARGET },
-  voice: { minHeight: TARGET, flexDirection: 'row', alignItems: 'center', gap: 2 },
-  voiceText: { flexShrink: 1, textDecorationLine: 'underline', textDecorationStyle: 'dotted' },
   iconButton: { width: TARGET, height: TARGET, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   loop: { gap: 6 },
   steps: { flexDirection: 'row', gap: 6 },

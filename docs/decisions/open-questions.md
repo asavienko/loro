@@ -57,9 +57,12 @@ content and voice review.
 | Listening | `bg-BG` | `gdk0ZsvfAOobfbTtnx6p` | Kosta         |
 | Listening | `ru-RU` | `EDpEYNf6XIeKYRzYcx4I` | MARIIA_R      |
 | Listening | `ru-RU` | `ogi2DyUAKJb7CEdqqvlU` | Stanislav     |
+| Prompt    | `en-GB` | `Xb7hH8MSUJpSbSDYk0k2` | Alice         |
 
-Local runs stay on `TTS_PROVIDER=stub` and spend no credits. A withdrawn voice fails closed; never
-substitute another locale. The device voice is a labelled fallback, not a way around this.
+The `en-GB` prompt voice (ElevenLabs' premade "Alice", British) was set on 2026-10-01 so English
+prompts have a clip now that the app has no device voice (plan 108); it awaits the owner's listen.
+Local runs may stay on `TTS_PROVIDER=stub` and spend no credits, but then nothing can be heard: the
+app plays only the server's clips. A withdrawn voice fails closed; never substitute another locale.
 
 **Still needed:** a native-speaker listen of the starter phrases and a live `TTS_API_KEY` on a paid
 plan. The pin does not claim either happened. Learner recordings are separate: they never leave the

@@ -6,10 +6,11 @@ language you're learning, then rate how it went. iOS, Android and the web from o
 
 **Status:** every screen and sheet of the v2.0 web prototype is ported, and the app is connected
 (plan [106](../../plans/106-connected-app.md)): its content, accounts, progress, sharing and AI
-generation come from the API ([library.md](../../docs/architecture/library.md)). Five tabs: Home,
-Phrases, Music (albums of songs sung from sets, with their own player), Create and Library. The
-prototype stays in Git history (`design/design-v2.0/rapid-ui-prototype`, removed after commit
-`52a0e3b`) as the reference for its behaviour.
+generation come from the API ([library.md](../../docs/architecture/library.md)), and so does every
+sound: phrases play the clips of the server's voices (plan [108](../../plans/108-backend-only.md)).
+Four tabs: Home, Explore, Create and Library; songs live in their sets and play in the one player,
+albums are in Library. The prototype stays in Git history (`design/design-v2.0/rapid-ui-prototype`,
+removed after commit `52a0e3b`) as the reference for its behaviour.
 
 ## Run
 
@@ -43,8 +44,8 @@ Expo Go can't run it: the Rust core comes from `modules/loro-core`, a local Expo
   `core/fsrs.ts` schedules through the Rust core's `core_call`; there is no JavaScript FSRS.
 - **The platform edge — `src/platform/`.** On iOS and Android, `metro.config.js` swaps seven shared
   modules: storage and the key-value store (AsyncStorage), the refresh token (expo-secure-store),
-  speech (expo-speech), cues (haptics), the Rust core (the LoroCore module instead of WASM) and the
-  provider sign-in page (an expo-web-browser auth session returning to `loro://account`, with PKCE
+  phrase clips (expo-audio), cues (haptics), the Rust core (the LoroCore module instead of WASM) and
+  the provider sign-in page (an expo-web-browser auth session returning to `loro://account`, with PKCE
   from expo-crypto, instead of leaving the tab). On the web the originals run.
 - **The connected state — `src/state/`.** The store, the account (`account.tsx`), the course's
   content (`content.tsx`) and progress sync (`progressSync.ts`); songs play in `src/music/`.

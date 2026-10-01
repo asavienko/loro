@@ -212,7 +212,7 @@ export function makeEn(n: Plural) {
       title: 'Add your phrase',
       target: (language: string) => `In ${language}`,
       native: (language: string) => `In ${language}`,
-      hint: 'It plays with the device voice.',
+      hint: 'Loro’s voice says it once it’s added.',
       add: 'Add phrase',
       added: 'Phrase added',
       editTitle: 'Edit your phrase',
@@ -342,8 +342,7 @@ export function makeEn(n: Plural) {
       speed: 'Speed',
       speedIs: (speed: number) => `Speed: ${speed}×`,
       keys: 'Keys: Space play or pause · ← → previous, next · 1 2 3 rate',
-      audioError: (language: string) =>
-        `This device has no ${language} voice, so the phrase can’t play. Add one in your system’s speech settings, then press Play.`,
+      audioError: (language: string) => `Loro has no ${language} recording of this phrase yet, so it can’t play.`,
       showText: (language: string) => `Show the ${language} text`,
       /** The panel a queue with a natural end stops on (a review, the demo, a Library list). */
       end: {
@@ -363,11 +362,9 @@ export function makeEn(n: Plural) {
       },
       /** The mini-player during the rating hold: the grades are in the full player. */
       miniRate: 'Tap to rate',
-      noVoice: 'No voice for this language',
-      audioSilent: 'Speech stopped before the phrase played. Press Play to try again.',
-      silent: 'Speech stopped — press Play',
-      voice: (name: string) => `Voice: ${name}`,
-      changeVoice: (name: string) => `Voice: ${name}. Change voice`,
+      noClip: 'No recording of this phrase yet',
+      audioSilent: 'The recording didn’t play. Check the connection, then press Play.',
+      silent: 'Didn’t play — press Play',
     },
     toast: {
       updateReady: 'A new version of Loro is ready',
@@ -469,8 +466,6 @@ export function makeEn(n: Plural) {
       course: 'I’m learning',
       courseNote: 'Progress is kept for each pair of languages. Switching back brings it back.',
       accessibility: 'Screen reader',
-      voices: 'Voices',
-      voiceAuto: (name: string) => `Automatic (${name})`,
       announceEveryStep: 'Announce every step',
       announceHint: 'Off: only “Your turn” and the reveal are announced.',
       listening: 'Listening',
@@ -488,13 +483,6 @@ export function makeEn(n: Plural) {
       namePlaceholder: 'Your name',
       native: 'Which language do you speak?',
       course: 'Which language are you learning?',
-      voices: 'Checking voices',
-      voicesChecking: 'Looking for voices on this device…',
-      voiceOk: (language: string, name: string) => `${language}: ${name}`,
-      voiceMissing: (language: string) => `${language}: no voice on this device`,
-      voiceHint: 'Add the missing voice in your system’s speech settings. You can go on, but those phrases won’t play until then.',
-      test: (language: string) => `Test ${language}`,
-      testShort: 'Test',
       loop: 'How it works',
       loopSteps: (native: string, target: string) => [
         `Hear the phrase in ${native}.`,

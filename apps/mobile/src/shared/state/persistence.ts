@@ -10,7 +10,6 @@ import {
   findBankPhrase,
   findContentPhrase,
   findSet,
-  LANGUAGES,
   LanguageCode,
   NATIVE_LANGUAGES,
   RENAMED_PHRASE_IDS,
@@ -305,11 +304,6 @@ function sanitizePrefs(value: unknown): Prefs {
     announceEveryStep: value.announceEveryStep === true,
     sortBySet,
     skippedDemo: value.skippedDemo === true,
-    voiceByLang: Object.fromEntries(
-      Object.entries(isObject(value.voiceByLang) ? value.voiceByLang : {}).filter(
-        ([lang, name]) => LANGUAGES.some((l) => l.code === lang) && typeof name === 'string' && name.length > 0 && name.length <= 200,
-      ),
-    ) as Prefs['voiceByLang'],
     pauseLength: value.pauseLength === 'longer' ? 'longer' : 'standard',
     queueHintDone: value.queueHintDone === true,
     changedAt: Object.fromEntries(Object.entries(isObject(value.changedAt) ? value.changedAt : {}).filter(([k, at]) => k in fresh && num(at))) as Prefs['changedAt'],
