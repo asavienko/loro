@@ -11,6 +11,7 @@ for (const scenario of [
   'cutover-failure',
   'configured-success',
   'backup-failure',
+  'seed-failure',
 ]) {
   test(`EC2 release: ${scenario}`, () => {
     const dir = mkdtempSync(join(tmpdir(), 'loro-release-'))
@@ -35,6 +36,8 @@ fi
 if [[ $1 == exec ]]; then
   if [[ $SCENARIO == candidate-failure && $2 == loro-api-candidate ]]; then exit 1; fi
   if [[ $SCENARIO == cutover-failure && $2 == loro-api && ! -f $TEST_DIR/restored ]]; then exit 1; fi
+  # Readiness passes but the library's seed fails: only the pack probe answers badly.
+  if [[ $SCENARIO == seed-failure && $* == *library/pack* ]]; then exit 1; fi
 fi
 if [[ $1 == start && $2 == loro-api ]]; then touch "$TEST_DIR/restored"; fi
 exit 0
@@ -70,7 +73,18 @@ exit 0
           assert.ok(calls.includes(`--env-file ${dir}/api.env --network loro-backend`))
         else assert.ok(!calls.includes('run -d'))
       }
-      if (scenario === 'candidate-failure' || scenario === 'backup-failure') {
+      const probes = calls.split('\n').filter((call) => call.includes('/v1/health/ready'))
+      const seeded = (call) => call.includes('/v1/library/pack?target=es-ES')
+      if (scenario !== 'backup-failure') {
+        // The candidate proves the library seeds before anything is stopped.
+        assert.ok(probes[0]?.startsWith('exec loro-api-candidate') && seeded(probes[0]))
+      }
+      if (scenario === 'cutover-failure') {
+        // The new active container is held to the library; the restored previous one to readiness.
+        assert.ok(seeded(probes.find((call) => call.startsWith('exec loro-api ')) ?? ''))
+        assert.ok(!seeded(probes.at(-1) ?? ''))
+      }
+      if (['candidate-failure', 'backup-failure', 'seed-failure'].includes(scenario)) {
         assert.ok(!calls.includes('stop loro-api'))
       } else {
         assert.ok(calls.includes('rename loro-api loro-api-previous'))

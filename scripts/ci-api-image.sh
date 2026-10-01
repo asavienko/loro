@@ -58,6 +58,10 @@ docker exec "$name" /nodejs/bin/node -e '
     if(!content.ok || body.nativeLanguage!=="bg" || body.targetLocale!=="ru-RU" || body.phraseCount!==31) throw Error("multilingual content");
     const sync=await fetch(base+"/sync/pull",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({since:null,limit:10})});
     if(sync.status!==401 && sync.status!==503) throw Error("anonymous sync exposed");
+    // The first library request seeds Loro content (and synthesizes its album) into PostgreSQL.
+    const pack=await fetch(base+"/library/pack?target=es-ES",{signal:AbortSignal.timeout(120000)});
+    const library=await pack.json();
+    if(!pack.ok || !library.sets?.length || !library.albums?.length || !library.bank?.phrases?.length) throw Error("library seed");
   })().catch(e=>{console.error(e);process.exit(1)})'
 # Existing content-only deployments may boot without PostgreSQL; they must report degraded readiness.
 docker run -d --platform linux/amd64 --name "$content" --network "$network" --read-only --cap-drop ALL \
@@ -71,7 +75,7 @@ for attempt in {1..30}; do
       const ready=await fetch(base+"/health/ready"); const body=await ready.json();
       if(ready.status!==503 || body.status!=="degraded" || body.checks?.database!=="unavailable") throw Error("false readiness");
     })().catch(()=>process.exit(1))' >/dev/null 2>&1; then
-    echo 'Exact API image passed durable readiness, guarded sync, multilingual content and degraded content-only readiness.'
+    echo 'Exact API image passed durable readiness, the seeded library, guarded sync, multilingual content and degraded content-only readiness.'
     exit 0
   fi
   [[ $(docker inspect --format '{{.State.Running}}' "$content") == true ]] || break

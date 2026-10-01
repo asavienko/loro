@@ -21,11 +21,16 @@ if [[ ${#runtime[@]} -gt 0 ]]; then
   docker exec loro-postgres pg_dump -U postgres -d loro -Fc > "$backup"
   [[ -s $backup ]] || { echo 'Pre-migration backup failed' >&2; exit 1; }
 fi
+readiness="fetch('http://127.0.0.1:3000/v1/health/ready',{signal:AbortSignal.timeout(2000)})"
+# The first library request seeds Loro's content into the database. A new image proves it with a
+# pack, so a seed that fails stops the release before cutover instead of at a learner's first pack.
+library="fetch('http://127.0.0.1:3000/v1/library/pack?target=es-ES',{signal:AbortSignal.timeout(20000)})"
 ready() {
-  local name=$1
+  local probe="$readiness"
+  [[ ${2:-} != library ]] || probe="$readiness.then(r=>r.ok?$library:r)"
   for ((i=0; i<30; i++)); do
-    if docker exec "$name" /nodejs/bin/node -e \
-      "fetch('http://127.0.0.1:3000/v1/health/ready',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"; then
+    if docker exec "$1" /nodejs/bin/node -e \
+      "$probe.then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"; then
       return 0
     fi
     sleep 2
@@ -45,7 +50,7 @@ run() {
 docker rm -f loro-api-candidate >/dev/null 2>&1 || true
 trap 'docker rm -f loro-api-candidate >/dev/null 2>&1 || true' EXIT
 run loro-api-candidate
-ready loro-api-candidate || { echo 'Candidate readiness failed; current service retained' >&2; exit 1; }
+ready loro-api-candidate library || { echo 'Candidate readiness failed; current service retained' >&2; exit 1; }
 docker rm -f loro-api-candidate >/dev/null
 had_previous=false
 if docker container inspect loro-api >/dev/null 2>&1; then
@@ -59,12 +64,13 @@ rollback() {
   if $had_previous; then
     docker rename loro-api-previous loro-api
     docker start loro-api >/dev/null
+    # The previous image may predate the library: it is held to readiness only.
     ready loro-api || { echo 'Rollback readiness failed' >&2; return 1; }
   fi
 }
-if ! run loro-api -p 127.0.0.1:3000:3000 || ! ready loro-api; then
+if ! run loro-api -p 127.0.0.1:3000:3000 || ! ready loro-api library; then
   rollback
   echo 'Deployment failed; previous container restored if present' >&2
   exit 1
 fi
-echo "Deployed $image; readiness passed. API: 127.0.0.1:3000 (SSH tunnel)."
+echo "Deployed $image; readiness and the library pack passed. API: 127.0.0.1:3000 (SSH tunnel)."
