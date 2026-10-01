@@ -293,7 +293,7 @@ export function makeBg(n: Plural): Copy {
       nextIn: (interval) => `след ${interval}`,
       rated: (grade, when) => `Оценка „${grade}“ — отново ${when}`,
       scheduled: 'Преговорът е насрочен',
-      backLater: 'Ще се върне по-късно в опашката',
+      backLater: 'Ще се върне в края на опашката',
       ratedPrevious: (grade) => `Предишната фраза: „${grade}“`,
       ratedAs: (grade) => `Оценка „${grade}“`,
       rateAs: (grade) => `Оцени: „${grade}“`,

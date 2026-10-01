@@ -294,7 +294,7 @@ export function makeRu(n: Plural): Copy {
       nextIn: (interval) => `через ${interval}`,
       rated: (grade, when) => `Оценка «${grade}» — снова ${when}`,
       scheduled: 'Повторение запланировано',
-      backLater: 'Вернётся позже в этой очереди',
+      backLater: 'Вернётся в конце очереди',
       ratedPrevious: (grade) => `Прошлая фраза: «${grade}»`,
       ratedAs: (grade) => `Оценка «${grade}»`,
       rateAs: (grade) => `Оценить: «${grade}»`,
