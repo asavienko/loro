@@ -14,9 +14,9 @@ const byLanguage = z.partialRecord(LANGUAGE_CODE, z.string().min(1));
 const note = z.object({ title: z.string().min(1), text: z.string().min(1) });
 
 /**
- * Every phrase's notes, all three (plan 105): a memory hint, the grammar rule it shows, and its
- * sounds, with IPA and a respelling for English readers. Written in English; the other UI
- * languages' versions sit beside them.
+ * Every phrase's notes, all three (plan 105): a mnemonic (a hook for remembering it), the grammar
+ * rule it shows, and its sounds, with IPA and a respelling for English readers. Written in English;
+ * the other UI languages' versions sit beside them.
  */
 export const notesSchema = z.object({
   mnemonic: note,

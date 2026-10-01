@@ -158,7 +158,8 @@ export function makeEn(n: Plural) {
       likeLabel: 'Like phrase',
       addToSet: 'Add to set…',
       heard: (count: number) => `heard ${count}×`,
-      notes: { mnemonic: 'Memory tip', grammar: 'Grammar', pronunciation: 'Sounds' },
+      /** The notes' tabs; the first is a mnemonic, a hook for remembering the phrase. */
+      notes: { mnemonic: 'Mnemonic', grammar: 'Grammar', pronunciation: 'Sounds' },
       notesTitle: 'Notes',
       notesInEnglish: 'Notes are in English for now.',
       words: 'Tap a word for its meaning.',

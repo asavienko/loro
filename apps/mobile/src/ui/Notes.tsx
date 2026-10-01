@@ -1,5 +1,6 @@
-// A phrase's notes as tabs (the web prototype's src/ui/Notes.tsx): the memory hint, the grammar
-// rule and its sounds, in the learner's language where there is a version in it.
+// A phrase's notes as tabs (the web prototype's src/ui/Notes.tsx): the mnemonic (a hook for
+// remembering the phrase), the grammar rule and its sounds, in the learner's language where there is
+// a version in it.
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { Phrase, PhraseNotes } from '@shared/content';

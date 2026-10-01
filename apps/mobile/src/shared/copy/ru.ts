@@ -145,7 +145,7 @@ export function makeRu(n: Plural): Copy {
       likeLabel: 'Отметить фразу',
       addToSet: 'В набор…',
       heard: (c) => `прослушана ${c}×`,
-      notes: { mnemonic: 'Подсказка', grammar: 'Грамматика', pronunciation: 'Звуки' },
+      notes: { mnemonic: 'Мнемоника', grammar: 'Грамматика', pronunciation: 'Звуки' },
       notesTitle: 'Заметки',
       notesInEnglish: 'Заметки пока на английском.',
       words: 'Нажмите на слово, чтобы увидеть значение.',

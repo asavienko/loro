@@ -144,7 +144,7 @@ export function makeBg(n: Plural): Copy {
       likeLabel: 'Харесай фразата',
       addToSet: 'Добави в набор…',
       heard: (c) => `чута ${c}×`,
-      notes: { mnemonic: 'Подсказка', grammar: 'Граматика', pronunciation: 'Звуци' },
+      notes: { mnemonic: 'Мнемоника', grammar: 'Граматика', pronunciation: 'Звуци' },
       notesTitle: 'Бележки',
       notesInEnglish: 'Засега бележките са на английски.',
       words: 'Докоснете дума, за да видите значението ѝ.',
