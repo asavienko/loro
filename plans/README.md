@@ -4,7 +4,7 @@ Active plans live here as `NN-topic.md`; finished ones move to [the archive](arc
 Plans 1–103 and 105, the dated archives and the reviews were removed on 2026-09-30 as stale (they
 described the first app); they remain in Git history at `e36cc758`. Numbers are never reused.
 
-The highest assigned ID is **111** and the next new plan is **112**. Recheck concurrent worktrees
+The highest assigned ID is **112** and the next new plan is **113**. Recheck concurrent worktrees
 and untracked `plans/` files before allocating.
 
 | Mark | Meaning                                           |
@@ -16,11 +16,12 @@ and untracked `plans/` files before allocating.
 
 ## Active
 
-| Plan                                 | Outcome                                                                                | Status                                                                |
-| ------------------------------------ | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| [104](104-prototype-react-native.md) | The v2.0 player as the Expo app in `apps/mobile`, shared logic in `src/shared`         | 🟡 Scope 5 left: full verification, gestures on a device, iOS (Xcode) |
-| [106](106-connected-app.md)          | The connected app: sign-in, limits, AI phrases/covers/songs, a server catalog, sharing | 🟡 Item 15 left: iOS, live provider runs, a live Apple sign-in        |
-| [111](111-open-model-providers.md)   | DeepSeek on Fireworks (OpenRouter fallback) writes; Muse Image draws covers            | 🟡 EC2 deploy, APK, a live Muse cover left; OpenRouter image credit   |
+| Plan                                  | Outcome                                                                                            | Status                                                                |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [104](104-prototype-react-native.md)  | The v2.0 player as the Expo app in `apps/mobile`, shared logic in `src/shared`                     | 🟡 Scope 5 left: full verification, gestures on a device, iOS (Xcode) |
+| [106](106-connected-app.md)           | The connected app: sign-in, limits, AI phrases/covers/songs, a server catalog, sharing             | 🟡 Item 15 left: iOS, live provider runs, a live Apple sign-in        |
+| [111](111-open-model-providers.md)    | DeepSeek on Fireworks (OpenRouter fallback) writes; Muse Image draws covers                        | 🟡 EC2 deploy, APK, a live Muse cover left; OpenRouter image credit   |
+| [112](112-course-content-at-scale.md) | 10,000 phrases per course, A1–C2, from a syllabus; level shards, per-set notes, pre-rendered audio | — Ready: phase 0 (infrastructure) first                               |
 
 ## Working rules
 

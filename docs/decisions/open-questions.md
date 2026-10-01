@@ -14,6 +14,7 @@ at `e36cc758`.
 | [Q-22](#q-22) | May licensed neural TTS audio be shared off-device as a file?     | open     | Privacy + content | Any export of neural audio          |
 | [Q-23](#q-23) | Who reviews the course text in each language, and when?           | open     | Product + content | Calling any course content reviewed |
 | [Q-24](#q-24) | Which desired retention schedules reviews: the core's 50% or 90%? | open     | Product           | The review-date policy              |
+| [Q-25](#q-25) | May the frequency and CEFR lists behind the syllabus be used?     | open     | Product + content | The syllabus vocabulary bands       |
 
 <a id="q-08"></a>
 
@@ -68,6 +69,11 @@ app plays only the server's clips. A withdrawn voice fails closed; never substit
 **Still needed:** a native-speaker listen of the starter phrases and a live `TTS_API_KEY` on a paid
 plan. The pin does not claim either happened.
 
+**Plan [112](../../plans/112-course-content-at-scale.md), 2026-10-01:** course clips are
+pre-rendered by a budgeted backfill, level by level, targets first and prompts by demand. Still to
+decide with it: speech at `mp3_44100_64` (the format joins the clip URL's `?v=` hash) and clip bytes
+moving from PostgreSQL to S3 before they pass 2 GB.
+
 <a id="q-21"></a>
 
 ## Q-21 · Under what eval and budget may live AI phrase generation run?
@@ -82,6 +88,12 @@ length, register, safety, prompt injection; a first live run's mnemonics were no
 Provider retention was decided on 2026-10-01
 ([ADR-0015](../architecture/adr/0015-open-model-providers.md)): Fireworks keeps no prompts for open
 models, and OpenRouter routes only to providers that don't.
+
+**Course content (plan [112](../../plans/112-course-content-at-scale.md), 2026-10-01):** the same
+model writes the courses offline, through `apps/api/src/authoring/`, under a per-run `--limit-usd`
+ceiling and a dated price table, with deterministic checks and a model judge. The pilot (500 A1
+phrases per course) is the eval: at most 5% critical errors in a native sample and at most 25%
+deterministic rejects, or that language does not scale.
 
 <a id="q-22"></a>
 
@@ -105,6 +117,12 @@ Czech translations of everything else, the Polish and Czech UI copy and the API'
 rules, all written by AI (Claude Sonnet 5.5) on 2026-10-02. Needs a reviewer per language and a rule
 for which content may be shown as reviewed.
 
+**Proposed rule (plan [112](../../plans/112-course-content-at-scale.md), 2026-10-01):** verdicts
+live in `packages/content/v2/reviews/<lang>.jsonl`, tied to a hash of the content they checked. Each
+course and level is sampled (5% of each batch, at least 60 phrases, stratified by grammar and
+topic); a batch passes at 3% or fewer critical errors, otherwise its topic is fully reviewed or
+written again. A set shows as reviewed only when every phrase in it is. Reviewers are still needed.
+
 <a id="q-24"></a>
 
 ## Q-24 · Which desired retention schedules reviews?
@@ -115,3 +133,15 @@ keeping the core's 50% date as the upper bound; that policy lives in the app
 (`apps/mobile/src/shared/state/memory.ts`), not in core-rs (see
 [v2-prototype-decisions.md](../design/v2-prototype-decisions.md) and
 [fsrs-model.md](../architecture/fsrs-model.md)). Product needs to confirm or change this.
+
+<a id="q-25"></a>
+
+## Q-25 · May the frequency and CEFR lists behind the syllabus be used?
+
+Plan [112](../../plans/112-course-content-at-scale.md) bands each course's vocabulary A1–C2 from
+published lists, committing only the derived bands with attribution in
+`packages/content/v2/syllabus/SOURCES.md`. Candidates: Wiktionary frequency lists (CC BY-SA),
+SUBTLEX, the Russian National Corpus frequency dictionary, and the Bulgarian, Polish and Czech
+national corpora's lists. Oxford 3000/5000 and the English Vocabulary Profile are proprietary and
+not used. Needs: each source's licence checked for derived, committed bands, and a fallback for
+Bulgarian, which has the weakest public CEFR inventories.
