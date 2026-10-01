@@ -10,10 +10,11 @@ what a learner can make, who can see it, and what it costs them. Code: `apps/api
 ## Where content lives
 
 The app ships no phrase content. Loro's sets, phrases, notes, the phrase bank, the topics and one
-album per course (Spanish, Bulgarian, British English and Russian) are in `packages/content/v2/`;
-the API seeds them into PostgreSQL the first time the library is used after a content change
-(`library_meta.seed` holds the content version and a seed revision, taken under an advisory lock).
-The songs of Loro's albums are the sets' phrases arranged as lyrics over the demo instrumental.
+album per course (Spanish, Bulgarian, British English, Russian, American English, Polish and Czech)
+are in `packages/content/v2/`; the API seeds them into PostgreSQL the first time the library is used
+after a content change (`library_meta.seed` holds the content version and a seed revision, taken
+under an advisory lock). The songs of Loro's albums are the sets' phrases arranged as lyrics over
+the demo instrumental.
 
 The app downloads a course's **pack** (`GET /library/pack?target=es-ES`): the topics, Loro's sets
 and phrases, the learner's own and saved sets when signed in, the course's phrase bank and the

@@ -4,10 +4,11 @@ Guidance for Claude Code working in this repository.
 
 ## What this is
 
-**Loro** — a mobile app (iOS + Android, plus the web) that teaches Spanish, Bulgarian, British
-English and Russian by the phrase, in an English, Bulgarian or Russian interface (never a course in
-the learner's own language): a listening-first player (hear a phrase in your language, say it in the
-pause, hear it in the target language, rate it; FSRS schedules the next time).
+**Loro** — a mobile app (iOS + Android, plus the web) that teaches Spanish, Bulgarian, British and
+American English, Russian, Polish and Czech by the phrase, in an English, Bulgarian, Russian, Polish
+or Czech interface (never a course in the learner's own language; en-GB and en-US count as one): a
+listening-first player (hear a phrase in your language, say it in the pause, hear it in the target
+language, rate it; FSRS schedules the next time).
 
 **The app is `apps/mobile`: the v2.0 design as an Expo app** (plan
 [104](plans/104-prototype-react-native.md)). It replaced the v1.1-based app on 2026-09-30. That app,
@@ -108,7 +109,7 @@ A change that violates one of these is reverted, not discussed.
   swapped in on iOS and Android by resolved path through the `NATIVE` map in `metro.config.js` (a
   new stand-in needs an entry there). `src/shared/state/` is the pure machine; `src/state/` is the
   connected React layer around it (store, account, course content, progress sync). Every
-  learner-facing string is in `src/shared/copy/` (en, bg, ru). Controls press through
+  learner-facing string is in `src/shared/copy/` (en, bg, ru, pl, cs). Controls press through
   `src/ui/Press.tsx` and switches through `src/ui/Toggle.tsx`, which give the haptics
   (lint-enforced). **One clock:** only `src/shared/state/clock.ts` builds a `Date` or reads
   `Date.now()` (lint-enforced). State changes go through `transition(state, event)`; the allowed
