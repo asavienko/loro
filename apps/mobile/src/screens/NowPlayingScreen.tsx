@@ -58,7 +58,15 @@ export function NowPlayingScreen() {
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
   const phrase = findPhrase(state.learner, currentPhraseId(state.player));
-  if (!phrase) return <View style={styles.screen} />;
+  // Nothing queued (the course changed, or the page was opened directly): only the way out.
+  if (!phrase)
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
+        <View style={styles.header}>
+          <HeaderButton label={c.player.close} icon="keyboard_arrow_down" onPress={close} />
+        </View>
+      </View>
+    );
   const { status, phase, index, order, audioError } = state.player;
   const playing = status === 'playing';
   const cannotSay = audioError?.reason === 'no-voice' && audioError.lang === phrase.targetLang;
