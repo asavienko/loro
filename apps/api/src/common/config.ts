@@ -1,5 +1,6 @@
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { ANTHROPIC_EFFORTS, type AnthropicEffort } from '../integrations/anthropic/messages.js'
 
 /**
  * Environment access, in one place.
@@ -28,7 +29,21 @@ export const config = {
   aiApiKey: (): string | undefined => process.env['ANTHROPIC_API_KEY'],
   aiSuggestModel: (): string => process.env['AI_MODEL_TRANSLATE'] ?? 'claude-haiku-4-5-20251001',
   /** The library's writer (plan 106): phrase decks, lyrics and cover specs. */
-  aiGenerateModel: (): string => process.env['AI_MODEL_GENERATE'] ?? 'claude-sonnet-5',
+  aiGenerateModel: (): string => {
+    // An empty line in the env file means the default, not a model called "".
+    const value = process.env['AI_MODEL_GENERATE']?.trim()
+    if (value) return value
+    return 'claude-sonnet-5'
+  },
+  /**
+   * How hard the writer thinks (`output_config.effort`): `low` keeps a deck quick enough to wait
+   * for. Empty leaves it to the model, as a model without effort (Claude Haiku 4.5) needs; an
+   * unknown value is ignored the same way.
+   */
+  aiGenerateEffort: (): AnthropicEffort | undefined => {
+    const value = (process.env['AI_EFFORT_GENERATE'] ?? 'low').trim()
+    return ANTHROPIC_EFFORTS.find((effort) => effort === value)
+  },
 
   /**
    * A learner's daily allowances (plan 106), counted per UTC day: phrase decks, covers and songs.

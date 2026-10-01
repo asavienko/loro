@@ -12,6 +12,10 @@ export type AnthropicFailureCode =
   | 'rate_limited'
   | 'capacity'
   | 'invalid_output'
+  /** The model declined (`stop_reason: "refusal"`); the output can't be trusted to match the schema. */
+  | 'refused'
+  /** The answer hit `max_tokens` (thinking counts against it): incomplete JSON. */
+  | 'truncated'
 
 /** Never retain provider bodies, credentials, prompts, or underlying error causes. */
 export class AnthropicFailure extends Error {
@@ -21,9 +25,20 @@ export class AnthropicFailure extends Error {
   }
 }
 
+/** `output_config.effort`; omitted when unset, for models that don't take it (Claude Haiku 4.5). */
+export type AnthropicEffort = 'low' | 'medium' | 'high' | 'xhigh' | 'max'
+export const ANTHROPIC_EFFORTS: readonly AnthropicEffort[] = [
+  'low',
+  'medium',
+  'high',
+  'xhigh',
+  'max',
+]
+
 export interface AnthropicOptions {
   apiKey: string
   model: string
+  effort?: AnthropicEffort | undefined
   timeoutMs: number
   maxTokens: number
   maxRequestBytes: number
@@ -93,6 +108,36 @@ async function boundedJson(response: Response, limit: number): Promise<unknown> 
   }
 }
 
+/**
+ * The provider's status as a failure code: a rejected key or unknown model is configuration, a
+ * malformed request is input, and only 429 and the 5xx/529 family are worth a later try.
+ */
+function failureForStatus(status: number): AnthropicFailureCode {
+  if (status === 429) return 'rate_limited'
+  if (status === 401 || status === 403 || status === 404) return 'configuration'
+  if (status === 400 || status === 413) return 'input'
+  return 'unavailable'
+}
+
+/**
+ * The one text block that holds the JSON. Thinking blocks come before it when the model thinks
+ * (adaptive thinking is on by default on current models) and are skipped; any other block, or
+ * more than one text block, is not an answer this adapter accepts.
+ */
+function answerBlock(content: unknown[]): { type: 'text'; text: string } {
+  let answer: { type: 'text'; text: string } | null = null
+  for (const block of content) {
+    if (!record(block)) throw new AnthropicFailure('invalid_output')
+    if (block['type'] === 'thinking' || block['type'] === 'redacted_thinking') continue
+    if (block['type'] !== 'text' || typeof block['text'] !== 'string' || answer) {
+      throw new AnthropicFailure('invalid_output')
+    }
+    answer = { type: 'text', text: block['text'] }
+  }
+  if (!answer) throw new AnthropicFailure('invalid_output')
+  return answer
+}
+
 /** Exactly one outbound attempt; retry/spend/fallback policy belongs to the guarded service. */
 export class AnthropicMessages {
   private readonly options: Readonly<AnthropicOptions>
@@ -113,7 +158,8 @@ export class AnthropicMessages {
       !options.apiKey.trim() ||
       !options.model.trim() ||
       limits.some((value) => !Number.isSafeInteger(value) || value <= 0) ||
-      options.timeoutMs > 2_147_483_647
+      options.timeoutMs > 2_147_483_647 ||
+      (options.effort !== undefined && !ANTHROPIC_EFFORTS.includes(options.effort))
     ) {
       throw new AnthropicFailure('configuration')
     }
@@ -144,7 +190,11 @@ export class AnthropicMessages {
         max_tokens: this.options.maxTokens,
         system: input.system,
         messages: input.messages.map(({ role, content }) => ({ role, content })),
-        output_config: { format: { type: 'json_schema', schema: input.schema } },
+        // No `thinking` field: current models think adaptively by default, and effort bounds it.
+        output_config: {
+          format: { type: 'json_schema', schema: input.schema },
+          ...(this.options.effort ? { effort: this.options.effort } : {}),
+        },
         stream: false,
       })
     } catch {
@@ -171,21 +221,16 @@ export class AnthropicMessages {
       })
       if (!response.ok) {
         await response.body?.cancel()
-        throw new AnthropicFailure(response.status === 429 ? 'rate_limited' : 'unavailable')
+        throw new AnthropicFailure(failureForStatus(response.status))
       }
       const envelope = await boundedJson(response, this.options.maxResponseBytes)
-      if (
-        !record(envelope) ||
-        envelope['stop_reason'] !== 'end_turn' ||
-        !Array.isArray(envelope['content']) ||
-        envelope['content'].length !== 1
-      ) {
+      if (!record(envelope)) throw new AnthropicFailure('invalid_output')
+      if (envelope['stop_reason'] === 'refusal') throw new AnthropicFailure('refused')
+      if (envelope['stop_reason'] === 'max_tokens') throw new AnthropicFailure('truncated')
+      if (envelope['stop_reason'] !== 'end_turn' || !Array.isArray(envelope['content'])) {
         throw new AnthropicFailure('invalid_output')
       }
-      const block: unknown = envelope['content'][0]
-      if (!record(block) || block['type'] !== 'text' || typeof block['text'] !== 'string') {
-        throw new AnthropicFailure('invalid_output')
-      }
+      const block = answerBlock(envelope['content'])
       const usage = envelope['usage']
       if (!record(usage)) throw new AnthropicFailure('invalid_output')
       const measuredUsage = {
@@ -202,7 +247,7 @@ export class AnthropicMessages {
       }
       let result: T
       try {
-        result = input.parse(JSON.parse(block['text']) as unknown)
+        result = input.parse(JSON.parse(block.text) as unknown)
       } catch {
         throw new AnthropicFailure('invalid_output')
       }

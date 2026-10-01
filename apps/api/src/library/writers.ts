@@ -72,11 +72,12 @@ export function writer(): AnthropicMessages | null {
     ? new AnthropicMessages({
         apiKey,
         model: config.aiGenerateModel(),
+        effort: config.aiGenerateEffort(),
         timeoutMs: 90_000,
         maxTokens: 16_000,
         maxRequestBytes: 64_000,
         maxResponseBytes: 256_000,
-        maxConcurrentRequests: 4,
+        maxConcurrentRequests: 8,
       })
     : null
   return client
@@ -377,6 +378,7 @@ export function bankPhrases(request: GeneratePhrasesRequest): WrittenPhrase[] {
 export async function claudeNotes(
   ai: AnthropicMessages,
   request: GenerateNotesRequest,
+  signal?: AbortSignal,
 ): Promise<{ image: string[]; notes: LibraryNotes }> {
   const target = LANGUAGE_NAMES[request.targetLang]
   const native = LANGUAGE_NAMES[request.nativeLang]
@@ -408,6 +410,7 @@ export async function claudeNotes(
       properties: { image: schema['image'], notes: schema['notes'] },
     },
     parse: (value) => z.object({ image: z.array(z.string()), notes: z.unknown() }).parse(value),
+    ...(signal ? { signal } : {}),
   })
   const notes = cleanNotes(result.value.notes)
   if (!notes) throw new Error('unusable notes')
