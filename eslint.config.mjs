@@ -96,6 +96,16 @@ export default tseslint.config(
     },
   },
 
+  // ── The landing page (apps/landing) ──
+  // Browser modules with JSDoc types, checked by tsc (checkJs). TypeScript knows the page's and
+  // Node's globals, so `no-undef` would only repeat it without them.
+  {
+    files: ['apps/landing/**/*.{js,mjs}'],
+    rules: {
+      'no-undef': 'off',
+    },
+  },
+
   // ── Build and tool configs ──
   // They're linted against the default project, which has no strictNullChecks, so
   // the type-aware rules can't run. Syntax rules still apply.

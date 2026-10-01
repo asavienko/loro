@@ -51,6 +51,8 @@ history at `e36cc758`.
   [ElevenLabs](../apps/api/src/integrations/elevenlabs/README.md) integration and the text-model
   transports in `apps/api/src/integrations/`
   ([ADR-0015](architecture/adr/0015-open-model-providers.md))
+- [`apps/landing`](../apps/landing/README.md) — the one-page site and how its build list stays
+  current
 - [`packages/core`](../packages/core/README.md),
   [`packages/core-rs`](../packages/core-rs/README.md),
   [`packages/content`](../packages/content/README.md) and its

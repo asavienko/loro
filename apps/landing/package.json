@@ -1,0 +1,16 @@
+{
+  "name": "@loro/landing",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Loro's one-page site: what the app is, and the Android builds from GitHub releases.",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test",
+    "lint": "eslint src scripts"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

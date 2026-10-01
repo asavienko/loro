@@ -15,6 +15,7 @@ remain in Git history at `e36cc758`. Delivery status lives in
 | F-04 | Progress and the learner's own sets, songs and likes sync across devices ([sync-protocol.md](../architecture/sync-protocol.md)). |
 | F-07 | Account deletion and data deletion; a JSON export of phrases and progress.                                                       |
 | F-08 | UI in English, Bulgarian or Russian; learn Spanish, Bulgarian or Russian (different from the UI language): seven pairs.          |
+| F-09 | A one-page site offers every Android build from GitHub releases, newest first, read afresh on each visit.                        |
 
 ## Listening and rating
 
