@@ -58,7 +58,7 @@ import type {
 import { composeLive, liveMusicConfigured } from './music-live.js'
 import { registerSpeech, registerSpeechMany, SpeechService, speechFor } from './speech.js'
 import { readTtsRuntimeConfig, type TtsRuntimeConfig } from '../tts/transport.js'
-import { synthesizeDemo } from './synth.js'
+import { demoLineLimit, synthesizeDemo } from './synth.js'
 import {
   MAX_SONG_LINES,
   assembleLyrics,
@@ -398,7 +398,7 @@ export class LibraryService {
           native: p.translations['en-GB'] ?? '',
         }))
         const style = MUSIC_STYLE_IDS[index % MUSIC_STYLE_IDS.length] ?? 'acoustic_folk'
-        const sections = assembleLyrics(songPhrases)
+        const sections = firstLines(assembleLyrics(songPhrases), demoLineLimit(style))
         const lineCount = sections.reduce((n, s) => n + s.lines.length, 0)
         const demo = synthesizeDemo(style, lineCount, set.id)
         const audioId = await this.storeAudio(tx, demo.wav, 'audio/wav')
@@ -1788,7 +1788,6 @@ export class LibraryService {
         }
       }
       sections ??= assembleLyrics(input.phrases)
-      const lineCount = sections.reduce((n, s) => n + s.lines.length, 0)
       let audio: {
         bytes: Uint8Array
         contentType: string
@@ -1798,6 +1797,7 @@ export class LibraryService {
         voiced: boolean
       }
       if (liveMusicConfigured()) {
+        const lineCount = sections.reduce((n, s) => n + s.lines.length, 0)
         const live = await composeLive({
           sections,
           styleId: input.styleId,
@@ -1806,12 +1806,14 @@ export class LibraryService {
         })
         audio = { ...live, durationMs: null, lines: null, by: 'elevenlabs', voiced: true }
       } else {
+        // The demo sings the lines its size allows (synth.ts); the lyrics end where its sound does.
+        sections = firstLines(sections, demoLineLimit(input.styleId))
         // Without a music provider, the server's voice speaks each line over the demo's bars.
         const lineTexts = sections.flatMap((section) => section.lines.map((line) => line.text))
         const voices = this.speech
           ? await this.speech.songVoices(input.targetLang, lineTexts, input.ownerId)
           : []
-        const demo = synthesizeDemo(input.styleId, lineCount, `${id}:${input.title}`, voices)
+        const demo = synthesizeDemo(input.styleId, lineTexts.length, `${id}:${input.title}`, voices)
         audio = {
           bytes: demo.wav,
           contentType: 'audio/wav',
@@ -2167,6 +2169,16 @@ function writtenIn(nativeLang: Language, notes: LibraryNotes): NoteTranslations 
 }
 
 /** Lyrics with each line's timing, where the sound's timing is known. */
+/** The song's first `limit` lines, in their sections; a section left with none is dropped. */
+function firstLines(sections: SongSection[], limit: number): SongSection[] {
+  let room = limit
+  return sections.flatMap((section) => {
+    const lines = section.lines.slice(0, Math.max(0, room))
+    room -= lines.length
+    return lines.length > 0 ? [{ ...section, lines }] : []
+  })
+}
+
 function timed(
   sections: SongSection[],
   lines: { startMs: number; endMs: number }[] | null,
