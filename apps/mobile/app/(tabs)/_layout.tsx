@@ -12,7 +12,7 @@ import { useStore } from '../../src/state/store';
 import { MusicMiniPlayer, SongBarGrades } from '../../src/music/MusicMiniPlayer';
 import { useMusic } from '../../src/music/MusicPlayer';
 import { MiniPlayer, PhraseBarGrades } from '../../src/ui/MiniPlayer';
-import { BarPassCard } from '../../src/nav/PassNotice';
+import { usePassAction } from '../../src/nav/PassNotice';
 import { BarShiftProvider } from '../../src/ui/barShift';
 import { TabBar } from '../../src/ui/TabBar';
 import { useReportChrome } from '../../src/ui/Toast';
@@ -47,7 +47,6 @@ export default function TabsLayout() {
         {chrome !== null && (
           <View style={[styles.over, { bottom: chrome + OVER_BAR }]} pointerEvents="box-none">
             <View style={styles.grades} pointerEvents="box-none" onLayout={(e) => setGrades(e.nativeEvent.layout.height)}>
-              <BarPassCard />
               <FrontGrades />
             </View>
           </View>
@@ -68,8 +67,10 @@ function useFront(): 'song' | 'phrases' | null {
 
 function FrontGrades() {
   const front = useFront();
+  // The end of a pass offers its way on (the next set) as a button before the phrase's grades.
+  const lead = usePassAction();
   if (front === 'song') return <SongBarGrades />;
-  if (front === 'phrases') return <PhraseBarGrades />;
+  if (front === 'phrases') return <PhraseBarGrades lead={lead} />;
   return null;
 }
 

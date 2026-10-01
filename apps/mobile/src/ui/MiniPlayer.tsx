@@ -9,7 +9,7 @@ import { endTitle, isTargetRevealed, PHASE_ICONS, phaseStepLabel } from '@shared
 import { barLoopRating, barRating } from '@shared/ui/rating';
 import { useRate } from '../screens/useRate';
 import { useCopy, useNow, useStore } from '../state/store';
-import { BarGrades, useRedrawIn } from './BarGrades';
+import { BarGrades, BarLead, useRedrawIn } from './BarGrades';
 import { IconName } from './Icon';
 import { MiniCard, MiniCarousel, MiniItem, miniFill, MiniProgress, Side } from './MiniBar';
 import { PhaseFill } from './PhaseFill';
@@ -140,7 +140,7 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
  * or it has a rating in its window; Undo follows a rating for a few seconds, even once the loop has
  * moved on from the phrase it rated.
  */
-export function PhraseBarGrades() {
+export function PhraseBarGrades({ lead }: { lead?: BarLead | null }) {
   const { state, actions } = useStore();
   const rate = useRate();
   const player = state.player;
@@ -153,5 +153,5 @@ export function PhraseBarGrades() {
   const view = barRating({ ratable, rated: windowOpen > 0 }, recent, now);
   // Drawn again as Undo runs out, and as the window closes and the grades come back.
   useRedrawIn(view.kind === 'undo' ? view.left : windowOpen > 0 ? windowOpen : null);
-  return <BarGrades view={view} onRate={rate} onUndo={() => recent && actions.unrate(recent.phraseId)} />;
+  return <BarGrades view={view} onRate={rate} onUndo={() => recent && actions.unrate(recent.phraseId)} lead={lead} />;
 }
