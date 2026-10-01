@@ -1,8 +1,10 @@
 // A song in the one player (plans 106, 107): cover, where it is, the controls, a heart, and Missed /
 // Hard / Easy, which review every phrase the song sings (the same window and undo as a phrase's
-// rating). Then the lyrics, each line with its meaning a tap away; where the sound's timing is known
-// (the demo sound) the line being played lights up. A demo sound says so: it is the server's
-// instrumental, never passed off as a sung recording.
+// rating). Then the lyrics, each line with its meaning and, where the sound's timing is known (the
+// sung song heard back, or the demo's bars; plan 113), the time it starts and a light as it plays.
+// A line the singer changed shows the words that were sung with the written line under them; a line
+// the singer skipped says so. A demo sound says so: it is the server's instrumental, never passed
+// off as a sung recording.
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { LayoutChangeEvent, ScrollView, StyleSheet, View } from 'react-native';
@@ -67,6 +69,8 @@ export function SongScreen() {
   const lines = song.sections.flatMap((section) => section.lines);
   const active = lines.findIndex((line) => line.startMs !== null && line.endMs !== null && ms >= line.startMs && ms < line.endMs);
   const liked = isLiked(state.learner, 'song', song.id);
+  // The lines are what was sung, heard back from the song (plan 113): a changed line keeps the written one.
+  const heard = song.timingBy === 'transcript';
 
   return (
     <PullDownWindow onClose={close} style={[styles.page, { paddingTop: insets.top }]}>
@@ -112,11 +116,17 @@ export function SongScreen() {
           <Badge icon={song.audioBy === 'demo' && !song.voiced ? 'graphic_eq' : 'mic'} label={song.audioBy === 'demo' ? (song.voiced ? c.music.spokenDemo : c.music.demoSound) : c.music.sung} />
           {/* An older server says `claude`: anything but the set's own phrases was written by a model. */}
           <Badge icon="lyrics" label={c.music.lyricsBy[song.lyricsBy === 'phrases' ? 'phrases' : 'ai']} />
+          {heard && <Badge icon="hearing" label={c.music.heard} />}
           <Badge icon="equalizer" label={c.music.style[song.styleId]} />
         </View>
         {song.audioBy === 'demo' && (
           <Txt variant="label" color="secondary">
             {song.voiced ? c.music.spokenNote : c.music.demoNote}
+          </Txt>
+        )}
+        {heard && (
+          <Txt variant="label" color="secondary">
+            {c.music.heardNote}
           </Txt>
         )}
 
@@ -182,23 +192,45 @@ export function SongScreen() {
               {section.lines.map((line, l) => {
                 const at = before + l;
                 const on = at === active;
+                const timed = line.startMs !== null;
                 return (
                   <Press
                     key={at}
-                    accessibilityRole={line.startMs !== null ? 'button' : 'text'}
-                    haptic={line.startMs !== null ? 'tap' : 'none'}
-                    disabled={line.startMs === null}
+                    accessibilityRole={timed ? 'button' : 'text'}
+                    accessibilityLabel={line.startMs !== null ? `${clockTime(line.startMs / 1000)} ${line.text}` : undefined}
+                    haptic={timed ? 'tap' : 'none'}
+                    disabled={!timed}
                     onPress={() => line.startMs !== null && music.seek(line.startMs / 1000)}
                     style={[styles.line, on && styles.lineOn]}
                   >
-                    <Txt variant="title" face="serif" weight={on ? 700 : 500} color={on ? 'primaryContainer' : 'onSurface'} lang={set?.targetLang}>
-                      {line.text}
-                    </Txt>
-                    {meanings && (
-                      <Txt variant="body" color="secondary">
-                        {line.meaning}
-                      </Txt>
-                    )}
+                    <View style={styles.lineRow}>
+                      {/* When the line starts, where the sound's timing is known; a line not heard in a heard-back song says so. */}
+                      {(timed || heard) && (
+                        <Txt variant="caption" color={on ? 'primaryContainer' : 'outline'} style={styles.time}>
+                          {line.startMs !== null ? clockTime(line.startMs / 1000) : '—'}
+                        </Txt>
+                      )}
+                      <View style={styles.lineText}>
+                        <Txt variant="title" face="serif" weight={on ? 700 : 500} color={on ? 'primaryContainer' : 'onSurface'} lang={set?.targetLang}>
+                          {line.text}
+                        </Txt>
+                        {line.written && (
+                          <Txt variant="label" color="secondary" italic lang={set?.targetLang}>
+                            {c.music.written(line.written.text)}
+                          </Txt>
+                        )}
+                        {heard && !timed && (
+                          <Txt variant="label" color="outline">
+                            {c.music.skippedLine}
+                          </Txt>
+                        )}
+                        {meanings && (
+                          <Txt variant="body" color="secondary">
+                            {line.meaning}
+                          </Txt>
+                        )}
+                      </View>
+                    </View>
                   </Press>
                 );
               })}
@@ -251,7 +283,7 @@ function SongRating({ song }: { song: Song }) {
   );
 }
 
-function Badge({ icon, label }: { icon: 'graphic_eq' | 'mic' | 'lyrics' | 'equalizer'; label: string }) {
+function Badge({ icon, label }: { icon: 'graphic_eq' | 'mic' | 'lyrics' | 'equalizer' | 'hearing'; label: string }) {
   return (
     <View style={styles.badge}>
       <Icon name={icon} size="xs" color="primaryContainer" />
@@ -287,6 +319,9 @@ const styles = StyleSheet.create({
   lyricsHead: { flexDirection: 'row', alignItems: 'center', paddingTop: 16 },
   section: { gap: 4, paddingTop: 8 },
   line: { paddingVertical: 6, paddingHorizontal: 10, marginHorizontal: -10, borderRadius: radius.xl },
+  lineRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  time: { minWidth: 36, paddingTop: 5, fontVariant: ['tabular-nums'] },
+  lineText: { flex: 1, gap: 2 },
   lineOn: { backgroundColor: colors.primaryFixed },
   setLink: { alignSelf: 'flex-start', marginTop: 16 },
 });
