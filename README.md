@@ -6,6 +6,9 @@ again, then rate how it went. The rating schedules the phrase with FSRS. Courses
 Bulgarian, British and American English, Russian, Polish and Czech; the app speaks English (British
 or American), Bulgarian, Russian, Polish and Czech.
 
+**Website:** <https://main.d8avifn92wmt4.amplifyapp.com/> — what Loro is, a demo of the player, and
+the newest Android build to download.
+
 This repository holds the app, the API, the shared packages and their documentation.
 
 ## Status
