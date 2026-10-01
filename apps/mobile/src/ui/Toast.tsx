@@ -68,7 +68,7 @@ const SHEET_OFFSET = 16;
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [item, setItem] = useState<ToastItem | null>(null);
   const [layers, setLayers] = useState<number[]>([]);
-  // The mini-player grows with its grades: the snackbar sits over whatever is there.
+  // The tab bar, the mini-player and the grades floating over it: the snackbar sits over whatever is there.
   const [chrome, setChrome] = useState<number | null>(null);
   const nextId = useRef(1);
   const announce = useCallback((text: string) => AccessibilityInfo.announceForAccessibility(text), []);

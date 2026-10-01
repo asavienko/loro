@@ -1,15 +1,17 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode } from 'react';
 import { languageLabel } from '@shared/copy';
 import type { Phrase } from '@shared/content';
 import { findPhrase, findSetView, promptOf } from '@shared/state/catalog';
+import { clock } from '@shared/state/clock';
 import { playsOnce } from '@shared/state/machine';
 import { continuation, currentPhraseId, displayLearner, pendingFor, sessionSummary, windowLeft } from '@shared/state/selectors';
-import type { Grade } from '@shared/state/types';
 import { endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction } from '@shared/ui/phase';
+import { barRating, recentLoopRating } from '@shared/ui/rating';
 import { useRate } from '../screens/useRate';
 import { useCopy, useNow, useStore } from '../state/store';
+import { BarGrades, useRedrawIn } from './BarGrades';
 import { IconName } from './Icon';
-import { MiniCard, MiniCarousel, MiniItem, miniFill, MiniProgress, MiniRated, MiniRating, Side } from './MiniBar';
+import { MiniCard, MiniCarousel, MiniItem, miniFill, MiniProgress, Side } from './MiniBar';
 import { PhaseFill } from './PhaseFill';
 import { SetCover } from './SetCover';
 import { Txt } from './Txt';
@@ -18,16 +20,13 @@ const STEPS_PER_REPETITION = 3;
 
 /**
  * The docked player for the phrase loop (the web's src/ui/MiniPlayer.tsx), on the shared bar
- * (MiniBar): tap to open, swipe for the next or previous phrase, rate it without opening the player.
- * The target stays hidden here, as everywhere, until it has been heard.
+ * (MiniBar): tap to open, swipe for the next or previous phrase; its grades float above it
+ * (PhraseBarGrades). The target stays hidden here, as everywhere, until it has been heard.
  */
 export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
   const c = useCopy();
   const { state, actions } = useStore();
   const now = useNow(60_000);
-  const rate = useRate();
-  // Rated while the loop waits for a rating, it moves straight on: the rated card stays a moment.
-  const [held, setHeld] = useState<MiniItem | null>(null);
 
   const player = state.player;
   const phrase = findPhrase(state.learner, currentPhraseId(player));
@@ -37,17 +36,8 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
   const ended = player.ended && playsOnce(player);
   const key = `${index}:${phrase.id}`;
 
-  /** A grade given a phrase, and what it did, as the player says it: not when it comes back (FSRS decides). */
-  const ratedAs = (grade: Grade): MiniRated => ({ grade, detail: c.player.scheduled, label: `${c.player.ratedAs(c.common.grade[grade])}. ${c.player.scheduled}` });
-  /** The grade a phrase was given, while it can still be undone. */
-  const ratedOf = (id: string) => {
-    const pending = pendingFor(state, id);
-    if (!pending || windowLeft(pending, Math.max(now, pending.at)) <= 0) return null;
-    return ratedAs(pending.grade);
-  };
-
   /** A phrase's card: the playing one, or a neighbour as it will start. */
-  const card = (p: Phrase, look: { revealed: boolean; status: string; badge: IconName | null; progress: ReactNode; rating: ReactNode }) => {
+  const card = (p: Phrase, look: { revealed: boolean; status: string; badge: IconName | null; progress: ReactNode }) => {
     const prompt = promptOf(p, state.learner.profile.nativeLang);
     const title = look.revealed ? p.target : prompt.text;
     const set = findSetView(state.learner, p.setId) ?? findSetView(state.learner, player.setId);
@@ -73,7 +63,6 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
         playing={playing}
         onToggle={playing ? actions.pause : actions.play}
         next={{ label: c.player.next, onPress: actions.next }}
-        rating={look.rating}
         progress={look.progress}
       />
     );
@@ -96,18 +85,12 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
         : phase === 'rate'
           ? c.player.howDidItGo
           : phaseInstruction(c, phase, prompt.lang, phrase.targetLang);
-  const own = (rating: ReactNode) =>
-    card(phrase, {
-      revealed: isTargetRevealed(player),
-      status,
-      badge: playing && !audioError ? (phase === 'rate' ? 'task_alt' : PHASE_ICONS[phase]) : null,
-      progress: timed ? <PhaseFill deplete={phase === 'rate'} style={miniFill} /> : <MiniProgress share={progress} />,
-      rating,
-    });
-  const onRate = (grade: Grade) => {
-    if (player.phase === 'rate') setHeld({ key, card: own(<MiniRating rated={ratedAs(grade)} />) });
-    rate(grade);
-  };
+  const own = card(phrase, {
+    revealed: isTargetRevealed(player),
+    status,
+    badge: playing && !audioError ? (phase === 'rate' ? 'task_alt' : PHASE_ICONS[phase]) : null,
+    progress: timed ? <PhaseFill deplete={phase === 'rate'} style={miniFill} /> : <MiniProgress share={progress} />,
+  });
 
   /** Where Next goes, as the loop's NEXT does: the next phrase, the queue again, or the course's next ones. */
   const nextAt = (): { index: number; id: string } | null => {
@@ -130,14 +113,13 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
         status: playing ? phaseInstruction(c, 'native', pPrompt.lang, p.targetLang) : c.player.paused,
         badge: playing ? PHASE_ICONS.native : null,
         progress: <MiniProgress share={0} />,
-        rating: <MiniRating rated={ratedOf(p.id)} />,
       }),
     };
   };
 
   return (
     <MiniCarousel
-      item={{ key, card: own(ended ? null : <MiniRating rated={ratedOf(phrase.id)} onRate={onRate} onUndo={() => actions.unrate(phrase.id)} />) }}
+      item={{ key, card: own }}
       // A pass through the queue again (repeat) is forward, as is a new queue.
       position={(player.session?.passes ?? 0) * 100_000 + index}
       queue={player.session?.id ?? ''}
@@ -148,7 +130,27 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
         else actions.jump(index - 1);
         return true;
       }}
-      held={held}
     />
   );
+}
+
+/**
+ * The phrase loop's grades above the bar: the phrase playing can be rated unless its queue has ended
+ * or it has a rating in its window; Undo follows a rating for a few seconds, even once the loop has
+ * moved on from the phrase it rated.
+ */
+export function PhraseBarGrades() {
+  const { state, actions } = useStore();
+  const rate = useRate();
+  const player = state.player;
+  const id = currentPhraseId(player);
+  const now = clock.now();
+  const pending = id === null ? undefined : pendingFor(state, id);
+  const windowOpen = pending ? windowLeft(pending, now) : 0;
+  const recent = recentLoopRating(state.pending, now);
+  const ratable = findPhrase(state.learner, id) !== undefined && player.status !== 'idle' && !(player.ended && playsOnce(player));
+  const view = barRating({ ratable, rated: windowOpen > 0 }, recent, now);
+  // Drawn again as Undo runs out, and as the window closes and the grades come back.
+  useRedrawIn(view.kind === 'undo' ? view.left : windowOpen > 0 ? windowOpen : null);
+  return <BarGrades view={view} onRate={rate} onUndo={() => recent && actions.unrate(recent.phraseId)} />;
 }

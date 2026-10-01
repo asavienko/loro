@@ -30,6 +30,7 @@ import {
 } from '@shared/state/selectors';
 import type { Phase } from '@shared/state/types';
 import { endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel, queueTitle } from '@shared/ui/phase';
+import { recentLoopRating } from '@shared/ui/rating';
 import { playerCoverSize } from '@shared/ui/room';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
@@ -263,7 +264,9 @@ function PlayTime({ phrase }: { phrase: Phrase }) {
 
 /**
  * Three grades, never preselected and without times. Once one is given it stays marked, and the line
- * over them says what it did, with Undo, for the rating's five-minute window.
+ * over them says what it did, with Undo, for the rating's five-minute window. A rating given in the
+ * hold moves the loop on: then the line offers Undo for that phrase for a few seconds, over the next
+ * one's grades.
  */
 function Rating({ phrase }: { phrase: Phrase }) {
   const c = useCopy();
@@ -273,6 +276,8 @@ function Rating({ phrase }: { phrase: Phrase }) {
   const pending = pendingFor(state, phrase.id);
   const left = pending ? Math.min(RATING_WINDOW_MS, windowLeft(pending, Math.max(now, pending.at))) : 0;
   const active = pending && left > 0 ? pending : undefined;
+  const recent = active ? null : recentLoopRating(state.pending, now);
+  const previous = recent && recent.phraseId !== phrase.id ? recent : null;
   const hold = state.player.phase === 'rate' && state.player.status === 'playing';
   const beforeTurn = state.player.repetition === 1 && (state.player.phase === 'native' || state.player.phase === 'pause');
   return (
@@ -282,6 +287,8 @@ function Rating({ phrase }: { phrase: Phrase }) {
           text={upNextIds(state.player).includes(phrase.id) ? c.player.backLater : c.player.scheduled}
           undo={{ label: c.player.undoFor(formatElapsed(left)), accessibilityLabel: c.player.undoLabel(formatElapsed(left)), onPress: () => actions.unrate() }}
         />
+      ) : previous ? (
+        <RatedLine text={c.player.ratedPrevious(c.common.grade[previous.grade])} undo={{ label: c.common.undo, onPress: () => actions.unrate(previous.phraseId) }} />
       ) : (
         <RatingLine>
           <Txt variant={hold ? 'body' : 'label'} weight={hold ? 700 : 500} color={hold ? 'onSurface' : 'secondary'} align="center" numberOfLines={2}>

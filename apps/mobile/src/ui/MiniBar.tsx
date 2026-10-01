@@ -1,33 +1,17 @@
 // The one player's bar above the tabs (plan 107), the same for a phrase and a song: a card that opens
-// the player, plays or pauses, skips, and takes a rating. Dragged sideways, the card follows the
-// finger and the next or previous item comes in beside it; let go far enough (or flung) and that one
-// takes its place, less and the card springs back. Any other change of item (Next, the loop moving on)
-// slides the new card in from the side it came from, and a rating that moved the loop on shows on the
-// rated card for a moment first. The grades give way to the grade given while it can be undone.
+// the player, plays or pauses and skips. Dragged sideways, the card follows the finger and the next or
+// previous item comes in beside it; let go far enough (or flung) and that one takes its place, less and
+// the card springs back. Any other change of item (Next, the loop moving on) slides the new card in
+// from the side it came from. Its grades float above it, apart (BarGrades).
 import { ReactNode, useEffect, useState } from 'react';
 import { LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-  Extrapolation,
-  FadeIn,
-  interpolate,
-  runOnJS,
-  SharedValue,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withDelay,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
-import type { Grade } from '@shared/state/types';
+import Animated, { Extrapolation, interpolate, runOnJS, SharedValue, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { useCopy } from '../state/store';
-import { GRADES } from './grades';
 import { Icon, IconName } from './Icon';
 import { holdClicks, releaseClicks } from './swallowClick';
 import { Txt } from './Txt';
 import { colors, radius, shadow, TARGET } from './theme';
-import { useRoom } from './useRoom';
 
 /** Which way an item lies from the one showing: 1 is the next (to the right), -1 the previous. */
 export type Side = 1 | -1;
@@ -47,8 +31,6 @@ const FLING_MIN_DISTANCE = 24;
 /** Where nothing lies that way, the card moves this share of the drag and springs back. */
 const RESIST = 0.25;
 const SLIDE_MS = 220;
-/** How long a rated card stays, saying its grade, before the next one slides in. */
-const HOLD_MS = 900;
 const SPRING = { damping: 26, stiffness: 300 };
 /** A swipe whose item hasn't changed this long after it said it would comes back. */
 const LANDING_MS = 1500;
@@ -60,14 +42,12 @@ interface Strip {
   queue: string;
   /** Where the strip rests. A card is placed when it mounts, relative to it, and keeps that place. */
   rest: number;
-  /** Cards on their way out (or back): as they last were, or as `node` says. */
-  leaving: { key: string; node?: ReactNode }[];
+  /** Cards on their way out (or back), as they last were. */
+  leaving: { key: string }[];
   /** A swipe let go: the neighbour it brought to the middle, until the item becomes it. */
   swiped: { key: string; side: Side } | null;
   /** The move to make once the cards are placed. */
-  move: { id: number; delay: number } | null;
-  /** The held card already shown, so it is shown once. */
-  heldShown: MiniItem | null;
+  move: { id: number } | null;
 }
 
 export function MiniCarousel({
@@ -77,7 +57,6 @@ export function MiniCarousel({
   can,
   neighbour,
   onSwipe,
-  held,
 }: {
   item: MiniItem;
   /** Where the item is in its queue, and which queue: a change says which way the bar moved. */
@@ -89,15 +68,13 @@ export function MiniCarousel({
   neighbour: (side: Side) => MiniItem | null;
   /** Moves to the neighbour; false when it couldn't (a song that didn't load). */
   onSwipe: (side: Side) => boolean | Promise<boolean>;
-  /** The rated card, shown in place of the item's own as it leaves: a rating that moved the loop on. */
-  held: MiniItem | null;
 }) {
   const reduce = useReducedMotion();
   const [width, setWidth] = useState(0);
   const span = width + GAP;
   const drag = useSharedValue(0);
   const [dragging, setDragging] = useState(false);
-  const [strip, setStrip] = useState<Strip>({ key: item.key, position, queue, rest: 0, leaving: [], swiped: null, move: null, heldShown: null });
+  const [strip, setStrip] = useState<Strip>({ key: item.key, position, queue, rest: 0, leaving: [], swiped: null, move: null });
 
   // The item changed: the cards are placed for the move here, while rendering, so the new card is
   // never drawn in the middle before it slides in.
@@ -107,8 +84,7 @@ export function MiniCarousel({
       setStrip({ ...strip, key: item.key, position, queue, swiped: null });
     } else {
       const side: Side = queue !== strip.queue || position >= strip.position ? 1 : -1;
-      const holding = held !== null && held.key === strip.key && held !== strip.heldShown;
-      const leaving = [...strip.leaving, { key: strip.key, node: holding ? held.card : undefined }, ...(strip.swiped ? [{ key: strip.swiped.key }] : [])];
+      const leaving = [...strip.leaving, { key: strip.key }, ...(strip.swiped ? [{ key: strip.swiped.key }] : [])];
       setStrip({
         key: item.key,
         position,
@@ -116,22 +92,20 @@ export function MiniCarousel({
         rest: strip.rest - side * span,
         leaving: leaving.filter((card) => card.key !== item.key),
         swiped: null,
-        move: { id: (strip.move?.id ?? 0) + 1, delay: holding ? HOLD_MS : 0 },
-        heldShown: holding ? held : strip.heldShown,
+        move: { id: (strip.move?.id ?? 0) + 1 },
       });
     }
   }
 
   const moveId = strip.move?.id;
-  const moveDelay = strip.move?.delay ?? 0;
   const rest = strip.rest;
   useEffect(() => {
     if (moveId === undefined) return;
     const settled = (finished?: boolean) => {
       if (finished) setStrip((s) => (s.move?.id === moveId ? { ...s, leaving: [], move: null } : s));
     };
-    drag.set(withDelay(moveDelay, withTiming(rest, { duration: reduce ? 0 : SLIDE_MS }, (finished) => runOnJS(settled)(finished))));
-  }, [moveId, moveDelay, rest, reduce, drag]);
+    drag.set(withTiming(rest, { duration: reduce ? 0 : SLIDE_MS }, (finished) => runOnJS(settled)(finished)));
+  }, [moveId, rest, reduce, drag]);
 
   // The neighbours are drawn only while the bar is dragged; until then `can` says where they may be.
   const next = dragging ? neighbour(1) : null;
@@ -147,7 +121,7 @@ export function MiniCarousel({
 
   // It didn't move after all: the card comes back and the neighbour goes.
   const back = (key: string) =>
-    setStrip((s) => (s.swiped?.key !== key ? s : { ...s, rest: s.rest + s.swiped.side * span, leaving: [...s.leaving, { key }], swiped: null, move: { id: (s.move?.id ?? 0) + 1, delay: 0 } }));
+    setStrip((s) => (s.swiped?.key !== key ? s : { ...s, rest: s.rest + s.swiped.side * span, leaving: [...s.leaving, { key }], swiped: null, move: { id: (s.move?.id ?? 0) + 1 } }));
   const land = (side: Side, key: string) => {
     setDragging(false);
     setStrip((s) => ({ ...s, rest: s.rest - side * span, swiped: { key, side } }));
@@ -206,7 +180,7 @@ export function MiniCarousel({
     if (!slots.some((s) => s.key === slot.key)) slots.push(slot);
   };
   add({ key: item.key, at: -rest, live: true, frozen: false, node: item.card });
-  for (const card of strip.leaving) add({ key: card.key, at: -rest, live: false, frozen: card.node === undefined, node: card.node ?? null });
+  for (const card of strip.leaving) add({ key: card.key, at: -rest, live: false, frozen: true, node: null });
   if (strip.swiped) add({ key: strip.swiped.key, at: -rest, live: false, frozen: true, node: null });
   if (next && nextKey) add({ key: nextKey, at: span - rest, live: false, frozen: false, node: next.card });
   if (previous && previousKey) add({ key: previousKey, at: -span - rest, live: false, frozen: false, node: previous.card });
@@ -246,7 +220,7 @@ function Slide({ drag, at, span, live, frozen, children }: { drag: SharedValue<n
   );
 }
 
-/** One item's card: its cover and words open the player; play or pause; next; the grades; how far it has played. */
+/** One item's card: its cover and words open the player; play or pause; next; how far it has played. */
 export function MiniCard({
   cover,
   badge,
@@ -256,7 +230,6 @@ export function MiniCard({
   playing,
   onToggle,
   next,
-  rating,
   progress,
 }: {
   cover: ReactNode;
@@ -268,8 +241,6 @@ export function MiniCard({
   playing: boolean;
   onToggle?: () => void;
   next: { label: string; onPress?: () => void; disabled?: boolean };
-  /** The grades, or the grade given (MiniRating); nothing for an item with nothing to rate. */
-  rating?: ReactNode;
   /** Along the bottom: how far the item has played. */
   progress: ReactNode;
 }) {
@@ -311,7 +282,6 @@ export function MiniCard({
           <Icon name="skip_next" fill size="lg" color="inverseOnSurface" />
         </Pressable>
       </View>
-      {rating}
       <View style={styles.track} accessible={false}>
         {progress}
       </View>
@@ -326,71 +296,6 @@ export function MiniProgress({ share }: { share: number }) {
 
 /** The fill's look, for a timed fill (PhaseFill) in the same track. */
 export const miniFill = { height: 4, backgroundColor: colors.primaryFixed, borderRadius: radius.full };
-
-/** A grade given: what the bar shows of it, and the whole sentence for screen readers. */
-export interface MiniRated {
-  grade: Grade;
-  /** After the grade's name: when the phrase comes back, or how many phrases a song reviewed. */
-  detail: string;
-  label: string;
-}
-
-/**
- * The three grades on the bar, never preselected; once one is given, the grade (its name always
- * whole) and what it does in their place while it can be undone (a rating given in the player shows
- * here too).
- */
-export function MiniRating({ rated, onRate, onUndo }: { rated: MiniRated | null; onRate?: (grade: Grade) => void; onUndo?: () => void }) {
-  const c = useCopy();
-  const reduce = useReducedMotion();
-  const { compact } = useRoom();
-  if (rated) {
-    const look = GRADES.find((g) => g.grade === rated.grade) ?? GRADES[0];
-    return (
-      <Animated.View key="rated" entering={reduce ? undefined : FadeIn.duration(180)} style={styles.rating}>
-        <View accessible accessibilityLabel={rated.label} accessibilityLiveRegion="polite" style={[styles.rated, { backgroundColor: look.bg }]}>
-          <Icon name={look.icon} size="sm" color={look.ink} />
-          <Txt variant="body" weight={700} color={look.ink} numberOfLines={1}>
-            {c.common.grade[rated.grade]}
-          </Txt>
-          <Txt variant="label" color={look.ink} numberOfLines={1} style={styles.flex}>
-            {rated.detail}
-          </Txt>
-        </View>
-        {onUndo && (
-          // On a compact screen Undo is its icon, so the grade keeps the room.
-          <Pressable accessibilityRole="button" accessibilityLabel={c.common.undo} onPress={onUndo} style={({ pressed }) => [compact ? styles.undoIcon : styles.undo, pressed && { opacity: 0.7 }]}>
-            {compact ? (
-              <Icon name="undo" size="md" color="primaryFixedDim" />
-            ) : (
-              <Txt variant="body" weight={700} color="primaryFixedDim">
-                {c.common.undo}
-              </Txt>
-            )}
-          </Pressable>
-        )}
-      </Animated.View>
-    );
-  }
-  return (
-    <View style={styles.rating}>
-      {GRADES.map(({ grade, icon, bg, ink }) => (
-        <Pressable
-          key={grade}
-          accessibilityRole="button"
-          onPress={onRate && (() => onRate(grade))}
-          style={({ pressed }) => [styles.grade, { backgroundColor: bg }, pressed && { opacity: 0.8 }]}
-        >
-          {/* A compact screen keeps the words whole and lets the colours tell the grades apart. */}
-          {!compact && <Icon name={icon} size="sm" color={ink} />}
-          <Txt variant="body" weight={600} color={ink} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={styles.shrink}>
-            {c.common.grade[grade]}
-          </Txt>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
 
 const styles = StyleSheet.create({
   live: { pointerEvents: 'auto' },
@@ -414,13 +319,6 @@ const styles = StyleSheet.create({
   text: { flex: 1, minWidth: 0 },
   play: { width: TARGET, height: TARGET, borderRadius: radius.full, backgroundColor: colors.primaryFixed, alignItems: 'center', justifyContent: 'center' },
   next: { width: TARGET, height: TARGET, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
-  rating: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, paddingBottom: 12 },
-  grade: { flex: 1, minWidth: 0, minHeight: TARGET, paddingHorizontal: 8, borderRadius: radius.full, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
-  rated: { flex: 1, minWidth: 0, minHeight: TARGET, paddingHorizontal: 14, borderRadius: radius.full, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  undo: { minHeight: TARGET, paddingHorizontal: 12, borderRadius: radius.full, justifyContent: 'center' },
-  undoIcon: { width: TARGET, height: TARGET, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
-  flex: { flex: 1, minWidth: 0 },
-  shrink: { flexShrink: 1 },
   track: { position: 'absolute', left: 8, right: 8, bottom: 0, height: 4, borderRadius: radius.full, backgroundColor: 'rgba(243,240,235,0.2)', overflow: 'hidden' },
   fill: miniFill,
 });
