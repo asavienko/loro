@@ -6,6 +6,7 @@ import { createContext, ReactNode, useContext } from 'react';
 import { LayoutChangeEvent, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { Gesture, GestureDetector, PanGesture } from 'react-native-gesture-handler';
 import Animated, { runOnJS, SharedValue, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import { thresholdHaptic } from '@shared/ui/haptics';
 import { holdClicks, releaseClicks } from './swallowClick';
 import { colors, radius } from './theme';
 
@@ -18,6 +19,12 @@ const OUT_MS = 180;
 const SPRING = { damping: 30, stiffness: 320 };
 /** A window still showing this long after it was asked to close comes back up. */
 const STAYED_MS = 700;
+
+/** How far down a window of this height is pulled to close when let go. */
+function closeAt(height: number) {
+  'worklet';
+  return Math.min(CLOSE_MAX, (height > 0 ? height : 800) * CLOSE_SHARE);
+}
 
 export interface PullDown {
   /** How far the window is pulled down. */
@@ -32,6 +39,8 @@ export function usePullDown(onClose: () => void): PullDown {
   const y = useSharedValue(0);
   const height = useSharedValue(0);
   const reduce = useReducedMotion();
+  // Far enough down that letting go closes it: each change is felt.
+  const past = useSharedValue(false);
   const close = () => {
     onClose();
     // If something kept it open it comes back to its place; a window gone by then (or a sheet,
@@ -43,15 +52,21 @@ export function usePullDown(onClose: () => void): PullDown {
     .failOffsetY(-10)
     .failOffsetX([-24, 24])
     .onStart(() => {
+      past.set(false);
       runOnJS(holdClicks)();
     })
     .onUpdate((e) => {
       y.set(Math.max(0, e.translationY));
+      const far = y.get() > closeAt(height.get());
+      if (far !== past.get()) {
+        past.set(far);
+        runOnJS(thresholdHaptic)();
+      }
     })
     .onEnd((e) => {
       const full = height.get() > 0 ? height.get() : 800;
       const pulled = y.get();
-      if (pulled > Math.min(CLOSE_MAX, full * CLOSE_SHARE) || (e.velocityY > FLING && pulled > FLING_MIN_DISTANCE)) {
+      if (pulled > closeAt(full) || (e.velocityY > FLING && pulled > FLING_MIN_DISTANCE)) {
         y.set(
           withTiming(full, { duration: reduce ? 0 : OUT_MS }, (finished) => {
             if (finished) runOnJS(close)();

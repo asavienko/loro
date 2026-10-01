@@ -19,6 +19,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { thresholdHaptic } from '@shared/ui/haptics';
 import { useCopy } from '../state/store';
 import { BarShift, useBarShift } from './barShift';
 import { Marquee } from './Marquee';
@@ -135,6 +136,7 @@ export function MiniCarousel({
   const previousKey = previous && previous.key !== item.key ? previous.key : null;
   const busy = strip.leaving.length > 0 || strip.swiped !== null || strip.move !== null;
   // Read by the gesture on the UI thread, kept current as the neighbours are drawn and the strip moves.
+  const past = useSharedValue(false);
   const ways = useSharedValue({ next: nextKey, previous: previousKey, canNext: can.next, canPrevious: can.previous, dragging, rest, busy });
   useEffect(() => {
     ways.set({ next: nextKey, previous: previousKey, canNext: can.next, canPrevious: can.previous, dragging, rest, busy });
@@ -157,6 +159,7 @@ export function MiniCarousel({
     .activeOffsetX([-12, 12])
     .failOffsetY([-12, 12])
     .onStart(() => {
+      past.set(false);
       runOnJS(holdClicks)();
       runOnJS(setDragging)(true);
     })
@@ -167,6 +170,12 @@ export function MiniCarousel({
       // Until the neighbours are drawn, `can` says whether one may be there.
       const open = e.translationX < 0 ? (way.dragging ? way.next !== null : way.canNext) : way.dragging ? way.previous !== null : way.canPrevious;
       drag.set(way.rest + (open ? e.translationX : e.translationX * RESIST));
+      // Far enough that letting go moves on, or back from there: felt either way.
+      const far = open && Math.abs(e.translationX) > Math.min(SWIPE_DISTANCE, span * 0.3);
+      if (far !== past.get()) {
+        past.set(far);
+        runOnJS(thresholdHaptic)();
+      }
     })
     .onEnd((e) => {
       const way = ways.get();

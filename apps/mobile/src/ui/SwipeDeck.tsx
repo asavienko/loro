@@ -6,6 +6,7 @@ import { ReactNode, RefObject, useEffect, useImperativeHandle, useState } from '
 import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { Extrapolation, interpolate, runOnJS, SharedValue, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import { thresholdHaptic } from '@shared/ui/haptics';
 import { Txt } from './Txt';
 import { colors, radius, shadow } from './theme';
 
@@ -103,6 +104,8 @@ function TopCard({
   }, [x, y, scale, shown, reduceMotion]);
   // Decided: it is flying off its side, and takes no second decision on the way.
   const [thrown, setThrown] = useState(false);
+  // The side a drag is far enough on to decide the card (0: neither); each change is felt.
+  const past = useSharedValue(0);
 
   const decide = (direction: SwipeDirection) => onSwipe(direction);
   const fly = (direction: SwipeDirection) => {
@@ -122,8 +125,16 @@ function TopCard({
     .enabled(!disabled && !thrown)
     .activeOffsetX([-10, 10])
     .failOffsetY([-10, 10])
+    .onStart(() => {
+      past.set(0);
+    })
     .onUpdate((e) => {
       x.set(e.translationX * 0.85);
+      const side = e.translationX > SWIPE_DISTANCE ? 1 : e.translationX < -SWIPE_DISTANCE ? -1 : 0;
+      if (side !== past.get()) {
+        past.set(side);
+        runOnJS(thresholdHaptic)();
+      }
     })
     .onEnd((e) => {
       const dx = e.translationX;

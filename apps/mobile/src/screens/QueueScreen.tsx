@@ -14,7 +14,7 @@ import { findPhrase, findSetView, promptOf } from '@shared/state/catalog';
 import { formatAgo, MINUTE } from '@shared/state/clock';
 import { clip, LIMITS } from '@shared/state/limits';
 import { currentPhraseId, previouslyPlayed, sessionSummary, upNextIds } from '@shared/state/selectors';
-import { tapHaptic } from '@shared/ui/haptics';
+import { liftHaptic, selectHaptic, tapHaptic, thresholdHaptic } from '@shared/ui/haptics';
 import { isTargetRevealed, queueTitle } from '@shared/ui/phase';
 import { useMySets } from '../state/mySets';
 import { useCopy, useNow, useStore } from '../state/store';
@@ -306,6 +306,10 @@ function QueueItem({ phraseId, position, again, first, last, onPlayNow, onRemove
   const height = useSharedValue(64);
   // A drag or swipe that ends over a control must not also press it.
   const moved = useSharedValue(false);
+  // Which side a swipe is past its mark on (0: neither), and how many rows a drag has moved: each
+  // change is felt.
+  const past = useSharedValue(0);
+  const rows = useSharedValue(0);
 
   const swiped = (dx: number) => {
     if (Math.abs(dx) > SWIPE) onGesture();
@@ -325,9 +329,15 @@ function QueueItem({ phraseId, position, again, first, last, onPlayNow, onRemove
     .failOffsetY([-10, 10])
     .onStart(() => {
       moved.set(true);
+      past.set(0);
     })
     .onUpdate((e) => {
       x.value = e.translationX * 0.5;
+      const side = e.translationX > SWIPE ? 1 : e.translationX < -SWIPE ? -1 : 0;
+      if (side !== past.get()) {
+        past.set(side);
+        runOnJS(thresholdHaptic)();
+      }
     })
     .onEnd((e) => {
       runOnJS(swiped)(e.translationX);
@@ -339,9 +349,16 @@ function QueueItem({ phraseId, position, again, first, last, onPlayNow, onRemove
     .onStart(() => {
       lifted.value = 1;
       moved.set(true);
+      rows.set(0);
+      runOnJS(liftHaptic)();
     })
     .onUpdate((e) => {
       y.value = e.translationY;
+      const over = Math.round(e.translationY / Math.max(1, height.value));
+      if (over !== rows.get()) {
+        rows.set(over);
+        runOnJS(selectHaptic)();
+      }
     })
     .onEnd((e) => {
       runOnJS(dropped)(Math.round(e.translationY / Math.max(1, height.value)));
