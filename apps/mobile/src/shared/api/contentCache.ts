@@ -1,23 +1,60 @@
-// The content the app has installed, kept on the device (plan 106): every course pack it downloaded
-// and the sets it opened from a link or Community. `restoreContent` installs them before the
-// learner's state loads, so the app opens offline with its progress intact; `refreshCourse` asks the
-// API for a course's current pack and installs it.
-import { applySet, ContentPack, ExtraSets, installedCourses, installedExtras, installedPack, installExtras, installPacks, keepOnlyLoros, LanguageCode, removeSet, TARGET_LANGUAGES } from '../content';
-import { fetchPack, type SetDetail } from './library';
+// The content the app has installed, kept on the device (plan 106): the server's languages, every
+// course pack it downloaded and the sets it opened from a link or Community. `restoreContent`
+// installs them before the learner's state loads, so the app opens offline with its progress intact;
+// `refreshCourse` asks the API for the languages and a course's current pack and installs them.
+import {
+  applySet,
+  ContentPack,
+  ExtraSets,
+  installedCourses,
+  installedExtras,
+  installedLanguages,
+  installedPack,
+  installExtras,
+  installLanguages,
+  installPacks,
+  keepOnlyLoros,
+  LANGUAGE_CODES,
+  LanguageCode,
+  LanguageList,
+  removeSet,
+} from '../content';
+import { fetchLanguages, fetchPack, type SetDetail } from './library';
 import { kvGet, kvRemove, kvSet } from './kv';
 
 const packKey = (lang: LanguageCode) => `loro.content.pack.${lang}`;
 const EXTRAS_KEY = 'loro.content.extras';
+const LANGUAGES_KEY = 'loro.content.languages';
+/** Whether the installed languages are also saved on the device. */
+let languagesSaved = false;
 /** The courses whose installed pack is also saved on the device. */
 const saved = new Set<LanguageCode>();
+
+const isLanguageList = (value: unknown): value is LanguageList =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as LanguageList).version === 'string' &&
+  Array.isArray((value as LanguageList).languages) &&
+  (value as LanguageList).languages.every((l) => typeof l === 'object' && l !== null && typeof l.code === 'string' && typeof l.flag === 'string' && typeof l.canTarget === 'boolean');
 
 const isPack = (value: unknown): value is ContentPack =>
   typeof value === 'object' && value !== null && Array.isArray((value as ContentPack).sets) && Array.isArray((value as ContentPack).phrases) && typeof (value as ContentPack).targetLang === 'string';
 
 /** Installs every pack and extra set saved on this device; resolves to the courses it had. */
 export async function restoreContent(): Promise<LanguageCode[]> {
+  try {
+    const raw = await kvGet(LANGUAGES_KEY);
+    const list: unknown = raw ? JSON.parse(raw) : null;
+    if (isLanguageList(list)) {
+      installLanguages(list);
+      languagesSaved = true;
+    }
+  } catch {
+    // Downloaded again with the course.
+  }
   const packs: ContentPack[] = [];
-  for (const lang of TARGET_LANGUAGES) {
+  // Every language the app handles: a pack saved before the device had the server's list still opens.
+  for (const lang of LANGUAGE_CODES) {
     try {
       const raw = await kvGet(packKey(lang));
       const pack: unknown = raw ? JSON.parse(raw) : null;
@@ -55,8 +92,32 @@ export function refreshCourse(lang: LanguageCode, fresh = false): Promise<boolea
   return next;
 }
 
+/**
+ * Downloads the server's languages and installs them when they changed. A device that already has
+ * a copy keeps it when the server can't be reached; one without fails, as it can't go on.
+ */
+async function refreshLanguages(): Promise<void> {
+  let list: LanguageList;
+  try {
+    list = await fetchLanguages();
+  } catch (error) {
+    if (installedLanguages()) return;
+    throw error;
+  }
+  if (!isLanguageList(list)) {
+    if (installedLanguages()) return;
+    throw new Error('Unreadable languages');
+  }
+  const same = installedLanguages()?.version === list.version;
+  if (!same) installLanguages(list);
+  if (!same || !languagesSaved) {
+    await kvSet(LANGUAGES_KEY, JSON.stringify(list));
+    languagesSaved = true;
+  }
+}
+
 async function download(lang: LanguageCode): Promise<boolean> {
-  const pack = await fetchPack(lang);
+  const [pack] = await Promise.all([fetchPack(lang), refreshLanguages()]);
   const same = installedPack(lang)?.version === pack.version;
   if (!same) installPacks([pack]);
   // Saved again after signing out forgot it, even when nothing in it changed.

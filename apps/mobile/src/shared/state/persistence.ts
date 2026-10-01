@@ -7,12 +7,14 @@
 import {
   CONTENT_VERSION,
   coursesFor,
+  LANGUAGE_CODES,
   findBankPhrase,
   findContentPhrase,
   findSet,
   LanguageCode,
   NATIVE_LANGUAGES,
   RENAMED_PHRASE_IDS,
+  TARGET_LANGUAGES,
 } from '../content';
 import { OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { clock, isLocalDayOf } from './clock';
@@ -139,8 +141,12 @@ function migrateLegacy(value: Json, device: Device): Json {
 function sanitizeProfile(value: unknown): Profile {
   const fresh = initialProfile();
   if (!isObject(value)) return fresh;
-  const native = NATIVE_LANGUAGES.find((l) => l === value.nativeLang) ?? fresh.nativeLang;
-  const target = coursesFor(native).find((l) => l === value.targetLang) ?? coursesFor(native)[0];
+  // Checked against the server's languages once the device has them; before (a first start after an
+  // update) any language the app handles keeps the learner's own choice rather than resetting it.
+  const natives: readonly LanguageCode[] = NATIVE_LANGUAGES.length > 0 ? NATIVE_LANGUAGES : LANGUAGE_CODES;
+  const native = natives.find((l) => l === value.nativeLang) ?? fresh.nativeLang;
+  const courses = TARGET_LANGUAGES.length > 0 ? coursesFor(native) : LANGUAGE_CODES.filter((l) => l !== native);
+  const target = courses.find((l) => l === value.targetLang) ?? (courses.includes(fresh.targetLang) ? fresh.targetLang : (courses[0] ?? fresh.targetLang));
   return {
     name: str(value.name) ? clip(value.name, LIMITS.name) : '',
     nativeLang: native,

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import phrasesJson from '../../../../../packages/content/v2/phrases.json';
 import setsJson from '../../../../../packages/content/v2/sets.json';
 import topicsJson from '../../../../../packages/content/v2/topics.json';
-import languagesJson from './languages.json';
+import languagesJson from '../../../../../packages/content/v2/languages.json';
 import metaJson from './meta.json';
 import noteTranslationsJson from '../../../../../packages/content/v2/note-translations.json';
 import bankJson from '../../../../../packages/content/v2/bank.json';

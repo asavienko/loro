@@ -26,8 +26,10 @@ each language its `code`, `flag`, the app's interface locale for a learner who s
 `version` is a hash of them, like the pack's. They come from `packages/content/v2/languages.json`,
 not the database, so the route answers before the seed and needs no account. The library's accepted
 languages and courses (`LIBRARY_LANGUAGES`/`LIBRARY_COURSES` in `@loro/core`, `V2_COURSES` and
-`V2_NATIVES` in `@loro/content/v2`) are that list, held equal by content's v2 test. The app still
-reads its own copy (`apps/mobile/src/shared/content/languages.json`) until it reads the route.
+`V2_NATIVES` in `@loro/content/v2`) are that list, held equal by content's v2 test. The app ships no
+list of its own: it downloads this one with each course's pack, keeps it on the device
+(`loro.content.languages`) and waits for it before onboarding; a saved course is kept across the
+first start after an update, before the list has arrived.
 
 A set opened from a link or Community is kept on the device too (`installExtras`), so progress on
 its phrases stays attached. Learner progress on a phrase that is not installed (another course, a

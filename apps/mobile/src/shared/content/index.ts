@@ -5,17 +5,52 @@
 // from the state machine in src/state/. Phrases the learner writes on the device live in learner
 // state and join this content in src/state/catalog.ts.
 //
-// The arrays below are filled in place when a pack is installed, so a module that imported them
-// sees the new content; `contentRevision` changes with each install, for the store to re-render.
+// The arrays below are filled in place when a pack (or the server's list of languages) is installed,
+// so a module that imported them sees the new content; `contentRevision` changes with each install,
+// for the store to re-render.
 import { apiUrl } from '../api/client';
-import languagesJson from './languages.json';
+import { LANGUAGE_CODES, UI_LOCALES } from './codes';
 import metaJson from './meta.json';
 import type { BankTheme, Language, LanguageCode, Localized, Meta, NoteTranslations, PhraseJson, SetJson, Topic, UiLocale } from './schema';
 
 export type { LanguageCode, UiLocale, Topic, Language, Localized, Tag, Level, Register, PhraseNotes, PhraseImage, BankTheme } from './schema';
 export type TopicTone = Topic['tone'];
 
-export const LANGUAGES = languagesJson as unknown as Language[];
+export { LANGUAGE_CODES } from './codes';
+
+/**
+ * The languages the server teaches and speaks in (GET /library/languages, plan 108), filled in place
+ * when installed. Empty until the first copy arrives (a first start): the app waits for them.
+ */
+export const LANGUAGES: Language[] = [];
+/** The languages a learner can speak (the UI has copy for them), and those they can learn. */
+export const NATIVE_LANGUAGES: LanguageCode[] = [];
+export const TARGET_LANGUAGES: LanguageCode[] = [];
+
+/** The server's list of languages as it serves it. */
+export interface LanguageList {
+  version: string;
+  languages: Language[];
+}
+
+let languageList: LanguageList | null = null;
+
+export function installedLanguages(): LanguageList | null {
+  return languageList;
+}
+
+export function installLanguages(list: LanguageList): void {
+  languageList = list;
+  LANGUAGES.length = 0;
+  LANGUAGES.push(...list.languages);
+  NATIVE_LANGUAGES.length = 0;
+  NATIVE_LANGUAGES.push(...list.languages.filter((l) => l.uiLocale !== null).map((l) => l.code));
+  TARGET_LANGUAGES.length = 0;
+  TARGET_LANGUAGES.push(...list.languages.filter((l) => l.canTarget).map((l) => l.code));
+  revision += 1;
+  for (const listener of listeners) listener();
+}
+
 export const META = metaJson as unknown as Meta;
 export const CONTENT_VERSION = META.version;
 
@@ -369,17 +404,22 @@ export function findAlbum(id: string | null | undefined): Album | undefined {
   return id ? ALBUMS.find((a) => a.id === id) : undefined;
 }
 
+/** A language as the server lists it; one it doesn't list (yet) shows without a flag. */
 export function getLanguage(code: LanguageCode): Language {
-  const language = LANGUAGES.find((l) => l.code === code);
-  if (!language) throw new Error(`Unknown language: ${code}`);
-  return language;
+  return LANGUAGES.find((l) => l.code === code) ?? { code, flag: '', uiLocale: null, canTarget: false };
 }
 
-export const NATIVE_LANGUAGES = LANGUAGES.filter((l) => l.uiLocale !== null).map((l) => l.code);
-export const TARGET_LANGUAGES = LANGUAGES.filter((l) => l.canTarget).map((l) => l.code);
+/** Whether a value is a language code the app handles. */
+export function isLanguageCode(value: unknown): value is LanguageCode {
+  return (LANGUAGE_CODES as readonly unknown[]).includes(value);
+}
 
+/** The UI language for a learner's own language: the server's say, or before its list arrives the code's own. */
 export function uiLocaleOf(native: LanguageCode): UiLocale {
-  return getLanguage(native).uiLocale ?? 'en';
+  const known = LANGUAGES.find((l) => l.code === native);
+  if (known) return known.uiLocale ?? 'en';
+  const prefix = native.split('-')[0];
+  return (UI_LOCALES as readonly string[]).includes(prefix) ? (prefix as UiLocale) : 'en';
 }
 
 /** Courses a learner with this native language can take. */

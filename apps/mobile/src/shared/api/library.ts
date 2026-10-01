@@ -1,6 +1,6 @@
 // The library's routes (plan 106): what the app reads, makes and shares. Shapes mirror the API's
 // apps/api/src/library/library.types.ts; the app reads them without zod, as it reads its content.
-import type { Album, ContentPack, LanguageCode, PhraseSet, PhraseWire, Visibility } from '../content';
+import type { Album, ContentPack, LanguageCode, LanguageList, PhraseSet, PhraseWire, Visibility } from '../content';
 import type { OwnNotes } from '../state/types';
 import { api } from './client';
 
@@ -78,6 +78,9 @@ export interface AlbumDetail {
 export type Shared = ({ kind: 'set' } & SetDetail) | ({ kind: 'album' } & AlbumDetail);
 
 export const fetchPack = (targetLang: LanguageCode) => api<ContentPack>(`/library/pack?target=${targetLang}`, { timeoutMs: 30_000 });
+
+/** The languages the server teaches and speaks in (plan 108). */
+export const fetchLanguages = () => api<LanguageList>('/library/languages');
 
 /** Community's order: the newest first, or the most saved first. */
 export type CommunitySort = 'new' | 'popular';
