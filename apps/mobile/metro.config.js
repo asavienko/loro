@@ -6,7 +6,7 @@
 //     the phrase notes and the suggestion generator. It is platform-neutral; tsconfig.json maps the
 //     same path for the type checker.
 //
-//  2. THE PLATFORM EDGE. On iOS and Android eight leaf modules are swapped for native ones; on the
+//  2. THE PLATFORM EDGE. On iOS and Android nine leaf modules are swapped for native ones; on the
 //     web the originals run (NATIVE below).
 //
 //  3. THE WORKSPACE. pnpm hoists packages to the repository root (.npmrc), and the Rust core's
@@ -51,6 +51,8 @@ const NATIVE = {
   [path.join(sharedRoot, 'api/secrets.ts')]: path.join(projectRoot, 'src/platform/secrets.ts'),
   // A provider's sign-in page: an auth session that returns to the app instead of leaving it.
   [path.join(sharedRoot, 'api/oauth.ts')]: path.join(projectRoot, 'src/platform/oauth.ts'),
+  // A word when a song is ready: expo-notifications instead of nothing (plan 113).
+  [path.join(sharedRoot, 'push.ts')]: path.join(projectRoot, 'src/platform/push.ts'),
 };
 
 const SHARED = '@shared/';

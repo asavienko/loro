@@ -36,7 +36,19 @@ export default (): ExpoConfig => ({
     ],
   },
   web: { bundler: 'metro', output: 'single', favicon: './assets/icons/icon-192.png' },
-  plugins: ['expo-router', 'expo-font', 'expo-splash-screen', ['expo-audio', { microphonePermission: false, recordAudioAndroid: false }], 'expo-secure-store', 'expo-web-browser', 'expo-localization'],
+  // A word when a song is ready (plan 113): a push through Expo's service needs the EAS project id;
+  // without one (a local APK) the app notifies itself only while it runs in the background.
+  ...(process.env.EAS_PROJECT_ID ? { extra: { eas: { projectId: process.env.EAS_PROJECT_ID } } } : {}),
+  plugins: [
+    'expo-router',
+    'expo-font',
+    'expo-splash-screen',
+    ['expo-audio', { microphonePermission: false, recordAudioAndroid: false }],
+    'expo-secure-store',
+    'expo-web-browser',
+    'expo-localization',
+    ['expo-notifications', { color: '#fcf9f4' }],
+  ],
   // Metro resolves @shared itself (metro.config.js); tsconfig's paths are for the type checker only.
   experiments: { typedRoutes: false, tsconfigPaths: false },
 });

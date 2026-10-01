@@ -4,17 +4,21 @@ import type { Album, ContentPack, LanguageCode, LanguageList, PhraseSet, PhraseW
 import type { OwnNotes } from '../state/types';
 import { api, ApiError } from './client';
 
-export type SongStyle = 'acoustic_folk' | 'modern_pop' | 'gentle_ballad' | 'upbeat_kids';
-export const SONG_STYLES: SongStyle[] = ['modern_pop', 'acoustic_folk', 'gentle_ballad', 'upbeat_kids'];
+/** The styles a song can be sung in (plan 113), in the order the sheet offers them. */
+export const SONG_STYLES = ['modern_pop', 'acoustic_folk', 'gentle_ballad', 'upbeat_kids', 'indie_rock', 'hip_hop', 'reggaeton', 'jazz_lounge', 'electronic_dance', 'country', 'lullaby', 'bossa_nova'] as const;
+export type SongStyle = (typeof SONG_STYLES)[number];
 
 export interface SongLine {
+  /** The line as it is heard: as sung, where the song was heard back (plan 113); as written otherwise. */
   text: string;
   meaning: string;
   /** The set phrase this line sings, if it is one. */
   phraseId: string | null;
-  /** When the line plays, where the sound's timing is known (the demo sound). */
+  /** When the line plays, where the sound's timing is known: heard in the sung song, or the demo's bars. */
   startMs: number | null;
   endMs: number | null;
+  /** The line as written, with its meaning, when the singer sang it differently; null (or absent) when the same. */
+  written?: { text: string; meaning: string } | null;
 }
 
 export interface Song {
@@ -32,16 +36,38 @@ export interface Song {
   audioBy: 'elevenlabs' | 'demo' | null;
   /** The lines are spoken over the sound: the server's voice over the demo, or sung. */
   voiced: boolean;
+  /**
+   * Where the lines' timings come from (plan 113): `transcript`, the sung song heard back, its
+   * lines as sung; `demo`, the synthesizer's bars; null, none. An older server sends nothing.
+   */
+  timingBy?: 'transcript' | 'demo' | null;
   durationMs: number | null;
   error: string | null;
   createdAt: number;
 }
 
-export type UsageKind = 'phrases' | 'cover' | 'song';
+/** A song's lyrics before the song (plan 113): read, changed and approved by the learner. */
+export interface Lyrics {
+  id: string;
+  setId: string;
+  styleId: SongStyle;
+  title: string;
+  status: 'writing' | 'ready' | 'failed';
+  sections: { name: 'verse' | 'chorus' | 'bridge'; lines: { text: string; meaning: string; phraseId: string | null }[] }[];
+  lyricsBy: 'ai' | 'phrases' | null;
+  /** How many times they were written. */
+  revision: number;
+  /** What the learner last asked to change. */
+  instruction: string | null;
+  updatedAt: number;
+}
+
+export type UsageKind = 'phrases' | 'cover' | 'song' | 'lyrics';
 
 export interface Usage {
   day: string;
   resetsAt: number;
+  /** An older server sends no `lyrics`. */
   daily: Record<UsageKind, { used: number; limit: number }>;
   kept: Record<'sets' | 'albums' | 'songs', { used: number; limit: number }>;
   /** Who writes each kind on this server: a model, or the labelled fallback. */
@@ -243,8 +269,51 @@ export const fetchCoverHistory = (kind: CoverKind, id: string) =>
 export const wearCover = (coverId: string, body: { kind: CoverKind; attachTo: string }) =>
   api<CoverState>(`/library/covers/${encodeURIComponent(coverId)}/wear`, { method: 'POST', body, auth: 'required' }).then(readCover);
 
-export const generateSong = (body: { setId: string; styleId: SongStyle; nativeLang: LanguageCode; title?: string; albumId?: string }) =>
+/** The lyrics as the server last sent them; a `claude` writer from an older server reads as `ai`. */
+const readLyrics = (lyrics: Lyrics): Lyrics => ({ ...lyrics, lyricsBy: lyrics.lyricsBy === null ? null : (ai(lyrics.lyricsBy) as 'ai' | 'phrases') });
+
+const LYRICS_POLL_MS = 2_500;
+/** About two and a half minutes: longer than the text model takes to write a song. */
+const LYRICS_POLLS = 60;
+
+/** Asks where a draft stands every few seconds until it is written (or failed), or the app stops waiting. */
+async function awaitLyrics(lyrics: Lyrics, pace: { pollMs: number; polls: number }): Promise<Lyrics> {
+  let draft = lyrics;
+  for (let polls = 0; draft.status === 'writing' && polls < pace.polls; polls++) {
+    await new Promise((resolve) => setTimeout(resolve, pace.pollMs));
+    draft = readLyrics(await api<Lyrics>(`/library/lyrics/${encodeURIComponent(draft.id)}`, { auth: 'required' }));
+  }
+  return draft;
+}
+
+/**
+ * Asks for a song's lyrics (plan 113) and waits while the text model writes them in the background.
+ * Resolves with the draft: `ready` to read, `failed`, or still `writing` if it took longer than the
+ * app waits. Without a text model the server answers at once with the set's phrases arranged.
+ */
+export async function writeLyrics(
+  body: { setId: string; styleId: SongStyle; nativeLang: LanguageCode; title?: string },
+  pace = { pollMs: LYRICS_POLL_MS, polls: LYRICS_POLLS },
+): Promise<Lyrics> {
+  return awaitLyrics(readLyrics(await api<Lyrics>('/library/lyrics', { method: 'POST', body, auth: 'required' })), pace);
+}
+
+/** The same draft written again, anew or changed as `instruction` asks, waited for the same way. */
+export async function rewriteLyrics(id: string, instruction: string | undefined, pace = { pollMs: LYRICS_POLL_MS, polls: LYRICS_POLLS }): Promise<Lyrics> {
+  const body = instruction ? { instruction } : {};
+  return awaitLyrics(readLyrics(await api<Lyrics>(`/library/lyrics/${encodeURIComponent(id)}/rewrite`, { method: 'POST', body, auth: 'required' })), pace);
+}
+
+export const fetchLyrics = (id: string) => api<Lyrics>(`/library/lyrics/${encodeURIComponent(id)}`, { auth: 'required' }).then(readLyrics);
+
+/** A song: from the learner's approved lyrics (`lyricsId`, plan 113), or with its lyrics written by the server. */
+export const generateSong = (body: { setId: string; styleId: SongStyle; nativeLang: LanguageCode; title?: string; albumId?: string; lyricsId?: string }) =>
   api<{ song: Song; album: Album }>('/library/generate/song', { method: 'POST', body, auth: 'required', timeoutMs: 60_000 });
+
+/** A device's Expo push token, with the UI language its messages are in (plan 113). */
+export const registerPushToken = (body: { token: string; lang: 'en' | 'bg' | 'ru' | 'pl' | 'cs'; platform?: 'ios' | 'android' }) =>
+  api<{ registered: true }>('/library/push-tokens', { method: 'POST', body, auth: 'required' });
+export const forgetPushToken = (token: string) => api<void>(`/library/push-tokens/${encodeURIComponent(token)}`, { method: 'DELETE', auth: 'required', timeoutMs: 5000 });
 
 export const retrySong = (id: string, nativeLang: LanguageCode) =>
   api<Song>(`/library/songs/${encodeURIComponent(id)}/retry`, { method: 'POST', body: { nativeLang }, auth: 'required' });

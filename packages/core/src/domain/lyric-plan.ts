@@ -24,11 +24,20 @@ export const MUSIC_MAX_PHRASES = 8
 export const MUSIC_MIN_STYLES = 2
 export const MUSIC_MAX_STYLES = 4
 
+/** The styles a song can be sung in (plan 113): each has a style pack and a demo setting. */
 export const MUSIC_STYLE_IDS = [
   'acoustic_folk',
   'modern_pop',
   'gentle_ballad',
   'upbeat_kids',
+  'indie_rock',
+  'hip_hop',
+  'reggaeton',
+  'jazz_lounge',
+  'electronic_dance',
+  'country',
+  'lullaby',
+  'bossa_nova',
 ] as const
 export type MusicStyleId = (typeof MUSIC_STYLE_IDS)[number]
 

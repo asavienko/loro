@@ -33,9 +33,11 @@ import {
   ProfileSchema,
   ReportSchema,
   RetrySongSchema,
+  RewriteLyricsSchema,
   RewriteNoteSchema,
   type RewriteNoteRequest,
   SaveSchema,
+  StartLyricsSchema,
   ShareCodeSchema,
   UpdateAlbumSchema,
   UpdateSetSchema,
@@ -62,6 +64,7 @@ import type {
   DeckWire,
   KeptKind,
   LanguagesWire,
+  LyricsWire,
   Owner,
   PackWire,
   PhraseWire,
@@ -71,7 +74,11 @@ import type {
   UsageKind,
   UsageWire,
 } from './library.types.js'
+import { audioDurationMs } from '@loro/content/audio-duration'
+import { alignLyrics, type HeardSection } from './align.js'
 import { composeLive, liveMusicConfigured } from './music-live.js'
+import { PushService } from './push.js'
+import { transcribeSong, transcriptionConfigured } from './transcribe.js'
 import { imageModelConfigured, textModelConfigured } from '../integrations/models.js'
 import type { StructuredTextModel } from '../integrations/text-model.js'
 import { registerSpeech, registerSpeechMany, SpeechService, speechFor } from './speech.js'
@@ -88,6 +95,7 @@ import {
   ruleNotes,
   aiPhrases,
   artist,
+  translateLines,
   writer,
   type SongPhrase,
   type SongSection,
@@ -99,6 +107,8 @@ const SEED_REVISION = 6
 /** A song still rendering after this long was lost with its process: it reads as failed. */
 const RENDER_TIMEOUT_MS = 10 * 60_000
 const DAY_MS = 86_400_000
+/** A lyrics draft is kept this long after it was last written (plan 113). */
+const DRAFT_TTL_MS = 7 * DAY_MS
 const COMMUNITY_PAGE = 50
 /** How many more of a maker's things a shared item's page offers. */
 const MORE_BY_MAKER = 12
@@ -173,9 +183,26 @@ interface SongRow {
   audio_id: string | null
   audio_by: SongWire['audioBy']
   voiced?: boolean | null
+  timing_by?: SongWire['timingBy'] | undefined
   duration_ms: number | null
   error: string | null
   created_at: string | number
+}
+interface LyricsRow {
+  id: string
+  owner_id: string
+  set_id: string
+  style_id: string
+  target_lang: Language
+  native_lang: Language
+  title: string
+  status: LyricsWire['status']
+  sections: SongSection[] | null
+  lyrics_by: 'ai' | 'phrases' | null
+  instruction: string | null
+  revision: number
+  created_at: string | number
+  updated_at: string | number
 }
 
 /** What a new cover goes on, and the words it is drawn for: the learner's own (`prompt`), if any. */
@@ -238,6 +265,8 @@ export class LibraryService {
     @Inject(SERVER_CLOCK) private readonly clock: ServerClock,
     /** Speaks a demo song's lines when the server has a voice for its language. */
     @Optional() @Inject(SpeechService) private readonly speech?: SpeechService,
+    /** Tells the learner's phone when a song is ready (plan 113). */
+    @Optional() @Inject(PushService) private readonly push?: PushService,
   ) {}
 
   // ---------- seed ----------
@@ -1530,6 +1559,7 @@ export class LibraryService {
       )
       await tx.query('DELETE FROM music_jobs WHERE user_id = $1', [userId])
       await tx.query('DELETE FROM music_lyric_documents WHERE user_id = $1', [userId])
+      await tx.query('DELETE FROM library_push_tokens WHERE user_id = $1', [userId])
       await tx.query('DELETE FROM auth_users WHERE id = $1', [userId])
     })
     return { deleted: true }
@@ -1567,7 +1597,7 @@ export class LibraryService {
       )
     ).rows
     const daily = Object.fromEntries(
-      (['phrases', 'cover', 'song'] as const).map((kind) => [
+      (['phrases', 'cover', 'song', 'lyrics'] as const).map((kind) => [
         kind,
         {
           used: used.find((u) => u.kind === kind)?.used ?? 0,
@@ -2242,16 +2272,222 @@ export class LibraryService {
     return id
   }
 
+  // ---------- lyrics (plan 113) ----------
+
+  /**
+   * Writes a song's lyrics first, for the learner to read, change and approve. The draft is saved
+   * as `writing` and the model works in the background; the app polls `GET /library/lyrics/:id`.
+   * Without a text model the set's phrases are the draft at once, free, labelled `phrases`.
+   */
+  async startLyrics(userId: string, body: unknown): Promise<LyricsWire> {
+    await this.ready()
+    const request = parseContract(StartLyricsSchema, body)
+    const set = await this.readableSet(userId, request.setId)
+    const phrases = await this.songPhrases(set.id, request.nativeLang)
+    const title = request.title ?? set.title
+    const now = this.clock.now()
+    const id = newId('lyrics')
+    const ai = writer()
+    if (ai) await this.spend(userId, 'lyrics')
+    const sections = ai ? null : assembleLyrics(phrases)
+    await this.db.query(
+      `INSERT INTO library_lyric_drafts(id, owner_id, set_id, style_id, target_lang, native_lang, title, status, sections, lyrics_by, instruction, revision, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NULL,1,$11,$11)`,
+      [
+        id,
+        userId,
+        set.id,
+        request.styleId,
+        set.target_lang,
+        request.nativeLang,
+        title,
+        ai ? 'writing' : 'ready',
+        sections ? JSON.stringify(sections) : null,
+        ai ? null : 'phrases',
+        now,
+      ],
+    )
+    // A draft is read within minutes and sung within the hour; a week later nobody wants it.
+    await this.db.query('DELETE FROM library_lyric_drafts WHERE updated_at < $1', [
+      now - DRAFT_TTL_MS,
+    ])
+    if (ai)
+      void this.writeLyrics(id, ai, {
+        ownerId: userId,
+        chargedDay: utcDay(now),
+        title,
+        styleId: request.styleId,
+        targetLang: set.target_lang,
+        nativeLang: request.nativeLang,
+        phrases,
+      })
+    return this.lyrics(userId, id)
+  }
+
+  /** A draft of the learner's: still `writing`, `ready` to read and approve, or `failed`. */
+  async lyrics(userId: string, id: unknown): Promise<LyricsWire> {
+    return this.toLyricsWire(await this.ownDraft(userId, parseContract(LibraryIdSchema, id)))
+  }
+
+  /**
+   * The same draft written again, from another of the day's lyrics: changed as the learner asks
+   * (`instruction`), or, without one, differently. The current lines stay readable while the model
+   * works, and stand if it fails.
+   */
+  async rewriteLyrics(userId: string, id: unknown, body: unknown): Promise<LyricsWire> {
+    await this.ready()
+    const request = parseContract(RewriteLyricsSchema, body)
+    const row = await this.ownDraft(userId, parseContract(LibraryIdSchema, id))
+    const ai = writer()
+    if (!ai) throw new LoroError('PROVIDER_UNAVAILABLE', 'No text model writes lyrics here')
+    const set = await this.readableSet(userId, row.set_id)
+    const phrases = await this.songPhrases(set.id, row.native_lang)
+    const now = this.clock.now()
+    const instruction = request.instruction ?? null
+    // Claimed in one statement, so two taps write it once; a draft lost to a restart may be claimed.
+    const claimed = (
+      await this.db.query<{ sections: SongSection[] | null }>(
+        `UPDATE library_lyric_drafts SET status = 'writing', instruction = $2, revision = revision + 1, updated_at = $3
+         WHERE id = $1 AND (status <> 'writing' OR updated_at < $4)
+         RETURNING sections`,
+        [row.id, instruction, now, now - RENDER_TIMEOUT_MS],
+      )
+    ).rows[0]
+    if (!claimed) throw new LoroError('VALIDATION_FAILED', 'The lyrics are still being written')
+    try {
+      await this.spend(userId, 'lyrics')
+    } catch (error) {
+      await this.db.query(
+        'UPDATE library_lyric_drafts SET status = $2, revision = revision - 1 WHERE id = $1',
+        [row.id, row.sections ? 'ready' : 'failed'],
+      )
+      throw error
+    }
+    void this.writeLyrics(row.id, ai, {
+      ownerId: userId,
+      chargedDay: utcDay(now),
+      title: row.title,
+      styleId: parseContract(z.enum(MUSIC_STYLE_IDS), row.style_id),
+      targetLang: row.target_lang,
+      nativeLang: row.native_lang,
+      phrases,
+      current: claimed.sections ?? undefined,
+      instruction: instruction ?? undefined,
+    })
+    return this.lyrics(userId, row.id)
+  }
+
+  /**
+   * The model's lyrics for a draft; never throws. A first writing that fails becomes the set's
+   * phrases arranged, labelled `phrases`; a rewriting that fails leaves the lyrics as they were.
+   * Either way the day's lyrics allowance is given back.
+   */
+  private async writeLyrics(
+    id: string,
+    ai: StructuredTextModel,
+    input: {
+      ownerId: string
+      chargedDay: string
+      title: string
+      styleId: MusicStyleId
+      targetLang: Language
+      nativeLang: Language
+      phrases: SongPhrase[]
+      current?: SongSection[] | undefined
+      instruction?: string | undefined
+    },
+  ): Promise<void> {
+    let sections: SongSection[] | null = null
+    let lyricsBy: 'ai' | 'phrases' = 'ai'
+    try {
+      sections = await aiLyrics(ai, { ...input, style: input.styleId })
+    } catch (error) {
+      this.logger.warn(
+        `lyrics writer failed: ${error instanceof Error ? error.message : 'unknown'}; ${input.current ? 'keeping the lyrics as they were' : 'arranging the phrases'}`,
+      )
+      await this.refund(input.ownerId, 'lyrics', input.chargedDay).catch(() => undefined)
+      if (input.current) {
+        await this.db
+          .query(
+            `UPDATE library_lyric_drafts SET status = 'ready', instruction = NULL, updated_at = $2 WHERE id = $1 AND status = 'writing'`,
+            [id, this.clock.now()],
+          )
+          .catch(() => undefined)
+        return
+      }
+      sections = assembleLyrics(input.phrases)
+      lyricsBy = 'phrases'
+    }
+    await this.db
+      .query(
+        `UPDATE library_lyric_drafts SET status = 'ready', sections = $2, lyrics_by = $3, updated_at = $4 WHERE id = $1 AND status = 'writing'`,
+        [id, JSON.stringify(sections), lyricsBy, this.clock.now()],
+      )
+      .catch(() => undefined)
+  }
+
+  private async ownDraft(userId: string, id: string): Promise<LyricsRow> {
+    const row = (
+      await this.db.query<LyricsRow>(
+        'SELECT * FROM library_lyric_drafts WHERE id = $1 AND owner_id = $2',
+        [id, userId],
+      )
+    ).rows[0]
+    if (!row) throw new LoroError('NOT_FOUND')
+    return row
+  }
+
+  private toLyricsWire(row: LyricsRow): LyricsWire {
+    // Work lost with its process reads as failed, as a song's does.
+    const lost =
+      row.status === 'writing' && this.clock.now() - num(row.updated_at) > RENDER_TIMEOUT_MS
+    return {
+      id: row.id,
+      setId: row.set_id,
+      styleId: row.style_id,
+      title: row.title,
+      status: lost ? 'failed' : row.status,
+      sections: row.sections ?? [],
+      lyricsBy: row.lyrics_by,
+      revision: row.revision,
+      instruction: row.instruction,
+      updatedAt: num(row.updated_at),
+    }
+  }
+
+  /** A set's phrases as a song sings them, at most as many as a song has lines for. */
+  private async songPhrases(setId: string, nativeLang: Language): Promise<SongPhrase[]> {
+    const phrases = (await this.phrasesOf([setId])).slice(0, MAX_SONG_LINES - 4)
+    if (phrases.length === 0) throw new LoroError('VALIDATION_FAILED', 'The set has no phrases')
+    return phrases.map((p) => ({
+      id: p.id,
+      target: p.doc.target,
+      native: p.doc.translations[nativeLang] ?? Object.values(p.doc.translations)[0] ?? '',
+    }))
+  }
+
+  // ---------- songs ----------
+
   /**
    * Starts a song from a set the learner can read. The song is saved at once as `rendering`; its
    * lyrics and sound are written in the background, and the app polls `GET /library/songs/:id`.
+   * With `lyricsId` (plan 113) the learner's approved draft is sung as it stands, and the lyrics
+   * are kept with the song from the start, so a failed song is made again from the same lines.
    */
   async generateSong(userId: string, body: unknown): Promise<{ song: SongWire; album: AlbumWire }> {
     await this.ready()
     const request = parseContract(GenerateSongSchema, body)
     const set = await this.readableSet(userId, request.setId)
-    const phrases = (await this.phrasesOf([set.id])).slice(0, MAX_SONG_LINES - 4)
-    if (phrases.length === 0) throw new LoroError('VALIDATION_FAILED', 'The set has no phrases')
+    const phrases = await this.songPhrases(set.id, request.nativeLang)
+    let approved: { sections: SongSection[]; lyricsBy: 'ai' | 'phrases' } | null = null
+    if (request.lyricsId) {
+      const draft = this.toLyricsWire(await this.ownDraft(userId, request.lyricsId))
+      if (draft.setId !== set.id)
+        throw new LoroError('VALIDATION_FAILED', 'The lyrics are for another set')
+      if (draft.status !== 'ready' || draft.sections.length === 0)
+        throw new LoroError('VALIDATION_FAILED', 'The lyrics are not ready')
+      approved = { sections: draft.sections, lyricsBy: draft.lyricsBy ?? 'phrases' }
+    }
     await this.assertKept(userId, 'songs')
     let albumId = request.albumId
     if (albumId) {
@@ -2282,38 +2518,45 @@ export class LibraryService {
     await this.db.query(
       `INSERT INTO library_songs(id, album_id, owner_id, set_id, position, title, style_id, status, lyrics, lyrics_by, audio_id, audio_by,
          duration_ms, error, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,'rendering','[]','phrases',NULL,NULL,NULL,NULL,$8)`,
-      [id, albumId, userId, set.id, position, title, request.styleId, now],
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'rendering',$8,$9,NULL,NULL,NULL,NULL,$10)`,
+      [
+        id,
+        albumId,
+        userId,
+        set.id,
+        position,
+        title,
+        request.styleId,
+        JSON.stringify(approved ? timed(approved.sections, null) : []),
+        approved?.lyricsBy ?? 'phrases',
+        now,
+      ],
     )
     await this.db.query('UPDATE library_albums SET updated_at = $2 WHERE id = $1', [albumId, now])
-    const songPhrases: SongPhrase[] = phrases.map((p) => ({
-      id: p.id,
-      target: p.doc.target,
-      native: p.doc.translations[request.nativeLang] ?? Object.values(p.doc.translations)[0] ?? '',
-    }))
     void this.render(id, {
       ownerId: userId,
+      albumId,
       chargedDay: utcDay(now),
       title,
       styleId: request.styleId,
       targetLang: set.target_lang,
       nativeLang: request.nativeLang,
-      phrases: songPhrases,
+      phrases,
+      approved,
     })
     return { song: await this.song(userId, id), album: (await this.album(userId, albumId)).album }
   }
 
   /**
-   * Makes a failed song again from its set's phrases, for another of the day's songs (given back if
-   * it fails again).
+   * Makes a failed song again, for another of the day's songs (given back if it fails again): from
+   * the lyrics it was given, or from its set's phrases when it had none yet.
    */
   async retrySong(userId: string, id: unknown, body: unknown): Promise<SongWire> {
     await this.ready()
     const { nativeLang } = parseContract(RetrySongSchema, body)
     const row = await this.ownSong(userId, parseContract(LibraryIdSchema, id))
     const set = await this.readableSet(userId, row.set_id)
-    const phrases = (await this.phrasesOf([set.id])).slice(0, MAX_SONG_LINES - 4)
-    if (phrases.length === 0) throw new LoroError('VALIDATION_FAILED', 'The set has no phrases')
+    const phrases = await this.songPhrases(set.id, nativeLang)
     const now = this.clock.now()
     // Claimed in one statement, so two taps make it once. A song lost to a restart kept its
     // allowance (nothing gave it back), so making it again costs nothing more.
@@ -2338,18 +2581,18 @@ export class LibraryService {
         throw error
       }
     }
+    // The lines it was given (as written, not as a singer sang them), to be sung again.
+    const given = row.lyrics.flatMap((s) => s.lines).length > 0 ? asWritten(row.lyrics) : null
     void this.render(row.id, {
       ownerId: userId,
+      albumId: row.album_id,
       chargedDay: utcDay(now),
       title: row.title,
       styleId: parseContract(z.enum(MUSIC_STYLE_IDS), row.style_id),
       targetLang: set.target_lang,
       nativeLang,
-      phrases: phrases.map((p) => ({
-        id: p.id,
-        target: p.doc.target,
-        native: p.doc.translations[nativeLang] ?? Object.values(p.doc.translations)[0] ?? '',
-      })),
+      phrases,
+      approved: given ? { sections: given, lyricsBy: row.lyrics_by } : null,
     })
     return this.song(userId, row.id)
   }
@@ -2377,11 +2620,12 @@ export class LibraryService {
     return row
   }
 
-  /** Writes the lyrics and the sound; never throws, the song records what went wrong. */
+  /** Writes the lyrics (unless given) and the sound; never throws, the song records what went wrong. */
   private async render(
     id: string,
     input: {
       ownerId: string
+      albumId: string
       /** The day whose song this spent, given back there if it fails. */
       chargedDay: string
       title: string
@@ -2389,13 +2633,15 @@ export class LibraryService {
       targetLang: Language
       nativeLang: Language
       phrases: SongPhrase[]
+      /** The learner's approved lyrics (plan 113), sung as they stand; null writes them here. */
+      approved: { sections: SongSection[]; lyricsBy: SongWire['lyricsBy'] } | null
     },
   ): Promise<void> {
     try {
-      let sections: SongSection[] | null = null
-      let lyricsBy: SongWire['lyricsBy'] = 'phrases'
+      let sections: SongSection[] | null = input.approved?.sections ?? null
+      let lyricsBy: SongWire['lyricsBy'] = input.approved?.lyricsBy ?? 'phrases'
       const ai = writer()
-      if (ai) {
+      if (!sections && ai) {
         try {
           sections = await aiLyrics(ai, { ...input, style: input.styleId })
           lyricsBy = 'ai'
@@ -2422,7 +2668,14 @@ export class LibraryService {
           targetLang: input.targetLang,
           lengthMs: Math.min(120_000, Math.max(30_000, lineCount * 5_000)),
         })
-        audio = { ...live, durationMs: null, lines: null, by: 'elevenlabs', voiced: true }
+        audio = {
+          ...live,
+          // Measured from the MP3's frames; never estimated from the length asked for.
+          durationMs: audioDurationMs(live.bytes),
+          lines: null,
+          by: 'elevenlabs',
+          voiced: true,
+        }
       } else {
         // The demo sings the lines its size allows (synth.ts); the lyrics end where its sound does.
         sections = firstLines(sections, demoLineLimit(input.styleId))
@@ -2441,26 +2694,51 @@ export class LibraryService {
           voiced: voices.some((voice) => voice !== null),
         }
       }
+      let lyrics = timed(sections, audio.lines)
+      let timingBy: SongWire['timingBy'] = audio.lines ? 'demo' : null
+      // A sung song is heard back (plan 113): its lines as they were sung, each timed, and a line the
+      // singer changed translated again. Hearing it fail leaves the lyrics as written, untimed.
+      if (audio.by === 'elevenlabs' && transcriptionConfigured()) {
+        try {
+          const heard = alignLyrics(sections, await transcribeSong({ ...audio, ...input }))
+          lyrics = await this.meaningsOfChanged(heard, input, ai)
+          timingBy = 'transcript'
+        } catch (error) {
+          this.logger.warn(
+            `hearing song ${id} back failed: ${error instanceof Error ? error.message : 'unknown'}; keeping the lyrics as written`,
+          )
+        }
+      }
       // The sound and the song that plays it are saved together, so a clean-up in between can't
       // take a sound no song points at yet.
-      await this.db.transaction(async (tx) => {
+      const kept = await this.db.transaction(async (tx) => {
         // Removed (or its account deleted) while it was being made: nothing to keep.
         const still = await tx.query('SELECT 1 FROM library_songs WHERE id = $1 FOR UPDATE', [id])
-        if (still.rows.length === 0) return
+        if (still.rows.length === 0) return false
         const audioId = await this.storeAudio(tx, audio.bytes, audio.contentType)
         await tx.query(
-          `UPDATE library_songs SET status = 'ready', lyrics = $2, lyrics_by = $3, audio_id = $4, audio_by = $5, duration_ms = $6, voiced = $7 WHERE id = $1`,
+          `UPDATE library_songs SET status = 'ready', lyrics = $2, lyrics_by = $3, audio_id = $4, audio_by = $5, duration_ms = $6, voiced = $7, timing_by = $8 WHERE id = $1`,
           [
             id,
-            JSON.stringify(timed(sections, audio.lines)),
+            JSON.stringify(lyrics),
             lyricsBy,
             audioId,
             audio.by,
             audio.durationMs,
             audio.voiced,
+            timingBy,
           ],
         )
+        return true
       })
+      // The learner's phone hears of it (plan 113); the app's own poll does too.
+      if (kept)
+        await this.push?.songFinished(input.ownerId, {
+          songId: id,
+          albumId: input.albumId,
+          title: input.title,
+          outcome: 'ready',
+        })
     } catch (error) {
       const reason = error instanceof Error ? error.message : 'unknown'
       this.logger.warn(`song ${id} failed: ${reason}`)
@@ -2473,6 +2751,45 @@ export class LibraryService {
         .catch(() => undefined)
       // A song that couldn't be made doesn't count against the day's songs.
       await this.refund(input.ownerId, 'song', input.chargedDay).catch(() => undefined)
+      await this.push?.songFinished(input.ownerId, {
+        songId: id,
+        albumId: input.albumId,
+        title: input.title,
+        outcome: 'failed',
+      })
+    }
+  }
+
+  /**
+   * The heard lines with a fresh meaning for each the singer changed, from the text model; when it
+   * fails (or there is none) the written meaning stands, which is near enough for a changed word.
+   */
+  private async meaningsOfChanged(
+    heard: HeardSection[],
+    input: { targetLang: Language; nativeLang: Language },
+    ai: StructuredTextModel | null,
+  ): Promise<SongRow['lyrics']> {
+    const changed = heard.flatMap((s) => s.lines).filter((line) => line.written !== null)
+    if (changed.length === 0 || !ai) return heard
+    try {
+      const meanings = await translateLines(ai, {
+        lines: changed.map((line) => line.text),
+        targetLang: input.targetLang,
+        nativeLang: input.nativeLang,
+      })
+      const byLine = new Map(changed.map((line, i) => [line, meanings[i] ?? line.meaning]))
+      return heard.map((section) => ({
+        name: section.name,
+        lines: section.lines.map((line) => ({
+          ...line,
+          meaning: byLine.get(line) ?? line.meaning,
+        })),
+      }))
+    } catch (error) {
+      this.logger.warn(
+        `translating sung lines failed: ${error instanceof Error ? error.message : 'unknown'}; keeping the written meanings`,
+      )
+      return heard
     }
   }
 
@@ -2541,6 +2858,9 @@ export class LibraryService {
       audioUrl: row.audio_id ? signedAudioPath(row.id, this.clock.now()) : null,
       audioBy: row.audio_by,
       voiced: row.voiced === true,
+      // Songs from before plan 113 have no column value: a demo's lines were timed by its bars.
+      timingBy:
+        row.timing_by ?? (row.audio_by === 'demo' && row.status === 'ready' ? 'demo' : null),
       durationMs: row.duration_ms,
       error: lost ? 'lost' : row.error,
       createdAt: num(row.created_at),
@@ -2657,6 +2977,7 @@ async function deleteLibraryOf(tx: SqlConnection, userId: string): Promise<void>
   await tx.query('DELETE FROM library_reports WHERE user_id = $1', [userId])
   await tx.query('DELETE FROM library_profiles WHERE user_id = $1', [userId])
   await tx.query('DELETE FROM library_progress WHERE user_id = $1', [userId])
+  await tx.query('DELETE FROM library_lyric_drafts WHERE owner_id = $1', [userId])
   // A clip is keyed by its language and text, so another learner's phrase (or Loro's) may speak
   // the same words: it stays, no longer counted against this learner.
   await tx.query('UPDATE library_speech SET owner_id = NULL WHERE owner_id = $1', [userId])
@@ -2797,6 +3118,18 @@ function firstLines(sections: SongSection[], limit: number): SongSection[] {
     room -= lines.length
     return lines.length > 0 ? [{ ...section, lines }] : []
   })
+}
+
+/** A song's lines as they were written (plan 113): a line the singer changed keeps its written form. */
+function asWritten(lyrics: SongRow['lyrics']): SongSection[] {
+  return lyrics.map((section) => ({
+    name: section.name,
+    lines: section.lines.map((line) => ({
+      text: line.written?.text ?? line.text,
+      meaning: line.written?.meaning ?? line.meaning,
+      phraseId: line.phraseId,
+    })),
+  }))
 }
 
 function timed(

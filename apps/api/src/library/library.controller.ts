@@ -17,6 +17,7 @@ import type { Response } from 'express'
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
 import { OptionalAuthGuard, readerOf, type ReaderRequest } from './library.guard.js'
 import { LibraryService } from './library.service.js'
+import { PushService } from './push.js'
 
 /** Reading: anyone, with more for the signed-in reader (their own and saved items). */
 @Controller('library')
@@ -144,7 +145,26 @@ export class LibraryReadController {
 @Controller('library')
 @UseGuards(AuthGuard)
 export class LibraryWriteController {
-  constructor(@Inject(LibraryService) private readonly library: LibraryService) {}
+  constructor(
+    @Inject(LibraryService) private readonly library: LibraryService,
+    @Inject(PushService) private readonly push: PushService,
+  ) {}
+
+  /** A device's push token, so the learner hears when a song is ready (plan 113). */
+  @Post('push-tokens')
+  @HttpCode(200)
+  registerPushToken(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    return this.push.register(request.principal.userId, body)
+  }
+
+  @Delete('push-tokens/:token')
+  @HttpCode(204)
+  async forgetPushToken(
+    @Req() request: AuthenticatedRequest,
+    @Param('token') token: string,
+  ): Promise<void> {
+    await this.push.forget(request.principal.userId, token)
+  }
 
   @Get('usage')
   @Header('Cache-Control', 'no-store')
@@ -322,6 +342,31 @@ export class LibraryWriteController {
     return this.library.wearCover(request.principal.userId, id, body)
   }
 
+  /** Lyrics written first (plan 113), in the background; the app polls `GET lyrics/:id`. */
+  @Post('lyrics')
+  @HttpCode(202)
+  startLyrics(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    return this.library.startLyrics(request.principal.userId, body)
+  }
+
+  @Get('lyrics/:id')
+  @Header('Cache-Control', 'no-store')
+  lyrics(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.library.lyrics(request.principal.userId, id)
+  }
+
+  /** The draft written again: anew, or changed as the learner asks. */
+  @Post('lyrics/:id/rewrite')
+  @HttpCode(202)
+  rewriteLyrics(
+    @Req() request: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.library.rewriteLyrics(request.principal.userId, id, body)
+  }
+
+  /** A song: from the learner's approved lyrics (`lyricsId`, plan 113), or written here. */
   @Post('generate/song')
   @HttpCode(202)
   generateSong(@Req() request: AuthenticatedRequest, @Body() body: unknown) {

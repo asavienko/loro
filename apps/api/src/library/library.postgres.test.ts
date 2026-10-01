@@ -17,6 +17,7 @@ import {
 } from '../testing/postgres-schema.js'
 import { AI_DECK_SIZE, LibraryService } from './library.service.js'
 import { ProgressService } from './progress.js'
+import { PushService } from './push.js'
 import { SpeechService, speechFor, utteranceId } from './speech.js'
 import { MAX_DEMO_WAV_BYTES, demoLineLimit } from './synth.js'
 import { resetArtist, resetWriter } from './writers.js'
@@ -1611,12 +1612,28 @@ describePostgres('the library against real PostgreSQL', () => {
     )
     expect((await library.song('zoe', song.id)).status).toBe('failed')
     expect(await code(library.deleteSong('zoe', 'song-none'))).toBe('NOT_FOUND')
+    // The sound is held back while the second tap is tried, so the song is surely still being made.
+    interface Store {
+      storeAudio: (...args: unknown[]) => Promise<string>
+    }
+    const real = (library as unknown as Store).storeAudio.bind(library)
+    let release: () => void = () => undefined
+    const held = vi
+      .spyOn(library as unknown as Store, 'storeAudio')
+      .mockImplementationOnce(async (...args) => {
+        await new Promise<void>((resolve) => {
+          release = resolve
+        })
+        return real(...args)
+      })
     await library.retrySong('zoe', song.id, { nativeLang: 'en-GB' })
     // A second tap while it is being made is refused, and nothing more is spent.
     expect(await code(library.retrySong('zoe', song.id, { nativeLang: 'en-GB' }))).toBe(
       'VALIDATION_FAILED',
     )
     expect(await code(library.deleteSong('zoe', song.id))).toBe('VALIDATION_FAILED')
+    release()
+    held.mockRestore()
     expect((await library.usage('zoe')).daily.song.used).toBe(1)
     await vi.waitFor(
       async () => {
@@ -1624,5 +1641,208 @@ describePostgres('the library against real PostgreSQL', () => {
       },
       { timeout: 5000 },
     )
+  })
+
+  it('writes the lyrics first, writes them again as asked, and sings the approved ones (plan 113)', async () => {
+    const ask = { setId: 'set-cafe', styleId: 'lullaby', nativeLang: 'en-GB' } as const
+    const lyricsReady = (id: string) =>
+      vi.waitFor(
+        async () => {
+          expect((await library.lyrics('amy', id)).status).toBe('ready')
+        },
+        { timeout: 5000 },
+      )
+    // Without a model: the set's phrases arranged, at once, free, and nothing to rewrite.
+    const plain = await library.startLyrics('amy', ask)
+    expect(plain).toMatchObject({ status: 'ready', lyricsBy: 'phrases', revision: 1 })
+    expect(
+      plain.sections.flatMap((s) => s.lines).every((l) => l.phraseId?.startsWith('cafe-')),
+    ).toBe(true)
+    expect((await library.usage('amy')).daily.lyrics.used).toBe(0)
+    expect(await code(library.rewriteLyrics('amy', plain.id, {}))).toBe('PROVIDER_UNAVAILABLE')
+
+    const cafe = (await library.set(null, 'set-cafe')).phrases
+    const line = (p: { id: string; target: string }) => ({
+      text: p.target,
+      meaning: `means ${p.id}`,
+      phraseId: p.id,
+    })
+    const [first, second] = cafe
+    if (!first || !second) throw new Error("Loro's café set has at least two phrases")
+    const written = {
+      sections: [
+        { name: 'verse', lines: [line(first), line(second)] },
+        { name: 'chorus', lines: [line(first)] },
+      ],
+    }
+    resetWriter(modelAnswering(written))
+    try {
+      // With a model: written in the background, from the day's lyrics, for its owner only.
+      const draft = await library.startLyrics('amy', ask)
+      expect(draft.status).toBe('writing')
+      expect(await code(library.lyrics('bob', draft.id))).toBe('NOT_FOUND')
+      await lyricsReady(draft.id)
+      const ready = await library.lyrics('amy', draft.id)
+      expect(ready.lyricsBy).toBe('ai')
+      expect(ready.sections.flatMap((s) => s.lines.map((l) => l.text))).toEqual([
+        first.target,
+        second.target,
+        first.target,
+      ])
+      expect((await library.usage('amy')).daily.lyrics.used).toBe(1)
+
+      // Written again as asked: another of the day's lyrics; the lines stay readable meanwhile.
+      resetWriter(modelAnswering({ sections: [written.sections[1], written.sections[0]] }))
+      const again = await library.rewriteLyrics('amy', draft.id, { instruction: 'Chorus first' })
+      expect(again).toMatchObject({ status: 'writing', revision: 2, instruction: 'Chorus first' })
+      expect(again.sections).toEqual(ready.sections)
+      await lyricsReady(draft.id)
+      expect((await library.lyrics('amy', draft.id)).sections.map((s) => s.name)).toEqual([
+        'chorus',
+        'verse',
+      ])
+      expect((await library.usage('amy')).daily.lyrics.used).toBe(2)
+
+      // A rewriting that fails leaves the lyrics as they were and gives the allowance back.
+      resetWriter(modelFailing())
+      await library.rewriteLyrics('amy', draft.id, {})
+      await lyricsReady(draft.id)
+      expect((await library.lyrics('amy', draft.id)).sections.map((s) => s.name)).toEqual([
+        'chorus',
+        'verse',
+      ])
+      expect((await library.usage('amy')).daily.lyrics.used).toBe(2)
+
+      // Sung as approved: the song holds the lines from the start, and keeps them when it is made
+      // again after a failure, without asking the (now failing) model.
+      const store = vi
+        .spyOn(library as unknown as { storeAudio: () => Promise<string> }, 'storeAudio')
+        .mockRejectedValueOnce(new Error('disk full'))
+      const { song } = await library.generateSong('amy', { ...ask, lyricsId: draft.id })
+      expect(song.sections.map((s) => s.name)).toEqual(['chorus', 'verse'])
+      expect(song.lyricsBy).toBe('ai')
+      await vi.waitFor(
+        async () => {
+          expect((await library.song('amy', song.id)).status).toBe('failed')
+        },
+        { timeout: 5000 },
+      )
+      store.mockRestore()
+      await library.retrySong('amy', song.id, { nativeLang: 'en-GB' })
+      await vi.waitFor(
+        async () => {
+          expect((await library.song('amy', song.id)).status).toBe('ready')
+        },
+        { timeout: 5000 },
+      )
+      const sung = await library.song('amy', song.id)
+      expect(sung.lyricsBy).toBe('ai')
+      expect(sung.sections.flatMap((s) => s.lines.map((l) => l.text))).toEqual([
+        first.target,
+        first.target,
+        second.target,
+      ])
+      expect(sung.sections.flatMap((s) => s.lines.map((l) => l.meaning))).toEqual([
+        `means ${first.id}`,
+        `means ${first.id}`,
+        `means ${second.id}`,
+      ])
+      expect(sung.timingBy).toBe('demo')
+      // Another set's draft, or someone else's, can't be sung.
+      expect(
+        await code(library.generateSong('amy', { ...ask, setId: 'set-tapas', lyricsId: draft.id })),
+      ).toBe('VALIDATION_FAILED')
+      expect(await code(library.generateSong('bob', { ...ask, lyricsId: draft.id }))).toBe(
+        'NOT_FOUND',
+      )
+    } finally {
+      resetWriter()
+    }
+  })
+
+  it('tells the learner’s phones when a song is ready, in their language, and forgets a dead token (plan 113)', async () => {
+    const sent: { url: string; body: unknown; auth: string | undefined }[] = []
+    let dead = false
+    const send = ((url: string | URL | Request, init?: RequestInit) => {
+      const body = JSON.parse(init?.body as string) as { to: string }[]
+      sent.push({
+        url: typeof url === 'string' ? url : url instanceof URL ? url.href : url.url,
+        body,
+        auth: (init?.headers as Record<string, string>)['authorization'],
+      })
+      return Promise.resolve(
+        Response.json({
+          data: body.map((m) =>
+            dead && m.to.includes('old')
+              ? { status: 'error', message: 'gone', details: { error: 'DeviceNotRegistered' } }
+              : { status: 'ok', id: 'ticket' },
+          ),
+        }),
+      )
+    }) as typeof fetch
+    vi.stubEnv('EXPO_PUSH_ACCESS_TOKEN', 'expo-secret')
+    const push = new PushService(database, { now: () => now }, send)
+    const told = new LibraryService(database, { now: () => now }, undefined, push)
+    const phone = 'ExponentPushToken[phoneAAAAAAAAAA]'
+    const old = 'ExponentPushToken[oldBBBBBBBBBBBB]'
+    await push.register('gil', { token: phone, lang: 'bg', platform: 'android' })
+    await push.register('gil', { token: old, lang: 'en' })
+    // A token moves with its device: registered by someone else, it is theirs now.
+    await push.register('hal', { token: old, lang: 'ru' })
+    await push.register('gil', { token: old, lang: 'en' })
+    // Someone else can't forget it.
+    await push.forget('hal', phone)
+
+    const { song, album } = await told.generateSong('gil', {
+      setId: 'set-cafe',
+      styleId: 'country',
+      nativeLang: 'bg-BG',
+    })
+    await vi.waitFor(
+      async () => {
+        expect((await told.song('gil', song.id)).status).toBe('ready')
+        expect(sent).toHaveLength(1)
+      },
+      { timeout: 5000 },
+    )
+    expect(sent[0]?.url).toBe('https://exp.host/--/api/v2/push/send')
+    expect(sent[0]?.auth).toBe('Bearer expo-secret')
+    expect(sent[0]?.body).toEqual([
+      {
+        to: phone,
+        title: 'Песента ви е готова',
+        body: `„${song.title}“ е готова за слушане.`,
+        data: { kind: 'song', songId: song.id, albumId: album.id, outcome: 'ready' },
+        sound: 'default',
+      },
+      expect.objectContaining({ to: old, title: 'Your song is ready' }),
+    ])
+
+    // The next song finds the old device gone, and the server forgets its token.
+    dead = true
+    const next = await told.generateSong('gil', {
+      setId: 'set-tapas',
+      styleId: 'country',
+      nativeLang: 'bg-BG',
+      albumId: album.id,
+    })
+    await vi.waitFor(
+      async () => {
+        expect((await told.song('gil', next.song.id)).status).toBe('ready')
+        expect(sent).toHaveLength(2)
+      },
+      { timeout: 5000 },
+    )
+    const kept = await database.query<{ token: string }>(
+      'SELECT token FROM library_push_tokens WHERE user_id = $1 ORDER BY token',
+      ['gil'],
+    )
+    expect(kept.rows.map((r) => r.token)).toEqual([phone])
+    // Signing out forgets the device; deleting the account forgets them all.
+    await push.forget('gil', phone)
+    expect(
+      (await database.query('SELECT 1 FROM library_push_tokens WHERE user_id = $1', ['gil'])).rows,
+    ).toEqual([])
+    vi.unstubAllEnvs()
   })
 })

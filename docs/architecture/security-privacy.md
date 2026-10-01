@@ -8,21 +8,24 @@ Rationale: [ADR-0011](adr/0011-analytics-and-privacy.md).
 sampling". The current app records nothing at all: it asks for no microphone permission, and
 `app.config.ts` blocks the one expo-audio would add. If recording is added, PCM stays in native
 memory, no JavaScript API returns audio bytes, and no API route accepts it. Licensed model audio
-(server phrase clips, songs) is a different thing and may be cached.
+(server phrase clips, songs) is a different thing and may be cached. The one transcription the
+server does is of the songs it generated itself, in the API process, to show their lyrics as sung
+([ADR-0019](adr/0019-transcribing-generated-songs.md)); no device audio is involved.
 
 ## What the server holds
 
-| Data                                                         | Where                            |
-| ------------------------------------------------------------ | -------------------------------- |
-| Account: a keyed hash of the email, or the provider subject  | PostgreSQL (`auth_*`)            |
-| Devices, sessions and refresh tokens (hashed)                | PostgreSQL (`auth_*`)            |
-| Pending email codes (hashed, ten minutes)                    | PostgreSQL (`auth_magic_codes`)  |
-| Display name                                                 | PostgreSQL (`library_profiles`)  |
-| The learner's sets, phrases, albums, songs, covers and saves | PostgreSQL (`library_*`)         |
-| Reports the learner made                                     | PostgreSQL (`library_reports`)   |
-| A copy of the learner's progress                             | PostgreSQL (`library_progress`)  |
-| Daily generation and clip counts                             | PostgreSQL (`library_usage`)     |
-| Rows from the earlier app's sync and music routes            | PostgreSQL (`sync_*`, `music_*`) |
+| Data                                                                | Where                              |
+| ------------------------------------------------------------------- | ---------------------------------- |
+| Account: a keyed hash of the email, or the provider subject         | PostgreSQL (`auth_*`)              |
+| Devices, sessions and refresh tokens (hashed)                       | PostgreSQL (`auth_*`)              |
+| Pending email codes (hashed, ten minutes)                           | PostgreSQL (`auth_magic_codes`)    |
+| Display name                                                        | PostgreSQL (`library_profiles`)    |
+| The learner's sets, phrases, albums, songs, covers and saves        | PostgreSQL (`library_*`)           |
+| Reports the learner made                                            | PostgreSQL (`library_reports`)     |
+| A copy of the learner's progress                                    | PostgreSQL (`library_progress`)    |
+| Daily generation and clip counts                                    | PostgreSQL (`library_usage`)       |
+| The Expo push tokens of the learner's devices, with the UI language | PostgreSQL (`library_push_tokens`) |
+| Rows from the earlier app's sync and music routes                   | PostgreSQL (`sync_*`, `music_*`)   |
 
 Email addresses are never stored in plaintext, and rate-limit buckets key on hashes, never raw
 addresses or emails.

@@ -101,6 +101,17 @@ app forgets what it kept on the device under that account and ends the session.
 A signed-in learner's **progress** follows them through `GET/POST /library/progress`; how it merges,
 when it runs and what happens on a shared phone are in [sync-protocol.md](sync-protocol.md).
 
+**A word when a song is ready** (plan [113](../../plans/113-lyrics-first-songs.md)). On iOS and
+Android the app registers its Expo push token with the UI language it shows
+(`POST /library/push-tokens`, after the first song the learner starts, once the system has allowed
+notifications; `DELETE /library/push-tokens/:token` on sign-out). When a song is ready or couldn't
+be made, `push.ts` sends one message per registered device through Expo's push service, in that
+device's language, with the song and album ids so a tap opens the album; a token the service reports
+as gone is forgotten, and all of a learner's go with their account. The token is the only device
+identifier the server keeps. `PUSH_PROVIDER=off` sends nothing; the app's own poll and local
+notification still tell the learner. A token needs an EAS project id in the app (`EAS_PROJECT_ID` at
+build time); without one the app registers nothing.
+
 ## Visibility and sharing
 
 | Visibility | Who can read it                                     | Listed in Community |
@@ -151,7 +162,8 @@ next phrase's clips in the two languages the learner hears.
 | `POST /library/generate/notes` | Notes and a picture for a typed phrase                       | Notes and a picture by Loro's rules (`rules`)     |
 | `POST /library/generate/note`  | Another mnemonic or grammar note, unlike the ones sent       | None: `PROVIDER_UNAVAILABLE` (the rules have one) |
 | `POST /library/generate/cover` | An illustration (Muse Image), else a shape spec, background  | A pattern drawn from the title (`pattern`)        |
-| `POST /library/generate/song`  | Lyrics that sing every phrase                                | The set's phrases arranged as a song (`phrases`)  |
+| `POST /library/lyrics`         | Lyrics that sing every phrase, read and approved first       | The set's phrases arranged as a song (`phrases`)  |
+| `POST /library/generate/song`  | The approved lyrics sung; written here without a draft       | The set's phrases arranged as a song (`phrases`)  |
 
 Text comes from DeepSeek V4.1 Flash on Fireworks (`FIREWORKS_API_KEY`), and from the same model
 through OpenRouter (`OPENROUTER_API_KEY`) when Fireworks fails, with reasoning off; covers are drawn
@@ -181,17 +193,47 @@ otherwise the server synthesizes a **demo instrumental** (`synth.ts`: chords, ba
 in the style, two bars per lyric line) whose line timings let the lyrics follow the sound. It is
 labelled "Demo sound" everywhere it is heard. A demo is a 22.05 kHz 16-bit mono WAV of at most 4
 MiB, which the HTTPS gateway can carry ([ec2-deployment.md](../process/ec2-deployment.md)): it sings
-as many whole lines as fit (12 in a gentle ballad, 16 to 22 in the other styles) and the song's
-lyrics end where its sound does. When the server has a voice for the song's language, each lyric
-line is also spoken over its bars (raw PCM from the voice, the music ducked under it; distinct lines
-only, counted against the owner's and the server's clip allowances), and the song is labelled
-"Spoken demo". Loro's own album songs are voiced the same way once, in the background, after the
-server starts with a voice (`LIBRARY_VOICE_LORO_SONGS=0` turns it off).
+as many whole lines as fit (12 in a gentle ballad or a lullaby, 15 in hip-hop, 16 to 22 in the other
+styles) and the song's lyrics end where its sound does. There are twelve styles (plan 113:
+`MUSIC_STYLE_IDS` in `packages/core`), each a style pack for ElevenLabs
+(`packages/content/src/style-packs.ts`) and a tempo, chord progression and feel for the demo. When
+the server has a voice for the song's language, each lyric line is also spoken over its bars (raw
+PCM from the voice, the music ducked under it; distinct lines only, counted against the owner's and
+the server's clip allowances), and the song is labelled "Spoken demo". Loro's own album songs are
+voiced the same way once, in the background, after the server starts with a voice
+(`LIBRARY_VOICE_LORO_SONGS=0` turns it off).
 
-A song is saved at once as `rendering` and made in the background; the app polls it. A song that
-fails (or is lost to a restart, after ten minutes) gives the day's song back; its owner can make it
-again (`POST /library/songs/:id/retry`, another of the day's songs) or remove it
-(`DELETE /library/songs/:id`).
+**A sung song is heard back** (plan 113, [ADR-0019](adr/0019-transcribing-generated-songs.md)).
+Right after ElevenLabs Music answers, the server sends the song it just received to ElevenLabs
+Scribe (`transcribe.ts`, the same key, `MUSIC_TRANSCRIBE=0` turns it off) for a transcript with a
+timestamp per word, and `align.ts` matches the words to the approved lines: a global alignment of
+folded tokens that forgives a transcriber a letter in a long word, attaches words sung inside or
+right beside a line to it, gives a line none of whose words was heard the words sung in its place,
+and ignores an ad-lib in a pause. The song is stored with each line as it was sung and when
+(`timingBy: 'transcript'`; the demo's bars are `demo`); a line the singer changed keeps the written
+line and its meaning in `written` and gets a meaning of its own from the text model
+(`translateLines`; the written meaning stands if it fails); a line the singer skipped keeps its
+words and has no timing. If hearing the song back fails, its lyrics stay as written and untimed
+(`timingBy: null`). A sung song's `durationMs` is measured from its MP3 frames. Only audio the
+server generated is ever transcribed; the app records nothing.
+
+**The lyrics come first** (plan [113](../../plans/113-lyrics-first-songs.md)). The app asks
+`POST /library/lyrics` (a set, a style, the learner's language, a title) for a draft, written by the
+text model in the background and polled at `GET /library/lyrics/:id`; the learner reads each line
+with its meaning, has it written again (`POST /library/lyrics/:id/rewrite`, anew or with an
+`instruction` in their own words, which the model is told is the learner's request and never
+overrides the rules: every phrase stays sung as written), and approves it by starting the song with
+`lyricsId`. Each writing spends one of the day's lyrics (`LIMIT_LYRICS_DAILY`, 20); a writing that
+fails gives it back, and leaves the lines as they were (or, the first time, the set's phrases
+arranged, labelled `phrases`). Without a text model the draft is the phrases at once, free, and
+there is nothing to rewrite (`PROVIDER_UNAVAILABLE`). Drafts are the learner's own and are cleared a
+week after they were last written. A song started without `lyricsId` has its lyrics written as part
+of the song, for older app builds.
+
+A song is saved at once as `rendering` and made in the background; the app polls it. A song sung
+from a draft holds its lines from the start. A song that fails (or is lost to a restart, after ten
+minutes) gives the day's song back; its owner can make it again (`POST /library/songs/:id/retry`,
+another of the day's songs, from the lines it was given) or remove it (`DELETE /library/songs/:id`).
 
 **Covers are never markup from a model.** An illustration is accepted only as PNG, JPEG or WebP by
 its bytes' signature (at most 2.5 MB) and carried inside the SVG as a base64 `data:` image. A shape
@@ -241,12 +283,13 @@ would spend several of the day's covers for one).
 
 **Allowances** are counted per learner per UTC day in `library_usage` with one atomic upsert, before
 any provider is asked: a model's phrase decks and notes (`LIMIT_PHRASES_DAILY`, default 30), covers
-(`LIMIT_COVER_DAILY`, 10, drawn patterns too) and songs (`LIMIT_SONG_DAILY`, 5, demos too); zero
-turns a kind off. One account keeps at most `LIMIT_SETS_KEPT` (100) sets, `LIMIT_ALBUMS_KEPT` (30)
-albums and `LIMIT_SONGS_KEPT` (120) songs; the course's "My phrases" set is one of the sets, so at
-the cap a phrase added on its own is refused until it goes into a set the learner has. A spent
-allowance is `429 LIMIT_REACHED` with `resets_at` (`null` for a kept cap); the app shows what is
-left before the learner asks. Making anything needs an account; reading does not.
+(`LIMIT_COVER_DAILY`, 10, drawn patterns too), songs (`LIMIT_SONG_DAILY`, 5, demos too) and a
+model's lyrics drafts (`LIMIT_LYRICS_DAILY`, 20, each writing); zero turns a kind off. One account
+keeps at most `LIMIT_SETS_KEPT` (100) sets, `LIMIT_ALBUMS_KEPT` (30) albums and `LIMIT_SONGS_KEPT`
+(120) songs; the course's "My phrases" set is one of the sets, so at the cap a phrase added on its
+own is refused until it goes into a set the learner has. A spent allowance is `429 LIMIT_REACHED`
+with `resets_at` (`null` for a kept cap); the app shows what is left before the learner asks. Making
+anything needs an account; reading does not.
 
 ## Running it locally
 

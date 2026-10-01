@@ -58,6 +58,8 @@ export const LIBRARY_TEXT = {
   noteText: 300,
   /** What the learner asks a cover to picture, in their own words. */
   coverPrompt: 200,
+  /** What a learner asks to change in a song's lyrics (plan 113). */
+  instruction: 200,
 }
 
 /** Links are how spam travels; nothing a learner names or describes here needs one. */
@@ -333,6 +335,33 @@ export const GenerateSongSchema = z.strictObject({
   title: shownText(LIBRARY_TEXT.title, 1).optional(),
   /** The learner's album to add it to; without one, a new album named after the set. */
   albumId: LibraryIdSchema.optional(),
+  /**
+   * The learner's approved lyrics (plan 113): a ready draft of theirs for the same set, sung as it
+   * stands. Without one the server writes the lyrics itself, as before.
+   */
+  lyricsId: LibraryIdSchema.optional(),
+})
+
+/** Lyrics written first, for the learner to read, change and approve (plan 113). */
+export const StartLyricsSchema = z.strictObject({
+  setId: LibraryIdSchema,
+  styleId: z.enum(MUSIC_STYLE_IDS),
+  nativeLang: LibraryLanguageSchema,
+  title: shownText(LIBRARY_TEXT.title, 1).optional(),
+})
+
+/** The same draft written again: anew, or changed as the learner asks. */
+export const RewriteLyricsSchema = z.strictObject({
+  instruction: shownText(LIBRARY_TEXT.instruction, 1).optional(),
+})
+
+/** The UI languages a push message can be in (the app's copy locales). */
+export const PUSH_LANGS = ['en', 'bg', 'ru', 'pl', 'cs'] as const
+/** A device's Expo push token (plan 113), with the UI language its messages are written in. */
+export const PushTokenSchema = z.strictObject({
+  token: z.string().regex(/^Expo(?:nent)?PushToken\[[A-Za-z0-9_-]{8,128}\]$/),
+  lang: z.enum(PUSH_LANGS),
+  platform: z.enum(['ios', 'android']).optional(),
 })
 
 /** Trying a failed song again: the language its lines are glossed in, as when it was made. */
@@ -355,3 +384,7 @@ export type WearCoverRequest = z.infer<typeof WearCoverSchema>
 export type GenerateNotesRequest = z.infer<typeof GenerateNotesSchema>
 export type RewriteNoteRequest = z.infer<typeof RewriteNoteSchema>
 export type GenerateSongRequest = z.infer<typeof GenerateSongSchema>
+export type StartLyricsRequest = z.infer<typeof StartLyricsSchema>
+export type RewriteLyricsRequest = z.infer<typeof RewriteLyricsSchema>
+export type PushLang = (typeof PUSH_LANGS)[number]
+export type PushTokenRequest = z.infer<typeof PushTokenSchema>

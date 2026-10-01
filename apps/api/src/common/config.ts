@@ -39,14 +39,26 @@ export const config = {
   openRouterImageModel: (): string => process.env['OPENROUTER_IMAGE_MODEL'] ?? 'meta/muse-image',
 
   /**
-   * A learner's daily allowances (plan 106), counted per UTC day: phrase decks, covers and songs.
-   * Zero turns that kind of generation off.
+   * A learner's daily allowances (plan 106), counted per UTC day: phrase decks, covers, songs and
+   * (plan 113) the lyrics drafts written before a song. Zero turns that kind of generation off.
    */
-  libraryDailyLimit: (kind: 'phrases' | 'cover' | 'song'): number =>
+  libraryDailyLimit: (kind: 'phrases' | 'cover' | 'song' | 'lyrics'): number =>
     Number(
       process.env[`LIMIT_${kind.toUpperCase()}_DAILY`] ??
-        { phrases: '30', cover: '10', song: '5' }[kind],
+        { phrases: '30', cover: '10', song: '5', lyrics: '20' }[kind],
     ),
+  /**
+   * A sung song is heard back (plan 113): transcribed with word timestamps by ElevenLabs Scribe,
+   * through `MUSIC_API_KEY`, unless turned off. The demo sound needs none: its timings are its bars.
+   */
+  musicTranscribe: (): boolean => process.env['MUSIC_TRANSCRIBE'] !== '0',
+  /**
+   * Push notifications through Expo's service (plan 113): a song's "ready" message to the learner's
+   * registered devices. `off` sends none; `EXPO_PUSH_ACCESS_TOKEN` is optional.
+   */
+  pushProvider: (): string => process.env['PUSH_PROVIDER'] ?? 'expo',
+  expoPushUrl: (): string => process.env['EXPO_PUSH_URL'] ?? 'https://exp.host/--/api/v2/push/send',
+  expoPushAccessToken: (): string | undefined => trimmed(process.env['EXPO_PUSH_ACCESS_TOKEN']),
   /** Signs song audio URLs; set it when more than one API process serves the same database. */
   libraryUrlSecret: (): string | undefined => {
     const value = process.env['LIBRARY_URL_SECRET']?.trim()

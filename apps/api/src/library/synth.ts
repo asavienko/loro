@@ -28,6 +28,20 @@ const STYLES: Record<MusicStyleId, Style> = {
   modern_pop: { bpm: 112, progression: [5, 3, 0, 4], hats: 'eighths', pad: 0.16, pluck: 0.3 },
   gentle_ballad: { bpm: 72, progression: [0, 5, 3, 4], hats: 'none', pad: 0.2, pluck: 0.28 },
   upbeat_kids: { bpm: 124, progression: [0, 3, 4, 0], hats: 'eighths', pad: 0.1, pluck: 0.36 },
+  indie_rock: { bpm: 128, progression: [0, 4, 5, 3], hats: 'eighths', pad: 0.08, pluck: 0.4 },
+  hip_hop: { bpm: 92, progression: [5, 3, 5, 4], hats: 'eighths', pad: 0.1, pluck: 0.22 },
+  reggaeton: { bpm: 96, progression: [5, 3, 0, 4], hats: 'eighths', pad: 0.12, pluck: 0.3 },
+  jazz_lounge: { bpm: 104, progression: [1, 4, 0, 0], hats: 'quarters', pad: 0.18, pluck: 0.26 },
+  electronic_dance: {
+    bpm: 126,
+    progression: [5, 3, 0, 4],
+    hats: 'eighths',
+    pad: 0.14,
+    pluck: 0.36,
+  },
+  country: { bpm: 108, progression: [0, 0, 3, 4], hats: 'quarters', pad: 0.1, pluck: 0.34 },
+  lullaby: { bpm: 76, progression: [0, 3, 0, 4], hats: 'none', pad: 0.22, pluck: 0.24 },
+  bossa_nova: { bpm: 116, progression: [0, 1, 4, 4], hats: 'quarters', pad: 0.14, pluck: 0.28 },
 }
 
 const MAJOR = [0, 2, 4, 5, 7, 9, 11]
