@@ -164,12 +164,14 @@ describe('rating window', () => {
     assert.equal(s.pending.length, 1, 'the second one is pending');
   });
 
-  it('missed brings the phrase back four phrases later', () => {
+  it('missed brings the phrase back at the end of the queue, after any other coming back', () => {
     let s = load(fresh());
     s = transition(s, { type: 'RATE', grade: 'missed', now: T0 });
     assert.deepEqual(upNextIds(s.player), ['cafe-02', 'cafe-03', 'cafe-04', 'cafe-05', 'cafe-01']);
     s = transition(s, { type: 'RATE', grade: 'missed', now: T0 + 1 });
     assert.equal(s.player.order.filter((id) => id === 'cafe-01').length, 2, 'not added twice');
+    s = run(s, { type: 'NEXT', now: T0 + 2 }, { type: 'RATE', grade: 'hard', now: T0 + 3 });
+    assert.deepEqual(upNextIds(s.player), ['cafe-03', 'cafe-04', 'cafe-05', 'cafe-01', 'cafe-02'], 'in the order they were rated');
   });
 
   it('near the end, missed still leaves another phrase first; on the last phrase it is not re-queued', () => {
@@ -409,12 +411,20 @@ describe('player review fixes', () => {
     assert.notEqual(order[s.player.index], 'cafe-01', 'not the phrase just heard again');
   });
 
-  it("shuffle on and off leaves a missed phrase's copy a few phrases on", () => {
+  it("shuffle on and off keeps a missed phrase's copy last", () => {
     let s = run(load(fresh()), { type: 'NEXT', now: T0 }, { type: 'RATE', grade: 'missed', now: T0 + 1 });
-    const copyAt = s.player.order.lastIndexOf('cafe-02');
-    assert.ok(copyAt > s.player.index + 1);
-    s = run(s, { type: 'TOGGLE_SHUFFLE', seed: 3 }, { type: 'TOGGLE_SHUFFLE', seed: 3 });
-    assert.equal(s.player.order.lastIndexOf('cafe-02'), copyAt);
+    const last = s.player.order.length - 1;
+    assert.equal(s.player.order.lastIndexOf('cafe-02'), last);
+    s = run(s, { type: 'TOGGLE_SHUFFLE', seed: 3 });
+    assert.equal(s.player.order.lastIndexOf('cafe-02'), last, 'shuffled');
+    s = run(s, { type: 'TOGGLE_SHUFFLE', seed: 3 });
+    assert.equal(s.player.order.lastIndexOf('cafe-02'), last, 'and back');
+  });
+
+  it("phrases added to the end of the queue play before a missed phrase's copy", () => {
+    let s = run(load(fresh()), { type: 'RATE', grade: 'missed', now: T0 });
+    s = run(s, { type: 'ENQUEUE', phraseIds: ['tapas-01'], setId: null, at: 'end', now: T0 + 1 });
+    assert.deepEqual(upNextIds(s.player).slice(-2), ['tapas-01', 'cafe-01']);
   });
 
   it('an audio error is left behind on Next', () => {

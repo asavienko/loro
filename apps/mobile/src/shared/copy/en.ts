@@ -316,8 +316,8 @@ export function makeEn(n: Plural) {
       rated: (grade: string, when: string) => `Rated ${grade} — back ${when}`,
       /** Beside Undo once the phrase is rated: what the rating did (the grades show no times). */
       scheduled: 'Next review scheduled',
-      /** …when a Missed or Hard phrase also comes back later in this queue. */
-      backLater: 'Back later in this queue',
+      /** …when a Missed or Hard phrase also comes back at the end of this queue. */
+      backLater: 'Back at the end of this queue',
       /** A rating that moved the loop on, while its Undo is offered. */
       ratedPrevious: (grade: string) => `Previous phrase: ${grade}`,
       ratedAs: (grade: string) => `Rated ${grade}`,

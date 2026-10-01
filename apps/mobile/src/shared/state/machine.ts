@@ -40,8 +40,6 @@ export const SPEEDS: Speed[] = [0.8, 1, 1.25];
 export const REPEAT_SETTINGS: RepeatsSetting[] = ['auto', 1, 3];
 /** Pressing Previous later than this restarts the phrase instead. */
 export const RESTART_THRESHOLD_MS = 3000;
-/** A missed phrase comes back this many phrases later in the same queue. */
-export const RELEARN_GAP = 4;
 
 export type AppEvent =
   | {
@@ -192,12 +190,23 @@ function withPlayer(state: AppState, player: PlayerState): AppState {
   return { ...state, player };
 }
 
+/**
+ * The phrases up next split into the rest and those coming back again (a Missed or Hard phrase's
+ * second play, already heard this pass): the queue keeps the latter last.
+ */
+function splitAgain(played: readonly string[], upNext: readonly string[]): { rest: string[]; again: string[] } {
+  const rest: string[] = [];
+  const again: string[] = [];
+  for (const id of upNext) (played.includes(id) ? again : rest).push(id);
+  return { rest, again };
+}
+
 /** A queue with a natural end (a review, the demo, a Library list) plays once, in either mode. */
 export function playsOnce(player: Pick<PlayerState, 'source'>): boolean {
   return player.source !== null;
 }
 
-/** Whether rating the current phrase `grade` brings it back a few phrases later in this queue. */
+/** Whether rating the current phrase `grade` brings it back at the end of this queue. */
 export function requeuesOn(player: PlayerState, grade: Grade): boolean {
   const id = currentPhraseId(player);
   const upNext = player.order.slice(player.index + 1);
@@ -435,12 +444,9 @@ function step(state: AppState, event: AppEvent): AppState {
         const rating = { key, phraseId: currentId, setId: player.setId, grade: event.grade, at: event.now, changedAt: event.now, day: localDay(event.now) };
         next = { ...committed, pending: [...committed.pending.filter((p) => p !== existing), rating] };
       }
-      // Missed or hard: bring it back a few phrases later in this queue.
+      // Missed or hard: bring it back at the end of this queue, after any other phrase coming back.
       let nextPlayer = player;
-      if (requeuesOn(player, event.grade)) {
-        const at = Math.min(player.order.length, player.index + 1 + RELEARN_GAP);
-        nextPlayer = { ...player, order: [...player.order.slice(0, at), currentId, ...player.order.slice(at)] };
-      }
+      if (requeuesOn(player, event.grade)) nextPlayer = { ...player, order: [...player.order, currentId] };
       if (player.phase === 'rate') return advance(next, nextPlayer, event.now, true);
       return withPlayer(next, nextPlayer);
     }
@@ -499,16 +505,12 @@ function step(state: AppState, event: AppEvent): AppState {
     case 'TOGGLE_SHUFFLE': {
       const played = player.order.slice(0, player.index + 1);
       const upNext = player.order.slice(player.index + 1);
-      // A missed phrase's second copy (it's also in `played`) keeps its place a few phrases
-      // on; only the rest reorder, or unshuffling would sort it right next to itself.
-      const isCopy = upNext.map((id) => played.includes(id));
-      const rest = upNext.filter((_, i) => !isCopy[i]);
+      // Only the rest reorder: the phrases coming back again stay last, in the order they were rated.
+      const { rest, again } = splitAgain(played, upNext);
       const sortedRest = player.shuffle
         ? [...rest].sort((a, b) => baseRank(player.baseOrder, a) - baseRank(player.baseOrder, b))
         : shuffled(rest, event.seed);
-      let r = 0;
-      const reordered = upNext.map((id, i) => (isCopy[i] ? id : sortedRest[r++]));
-      return withPlayer(state, { ...player, shuffle: !player.shuffle, order: [...played, ...reordered] });
+      return withPlayer(state, { ...player, shuffle: !player.shuffle, order: [...played, ...sortedRest, ...again] });
     }
 
     case 'REORDER_UP_NEXT': {
@@ -574,10 +576,12 @@ function step(state: AppState, event: AppEvent): AppState {
       const upNext = player.order.slice(player.index + 1);
       const adding = ids.filter((id) => id !== currentId);
       if (adding.length === 0) return state;
+      // Added to the end, they still play before the phrases coming back again.
+      const { rest, again } = splitAgain(played, upNext);
       const order =
         event.at === 'next'
           ? [...played, ...adding, ...upNext.filter((id) => !adding.includes(id))]
-          : [...played, ...upNext, ...adding.filter((id) => !upNext.includes(id))];
+          : [...played, ...rest, ...adding.filter((id) => !upNext.includes(id)), ...again];
       return withPlayer(state, {
         ...player,
         order,
