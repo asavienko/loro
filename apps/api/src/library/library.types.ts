@@ -146,6 +146,17 @@ export interface PackWire {
   phrases: PhraseWire[]
   bank: { themes: BankThemeWire[]; phrases: BankPhraseWire[] }
   albums: AlbumWire[]
+  /** The reader's own covers of the course's phrases and songs, by id; empty signed out. */
+  covers: { phrases: Record<string, string>; songs: Record<string, string> }
+}
+
+/** A cover just drawn, and what wears it when that is a new copy of one of Loro's sets or albums. */
+export interface DrawnCoverWire {
+  id: string
+  /** Path under the API's `/v1`, e.g. `/library/covers/cover-x.svg`. */
+  url: string
+  provider: 'claude' | 'pattern'
+  copy?: { kind: 'set' | 'album'; id: string }
 }
 
 /** The languages the app offers (plan 108), and a version that changes whenever they do. */

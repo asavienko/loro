@@ -578,10 +578,22 @@ export function assembleLyrics(phrases: SongPhrase[]): SongSection[] {
 
 // ---------- covers ----------
 
+/** What Claude is told a cover is for; a phrase's cover pictures what the phrase says. */
+const COVER_SUBJECT = {
+  set: 'a set of phrases',
+  album: 'an album of songs',
+  song: 'a song',
+  phrase: 'one spoken phrase (title: the phrase; about: what it means)',
+} as const
+
 /** A cover spec Claude designed for the title; throws when it fails or draws nothing usable. */
 export async function claudeCover(
   ai: AnthropicMessages,
-  input: { kind: 'set' | 'album'; title: string; description?: string | undefined },
+  input: {
+    kind: 'set' | 'album' | 'song' | 'phrase'
+    title: string
+    description?: string | undefined
+  },
 ): Promise<CoverSpec> {
   const result = await ai.generate({
     system: COVER_SYSTEM_PROMPT,
@@ -589,7 +601,7 @@ export async function claudeCover(
       {
         role: 'user',
         content: JSON.stringify({
-          for: input.kind === 'set' ? 'a set of phrases' : 'an album of songs',
+          for: COVER_SUBJECT[input.kind],
           title: input.title,
           about: input.description ?? '',
         }),

@@ -239,13 +239,32 @@ export const GenerateNotesSchema = z
     path: ['nativeLang'],
   })
 
-export const GenerateCoverSchema = z.strictObject({
-  kind: z.enum(['set', 'album']),
-  title: shownText(LIBRARY_TEXT.title, 1),
-  description: shownText(200).optional(),
-  /** The learner's set or album to put the cover on once drawn. */
-  attachTo: LibraryIdSchema.optional(),
-})
+/** What a cover is for: a set or album wears it; a phrase's or song's is the learner's own. */
+export const COVER_KINDS = ['set', 'album', 'song', 'phrase'] as const
+
+export const GenerateCoverSchema = z
+  .strictObject({
+    kind: z.enum(COVER_KINDS),
+    /** What a cover not put on anything yet is for; with `attachTo` the item's own words are used. */
+    title: shownText(LIBRARY_TEXT.title, 1).optional(),
+    description: shownText(200).optional(),
+    /**
+     * The item to put the cover on once drawn: the learner's own set or album (changed in place), one
+     * of Loro's (the learner gets a copy wearing it, LIB-01), or any phrase or song they can read (a
+     * cover of their own, shown only to them).
+     */
+    attachTo: LibraryIdSchema.optional(),
+    /** The learner's language: a copy of Loro's set takes its description in it. */
+    nativeLang: LibraryLanguageSchema.optional(),
+  })
+  .refine((r) => r.attachTo !== undefined || r.title !== undefined, {
+    message: 'A cover needs a title or an item to go on',
+    path: ['title'],
+  })
+  .refine((r) => r.attachTo !== undefined || r.kind === 'set' || r.kind === 'album', {
+    message: 'A phrase’s or song’s cover goes on it',
+    path: ['attachTo'],
+  })
 
 export const GenerateSongSchema = z.strictObject({
   /** Any set the learner can read: Loro's, theirs, or a shared one. */

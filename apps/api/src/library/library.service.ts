@@ -51,6 +51,7 @@ import type {
   AlbumWire,
   BankPhraseWire,
   BankThemeWire,
+  DrawnCoverWire,
   KeptKind,
   LanguagesWire,
   Owner,
@@ -164,6 +165,16 @@ interface SongRow {
   error: string | null
   created_at: string | number
 }
+
+/** What a new cover goes on, and the words it is drawn for. */
+interface CoverSubject {
+  title: string
+  description?: string | undefined
+}
+type CoverTarget =
+  | { kind: 'set'; row: SetRow; copy: boolean; subject: CoverSubject }
+  | { kind: 'album'; row: AlbumRow; copy: boolean; subject: CoverSubject }
+  | { kind: 'song' | 'phrase'; id: string; subject: CoverSubject }
 
 const num = (value: string | number | null | undefined) => Number(value ?? 0)
 /** An empty description is no description. */
@@ -539,11 +550,41 @@ export class LibraryService {
       phrases: uniquePhrases(phrases).map((p) => toPhraseWire(p, tts)),
       bank: { themes, phrases: bank },
       albums,
+      covers: await this.itemCoversOf(userId, targetLang),
     }
     return {
       version: createHash('sha256').update(JSON.stringify(body)).digest('hex').slice(0, 16),
       ...body,
     }
+  }
+
+  /**
+   * The reader's own covers of a course's phrases and songs, wherever those are. Kept by id, so they
+   * outlast a reseed of Loro's content; one whose phrase or song is gone is not served.
+   */
+  private async itemCoversOf(
+    userId: string | null,
+    targetLang: Language,
+  ): Promise<PackWire['covers']> {
+    const covers: PackWire['covers'] = { phrases: {}, songs: {} }
+    if (!userId) return covers
+    const rows = await this.db.query<{
+      kind: 'phrase' | 'song'
+      item_id: string
+      cover_id: string
+    }>(
+      `SELECT c.kind, c.item_id, c.cover_id FROM library_item_covers c WHERE c.user_id = $1 AND (
+         (c.kind = 'phrase' AND EXISTS (SELECT 1 FROM library_phrases p JOIN library_sets s ON s.id = p.set_id
+           WHERE p.id = c.item_id AND s.target_lang = $2))
+         OR (c.kind = 'song' AND EXISTS (SELECT 1 FROM library_songs so JOIN library_albums a ON a.id = so.album_id
+           WHERE so.id = c.item_id AND a.target_lang = $2)))
+       ORDER BY c.kind, c.item_id`,
+      [userId, targetLang],
+    )
+    for (const row of rows.rows)
+      covers[row.kind === 'phrase' ? 'phrases' : 'songs'][row.item_id] =
+        `/library/covers/${row.cover_id}.svg`
+    return covers
   }
 
   /** Public sets or albums of a course, newest first, optionally matching a search. */
@@ -1609,14 +1650,21 @@ export class LibraryService {
     return { provider: 'rules', ...ruleNotes(request) }
   }
 
-  async generateCover(
-    userId: string,
-    body: unknown,
-  ): Promise<{ id: string; url: string; provider: 'claude' | 'pattern' }> {
+  /**
+   * A drawn cover (LIB-04) from the day's allowance. With `attachTo` it goes on an item, drawn for the
+   * item's own words: the learner's set or album wears it in place; one of Loro's (read-only, LIB-01)
+   * is copied into the learner's library wearing it; a phrase or song they can read gets it as their
+   * own cover, shown only to them.
+   */
+  async generateCover(userId: string, body: unknown): Promise<DrawnCoverWire> {
+    await this.ready()
     const request = parseContract(GenerateCoverSchema, body)
-    if (request.attachTo) {
-      if (request.kind === 'set') await this.ownSet(userId, request.attachTo)
-      else await this.ownAlbum(userId, request.attachTo)
+    const target = request.attachTo
+      ? await this.coverTarget(userId, request.kind, request.attachTo)
+      : null
+    const subject = target?.subject ?? {
+      title: request.title ?? '',
+      description: request.description,
     }
     await this.spend(userId, 'cover')
     let spec: CoverSpec | null = null
@@ -1624,7 +1672,7 @@ export class LibraryService {
     const ai = writer()
     if (ai) {
       try {
-        spec = await claudeCover(ai, request)
+        spec = await claudeCover(ai, { kind: request.kind, ...subject })
         provider = 'claude'
       } catch (error) {
         this.logger.warn(
@@ -1633,21 +1681,205 @@ export class LibraryService {
       }
     }
     // A new pattern each time the learner asks again: the seed includes the moment.
-    spec ??= patternCover(`${request.title}:${this.clock.now()}`)
+    spec ??= patternCover(`${subject.title}:${this.clock.now()}`)
     const id = newId('cover')
-    await this.db.query(
-      'INSERT INTO library_covers(id, owner_id, provider, svg, created_at) VALUES ($1,$2,$3,$4,$5)',
-      [id, userId, provider, renderCover(spec), this.clock.now()],
-    )
-    if (request.attachTo) {
-      const table = request.kind === 'set' ? 'library_sets' : 'library_albums'
-      await this.db.query(`UPDATE ${table} SET cover_id = $2, updated_at = $3 WHERE id = $1`, [
-        request.attachTo,
-        id,
-        this.clock.now(),
-      ])
+    const svg = renderCover(spec)
+    let copy: DrawnCoverWire['copy']
+    try {
+      copy = await this.db.transaction(async (tx) => {
+        await tx.query(
+          'INSERT INTO library_covers(id, owner_id, provider, svg, created_at) VALUES ($1,$2,$3,$4,$5)',
+          [id, userId, provider, svg, this.clock.now()],
+        )
+        return target ? this.wear(tx, userId, target, id, request.nativeLang) : undefined
+      })
+    } catch (error) {
+      // Nothing wears it: the day's cover is given back.
+      await this.refund(userId, 'cover').catch(() => undefined)
+      throw error
     }
-    return { id, url: `/library/covers/${id}.svg`, provider }
+    return { id, url: `/library/covers/${id}.svg`, provider, ...(copy ? { copy } : {}) }
+  }
+
+  /**
+   * What a cover goes on, checked before the allowance is spent: someone else's set or album is not
+   * found (only its owner changes it), and a copy of Loro's must fit in the learner's account.
+   */
+  private async coverTarget(
+    userId: string,
+    kind: 'set' | 'album' | 'song' | 'phrase',
+    id: string,
+  ): Promise<CoverTarget> {
+    switch (kind) {
+      case 'set': {
+        const row = await this.readableSet(userId, id)
+        if (row.origin !== 'loro' && row.owner_id !== userId) throw new LoroError('NOT_FOUND')
+        const copy = row.origin === 'loro'
+        if (copy) await this.assertKept(userId, 'sets')
+        const description = row.description ?? row.subtitle?.en
+        return { kind, row, copy, subject: { title: row.title, description } }
+      }
+      case 'album': {
+        const row = await this.readableAlbum(userId, id)
+        if (row.origin !== 'loro' && row.owner_id !== userId) throw new LoroError('NOT_FOUND')
+        const copy = row.origin === 'loro'
+        if (copy) {
+          await this.assertKept(userId, 'albums')
+          // The copy keeps the album's songs, so they must fit too.
+          const limit = config.libraryStorageLimit('songs')
+          if ((await this.keptCount(userId, 'songs')) + num(row.song_count) > limit)
+            throw new LoroError('LIMIT_REACHED', `At most ${limit} songs`, {
+              kind: 'songs',
+              limit,
+              resets_at: null,
+            })
+        }
+        const description = row.description ?? undefined
+        return { kind, row, copy, subject: { title: row.title, description } }
+      }
+      case 'song': {
+        const song = (
+          await this.db.query<SongRow>('SELECT * FROM library_songs WHERE id = $1', [id])
+        ).rows[0]
+        if (!song) throw new LoroError('NOT_FOUND')
+        const album = await this.readableAlbum(userId, song.album_id)
+        return { kind, id: song.id, subject: { title: song.title, description: album.title } }
+      }
+      case 'phrase': {
+        const phrase = (
+          await this.db.query<Pick<PhraseRow, 'doc' | 'set_id'>>(
+            'SELECT doc, set_id FROM library_phrases WHERE id = $1',
+            [id],
+          )
+        ).rows[0]
+        if (!phrase) throw new LoroError('NOT_FOUND')
+        await this.readableSet(userId, phrase.set_id)
+        const meaning =
+          phrase.doc.translations['en-GB'] ?? Object.values(phrase.doc.translations)[0]
+        return { kind, id, subject: { title: phrase.doc.target, description: meaning } }
+      }
+    }
+  }
+
+  /** Puts a new cover on its item; returns the copy made when the item is one of Loro's. */
+  private async wear(
+    tx: SqlConnection,
+    userId: string,
+    target: CoverTarget,
+    coverId: string,
+    nativeLang: Language | undefined,
+  ): Promise<DrawnCoverWire['copy']> {
+    const now = this.clock.now()
+    if (target.kind === 'set' || target.kind === 'album') {
+      if (target.copy)
+        return target.kind === 'set'
+          ? { kind: 'set', id: await this.copySet(tx, userId, target.row, coverId, nativeLang) }
+          : { kind: 'album', id: await this.copyAlbum(tx, userId, target.row, coverId) }
+      const table = target.kind === 'set' ? 'library_sets' : 'library_albums'
+      await tx.query(`UPDATE ${table} SET cover_id = $2, updated_at = $3 WHERE id = $1`, [
+        target.row.id,
+        coverId,
+        now,
+      ])
+      return undefined
+    }
+    await tx.query(
+      `INSERT INTO library_item_covers(user_id, kind, item_id, cover_id, updated_at) VALUES ($1,$2,$3,$4,$5)
+       ON CONFLICT (user_id, kind, item_id) DO UPDATE SET cover_id = EXCLUDED.cover_id, updated_at = EXCLUDED.updated_at`,
+      [userId, target.kind, target.id, coverId, now],
+    )
+    return undefined
+  }
+
+  /**
+   * The learner's own copy of one of Loro's sets: its title, topic and level, its subtitle in the
+   * learner's language as the description, and its phrases listed rather than copied, so each keeps
+   * one progress (plan 108).
+   */
+  private async copySet(
+    tx: SqlConnection,
+    userId: string,
+    row: SetRow,
+    coverId: string,
+    native: Language | undefined,
+  ): Promise<string> {
+    const nativeLang = native && native !== row.target_lang ? native : 'en-GB'
+    const locale = V2_LANGUAGES.find((l) => l.code === nativeLang)?.uiLocale ?? 'en'
+    const id = newId('set-u')
+    await this.insertSet(tx, {
+      id,
+      userId,
+      targetLang: row.target_lang,
+      nativeLang,
+      title: row.title,
+      description: blankToNull(row.subtitle?.[locale] ?? row.description),
+      topicId: row.topic_id,
+      level: row.level,
+      coverIcon: row.cover_icon,
+      coverId,
+      visibility: 'private',
+      inbox: false,
+    })
+    const held = await tx.query<{ id: string }>(
+      'SELECT id FROM library_phrases WHERE set_id = $1 ORDER BY position',
+      [row.id],
+    )
+    const items = held.rows.map((p) => ({ ref: p.id }))
+    await this.insertItems(tx, id, row.target_lang, nativeLang, items, 0, userId)
+    return id
+  }
+
+  /**
+   * The learner's own copy of one of Loro's albums, with its ready songs (the same sound, sung from
+   * the same sets) and any covers the learner gave those songs.
+   */
+  private async copyAlbum(
+    tx: SqlConnection,
+    userId: string,
+    row: AlbumRow,
+    coverId: string,
+  ): Promise<string> {
+    const id = newId('album-u')
+    const now = this.clock.now()
+    await tx.query(
+      `INSERT INTO library_albums(id, owner_id, target_lang, title, description, cover_id, visibility, share_code, origin, position, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,'private',$7,'user',0,$8,$8)`,
+      [id, userId, row.target_lang, row.title, row.description, coverId, newShareCode(), now],
+    )
+    const songs = await tx.query<SongRow>(
+      "SELECT * FROM library_songs WHERE album_id = $1 AND status = 'ready' ORDER BY position, created_at",
+      [row.id],
+    )
+    for (const [position, song] of songs.rows.entries()) {
+      const songId = newId('song')
+      await tx.query(
+        `INSERT INTO library_songs(id, album_id, owner_id, set_id, position, title, style_id, status, lyrics, lyrics_by, audio_id,
+           audio_by, duration_ms, error, created_at, voiced)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,'ready',$8,$9,$10,$11,$12,NULL,$13,$14)`,
+        [
+          songId,
+          id,
+          userId,
+          song.set_id,
+          position,
+          song.title,
+          song.style_id,
+          JSON.stringify(song.lyrics),
+          song.lyrics_by,
+          song.audio_id,
+          song.audio_by,
+          song.duration_ms,
+          now,
+          song.voiced === true,
+        ],
+      )
+      await tx.query(
+        `INSERT INTO library_item_covers(user_id, kind, item_id, cover_id, updated_at)
+         SELECT user_id, kind, $3, cover_id, $4 FROM library_item_covers WHERE user_id = $1 AND kind = 'song' AND item_id = $2`,
+        [userId, song.id, songId, now],
+      )
+    }
+    return id
   }
 
   /**
@@ -2050,6 +2282,7 @@ async function deleteLibraryOf(tx: SqlConnection, userId: string): Promise<void>
     [userId],
   )
   await tx.query('DELETE FROM library_albums WHERE owner_id = $1', [userId])
+  await tx.query('DELETE FROM library_item_covers WHERE user_id = $1', [userId])
   // A song made from someone's set takes the set's cover: a cover another learner's set or album
   // still wears stays, no longer theirs.
   await tx.query(

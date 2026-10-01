@@ -194,3 +194,17 @@ CREATE INDEX IF NOT EXISTS library_set_refs_phrase ON library_set_refs(phrase_id
 ALTER TABLE library_sets ADD COLUMN IF NOT EXISTS inbox boolean NOT NULL DEFAULT false;
 CREATE UNIQUE INDEX IF NOT EXISTS library_sets_inbox ON library_sets(owner_id, target_lang) WHERE inbox;
 `
+
+/**
+ * A learner's own cover for a phrase or a song (`kind`), shown only to them, wherever the phrase or
+ * song is: Loro's, their own or someone else's. A set or album wears its cover itself (`cover_id`).
+ */
+export const LIBRARY_ITEM_COVERS_MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS library_item_covers (
+  user_id text NOT NULL,
+  kind text NOT NULL,
+  item_id text NOT NULL,
+  cover_id text NOT NULL,
+  updated_at bigint NOT NULL,
+  PRIMARY KEY (user_id, kind, item_id)
+);
+`

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { CreateAlbumSchema, ProfileSchema, UpdateSetSchema } from './library.js'
+import {
+  CreateAlbumSchema,
+  GenerateCoverSchema,
+  ProfileSchema,
+  UpdateSetSchema,
+} from './library.js'
 
 describe('text other learners read', () => {
   it('keeps names, titles and descriptions free of links', () => {
@@ -24,5 +29,18 @@ describe('text other learners read', () => {
     expect(UpdateSetSchema.safeParse({ description: null }).success).toBe(true)
     for (const description of ['Awww. So cute', 'Unit 3.Top phrases', 'Кафе.Ресторант.Бар'])
       expect(UpdateSetSchema.safeParse({ description }).success, description).toBe(true)
+  })
+})
+
+describe('a cover request', () => {
+  it('goes on an item, or is for a titled set or album', () => {
+    const ok = (body: unknown) => GenerateCoverSchema.safeParse(body).success
+    expect(ok({ kind: 'set', title: 'Hotel' })).toBe(true)
+    expect(ok({ kind: 'album', attachTo: 'album-loro-es' })).toBe(true)
+    expect(ok({ kind: 'phrase', attachTo: 'cafe-01', nativeLang: 'ru-RU' })).toBe(true)
+    // Nothing to draw it for, or a phrase's or song's cover with nowhere to go.
+    expect(ok({ kind: 'set' })).toBe(false)
+    expect(ok({ kind: 'song', title: 'A song' })).toBe(false)
+    expect(ok({ kind: 'word', attachTo: 'cafe-01' })).toBe(false)
   })
 })
