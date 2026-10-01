@@ -8,23 +8,21 @@ import { useState } from 'react';
 import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Song } from '@shared/api/library';
-import { easyCue, gentleCue } from '@shared/audio/cues';
 import { findSet } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
 import { formatElapsed } from '@shared/state/clock';
-import { findPhrase } from '@shared/state/catalog';
 import { RATING_WINDOW_MS } from '@shared/state/memory';
 import { isLiked, windowLeft } from '@shared/state/selectors';
-import type { Grade, PendingRating } from '@shared/state/types';
+import type { Grade } from '@shared/state/types';
 import { AlbumCover } from '../music/AlbumCover';
 import { clockTime, useMusic } from '../music/MusicPlayer';
+import { songRating, useRateSong } from '../music/songRating';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
-import { useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
 import { colors, radius, shadow, TARGET } from '../ui/theme';
-import { GRADES } from './grades';
+import { GRADES } from '../ui/grades';
 import { useRoom } from '../ui/useRoom';
 
 export function SongScreen() {
@@ -202,26 +200,14 @@ export function SongScreen() {
 function SongRating({ song }: { song: Song }) {
   const c = useCopy();
   const { state, actions } = useStore();
-  const { announce } = useToast();
-  const { compact } = useRoom();
   const now = useNow(1000);
-  const phraseIds = [...new Set(song.sections.flatMap((s) => s.lines).flatMap((l) => (l.phraseId ? [l.phraseId] : [])))].filter((id) => findPhrase(state.learner, id));
-  if (phraseIds.length === 0) return null;
-  const open = (p: PendingRating) => !p.undone && windowLeft(p, Math.max(now, p.at)) > 0;
-  const given = state.pending.filter((p) => p.songId === song.id && open(p) && phraseIds.includes(p.phraseId));
-  // Phrases rated some other way (the loop, another song) keep that rating: the song leaves them be.
-  const ratedElsewhere = new Set(state.pending.filter((p) => p.songId !== song.id && open(p)).map((p) => p.phraseId));
-  const ratable = phraseIds.filter((id) => !ratedElsewhere.has(id));
+  const rateSong = useRateSong();
+  const rating = songRating(state, song, now);
+  const { given, ratable, count } = rating;
   const rated = given[0];
   const left = given.length > 0 ? Math.min(RATING_WINDOW_MS, ...given.map((p) => windowLeft(p, Math.max(now, p.at)))) : 0;
-  const count = given.length > 0 ? given.length : ratable.length;
-  const rate = (grade: Grade) => {
-    if (ratable.length === 0 && given.length === 0) return;
-    actions.ratePhrases(song.id, phraseIds, song.setId, grade);
-    if (grade === 'easy') easyCue();
-    else gentleCue();
-    announce(c.music.songRated(c.common.grade[grade], count));
-  };
+  const rate = (grade: Grade) => rateSong(song, rating, grade);
+  const { compact } = useRoom();
   if (count === 0) return null;
   return (
     <View style={styles.rating}>

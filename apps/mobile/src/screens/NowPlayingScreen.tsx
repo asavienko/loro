@@ -42,7 +42,7 @@ import { ToastOffsetContext, useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
 import { colors, ColorName, radius, shadow, TARGET } from '../ui/theme';
 import { useRoom } from '../ui/useRoom';
-import { GRADES } from './grades';
+import { GRADES } from '../ui/grades';
 import { useRate } from './useRate';
 
 const STEPS: Exclude<Phase, 'rate'>[] = ['native', 'pause', 'target'];
