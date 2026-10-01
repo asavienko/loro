@@ -1,11 +1,12 @@
 /**
- * Covers (plan 106). A cover is a small spec of shapes and colours, never markup: the model writes the
- * spec, or the server draws one from the title, and only `renderCover` turns it into SVG. Nothing a
- * model or a learner writes reaches the SVG as text, so a cover cannot carry a script, a link, an
- * image or words.
+ * Covers (plans 106, 111). A cover is an SVG written only here: an illustration the image model drew,
+ * carried inside as checked image bytes (`renderImageCover`), or a small spec of shapes and colours the
+ * text model wrote or the server drew from the title (`renderCover`). Nothing a model or a learner
+ * writes reaches the SVG as text, so a cover cannot carry a script, a link or markup.
  */
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
+import type { GeneratedImage } from '../integrations/openrouter/images.js'
 
 export const COVER_SIZE = 512
 const MAX_SHAPES = 24
@@ -190,6 +191,39 @@ export function renderCover(spec: CoverSpec): string {
     `<g clip-path="url(#${id}-c)">${parsed.shapes.map(shapeSvg).join('')}</g>`,
     '</svg>',
   ].join('')
+}
+
+/**
+ * An illustration as a cover: its bytes, base64, in an `image` the size of the canvas. The type comes
+ * from a closed set the transport matched against the bytes' signature, and base64 has no quote or
+ * angle bracket, so nothing in the picture can become markup.
+ */
+export function renderImageCover(image: GeneratedImage): string {
+  const type = z.enum(['image/png', 'image/jpeg', 'image/webp']).parse(image.contentType)
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${COVER_SIZE} ${COVER_SIZE}" width="${COVER_SIZE}" height="${COVER_SIZE}">`,
+    `<image width="${COVER_SIZE}" height="${COVER_SIZE}" preserveAspectRatio="xMidYMid slice" href="data:${type};base64,${image.bytes.toString('base64')}"/>`,
+    '</svg>',
+  ].join('')
+}
+
+/**
+ * What the image model is asked to draw (LIB-04): a flat illustration without words. The title and
+ * description are the learner's, bounded by the request schema; the most they can do is change the
+ * picture, which the provider moderates and the learner can draw again.
+ */
+export function coverImagePrompt(input: {
+  kind: 'set' | 'album'
+  title: string
+  description?: string | undefined
+}): string {
+  const about = input.description ? `, about: ${input.description}` : ''
+  return [
+    'Square cover illustration for a language-learning app.',
+    'Flat, hand-drawn style: simple bold shapes, warm colours, a pale plain background, legible as a small thumbnail.',
+    'Absolutely no text, letters, numbers, words, signs, logos or watermarks. Not a photograph; no realistic faces.',
+    `Subject: ${input.kind === 'set' ? 'a set of everyday phrases' : 'an album of songs'} titled "${input.title}"${about}.`,
+  ].join('\n')
 }
 
 // ---------- drawn by the server ----------

@@ -9,6 +9,7 @@ import {
   FIREWORKS_CHAT_URL,
   OPENROUTER_CHAT_URL,
 } from './openai-compatible/chat.js'
+import { OpenRouterImages, type ImageModel } from './openrouter/images.js'
 import { FallbackTextModel, type StructuredTextModel } from './text-model.js'
 
 /**
@@ -74,4 +75,27 @@ export function textModel(
     )
   }
   return models.length > 0 ? new FallbackTextModel(models, timeoutMs) : null
+}
+
+export function imageModelConfigured(): boolean {
+  return Boolean(config.openRouterApiKey())
+}
+
+/** The image model through OpenRouter's key, or null: covers are designed or drawn instead. */
+export function imageModel(
+  limits: { timeoutMs: number; maxImageBytes: number; maxConcurrentRequests: number },
+  send: typeof fetch = fetch,
+): ImageModel | null {
+  const apiKey = config.openRouterApiKey()
+  if (!apiKey) return null
+  return new OpenRouterImages(
+    {
+      apiKey,
+      model: config.openRouterImageModel(),
+      maxPromptBytes: 2_000,
+      extraBody: { provider: OPENROUTER_PRIVACY },
+      ...limits,
+    },
+    send,
+  )
 }

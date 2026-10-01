@@ -36,6 +36,7 @@ import {
   ShareCodeSchema,
   UpdateAlbumSchema,
   UpdateSetSchema,
+  type GenerateCoverRequest,
   type LibraryNotes,
   type SetItem,
   type Visibility,
@@ -46,11 +47,12 @@ import { config } from '../common/config.js'
 import { LoroError } from '../common/errors.js'
 import { parseContract } from '../common/parse.js'
 import { DATABASE, type SqlConnection, type SqlDatabase } from '../database/database.js'
-import { patternCover, renderCover, type CoverSpec } from './covers.js'
+import { coverImagePrompt, patternCover, renderCover, renderImageCover } from './covers.js'
 import type {
   AlbumWire,
   BankPhraseWire,
   BankThemeWire,
+  CoverState,
   KeptKind,
   LanguagesWire,
   Owner,
@@ -63,7 +65,7 @@ import type {
   UsageWire,
 } from './library.types.js'
 import { composeLive, liveMusicConfigured } from './music-live.js'
-import { textModelConfigured } from '../integrations/models.js'
+import { imageModelConfigured, textModelConfigured } from '../integrations/models.js'
 import { registerSpeech, registerSpeechMany, SpeechService, speechFor } from './speech.js'
 import { readTtsRuntimeConfig, type TtsRuntimeConfig } from '../tts/transport.js'
 import { demoLineLimit, synthesizeDemo } from './synth.js'
@@ -76,6 +78,7 @@ import {
   aiNotes,
   ruleNotes,
   aiPhrases,
+  artist,
   writer,
   type SongPhrase,
   type SongSection,
@@ -766,18 +769,50 @@ export class LibraryService {
     return { bytes: audio.body, contentType: audio.content_type }
   }
 
+  /** A ready cover's SVG. One still being drawn has none yet, and is not found. */
   async cover(id: unknown): Promise<string> {
     const coverId = parseContract(
       LibraryIdSchema,
       typeof id === 'string' ? id.replace(/\.svg$/, '') : id,
     )
     const row = (
-      await this.db.query<{ svg: string }>('SELECT svg FROM library_covers WHERE id = $1', [
-        coverId,
-      ])
+      await this.db.query<{ svg: string | null }>(
+        `SELECT svg FROM library_covers WHERE id = $1 AND status = 'ready'`,
+        [coverId],
+      )
+    ).rows[0]
+    if (!row?.svg) throw new LoroError('NOT_FOUND')
+    return row.svg
+  }
+
+  /**
+   * Where a cover stands, for the app that asked for it: `rendering` until it is drawn, then `ready`
+   * with its address. Work lost with its process reads as `failed`, as a song's does.
+   */
+  async coverState(id: unknown): Promise<CoverState> {
+    const coverId = parseContract(
+      LibraryIdSchema,
+      typeof id === 'string' ? id.replace(/\.json$/, '') : id,
+    )
+    const row = (
+      await this.db.query<{ provider: string; status: string; created_at: string | number }>(
+        'SELECT provider, status, created_at FROM library_covers WHERE id = $1',
+        [coverId],
+      )
     ).rows[0]
     if (!row) throw new LoroError('NOT_FOUND')
-    return row.svg
+    const provider = row.provider === 'pattern' ? 'pattern' : 'ai'
+    if (row.status === 'ready') {
+      return { id: coverId, status: 'ready', url: `/library/covers/${coverId}.svg`, provider }
+    }
+    const lost =
+      row.status === 'rendering' && this.clock.now() - num(row.created_at) > RENDER_TIMEOUT_MS
+    return {
+      id: coverId,
+      status: lost ? 'failed' : (row.status as 'rendering' | 'failed'),
+      url: null,
+      provider,
+    }
   }
 
   // ---------- writing: sets ----------
@@ -1610,45 +1645,108 @@ export class LibraryService {
     return { provider: 'rules', ...ruleNotes(request) }
   }
 
-  async generateCover(
-    userId: string,
-    body: unknown,
-  ): Promise<{ id: string; url: string; provider: 'ai' | 'pattern' }> {
+  /**
+   * A cover for a set or album (plan 111). Counted at once; drawn in the background, since an image
+   * model takes longer than the gateway waits. The set or album keeps its old cover until the new one
+   * is ready, and the app polls `GET /library/covers/:id.json`. With no model at all the server's
+   * pattern is drawn now.
+   */
+  async generateCover(userId: string, body: unknown): Promise<CoverState> {
     const request = parseContract(GenerateCoverSchema, body)
     if (request.attachTo) {
       if (request.kind === 'set') await this.ownSet(userId, request.attachTo)
       else await this.ownAlbum(userId, request.attachTo)
     }
     await this.spend(userId, 'cover')
-    let spec: CoverSpec | null = null
-    let provider: 'ai' | 'pattern' = 'pattern'
-    const ai = writer()
-    if (ai) {
-      try {
-        spec = await aiCover(ai, request)
-        provider = 'ai'
-      } catch (error) {
-        this.logger.warn(
-          `cover writer failed: ${error instanceof Error ? error.message : 'unknown'}; drawing a pattern`,
-        )
-      }
-    }
-    // A new pattern each time the learner asks again: the seed includes the moment.
-    spec ??= patternCover(`${request.title}:${this.clock.now()}`)
     const id = newId('cover')
-    await this.db.query(
-      'INSERT INTO library_covers(id, owner_id, provider, svg, created_at) VALUES ($1,$2,$3,$4,$5)',
-      [id, userId, provider, renderCover(spec), this.clock.now()],
-    )
-    if (request.attachTo) {
-      const table = request.kind === 'set' ? 'library_sets' : 'library_albums'
-      await this.db.query(`UPDATE ${table} SET cover_id = $2, updated_at = $3 WHERE id = $1`, [
-        request.attachTo,
-        id,
-        this.clock.now(),
-      ])
+    if (!artist() && !writer()) {
+      const svg = renderCover(patternCover(`${request.title}:${this.clock.now()}`))
+      await this.db.transaction(async (tx) => {
+        await tx.query(
+          `INSERT INTO library_covers(id, owner_id, provider, svg, status, created_at) VALUES ($1,$2,'pattern',$3,'ready',$4)`,
+          [id, userId, svg, this.clock.now()],
+        )
+        await this.attachCover(tx, userId, request, id)
+      })
+      return { id, status: 'ready', url: `/library/covers/${id}.svg`, provider: 'pattern' }
     }
-    return { id, url: `/library/covers/${id}.svg`, provider }
+    await this.db.query(
+      `INSERT INTO library_covers(id, owner_id, provider, svg, status, created_at) VALUES ($1,$2,'ai',NULL,'rendering',$3)`,
+      [id, userId, this.clock.now()],
+    )
+    void this.drawCover(userId, id, request)
+    return { id, status: 'rendering', url: null, provider: 'ai' }
+  }
+
+  /**
+   * The image model's illustration; failing that, the text model's shape cover; failing that, the
+   * server's pattern, labelled as such. Then the cover is ready and takes its place.
+   */
+  private async drawCover(
+    userId: string,
+    id: string,
+    request: GenerateCoverRequest,
+  ): Promise<void> {
+    try {
+      let svg: string | null = null
+      let provider: 'ai' | 'pattern' = 'ai'
+      const images = artist()
+      if (images) {
+        try {
+          svg = renderImageCover(await images.generate({ prompt: coverImagePrompt(request) }))
+        } catch (error) {
+          this.logger.warn(
+            `cover image failed: ${error instanceof Error ? error.message : 'unknown'}; designing shapes`,
+          )
+        }
+      }
+      const ai = svg ? null : writer()
+      if (ai) {
+        try {
+          svg = renderCover(await aiCover(ai, request))
+        } catch (error) {
+          this.logger.warn(
+            `cover writer failed: ${error instanceof Error ? error.message : 'unknown'}; drawing a pattern`,
+          )
+        }
+      }
+      if (!svg) {
+        // A new pattern each time the learner asks again: the seed includes the moment.
+        svg = renderCover(patternCover(`${request.title}:${this.clock.now()}`))
+        provider = 'pattern'
+      }
+      const done = svg
+      await this.db.transaction(async (tx) => {
+        const updated = await tx.query(
+          `UPDATE library_covers SET svg = $2, provider = $3, status = 'ready' WHERE id = $1 AND status = 'rendering'`,
+          [id, done, provider],
+        )
+        if (updated.rowCount) await this.attachCover(tx, userId, request, id)
+      })
+    } catch (error) {
+      this.logger.warn(`cover ${id} failed: ${error instanceof Error ? error.message : 'unknown'}`)
+      await this.db
+        .query(
+          `UPDATE library_covers SET status = 'failed' WHERE id = $1 AND status = 'rendering'`,
+          [id],
+        )
+        .catch(() => undefined)
+    }
+  }
+
+  /** The new cover takes its place on the set or album it was drawn for, if the learner still owns it. */
+  private async attachCover(
+    tx: SqlConnection,
+    userId: string,
+    request: GenerateCoverRequest,
+    id: string,
+  ): Promise<void> {
+    if (!request.attachTo) return
+    const table = request.kind === 'set' ? 'library_sets' : 'library_albums'
+    await tx.query(
+      `UPDATE ${table} SET cover_id = $2, updated_at = $3 WHERE id = $1 AND owner_id = $4`,
+      [request.attachTo, id, this.clock.now(), userId],
+    )
   }
 
   /**
@@ -2267,7 +2365,7 @@ export function writersInUse(): UsageWire['writers'] {
   const ai = textModelConfigured()
   return {
     phrases: ai ? 'ai' : 'bank',
-    cover: ai ? 'ai' : 'pattern',
+    cover: ai || imageModelConfigured() ? 'ai' : 'pattern',
     lyrics: ai ? 'ai' : 'phrases',
     music: liveMusicConfigured() ? 'elevenlabs' : 'demo',
   }

@@ -3,24 +3,7 @@
  * by the caller's parser. Transports make exactly one attempt each; `FallbackTextModel` tries them in
  * order within one deadline, and the owning service's labelled fallback answers when all fail.
  */
-
-export type TextModelFailureCode =
-  | 'configuration'
-  | 'input'
-  | 'cancelled'
-  | 'timeout'
-  | 'unavailable'
-  | 'rate_limited'
-  | 'capacity'
-  | 'invalid_output'
-
-/** Never retain provider bodies, credentials, prompts, or underlying error causes. */
-export class TextModelFailure extends Error {
-  constructor(readonly code: TextModelFailureCode) {
-    super(`Text model request failed: ${code}`)
-    this.name = 'TextModelFailure'
-  }
-}
+import { ProviderFailure } from './provider-failure.js'
 
 export interface StructuredRequest<T> {
   system: string
@@ -60,21 +43,21 @@ export class FallbackTextModel implements StructuredTextModel {
       timeoutMs <= 0 ||
       timeoutMs > 2_147_483_647
     ) {
-      throw new TextModelFailure('configuration')
+      throw new ProviderFailure('configuration')
     }
   }
 
   async generate<T>(input: StructuredRequest<T>): Promise<StructuredResult<T>> {
     const deadline = AbortSignal.timeout(this.timeoutMs)
     const signal = input.signal ? AbortSignal.any([input.signal, deadline]) : deadline
-    let last: unknown = new TextModelFailure('unavailable')
+    let last: unknown = new ProviderFailure('unavailable')
     for (const model of this.models) {
       try {
         return await model.generate({ ...input, signal })
       } catch (error) {
-        if (input.signal?.aborted) throw new TextModelFailure('cancelled')
-        if (deadline.aborted) throw new TextModelFailure('timeout')
-        if (error instanceof TextModelFailure && error.code === 'input') throw error
+        if (input.signal?.aborted) throw new ProviderFailure('cancelled')
+        if (deadline.aborted) throw new ProviderFailure('timeout')
+        if (error instanceof ProviderFailure && error.code === 'input') throw error
         last = error
       }
     }

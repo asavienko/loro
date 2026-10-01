@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { ProviderFailure } from './provider-failure.js'
 import {
   FallbackTextModel,
-  TextModelFailure,
   type StructuredRequest,
   type StructuredTextModel,
 } from './text-model.js'
@@ -28,14 +28,14 @@ function model(answer: (input: StructuredRequest<unknown>) => Promise<unknown>) 
   return self
 }
 const asked = (m: StructuredTextModel) => calls.get(m) ?? 0
-const failing = (code: TextModelFailure['code']) =>
-  model(() => Promise.reject(new TextModelFailure(code)))
+const failing = (code: ProviderFailure['code']) =>
+  model(() => Promise.reject(new ProviderFailure(code)))
 const hanging = () =>
   model(
     (input) =>
       new Promise((_resolve, reject) => {
         input.signal?.addEventListener('abort', () => {
-          reject(new TextModelFailure('cancelled'))
+          reject(new ProviderFailure('cancelled'))
         })
       }),
   )

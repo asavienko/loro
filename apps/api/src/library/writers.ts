@@ -14,7 +14,8 @@ import type {
 } from '@loro/core/api/library'
 import { LibraryNotesSchema } from '@loro/core/api/library'
 import { z } from 'zod'
-import { textModel } from '../integrations/models.js'
+import { imageModel, textModel } from '../integrations/models.js'
+import type { ImageModel } from '../integrations/openrouter/images.js'
 import type { StructuredTextModel } from '../integrations/text-model.js'
 import { deviceNotes } from './notes/index.js'
 import { COVER_JSON_SCHEMA, COVER_SYSTEM_PROMPT, readCoverSpec, type CoverSpec } from './covers.js'
@@ -81,6 +82,20 @@ export function writer(): StructuredTextModel | null {
 /** For tests: forget the client so a changed environment is read again. */
 export function resetWriter(client_?: StructuredTextModel | null): void {
   client = client_
+}
+
+let images: ImageModel | null | undefined
+
+/** The configured image model, which draws covers in the background (plan 111), or null. */
+export function artist(): ImageModel | null {
+  if (images !== undefined) return images
+  images = imageModel({ timeoutMs: 180_000, maxImageBytes: 2_500_000, maxConcurrentRequests: 2 })
+  return images
+}
+
+/** For tests: forget the image model, or use the one given. */
+export function resetArtist(model?: ImageModel | null): void {
+  images = model
 }
 
 // ---------- phrases ----------

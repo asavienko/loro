@@ -1,7 +1,7 @@
 import { createServer } from 'node:http'
 import { once } from 'node:events'
 import { describe, expect, it, vi } from 'vitest'
-import { TextModelFailure } from '../text-model.js'
+import { ProviderFailure } from '../provider-failure.js'
 import { ChatCompletions, FIREWORKS_CHAT_URL, type ChatCompletionsOptions } from './chat.js'
 
 const options: ChatCompletionsOptions = {
@@ -59,10 +59,10 @@ describe('OpenAI-compatible chat completions adapter', () => {
     const client = new ChatCompletions(options, send)
     const pending = client.generate(request)
     const rejected = await client.generate(request).catch((error: unknown) => error)
-    expect(rejected).toBeInstanceOf(TextModelFailure)
+    expect(rejected).toBeInstanceOf(ProviderFailure)
     expect(rejected).toMatchObject({
       code: 'capacity',
-      message: 'Text model request failed: capacity',
+      message: 'Provider request failed: capacity',
     })
     expect(send).toHaveBeenCalledTimes(1)
     finish()
@@ -81,7 +81,7 @@ describe('OpenAI-compatible chat completions adapter', () => {
         send.mockResolvedValueOnce(response(envelope('private invalid JSON')))
       send.mockImplementation(() => Promise.resolve(response(envelope())))
       const client = new ChatCompletions(options, send)
-      await expect(client.generate(request)).rejects.toBeInstanceOf(TextModelFailure)
+      await expect(client.generate(request)).rejects.toBeInstanceOf(ProviderFailure)
       expect(send).toHaveBeenCalledTimes(1)
       await expect(client.generate(request)).resolves.toHaveProperty('value.ok', true)
       expect(send).toHaveBeenCalledTimes(2)
@@ -235,7 +235,7 @@ describe('OpenAI-compatible chat completions adapter', () => {
         .mockResolvedValue(new Response('private provider data', { status }))
       const client = new ChatCompletions(options, send)
       const error = await client.generate(request).catch((failure: unknown) => failure)
-      expect(error).toBeInstanceOf(TextModelFailure)
+      expect(error).toBeInstanceOf(ProviderFailure)
       expect(error).toMatchObject({ code: status === 429 ? 'rate_limited' : 'unavailable' })
       expect(String(error)).not.toContain('private')
       expect(send).toHaveBeenCalledTimes(1)
