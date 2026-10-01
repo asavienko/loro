@@ -58,11 +58,58 @@ Migrations must stay backward compatible: rollback never restores an older datab
 
 ## Public HTTPS gateway
 
-API Gateway → a VPC Lambda → nginx on the host (`infra/ec2/https.yaml`, installed by
-`scripts/deploy-ec2-proxy.sh HOST readonly|accounts`). It allows an explicit list of routes: health,
-the content endpoints, and (in `accounts` mode) sign-in, `/me` and sync. The `/v1/library/*` routes
-the current app uses are **not** on that list yet. Google sign-in is in testing mode (project
+API Gateway → a VPC Lambda → nginx on the host port 8080 → the API on `127.0.0.1:3000`. The gateway
+is the CloudFormation stack `loro-api-gateway` (`infra/ec2/https.yaml`, the Lambda's code inline,
+tested from that source by `pnpm test:deploy`); nginx is installed by
+`scripts/deploy-ec2-proxy.sh HOST readonly|accounts`. Only the Lambda's security group reaches
+port 8080. Both layers allow explicit routes: health and the content endpoints always; with the
+stack's `AccountAccess=enabled` and nginx in `accounts` mode also sign-in, `/me`, sync and **the
+library** (`/v1/library/*`): every route the app calls, each with its own methods (reads also answer
+`HEAD`; `OPTIONS` preflights reach the API's CORS). Any other path is
+`404 {"error":"not_available"}` at the Lambda. Google sign-in is in testing mode (project
 `loro-508020`); Apple is unconfigured; email codes go to a host-local inbox.
+
+What passes through, on library routes:
+
+- **Requests**: the bearer, `Content-Type`, `Range` and `If-None-Match`; the query keys `target`,
+  `kind`, `q`, `sort`, `exp`, `sig` and `v`. Bodies up to 4 MiB (a learner's progress can reach 3.8
+  MB; account routes keep 1 MiB). Cookies and caller forwarding headers never pass. The Lambda names
+  the caller's address (`requestContext.http.sourceIp`) to nginx, which sends it to the API as
+  `X-Real-IP`, replacing anything the caller sent.
+- **Responses**: JSON and text as text; audio, covers and anything else base64-encoded, so song
+  audio, ranges (`206`, `Content-Range`, `Accept-Ranges`) and clips arrive byte-exact. The API's
+  `Cache-Control`, `ETag`, `Content-Security-Policy` and `Retry-After` pass through; a reply without
+  a `Cache-Control` gets `no-store`. Lambda refuses replies over 6 MB, so one that would exceed it
+  is `502 {"error":"response_too_large"}` rather than a cut-off body.
+- **Rates**: the stage allows 50 requests/s with a burst of 100 (Explore loads a cover per set; the
+  player checks a clip per phrase). nginx allows the library 50 r/s (burst 100) and account routes
+  20 r/s (burst 40) per gateway address.
+- **Time**: an HTTP API integration has at most **30 s**. The Lambda gives up on the API at 28 s
+  (its own timeout is 29 s) and nginx at 28 s. Without `ANTHROPIC_API_KEY` every library route
+  answers in well under a second. With live Claude on this host, phrase decks, notes and covers are
+  written while the request waits (the writer allows itself 90 s): one that takes longer than 30 s
+  reaches the app as a gateway `503` although the server finishes it and counts the allowance. Keep
+  live Claude off this gateway until generation answers inside that ceiling or moves to a job the
+  app polls, as songs already do.
+
+Roll out a change to the gateway or nginx in this order: the API (above), then nginx, then the
+stack. `aws cloudformation deploy` keeps every parameter it isn't given at the stack's current value
+(`VpcId`, `SubnetId`, `PrivateIp`, `OriginSecurityGroup`):
+
+```bash
+bash scripts/deploy-ec2-proxy.sh HOST accounts
+aws cloudformation deploy --profile loro --region eu-central-1 --stack-name loro-api-gateway \
+  --template-file infra/ec2/https.yaml --capabilities CAPABILITY_IAM \
+  --parameter-overrides AccountAccess=enabled
+aws cloudformation describe-stacks --profile loro --region eu-central-1 \
+  --stack-name loro-api-gateway --query 'Stacks[0].Outputs'
+node scripts/check-account-api.mjs https://GATEWAY_HOST/v1
+```
+
+The proxy script validates the configuration under the container's restrictions, reloads nginx and
+probes it from the host: health, denied paths, and in `accounts` mode the pack, a signed-out
+`usage`, a clip's `HEAD`, a 3 MB body accepted and a 5 MB one refused. `AccountAccess=disabled`
+withdraws sign-in, sync and the library from the gateway without touching data.
 
 ## Teardown
 

@@ -55,6 +55,12 @@ for (const path of ['/sync/pull', '/sync/push', '/sync/status']) {
   )
 }
 assert.equal((await request('/ai/scene')).status, 404, 'AI stays private')
+// F-04: the library through the gateway: Loro's pack for anyone, a learner's own things signed in.
+const pack = await request('/library/pack?target=es-ES')
+assert.equal(pack.status, 200, 'library pack')
+assert.ok((await pack.json()).sets.length > 0, 'library seeded')
+assert.equal((await request('/library/usage')).status, 401, 'anonymous library usage denied')
+assert.equal((await request('/library/admin')).status, 404, 'unknown library route closed')
 console.log(
-  'Public durable readiness, Google start/cancel callback and anonymous account/sync denial passed. Live Google consent and device session remain separate checks.',
+  'Public durable readiness, Google start/cancel callback, the library pack and anonymous account/sync/library denial passed. Live Google consent and device session remain separate checks.',
 )

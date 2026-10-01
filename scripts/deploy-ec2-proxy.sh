@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# F-01/F-03: explicit public routes; API remains on host loopback.
+# F-01/F-03/F-04: explicit public routes; API remains on host loopback. `accounts` also carries
+# sign-in, sync and the library; deploy the API first, since the probes below exercise it.
 set -euo pipefail
 [[ $# -ge 1 && $# -le 2 && $1 =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]] || exit 2
 mode=${2:-readonly}
@@ -10,8 +11,10 @@ cd "$(dirname "$0")/.."
 opts=(-o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15)
 scp "${opts[@]}" "$config" "ec2-user@$1:/tmp/loro-public-proxy.conf"
 scp "${opts[@]}" infra/ec2/account-upstream.conf "ec2-user@$1:/tmp/loro-account-upstream.conf"
-ssh "${opts[@]}" "ec2-user@$1" 'sudo bash -s' <<'REMOTE'
+# shellcheck disable=SC2029 # The validated mode is intentionally passed to the remote bash.
+ssh "${opts[@]}" "ec2-user@$1" "sudo bash -s -- $mode" <<'REMOTE'
 set -euo pipefail
+mode=$1
 exec 9>/var/lock/loro-proxy-deploy.lock
 flock -n 9
 image=nginx@sha256:dc5069ad14f19660b141b21236140b91656bf89bbc3e2417c70ae650cd66104c
@@ -45,5 +48,21 @@ case $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/v1/sync/pull
   404|405) ;; # Read-only rejects the route; account profile rejects its GET method.
   *) exit 1 ;;
 esac
-echo 'Proxy health and deny probes passed; verify account flows before enabling gateway AccountAccess.'
+origin=http://127.0.0.1:8080/v1/library
+code() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
+if [[ $mode == readonly ]]; then
+  [[ $(code "$origin/pack?target=es-ES") == 404 ]]
+else
+  # The library: the pack (which seeds it) with the API's one Cache-Control, sign-in required for
+  # a learner's own things, a clip's HEAD reaching the API, and room for a 3 MB progress body.
+  [[ $(code "$origin/pack?target=es-ES") == 200 ]]
+  [[ $(curl -s -o /dev/null -D - "$origin/pack?target=es-ES" | grep -ci '^cache-control:') == 1 ]]
+  [[ $(code "$origin/usage") == 401 ]]
+  [[ $(code -X PUT "$origin/pack") == 405 ]]
+  [[ $(code -I "$origin/speech/00000000000000000000000000000000.mp3") != 405 ]]
+  [[ $({ printf '{"pad":"'; head -c 3000000 /dev/zero | tr '\0' a; printf '"}'; } |
+    code -X POST -H 'Content-Type: application/json' --data-binary @- "$origin/progress") == 401 ]]
+  [[ $(head -c 5000000 /dev/zero | code -X POST --data-binary @- "$origin/progress") == 413 ]]
+fi
+echo "Proxy health, $mode route and deny probes passed; verify account flows before enabling gateway AccountAccess."
 REMOTE

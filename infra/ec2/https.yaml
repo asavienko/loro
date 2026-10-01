@@ -53,7 +53,8 @@ Resources:
       Runtime: nodejs22.x
       Handler: index.handler
       Role: !GetAtt Role.Arn
-      Timeout: 20
+      # Inside API Gateway's 30 s integration limit; the upstream fetch gives up at 28 s.
+      Timeout: 29
       MemorySize: 128
       Environment:
         Variables:
@@ -74,45 +75,83 @@ Resources:
             ['/v1/auth/google/callback', ['GET']], ['/v1/auth/apple/callback', ['POST']],
             ...['push', 'pull', 'status'].map(p => ['/v1/sync/' + p, ['POST']])
           ]);
+          // F-04: the library routes the app calls, by method; ids are the API's LibraryIdSchema.
+          const ID = '[a-z0-9][a-z0-9.-]{2,95}';
+          const libraryRoutes = [
+            [['GET', 'HEAD'], ['(pack|community|languages|usage|profile|progress)',
+              `sets/${ID}(/(songs|more))?`, `albums/${ID}(/more)?`, 'shared/[a-z0-9]{10}',
+              `songs/${ID}(/audio)?`, `covers/${ID}\\.svg`, 'speech/[a-f0-9]{32}\\.mp3']],
+            [['POST'], ['(profile|progress|sets|phrases|albums|saves|reports)',
+              'me/(delete|delete-account)', 'generate/(phrases|notes|cover|song)',
+              `sets/${ID}`, `sets/${ID}/phrases/${ID}`, `albums/${ID}`, `songs/${ID}/retry`]],
+            [['DELETE'], [`(sets|phrases|albums|songs)/${ID}`, `saves/(set|album)/${ID}`]]
+          ].map(([methods, paths]) => [methods, new RegExp(`^/v1/library/(${paths.join('|')})$`)]);
+          const libraryMethods = (path) =>
+            libraryRoutes.flatMap(([methods, pattern]) => pattern.test(path) ? methods : []);
+          // JSON and text stay text; audio, images and the rest travel base64, byte for byte.
+          const textual = /^(text\/|application\/([a-z0-9.+-]*\+)?json\b)/i;
+          // Lambda refuses a response over 6 MB. Demo songs stay under 4 MiB (5.6 MB as base64).
+          const MAX_RESPONSE = 6000000;
+          const failure = (statusCode, error) => ({statusCode,
+            headers: {'content-type': 'application/json', 'cache-control': 'no-store'},
+            body: JSON.stringify({error})});
           exports.handler = async (event) => {
-            const headers = {'content-type': 'application/json', 'cache-control': 'no-store'};
-            const reply = (statusCode, body) => ({statusCode, headers, body});
             const method = event.requestContext?.http?.method;
             const path = event.rawPath;
-            const account = process.env.ACCOUNT_ACCESS === 'enabled' && accountRoutes.has(path);
-            const methods = publicPaths.has(path) ? ['GET'] : account ? accountRoutes.get(path) : [];
+            const enabled = process.env.ACCOUNT_ACCESS === 'enabled';
+            const account = enabled && accountRoutes.has(path);
+            const library = enabled && !account && path.startsWith('/v1/library/');
+            const methods = publicPaths.has(path) ? ['GET'] : account ? accountRoutes.get(path)
+              : library ? libraryMethods(path) : [];
             if (!methods.includes(method) && !(method === 'OPTIONS' && methods.length))
-              return reply(404, '{"error":"not_available"}');
+              return failure(404, 'not_available');
             const url = new URL(path, process.env.ORIGIN);
             const callback = account && path.endsWith('/callback');
-            for (const key of callback ? ['state', 'code', 'error'] : ['native', 'target', 'from', 'id']) {
+            const queryKeys = callback ? ['state', 'code', 'error']
+              : library ? ['target', 'kind', 'q', 'sort', 'exp', 'sig', 'v']
+              : ['native', 'target', 'from', 'id'];
+            for (const key of queryKeys) {
               const value = event.queryStringParameters?.[key];
               if (typeof value === 'string') url.searchParams.set(key, value);
             }
             const forwarded = {};
             const incoming = Object.fromEntries(Object.entries(event.headers || {}).map(([k, v]) => [k.toLowerCase(), v]));
             for (const key of ['origin', 'access-control-request-method', 'access-control-request-headers',
-              ...(account ? ['content-type', 'authorization', 'x-loro-device', 'x-loro-app', 'idempotency-key'] : [])]) {
+              ...(account ? ['content-type', 'authorization', 'x-loro-device', 'x-loro-app', 'idempotency-key'] : []),
+              ...(library ? ['content-type', 'authorization', 'range', 'if-none-match'] : [])]) {
               if (typeof incoming[key] === 'string') forwarded[key] = incoming[key];
             }
+            // nginx passes this on as X-Real-IP, so the API limits sign-in per learner, not per proxy.
+            const source = event.requestContext?.http?.sourceIp;
+            if ((account || library) && typeof source === 'string' && /^[0-9a-fA-F.:]{2,45}$/.test(source))
+              forwarded['x-loro-source-ip'] = source;
             const body = method === 'POST'
               ? Buffer.from(event.body || '', event.isBase64Encoded ? 'base64' : 'utf8') : undefined;
-            if (body && body.length > 1024 * 1024) return reply(413, '{"error":"payload_too_large"}');
+            // Progress can reach 3.8 MB (the API's JSON limit is 4 MiB); account bodies are small.
+            if (body && body.length > (library ? 4 : 1) * 1024 * 1024) return failure(413, 'payload_too_large');
             try {
+              // API Gateway gives up after 30 s; answer first, with the API's reply or an error.
               const response = await fetch(url, {method, headers: forwarded, body,
-                redirect: 'manual', signal: AbortSignal.timeout(15000)});
-              if (response.status >= 300 && response.status < 400 && !callback)
-                return reply(502, '{"error":"unexpected_redirect"}');
-              for (const key of ['content-type', 'retry-after', 'referrer-policy', 'vary',
+                redirect: 'manual', signal: AbortSignal.timeout(28000)});
+              if (response.status >= 300 && response.status < 400 && response.status !== 304 && !callback)
+                return failure(502, 'unexpected_redirect');
+              // The API's own caching stands; a reply without any is marked no-store.
+              const headers = {'content-type': 'application/json', 'cache-control': 'no-store'};
+              for (const key of ['content-type', 'cache-control', 'etag', 'content-range', 'accept-ranges',
+                'content-security-policy', 'x-content-type-options', 'retry-after', 'referrer-policy', 'vary',
                 'access-control-allow-origin', 'access-control-allow-methods',
                 'access-control-allow-headers', 'access-control-expose-headers',
                 ...(callback ? ['location'] : [])]) {
                 const value = response.headers.get(key);
                 if (value) headers[key] = value;
               }
-              return reply(response.status, await response.text());
+              const bytes = Buffer.from(await response.arrayBuffer());
+              const text = bytes.length === 0 || textual.test(response.headers.get('content-type') || '');
+              const payload = bytes.toString(text ? 'utf8' : 'base64');
+              if (payload.length > MAX_RESPONSE) return failure(502, 'response_too_large');
+              return {statusCode: response.status, headers, body: payload, isBase64Encoded: !text};
             } catch {
-              return reply(503, '{"error":"backend_unavailable"}');
+              return failure(503, 'backend_unavailable');
             }
           };
   Logs:
@@ -132,6 +171,8 @@ Resources:
       IntegrationType: AWS_PROXY
       IntegrationUri: !GetAtt Proxy.Arn
       PayloadFormatVersion: '2.0'
+      # The HTTP API maximum: a reply that takes longer is a 503 to the app.
+      TimeoutInMillis: 30000
   Route:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -144,9 +185,10 @@ Resources:
       ApiId: !Ref Api
       StageName: '$default'
       AutoDeploy: true
+      # A learner opening Explore loads a cover per set and checks a clip per phrase.
       DefaultRouteSettings:
-        ThrottlingBurstLimit: 20
-        ThrottlingRateLimit: 10
+        ThrottlingBurstLimit: 100
+        ThrottlingRateLimit: 50
   Permission:
     Type: AWS::Lambda::Permission
     Properties:
