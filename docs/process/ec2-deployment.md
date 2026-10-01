@@ -90,10 +90,12 @@ follows `ANTHROPIC_API_KEY` alone) and `TRUST_PROXY=1`. What the library uses
 - `LIMIT_SPEECH_RENDERS_DAILY` (500 server-wide), `LIMIT_SPEECH_OWNER_DAILY` (100 per learner): new
   clip renders per UTC day; each clip renders once.
 - `TRUST_PROXY`: set to `1` by `scripts/ec2-release.sh`; leave it out of the file.
-- Optional `ANTHROPIC_API_KEY` (`AI_MODEL_GENERATE`): Claude writes decks, notes, covers and lyrics;
-  mind the gateway's 30 s ceiling below. Without it the labelled fallbacks answer.
+- Optional `ANTHROPIC_API_KEY` (`AI_MODEL_GENERATE`, `AI_EFFORT_GENERATE`): Claude writes decks,
+  notes, covers and lyrics. Without it the labelled fallbacks answer. Not yet in
+  `secrets/ec2-api.enc.env`; see
+  [Turning on Claude and ElevenLabs Music](#turning-on-claude-and-elevenlabs-music).
 - Optional `MUSIC_PROVIDER=elevenlabs` with `MUSIC_API_KEY`: ElevenLabs Music sings songs (MP3, at
-  most two minutes); otherwise the demo.
+  most two minutes); otherwise the demo. Not yet in the file either.
 - `LIMIT_*_DAILY`, `LIMIT_*_KEPT`: learners' allowances and caps
   ([library.md](../architecture/library.md)).
 
@@ -102,6 +104,54 @@ records each utterance's clip and voice), so they live in the `loro-postgres` vo
 renders nothing again; they are also in each pre-release dump. A new voice or model is a new clip
 URL and renders afresh. `TTS_CACHE_DIR` is only the older `/v1/tts` routes' file cache (by default
 the container's `/tmp`, emptied on restart), which the app does not use.
+
+### Turning on Claude and ElevenLabs Music
+
+The app's Create tab says who writes on this server (`GET /v1/library/usage`): "Loro's phrase bank
+(no AI writer set up)" and "Demo sound" mean the keys below are missing from the running container.
+`AI_PROVIDER` plays no part (the release sets it to `stub` for the older `/v1/ai` routes); the
+library follows `ANTHROPIC_API_KEY` alone. Needs the age identity (`~/.config/sops/age/loro.txt`).
+
+1. Add the keys to the host's encrypted file (`pnpm env:edit` edits the local `api.enc.env`, not
+   this one):
+
+   ```bash
+   export SOPS_AGE_KEY_FILE=~/.config/sops/age/loro.txt
+   sops edit --input-type dotenv --output-type dotenv secrets/ec2-api.enc.env
+   ```
+
+   ```dotenv
+   # Claude writes decks, notes, covers and lyrics.
+   ANTHROPIC_API_KEY=sk-ant-…
+   # ElevenLabs Music sings songs (a plan with Music); the key may be TTS_API_KEY's.
+   MUSIC_PROVIDER=elevenlabs
+   MUSIC_API_KEY=…
+   ```
+
+   Comments go on lines of their own: Docker's `--env-file` keeps a `#` after a value as part of it.
+   `AI_MODEL_GENERATE` (`claude-sonnet-5`) and `AI_EFFORT_GENERATE` (`low`) are optional.
+   `TTS_PROVIDER=elevenlabs`, `TTS_API_KEY` and the voices are already there. Commit only the
+   encrypted file.
+
+2. Install it on the host and redeploy; a container reads the file only when it starts, and the
+   deploy ships the current code with it:
+
+   ```bash
+   HOST=$(aws cloudformation describe-stacks --profile loro --region eu-central-1 \
+     --stack-name loro-api-dev --query "Stacks[0].Outputs[?OutputKey=='Host'].OutputValue" --output text)
+   sops decrypt --input-type dotenv --output-type dotenv secrets/ec2-api.enc.env |
+     ssh ec2-user@$HOST 'sudo install -D -m 600 -o root -g root /dev/stdin /opt/loro/runtime/api.env'
+   pnpm check
+   bash scripts/deploy-ec2.sh $HOST /opt/loro/runtime/api.env loro-backend
+   ```
+
+3. Check: the Create tab now names Claude and ElevenLabs Music, and a deck's cards say "Written by
+   AI". A key that is wrong shows in the log as `Anthropic request failed: configuration` (a refused
+   key or an unknown model), `rate_limited` or `unavailable`, after which the fallback answered:
+
+   ```bash
+   ssh ec2-user@$HOST 'sudo docker logs --since 10m loro-api 2>&1 | grep -E "writer failed|song .* failed"'
+   ```
 
 **Reading an email sign-in code.** With `inbox:local` the API writes the latest code request to
 `/tmp/loro-magic-delivery.json` inside the container (mode 600, `{email, code, expires_in}`). The
@@ -147,11 +197,12 @@ What passes through, on library routes:
   20 r/s (burst 40) per gateway address.
 - **Time**: an HTTP API integration has at most **30 s**. The Lambda gives up on the API at 28 s
   (its own timeout is 29 s) and nginx at 28 s. Without `ANTHROPIC_API_KEY` every library route
-  answers in well under a second. With live Claude on this host, phrase decks, notes and covers are
-  written while the request waits (the writer allows itself 90 s): one that takes longer than 30 s
-  reaches the app as a gateway `503` although the server finishes it and counts the allowance. Keep
-  live Claude off this gateway until generation answers inside that ceiling or moves to a job the
-  app polls, as songs already do.
+  answers in well under a second. With live Claude, a phrase deck is a job: a request waits up to 20
+  s and otherwise answers `202 {status: 'writing'}`, and the app asks again with the same body until
+  the deck is written (the writer allows itself 90 s). Notes for one phrase wait at most 22 s, past
+  which Loro's rules answer. Songs are made in the background and polled. A cover is still written
+  while its request waits; its spec is short, but one that took past 28 s would reach the app as a
+  gateway `503`.
 
 Roll out a change to the gateway or nginx in this order: the API (above), then nginx, then the
 stack. `aws cloudformation deploy` keeps every parameter it isn't given at the stack's current value

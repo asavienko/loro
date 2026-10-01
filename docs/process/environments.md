@@ -24,11 +24,18 @@ no staging or production environment yet.
 | `CORS_ALLOWED_ORIGINS`                       | Browser origins; local Compose includes 8081 and 8082                                      |
 | `TRUST_PROXY=1`                              | Behind the EC2 gateway's nginx only: auth limits key on its `X-Real-IP` (private peers)    |
 | `ANTHROPIC_API_KEY`, `AI_MODEL_GENERATE`     | Claude writes phrase decks, lyrics and covers; empty uses the labelled fallbacks           |
+| `AI_EFFORT_GENERATE`                         | The writer's effort, `low` by default; empty for a model without effort (Claude Haiku 4.5) |
 | `MUSIC_PROVIDER`, `MUSIC_API_KEY`            | `elevenlabs` sings songs; `stub` (default) gives the labelled "Demo sound" instrumental    |
 | `TTS_PROVIDER`, `TTS_API_KEY`, `TTS_VOICE_*` | `elevenlabs` renders phrase audio with the Q-15 voices; `stub` (default) spends nothing    |
 | `LIMIT_*`                                    | Per-user daily generation allowances and kept-item caps; `LIMIT_SPEECH_*` bounds TTS spend |
 | `LIBRARY_URL_SECRET`                         | Signs song audio URLs; set it when several processes share a database                      |
 | `NODE_ENV=production`                        | Missing WASM becomes fatal at startup                                                      |
+
+Where the keys go: locally, `apps/api/.env` (host commands) or, for `pnpm local:up`, which decrypts
+`secrets/api.enc.env` over `apps/api/.env`, that encrypted file (`pnpm env:edit`; its older
+`MODEL_API_KEY` is read by nothing, the key is `ANTHROPIC_API_KEY`). For the development host,
+`secrets/ec2-api.enc.env`:
+[Turning on Claude and ElevenLabs Music](ec2-deployment.md#turning-on-claude-and-elevenlabs-music).
 
 All `EXPO_PUBLIC_*` values are public and baked into a build: never put secrets there. Rebuild the
 APK after changing `EXPO_PUBLIC_API_URL`.
