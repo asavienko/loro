@@ -13,8 +13,11 @@ Parameters:
     Description: Your public IPv4 address with /32; SSH only
     AllowedPattern: '(\d{1,3}\.){3}\d{1,3}/32'
   AmiId:
-    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+    Type: AWS::EC2::Image::Id
+    Description: >-
+      The instance's image. A different image replaces the instance, its disk and the database on
+      it, so scripts/provision-ec2.sh passes the running instance's own image when updating and
+      Amazon Linux 2023's latest only when creating the stack.
 Resources:
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
