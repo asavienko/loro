@@ -204,7 +204,13 @@ page and in the player has a button in its corner (`src/ui/CoverRedraw.tsx`, ins
 `AlbumCover` and `PhraseImage`). It first says what will happen and how many covers are left today,
 and who draws them here; signed out it offers sign-in. `POST /library/generate/cover` with
 `attachTo` draws for the item's own words (a set's or album's title and description, a song's title
-and album, a phrase and its meaning), never for text the app sends:
+and album, a phrase and its meaning), never for a title or description the app sends. The learner
+may also say what to picture (`prompt`, at most 200 characters, no links): the sheet's field starts
+with the words they last asked for this item, else the item's own (a phrase's meaning in their
+language), and sends them only when they differ from the item's own. The prompt is added to the
+image model's request as `Picture: …` (and to the shape writer's data as `picture`), while the style
+and the rule against any text in the picture stay the server's; the provider moderates it, as it
+does titles.
 
 | The artwork of                   | The new cover                                                                                                                                                                                                                                       |
 | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -218,6 +224,19 @@ asked for. A copy of one of Loro's is made at once, wearing Loro's cover until t
 and the first answer names it (`copy: {kind, id}`) so the app opens it while the cover is drawn. A
 copy must fit the kept caps before the day's cover is spent, and a cover nothing could wear is given
 back. Once ready, a cover goes on a set or album only while the learner still owns it.
+
+**Every cover drawn is kept to choose again.** `library_covers` records what each learner's cover
+was drawn for (`item_kind`, `item_id`: what wears it, so a first cover of Loro's set is filed under
+the learner's copy) and their `prompt`. `GET /library/covers/{kind}/{id}` lists the learner's ready
+covers for an item they may change, newest first (at most 24), with `current`, the one it wears; the
+sheet shows them as thumbnails above the prompt field, the worn one marked. Tapping one calls
+`POST /library/covers/{coverId}/wear` with `{kind, attachTo}`, which puts it back at once: nothing
+is drawn and no cover is spent. Only the learner's own cover, of the item it was drawn for, goes
+back on an item still theirs to change; anything else is not found. A cover still being drawn takes
+its item's place when it is ready, even if an earlier one was put back meanwhile. Rejected: keeping
+earlier covers on the device only (they would not follow the learner to another device, and the
+server already keeps every cover it drew), and drawing several covers per tap to choose from (it
+would spend several of the day's covers for one).
 
 **Allowances** are counted per learner per UTC day in `library_usage` with one atomic upsert, before
 any provider is asked: a model's phrase decks and notes (`LIMIT_PHRASES_DAILY`, default 30), covers
