@@ -129,6 +129,13 @@ are no clips and the device voice speaks, as before.
 | `POST /library/generate/cover`   | A shape spec designed for the title       | A pattern drawn from the title (`pattern`)       |
 | `POST /library/generate/song`    | Lyrics that sing every phrase             | The set's phrases arranged as a song (`phrases`) |
 
+A phrase's three notes are a mnemonic, a grammar rule and its sounds, in the learner's language. The
+mnemonic is a hook for remembering the phrase: Claude is asked for a word of the learner's it sounds
+like, a picture or tiny scene, a word they know or a pattern of their language, and never for an
+invented etymology or fact (`notesBrief` in `writers.ts`). Loro's rules only use what is true of the
+phrase: a word of its meaning it sounds like, a word it shares with Loro's phrases, or its pieces
+and beats (`notes/memory.ts`).
+
 A song's sound comes from ElevenLabs Music with `MUSIC_PROVIDER=elevenlabs` and `MUSIC_API_KEY`;
 otherwise the server synthesizes a **demo instrumental** (`synth.ts`: chords, bass, melody and beat
 in the style, two bars per lyric line) whose line timings let the lyrics follow the sound. It is
