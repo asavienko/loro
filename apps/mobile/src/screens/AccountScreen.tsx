@@ -5,6 +5,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { PostHogMaskView } from 'posthog-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '@shared/api/client';
 import { deleteAccount, deleteEverything, setDisplayName } from '@shared/api/library';
@@ -156,26 +157,29 @@ export function SignIn({ onDone, embedded = false }: { onDone: () => void; embed
           <Txt variant="label" weight={600} nativeID="code-label">
             {c.account.code}
           </Txt>
-          <TextInput
-            ref={codeField}
-            autoFocus
-            accessibilityLabelledBy="code-label"
-            aria-label={c.account.code}
-            value={code}
-            onChangeText={(text) => {
-              const digits = text.replace(/\D/g, '').slice(0, 6);
-              setCode(digits);
-              if (digits.length === 6) void verify(digits);
-            }}
-            keyboardType="number-pad"
-            textContentType="oneTimeCode"
-            autoComplete="one-time-code"
-            maxLength={6}
-            editable={!busy}
-            style={[field, styles.code]}
-            placeholder="000000"
-            placeholderTextColor={placeholderColor}
-          />
+          {/* The one thing session replay never records: a code that signs in (src/analytics). */}
+          <PostHogMaskView>
+            <TextInput
+              ref={codeField}
+              autoFocus
+              accessibilityLabelledBy="code-label"
+              aria-label={c.account.code}
+              value={code}
+              onChangeText={(text) => {
+                const digits = text.replace(/\D/g, '').slice(0, 6);
+                setCode(digits);
+                if (digits.length === 6) void verify(digits);
+              }}
+              keyboardType="number-pad"
+              textContentType="oneTimeCode"
+              autoComplete="one-time-code"
+              maxLength={6}
+              editable={!busy}
+              style={[field, styles.code]}
+              placeholder="000000"
+              placeholderTextColor={placeholderColor}
+            />
+          </PostHogMaskView>
           {problem && <Problem text={problem} />}
           <Button variant="primary" label={busy ? c.account.verifying : c.account.verify} disabled={busy || code.length !== 6} onPress={() => void verify()} />
           <View style={styles.row}>

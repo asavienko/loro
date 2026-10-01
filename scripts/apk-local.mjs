@@ -62,7 +62,13 @@ if (web) {
 }
 env.EXPO_PUBLIC_API_URL = api
 env.EXPO_PUBLIC_WEB_URL = web
-const PUBLIC_KEYS = new Set(['EXPO_PUBLIC_API_URL', 'EXPO_PUBLIC_WEB_URL'])
+// PostHog's project key is public by design (ADR-0011); without it the APK sends no analytics.
+const PUBLIC_KEYS = new Set([
+  'EXPO_PUBLIC_API_URL',
+  'EXPO_PUBLIC_WEB_URL',
+  'EXPO_PUBLIC_POSTHOG_KEY',
+  'EXPO_PUBLIC_POSTHOG_HOST',
+])
 for (const key of Object.keys(env)) {
   if (key.startsWith('EXPO_PUBLIC_') && !PUBLIC_KEYS.has(key)) delete env[key]
 }

@@ -10,6 +10,7 @@ import { useLatest } from '@shared/lib/useLatest'
 import { useNav } from '@shared/nav/NavContext'
 import { courseSets, findPhrase, promptOf } from '@shared/state/catalog'
 import { LIMITS, tidy } from '@shared/state/limits'
+import { analyticsAvailable, setSharingUsage, sharingUsage } from '../analytics/posthog'
 import { useAccount } from '../state/account'
 import { useCopy, useStore } from '../state/store'
 import { Button } from '../ui/Button'
@@ -112,7 +113,40 @@ export function SettingsSheet({ open, atVoices = false, onClose }: { open: boole
           />
         </View>
       </SheetSection>
+
+      {analyticsAvailable() && <UsageSharing />}
     </Sheet>
+  )
+}
+
+/** Product analytics and screen recording (ADR-0011): on until the learner turns it off here. */
+function UsageSharing() {
+  const c = useCopy()
+  const [on, setOn] = useState(sharingUsage)
+  return (
+    <SheetSection title={c.settings.privacy}>
+      <View style={styles.switchRow}>
+        <View style={styles.switchText}>
+          <Txt variant="row" weight={500}>
+            {c.settings.shareUsage}
+          </Txt>
+          <Txt variant="label" color="secondary">
+            {c.settings.shareUsageHint}
+          </Txt>
+        </View>
+        <Switch
+          accessibilityLabel={c.settings.shareUsage}
+          accessibilityHint={c.settings.shareUsageHint}
+          value={on}
+          onValueChange={(next) => {
+            setOn(next)
+            void setSharingUsage(next)
+          }}
+          trackColor={{ true: colors.primaryContainer, false: colors.surfaceContainerHighest }}
+          thumbColor={colors.surfaceContainerLowest}
+        />
+      </View>
+    </SheetSection>
   )
 }
 
