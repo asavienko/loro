@@ -1,8 +1,10 @@
 // Phrase clips on iOS and Android (metro.config.js swaps this in for src/shared/audio/speech.ts,
 // whose exports it mirrors): the clip the server's voice recorded for a phrase (plans 106, 108),
 // played through expo-audio at the learner's speed and measured by its own length. There is no
-// device voice: a phrase without a clip fails at once as 'no-clip'.
+// device voice: a phrase without a clip fails at once as 'no-clip'. Its waits are timed natively
+// (`after`), so the loop keeps time with the screen locked (P3-11).
 import { createAudioPlayer } from 'expo-audio';
+import { after } from '../audio/media';
 
 export type PlaybackResult = { status: 'ended'; ms: number | null } | { status: 'timeout' } | { status: 'failed'; reason: FailureReason };
 export type FailureReason = 'no-clip' | 'silent';
@@ -39,11 +41,11 @@ function playClip(url: string, rate: number): Playback {
   let resolve: (r: PlaybackResult) => void = () => {};
   const done = new Promise<PlaybackResult>((r) => (resolve = r));
   const check = new AbortController();
-  const checkTimer = setTimeout(() => check.abort(), CLIP_CHECK_MS);
+  const stopCheck = after(CLIP_CHECK_MS, () => check.abort());
   let cancelled = false;
   let playing: Playback | null = null;
   void clipAvailable(url, check.signal).then((ok) => {
-    clearTimeout(checkTimer);
+    stopCheck();
     if (cancelled) return;
     if (!ok) return resolve({ status: 'failed', reason: 'silent' });
     playing = startClip(url, rate);
@@ -53,7 +55,7 @@ function playClip(url: string, rate: number): Playback {
     done,
     cancel: () => {
       cancelled = true;
-      clearTimeout(checkTimer);
+      stopCheck();
       check.abort();
       playing?.cancel();
     },
@@ -68,20 +70,20 @@ function startClip(url: string, rate: number): Playback {
   const settle = (r: PlaybackResult) => {
     if (settled) return;
     settled = true;
-    clearTimeout(watchdog);
+    watchdog();
     subscription.remove();
     player.remove();
     resolve(r);
   };
-  let watchdog = setTimeout(() => settle({ status: 'failed', reason: 'silent' }), CLIP_LOAD_MS);
+  let watchdog = after(CLIP_LOAD_MS, () => settle({ status: 'failed', reason: 'silent' }));
   let started = false;
   const subscription = player.addListener('playbackStatusUpdate', (status) => {
     if (status.isLoaded && !started) {
       started = true;
-      clearTimeout(watchdog);
+      watchdog();
       // The speed again once loaded: a rate set before the source is ready may not hold on Android.
       if (rate !== 1) player.setPlaybackRate(rate);
-      watchdog = setTimeout(() => settle({ status: 'timeout' }), status.duration > 0 ? (status.duration * 2000) / rate + 3000 : CLIP_STALL_MS);
+      watchdog = after(status.duration > 0 ? (status.duration * 2000) / rate + 3000 : CLIP_STALL_MS, () => settle({ status: 'timeout' }));
     }
     if (status.didJustFinish) settle({ status: 'ended', ms: (status.duration * 1000) / rate });
   });
@@ -92,7 +94,7 @@ function startClip(url: string, rate: number): Playback {
     cancel: () => {
       if (settled) return;
       settled = true;
-      clearTimeout(watchdog);
+      watchdog();
       subscription.remove();
       player.pause();
       player.remove();
@@ -109,6 +111,6 @@ export function speak(clipUrl: string | null | undefined, rate: number): Playbac
 export function silence(ms: number): Playback {
   let resolve: (r: PlaybackResult) => void = () => {};
   const done = new Promise<PlaybackResult>((r) => (resolve = r));
-  const timer = setTimeout(() => resolve({ status: 'ended', ms }), ms);
-  return { done, cancel: () => clearTimeout(timer) };
+  const cancel = after(ms, () => resolve({ status: 'ended', ms }));
+  return { done, cancel };
 }

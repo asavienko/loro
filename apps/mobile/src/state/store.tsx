@@ -15,6 +15,7 @@ import { onOtherTabSave, readRaw, Stored } from '@shared/state/storage';
 import type { AppState } from '@shared/state/types';
 import { useLatest } from '@shared/lib/useLatest';
 import { trackEvent } from '../analytics/posthog';
+import { after } from '../audio/media';
 
 export type { Actions } from '@shared/state/actions';
 
@@ -51,16 +52,17 @@ export function StoreProvider({ children, stored }: { children: ReactNode; store
   const record = (result: SaveResult) => setSaveProblem(result === 'saved' ? null : result);
   const recordRef = useLatest(record);
 
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Timed natively (`after`): a rating from the lock screen is saved with the screen still locked.
+  const timer = useRef<(() => void) | undefined>(undefined);
   useEffect(() => {
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => void saveState(state).then((r) => recordRef.current(r)), SAVE_DEBOUNCE_MS);
+    timer.current?.();
+    timer.current = after(SAVE_DEBOUNCE_MS, () => void saveState(state).then((r) => recordRef.current(r)));
   }, [state, recordRef]);
 
   useEffect(() => {
     const subscription = AppLifecycle.addEventListener('change', (next) => {
       if (next === 'active') return;
-      clearTimeout(timer.current);
+      timer.current?.();
       flushState(latest.current);
     });
     return () => subscription.remove();

@@ -1,7 +1,8 @@
 // Runs the side effects of the state machine's current phase, as the web prototype's driver does
 // (its src/audio/driver.ts): prompt, the learner's turn, target, the hold for a rating. Each
-// finished phase is reported with its cycle, so a stale completion is ignored. The app going to
-// the background pauses cleanly (the web listens for the page hiding).
+// finished phase is reported with its cycle, so a stale completion is ignored. On iOS and Android
+// the loop plays on with the screen locked (its silences are timed natively, src/audio/media.ts);
+// elsewhere the app going to the background pauses cleanly (the web listens for the page hiding).
 import { useEffect } from 'react';
 import { AppState as AppLifecycle } from 'react-native';
 import { holdCue, turnCue } from '@shared/audio/cues';
@@ -11,6 +12,7 @@ import { findPhrase, promptOf } from '@shared/state/catalog';
 import { currentPhraseId, phaseDurationMs } from '@shared/state/selectors';
 import { GAP_MS, RATE_HOLD_MS } from '@shared/state/timing';
 import { useStore } from '../state/store';
+import { backgroundPlayback } from './media';
 
 /** Speech followed by a gap; the gap is not part of the measurement. */
 function speakThenGap(play: Playback): Playback {
@@ -101,8 +103,11 @@ export function usePlaybackDriver(): void {
     }
   }, [nextId, latest]);
 
-  // Another app, a call, the lock screen: pause instead of leaving the state "playing".
+  // With the lock-screen controls (src/audio/lockScreen.ts, P3-11) the loop plays on in the
+  // background, and a call or another app's sound pauses it through them. Without them (the web,
+  // a build without the module), leaving the app pauses instead of leaving the state "playing".
   useEffect(() => {
+    if (backgroundPlayback) return;
     const subscription = AppLifecycle.addEventListener('change', (next) => {
       if (next !== 'active' && latest.current.player.status === 'playing') actions.pause();
     });
