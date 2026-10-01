@@ -291,6 +291,19 @@ describe('queue edits', () => {
     assert.deepEqual(restored.player.order, s.player.order);
     assert.deepEqual(transition(s, { type: 'CLEAR_QUEUE' }).player.order, ['cafe-01']);
   });
+
+  it('closes only while paused, emptying the queue and keeping ratings', () => {
+    let s = load(fresh());
+    s = transition(s, { type: 'RATE', grade: 'easy', now: T0 + 1 });
+    assert.equal(transition(s, { type: 'CLOSE' }), s);
+    s = transition(s, { type: 'PAUSE', now: T0 + 2 });
+    const closed = transition(s, { type: 'CLOSE' });
+    assert.equal(closed.player.status, 'idle');
+    assert.equal(currentPhraseId(closed.player), null);
+    assert.ok(closed.player.cycle > s.player.cycle);
+    assert.deepEqual(closed.pending, s.pending);
+    assert.deepEqual(closed.learner, s.learner);
+  });
 });
 
 describe('repetitions', () => {
