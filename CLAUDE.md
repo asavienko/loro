@@ -164,6 +164,7 @@ pnpm --filter @loro/mobile android    # Android development build (needs cargo-n
 pnpm --filter @loro/mobile test       # the app's unit tests (node:test via tsx)
 pnpm --filter @loro/mobile bundle     # proves the iOS bundle compiles
 pnpm --filter @loro/api dev           # :3000; requires PostgreSQL/auth configuration
+pnpm --filter @loro/landing dev       # the landing page on :4173 (builds live from GitHub)
 pnpm local:up / pnpm local:down       # SOPS-decrypted API + Expo web containers
 
 # One test file (app tests need the content fixture installed first)
@@ -193,6 +194,7 @@ cd packages/core-rs && cargo test <name>
 | `apps/mobile/modules/loro-core/`           | Expo module over the Rust core (UniFFI)                                        |
 | `apps/mobile/modules/loro-media/`          | Expo module: the player on the lock screen and shade (P3-11)                   |
 | `apps/api/`                                | NestJS backend                                                                 |
+| `apps/landing/`                            | One-page site; lists the Android builds from GitHub (F-09)                     |
 | `packages/core/`                           | Shared TS domain and API contracts — used by the API and content               |
 | `packages/core-rs/`                        | Rust: FSRS (and the older `/v1/sync` merge and clocks)                         |
 | `packages/content/`                        | Server catalogs, review gates; `v2/` is the app's seeded content               |
@@ -204,8 +206,9 @@ cd packages/core-rs && cargo test <name>
 
 [`docs/decisions/open-questions.md`](docs/decisions/open-questions.md) lists unresolved decisions
 with owners and dates: Q-08/Q-12 (pricing, store billing), Q-13 (es-419), Q-15 (voices), Q-21 (eval
-and budget for live AI generation), Q-22 (sharing audio files), Q-23 (native-speaker review) and
-Q-24 (review retention target).
+and budget for live AI generation), Q-22 (sharing audio files), Q-23 (native-speaker review), Q-24
+(review retention target), Q-25 (syllabus word lists), Q-26 (en-US written or adapted) and Q-27
+(where the landing page is served).
 
 ## EC2 development deployment
 

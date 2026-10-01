@@ -16,6 +16,7 @@ module.exports = {
       [
         'mobile',
         'api',
+        'landing',
         'core',
         'core-rs',
         'tokens',

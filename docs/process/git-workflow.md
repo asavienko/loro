@@ -19,8 +19,8 @@ Trunk-based on `main`, short-lived branches, Conventional Commits, squash-merged
 `commitlint.config.cjs` sets the rules:
 
 - **Types:** `feat` `fix` `perf` `refactor` `test` `docs` `chore` `content` `revert`.
-- **Scopes:** `mobile` `api` `core` `core-rs` `tokens` `content` `engines` `sync` `audio` `dsp`
-  `widgets` `ci` `docs` `deps`. A missing scope is a warning, an unknown one an error.
+- **Scopes:** `mobile` `api` `landing` `core` `core-rs` `tokens` `content` `engines` `sync` `audio`
+  `dsp` `widgets` `ci` `docs` `deps`. A missing scope is a warning, an unknown one an error.
 - Subject in lower case, no trailing period; header at most 100 characters.
 - `BREAKING CHANGE:` in the footer for a wire-format or schema break.
 

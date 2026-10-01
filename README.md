@@ -53,6 +53,7 @@ Everything under `docs/` is indexed in [`docs/README.md`](docs/README.md).
 | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | [`apps/mobile/`](apps/mobile/README.md)           | The Expo / React Native app (iOS, Android, web)                                                                   |
 | [`apps/api/`](apps/api/README.md)                 | NestJS + PostgreSQL: sign-in and the library the app uses, plus the older sync, content, music, TTS and AI routes |
+| [`apps/landing/`](apps/landing/README.md)         | The one-page site, with the Android builds read from GitHub releases on each visit                                |
 | [`packages/core/`](packages/core/README.md)       | Shared TypeScript domain model, API contracts and sync field policy (API and content only)                        |
 | [`packages/core-rs/`](packages/core-rs/README.md) | Rust core: FSRS for the app, the `/v1/sync` merge for the API (UniFFI native, WASM web/Node)                      |
 | [`packages/content/`](packages/content/README.md) | The app's seed content (`v2/`) and the first app's Spanish catalog, with their checks                             |

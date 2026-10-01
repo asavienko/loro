@@ -16,6 +16,7 @@ at `e36cc758`.
 | [Q-24](#q-24) | Which desired retention schedules reviews: the core's 50% or 90%? | open     | Product           | The review-date policy              |
 | [Q-25](#q-25) | May the frequency and CEFR lists behind the syllabus be used?     | open     | Product + content | The syllabus vocabulary bands       |
 | [Q-26](#q-26) | Is the American English course written, or adapted from British?  | open     | Product           | Plan 112 batches for en-US          |
+| [Q-27](#q-27) | Where is the landing page served?                                 | open     | Product           | Visitors reaching the page          |
 
 <a id="q-08"></a>
 
@@ -160,3 +161,17 @@ adapting it from en-GB (a variety stage: spelling, vocabulary, present perfect u
 small call per set, keeps the courses aligned phrase for phrase (an en-GB phrase and its en-US twin
 could even share a set id suffix), but risks British phrasing with American spelling where the
 adapter is lazy. The owner decides before the first en-US batch; until then en-US has no batch.
+
+<a id="q-27"></a>
+
+## Q-27 · Where is the landing page served?
+
+`apps/landing` is a static folder that reads the Android builds from GitHub's releases API in the
+visitor's browser, and its download links are the releases' own assets
+([its README](../../apps/landing/README.md)). Both need the repository to be public, which
+[ADR-0018](../architecture/adr/0018-public-source-available-repository.md) decided on 2026-10-02,
+Releases included. Until the switch GitHub answers 404 to anyone not signed in, so the page shows
+the builds saved on 2026-10-01 and only collaborators can download. Still open: where the folder is
+served from, and under which domain. GitHub Pages stays off
+([public-repository.md](../process/public-repository.md)), which leaves the EC2 gateway's nginx or a
+separate static host.
