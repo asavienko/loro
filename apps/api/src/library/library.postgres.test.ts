@@ -278,6 +278,62 @@ describePostgres('the library against real PostgreSQL', () => {
     }
   })
 
+  it('answers "still writing" while Claude writes, and gives the deck to the same request asked again', async () => {
+    let finish!: () => void
+    let asked = 0
+    resetWriter(
+      claudeClient(() => {
+        asked += 1
+        return new Promise<Response>((resolve) => {
+          finish = () => {
+            resolve(
+              Response.json({
+                stop_reason: 'end_turn',
+                content: [
+                  { type: 'thinking', thinking: '', signature: 'sig' },
+                  {
+                    type: 'text',
+                    text: JSON.stringify({
+                      phrases: Array.from({ length: 9 }, (_, i) => ({
+                        ...writtenPhrase,
+                        target: `Frase número ${i + 1}`,
+                      })),
+                    }),
+                  },
+                ],
+                usage: { input_tokens: 1, output_tokens: 1 },
+              }),
+            )
+          }
+        })
+      }),
+    )
+    const body = { mode: 'topic', input: 'hotel', targetLang: 'es-ES', nativeLang: 'en-GB' }
+    try {
+      expect(await library.generatePhrases('wren', body, 5)).toEqual({ status: 'writing' })
+      // Asked again while it is still being written: the same deck, not a second one.
+      expect(await library.generatePhrases('wren', body, 5)).toEqual({ status: 'writing' })
+      expect(asked).toBe(1)
+      expect((await library.usage('wren')).daily.phrases.used).toBe(1)
+      finish()
+      const deck = await library.generatePhrases('wren', body, 1_000)
+      expect('status' in deck).toBe(false)
+      if ('status' in deck) return
+      expect(deck.provider).toBe('claude')
+      // Claude writes a short deck; More asks for the rest.
+      expect(deck.phrases).toHaveLength(6)
+      expect(asked).toBe(1)
+      expect((await library.usage('wren')).daily.phrases.used).toBe(1)
+      // Once collected it is gone: asking again is a new deck.
+      expect(await library.generatePhrases('wren', body, 5)).toEqual({ status: 'writing' })
+      expect(asked).toBe(2)
+      finish()
+      await library.generatePhrases('wren', body)
+    } finally {
+      resetWriter()
+    }
+  })
+
   it('caps how many sets one account keeps', async () => {
     const phrases = (await deck('eve')).slice(0, 1)
     for (let i = 0; i < 3; i++)

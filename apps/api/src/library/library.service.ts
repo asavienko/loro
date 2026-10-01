@@ -36,6 +36,7 @@ import {
   ShareCodeSchema,
   UpdateAlbumSchema,
   UpdateSetSchema,
+  type GeneratePhrasesRequest,
   type LibraryNotes,
   type SetItem,
   type Visibility,
@@ -192,10 +193,49 @@ const LANGUAGES: LanguagesWire = {
   languages: V2_LANGUAGES,
 }
 
+/** A deck of suggestions as the app receives it (`POST /library/generate/phrases`). */
+export interface PhraseDeck {
+  provider: 'claude' | 'bank'
+  phrases: WrittenPhrase[]
+  themes: { id: string; title: V2Localized }[]
+}
+/** Claude is still writing the deck: ask again with the same body for it (`202`). */
+export interface StillWriting {
+  status: 'writing'
+}
+
+/**
+ * How long one deck request waits for Claude before answering "still writing". The EC2 gateway
+ * gives up on a request at 28 s (ec2-deployment.md), so the answer has to leave well before that.
+ */
+export const DECK_WAIT_MS = 20_000
+/** How long notes for one phrase may take before Loro's rules answer instead, inside that ceiling. */
+const NOTES_WAIT_MS = 22_000
+/** A deck Claude finished keeps this long for its learner to come back for it. */
+const DECK_KEEP_MS = 5 * 60_000
+/**
+ * Claude writes at most this many suggestions to a deck (More asks for the next ones): the learner
+ * decides one card at a time, and a short deck is written in a fraction of a dozen's time.
+ */
+export const CLAUDE_DECK_SIZE = 6
+
+interface DeckJob {
+  done: Promise<PhraseDeck>
+  answer?: PhraseDeck
+  /** When it started, or finished. */
+  at: number
+}
+
 @Injectable()
 export class LibraryService {
   private readonly logger = new Logger('library')
   private seeded: Promise<void> | undefined
+  /**
+   * Decks Claude is writing or has written, by learner and request: a request that outlasts its
+   * wait is answered "still writing", and the same request asked again joins the deck already
+   * being written instead of spending another (one API process; see library.md).
+   */
+  private readonly decks = new Map<string, DeckJob>()
 
   constructor(
     @Inject(DATABASE) private readonly db: SqlDatabase,
@@ -1581,27 +1621,82 @@ export class LibraryService {
   /**
    * A deck of suggestions: Claude's where it writes (from the day's allowance, `429` when it is
    * spent), otherwise the phrase bank's, free, as the app's own copy of the bank would answer.
+   * Given `waitMs`, a deck Claude hasn't finished by then is answered `{status: 'writing'}`, and
+   * asking again with the same request picks it up.
    */
-  async generatePhrases(userId: string, body: unknown) {
+  async generatePhrases(userId: string, body: unknown): Promise<PhraseDeck>
+  async generatePhrases(
+    userId: string,
+    body: unknown,
+    waitMs: number,
+  ): Promise<PhraseDeck | StillWriting>
+  async generatePhrases(
+    userId: string,
+    body: unknown,
+    waitMs?: number,
+  ): Promise<PhraseDeck | StillWriting> {
     const request = parseContract(GeneratePhrasesSchema, body)
     const ai = writer()
-    if (ai) {
+    if (!ai) return this.bankDeck(userId, request)
+    const now = this.clock.now()
+    for (const [key, job] of this.decks)
+      if (job.answer && now - job.at > DECK_KEEP_MS) this.decks.delete(key)
+    const key = `${userId}:${createHash('sha256').update(JSON.stringify(request)).digest('hex')}`
+    let job = this.decks.get(key)
+    if (!job) {
+      const day = utcDay(now)
       await this.spend(userId, 'phrases')
-      try {
-        const phrases = await this.voiced(userId, request, await claudePhrases(ai, request))
-        return { provider: 'claude' as const, phrases, themes: [] }
-      } catch (error) {
-        this.logger.warn(
-          `phrase writer failed: ${error instanceof Error ? error.message : 'unknown'}; answering from the bank`,
-        )
-        // The bank answers instead, free: a writer's failure doesn't cost the learner a deck.
-        await this.refund(userId, 'phrases')
-      }
+      const started: DeckJob = { done: this.writeDeck(userId, request, ai, day), at: now }
+      started.done.then(
+        (answer) => {
+          started.answer = answer
+          started.at = this.clock.now()
+        },
+        () => {
+          if (this.decks.get(key) === started) this.decks.delete(key)
+        },
+      )
+      this.decks.set(key, started)
+      job = started
     }
+    const answer = job.answer ?? (await settledWithin(job.done, waitMs))
+    if (!answer) return { status: 'writing' }
+    if (this.decks.get(key) === job) this.decks.delete(key)
+    return answer
+  }
+
+  /** Claude's deck, or the bank's when Claude fails: then the allowance is given back. */
+  private async writeDeck(
+    userId: string,
+    request: GeneratePhrasesRequest,
+    ai: NonNullable<ReturnType<typeof writer>>,
+    day: string,
+  ): Promise<PhraseDeck> {
+    try {
+      const written = await claudePhrases(ai, {
+        ...request,
+        count: Math.min(request.count, CLAUDE_DECK_SIZE),
+      })
+      return {
+        provider: 'claude',
+        phrases: await this.voiced(userId, request, written),
+        themes: [],
+      }
+    } catch (error) {
+      this.logger.warn(
+        `phrase writer failed: ${error instanceof Error ? error.message : 'unknown'}; answering from the bank`,
+      )
+      // The bank answers instead, free: a writer's failure doesn't cost the learner a deck.
+      await this.refund(userId, 'phrases', day)
+      return this.bankDeck(userId, request)
+    }
+  }
+
+  private async bankDeck(userId: string, request: GeneratePhrasesRequest): Promise<PhraseDeck> {
     const phrases = await this.voiced(userId, request, bankPhrases(request))
     const themes =
       phrases.length > 0 ? [] : V2_CONTENT.bank.themes.map((t) => ({ id: t.id, title: t.title }))
-    return { provider: 'bank' as const, phrases, themes }
+    return { provider: 'bank', phrases, themes }
   }
 
   /**
@@ -1639,7 +1734,9 @@ export class LibraryService {
     if (ai) {
       await this.spend(userId, 'phrases')
       try {
-        return { provider: 'claude', ...(await claudeNotes(ai, request)) }
+        // Answered while the request waits, so inside the gateway's ceiling: past it, the rules do.
+        const signal = AbortSignal.timeout(NOTES_WAIT_MS)
+        return { provider: 'claude', ...(await claudeNotes(ai, request, signal)) }
       } catch (error) {
         this.logger.warn(
           `notes writer failed: ${error instanceof Error ? error.message : 'unknown'}; answering by the rules`,
@@ -2493,6 +2590,23 @@ function validAudioSignature(
 
 function utcDay(now: number): string {
   return new Date(now).toISOString().slice(0, 10)
+}
+
+/** What `work` settles to within `ms` (forever when unset), or null if it is still going. */
+async function settledWithin<T>(work: Promise<T>, ms: number | undefined): Promise<T | null> {
+  if (ms === undefined) return work
+  let timer: NodeJS.Timeout | undefined
+  const late = new Promise<null>((resolve) => {
+    timer = setTimeout(() => {
+      resolve(null)
+    }, ms)
+    timer.unref()
+  })
+  try {
+    return await Promise.race([work, late])
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 export function writersInUse(): UsageWire['writers'] {
