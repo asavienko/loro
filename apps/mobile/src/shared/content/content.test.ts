@@ -33,7 +33,7 @@ describe('content', () => {
     }
   });
 
-  it('every phrase has an image, its sounds, a memory hint and a grammar rule', () => {
+  it('every phrase has an image, its sounds, a mnemonic and a grammar rule', () => {
     for (const p of CONTENT_PHRASES) {
       assert.ok(p.image && p.image.length > 0, `${p.id}: image`);
       assert.deepEqual(Object.keys(p.notes ?? {}).sort(), ['grammar', 'mnemonic', 'pronunciation'], p.id);
@@ -109,7 +109,7 @@ describe('phrase bank', () => {
     assert.match(found, /bank-health-es-99: the same phrase as bank-health-es-05/);
   });
 
-  it('every bank phrase has an image, its sounds, a memory hint and a grammar rule, in every UI language', () => {
+  it('every bank phrase has an image, its sounds, a mnemonic and a grammar rule, in every UI language', () => {
     assert.equal(problems(bank(), bankNoteTranslationsJson), '');
     for (const p of BANK_PHRASES) {
       assert.ok(p.image.length > 0, p.id);
