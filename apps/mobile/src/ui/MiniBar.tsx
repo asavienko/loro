@@ -21,6 +21,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useCopy } from '../state/store';
 import { BarShift, useBarShift } from './barShift';
+import { Marquee } from './Marquee';
 import { Icon, IconName } from './Icon';
 import { holdClicks, releaseClicks } from './swallowClick';
 import { Txt } from './Txt';
@@ -303,7 +304,8 @@ export function MiniCard({
             )}
           </View>
           <View style={styles.text}>
-            {title}
+            {/* A title too long for the bar reads across, so it can be read in full. */}
+            <Marquee>{title}</Marquee>
             <Txt variant="label" color="secondaryFixedDim" numberOfLines={1}>
               {status}
             </Txt>
