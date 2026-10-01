@@ -804,6 +804,30 @@ describePostgres('the library against real PostgreSQL', () => {
     expect((await library.set('finn', a.set.id)).set.phraseIds).not.toContain(id)
   })
 
+  it('makes “My phrases” only within the kept-sets cap, and keeps filling one already made', async () => {
+    const add = (userId: string, target: string, setId?: string) =>
+      library.addPhrase(userId, {
+        phrase: { target, native: target, source: 'written' },
+        targetLang: 'es-ES',
+        nativeLang: 'en-GB',
+        inboxTitle: 'My phrases',
+        ...(setId ? { setId } : {}),
+      })
+    const make = (userId: string, title: string) =>
+      library.createSet(userId, { title, targetLang: 'es-ES', nativeLang: 'en-GB', phrases: [] })
+    // Two sets and "My phrases" reach the cap of three; it still takes phrases afterwards.
+    await make('uma', 'Uno')
+    await make('uma', 'Dos')
+    const inbox = await add('uma', 'Hola')
+    expect((await library.usage('uma')).kept.sets).toEqual({ used: 3, limit: 3 })
+    expect((await add('uma', 'Adiós')).set.id).toBe(inbox.set.id)
+    // At the cap without one, a phrase on its own is refused; into a set she has, it is kept.
+    const sets = await Promise.all(['Uno', 'Dos', 'Tres'].map((title) => make('val', title)))
+    expect(await code(add('val', 'Hola'))).toBe('LIMIT_REACHED')
+    expect((await library.usage('val')).kept.sets.used).toBe(3)
+    expect((await add('val', 'Hola', sets[0]?.set.id)).set.phraseIds).toHaveLength(1)
+  })
+
   it('gives bank phrases and written suggestions clips, English prompts included', async () => {
     vi.stubEnv('TTS_PROVIDER', 'elevenlabs')
     vi.stubEnv('TTS_API_KEY', 'k')

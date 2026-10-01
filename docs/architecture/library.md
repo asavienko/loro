@@ -149,7 +149,9 @@ served with `Content-Security-Policy: default-src 'none'`.
 any provider is asked: Claude's phrase decks and notes (`LIMIT_PHRASES_DAILY`, default 30), covers
 (`LIMIT_COVER_DAILY`, 10, drawn patterns too) and songs (`LIMIT_SONG_DAILY`, 5, demos too). One
 account keeps at most `LIMIT_SETS_KEPT` (100) sets, `LIMIT_ALBUMS_KEPT` (30) albums and
-`LIMIT_SONGS_KEPT` (120) songs. A spent allowance is `429 LIMIT_REACHED` with `resets_at`; the app
+`LIMIT_SONGS_KEPT` (120) songs; a course's "My phrases" set, made by the first phrase added on its
+own, is one of the sets, so at the cap that phrase is refused until it goes into a set the learner
+has. A spent allowance is `429 LIMIT_REACHED` with `resets_at` (`null` for a kept cap); the app
 shows what is left before the learner asks. Generation needs an account; reading does not.
 
 ## Running it locally

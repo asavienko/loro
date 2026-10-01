@@ -1016,6 +1016,8 @@ export class LibraryService {
       ).rows[0]?.id
     const found = await find()
     if (found) return found
+    // It is one of the learner's kept sets: at the cap, a phrase goes into a set they have.
+    await this.assertKept(userId, 'sets')
     await this.db.transaction(async (tx) => {
       // Two phrases added at once make one set: the second waits, then finds the first's.
       await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`inbox:${userId}`])
