@@ -72,12 +72,16 @@ device.
 
 ## Q-21 · Under what eval and budget may live AI phrase generation run?
 
-Make a set asks Claude for phrases when the API holds `ANTHROPIC_API_KEY`, inside per-user daily
-limits; otherwise it answers from the phrase bank and says so. Claude's phrases are marked as
-unchecked by a native speaker and are added only by an explicit learner action.
+Make a set asks DeepSeek V4.1 Flash (Fireworks, then OpenRouter) for phrases when the API holds
+`FIREWORKS_API_KEY` or `OPENROUTER_API_KEY`, inside per-user daily limits; otherwise it answers from
+the phrase bank and says so. A model's phrases are marked as unchecked by a native speaker and are
+added only by an explicit learner action.
 
 **Leaning:** keep that labelling until a named eval corpus passes per language pair (naturalness,
-length, register, safety, prompt injection). Provider retention of prompts needs a privacy decision.
+length, register, safety, prompt injection; a first live run's mnemonics were not always true).
+Provider retention was decided on 2026-10-01
+([ADR-0015](../architecture/adr/0015-open-model-providers.md)): Fireworks keeps no prompts for open
+models, and OpenRouter routes only to providers that don't.
 
 <a id="q-22"></a>
 

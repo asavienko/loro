@@ -20,7 +20,7 @@ apps/api/src/
 ├── common/           # clock, config, problem details, HTTP helpers
 ├── database/         # PostgreSQL client and additive schema
 ├── health/           # liveness and readiness (database, WASM)
-├── integrations/     # Anthropic and ElevenLabs transports
+├── integrations/     # Fireworks/OpenRouter text, OpenRouter images, ElevenLabs
 ├── sync/             # HLC push/pull with the Rust merge (not used by the current app)
 ├── content/ ai/ tts/ music/   # earlier routes, kept; the app uses library/ instead
 └── testing/
@@ -40,11 +40,11 @@ version changes. Song audio and phrase clips are stored in PostgreSQL (`library_
 
 ## Providers
 
-| Variable                                  | Without it                                                     |
-| ----------------------------------------- | -------------------------------------------------------------- |
-| `ANTHROPIC_API_KEY`                       | Phrase bank, drawn cover patterns, the set's phrases as lyrics |
-| `MUSIC_PROVIDER=elevenlabs` + key         | A synthesized "Demo sound" instrumental                        |
-| `TTS_PROVIDER=elevenlabs` + pinned voices | No server clips; the app uses the device voice                 |
+| Variable                                   | Without it                                                     |
+| ------------------------------------------ | -------------------------------------------------------------- |
+| `FIREWORKS_API_KEY` / `OPENROUTER_API_KEY` | Phrase bank, drawn cover patterns, the set's phrases as lyrics |
+| `MUSIC_PROVIDER=elevenlabs` + key          | A synthesized "Demo sound" instrumental                        |
+| `TTS_PROVIDER=elevenlabs` + pinned voices  | No server clips; the app uses the device voice                 |
 
 Every fallback is labelled where the learner sees it.
 
