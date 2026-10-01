@@ -2,7 +2,7 @@
 // filtered lists, like a music library, then their progress. The chosen list lives in the route.
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useNav } from '@shared/nav/NavContext';
 import type { LibraryView } from '@shared/nav/routes';
 import { coursePhrases, findPhrase, findSetView, ownPhrases, SetView } from '@shared/state/catalog';
@@ -25,6 +25,7 @@ import {
 } from '@shared/state/selectors';
 import type { LibraryListView } from '@shared/state/types';
 import { hrefOf } from '../nav/Shell';
+import { Press } from '../ui/Press';
 import { AlbumsView } from './AlbumsView';
 import { useAccount } from '../state/account';
 import { onDevice } from '../state/upload';
@@ -92,9 +93,10 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
           {(['phrases', 'sets', 'albums'] as const).map((s) => {
             const on = segment === s;
             return (
-              <Pressable
+              <Press
                 key={s}
                 accessibilityRole="tab"
+                haptic={on ? 'none' : 'select'}
                 accessibilityState={{ selected: on }}
                 aria-selected={on}
                 // The segment already shown keeps its view (Missed stays Missed).
@@ -104,7 +106,7 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
                 <Txt weight={on ? 700 : 500} color={on ? 'onSurface' : 'secondary'}>
                   {s === 'albums' ? c.library.albumsSegment : s === 'sets' ? c.library.setsSegment : c.library.phrasesSegment}
                 </Txt>
-              </Pressable>
+              </Press>
             );
           })}
         </View>

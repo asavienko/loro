@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Icon, IconName } from './Icon';
+import { Press } from './Press';
 import { Txt } from './Txt';
 import { colors, radius, TARGET } from './theme';
 
@@ -40,9 +41,9 @@ export function StatTile({ label, value, note, onPress, layout = 'vertical' }: {
   // Named label first, so a reader hears "Learned, 3".
   const name = [label, value, note].filter(Boolean).join(', ');
   return onPress ? (
-    <Pressable accessibilityRole="button" accessibilityLabel={name} onPress={onPress} style={({ pressed }) => [styles.tile, pressed && { backgroundColor: colors.surfaceContainer }]}>
+    <Press accessibilityRole="button" accessibilityLabel={name} onPress={onPress} style={({ pressed }) => [styles.tile, pressed && { backgroundColor: colors.surfaceContainer }]}>
       {body}
-    </Pressable>
+    </Press>
   ) : (
     <View accessible accessibilityLabel={name} style={styles.tile}>
       {body}
@@ -53,7 +54,7 @@ export function StatTile({ label, value, note, onPress, layout = 'vertical' }: {
 /** A figure as a quiet chip, label then value ("Learned 3"). */
 export function StatChip({ label, value, icon, onPress }: { label: string; value: string | number; icon?: IconName; onPress: () => void }) {
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.chip, pressed && { backgroundColor: colors.surfaceContainer }]}>
+    <Press accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.chip, pressed && { backgroundColor: colors.surfaceContainer }]}>
       {icon && <Icon name={icon} size="sm" color="primaryContainer" />}
       <Txt variant="body" weight={500}>
         {label}
@@ -61,7 +62,7 @@ export function StatChip({ label, value, icon, onPress }: { label: string; value
       <Txt variant="body" weight={700}>
         {String(value)}
       </Txt>
-    </Pressable>
+    </Press>
   );
 }
 

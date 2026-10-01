@@ -5,7 +5,7 @@
 // song gets a cover of the learner's own. Drawing needs an account (F-01); while it draws, the
 // artwork says so.
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { keepItemCover } from '@shared/api/contentCache';
 import { generateCover, type Song } from '@shared/api/library';
 import { findAlbum, type Album, type LanguageCode, type Phrase, type PhraseSet } from '@shared/content';
@@ -16,6 +16,7 @@ import { useContent } from '../state/content';
 import { useCopy, useStore } from '../state/store';
 import { Button } from './Button';
 import { Icon } from './Icon';
+import { Press } from './Press';
 import { problemText, resetTime } from './problems';
 import { Sheet } from './Sheet';
 import { useToast } from './Toast';
@@ -116,7 +117,7 @@ export function CoverRedraw({ item, width, height, rounded }: { item: CoverItem;
           )}
         </View>
       ) : (
-        <Pressable
+        <Press
           accessibilityRole="button"
           accessibilityLabel={c.share.coverFor(titleOf(item, state.learner.profile.nativeLang))}
           hitSlop={slop}
@@ -124,7 +125,7 @@ export function CoverRedraw({ item, width, height, rounded }: { item: CoverItem;
           style={({ pressed }) => [styles.chip, { width: chip, height: chip, right: inset, bottom: inset }, pressed && styles.pressed]}
         >
           <Icon name="auto_awesome" size={Math.round(chip * 0.56)} color="primaryContainer" />
-        </Pressable>
+        </Press>
       )}
       <Sheet open={asking} title={c.share.cover} onClose={() => setAsking(false)}>
         <View style={styles.body}>

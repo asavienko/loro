@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { SetView } from '@shared/state/catalog';
 import type { SetProgress } from '@shared/state/selectors';
 import { useCopy } from '../state/store';
 import { Icon } from './Icon';
+import { Press } from './Press';
 import { SetCover } from './SetCover';
 import { Txt } from './Txt';
 import { colors, ColorName, radius, shadow, TARGET } from './theme';
@@ -22,7 +23,7 @@ export function SetCard({ view, progress, onOpen, onPlay, width = 160 }: { view:
   const c = useCopy();
   return (
     <View style={{ width }}>
-      <Pressable accessibilityRole="button" onPress={onOpen} style={({ pressed }) => pressed && { opacity: 0.85 }}>
+      <Press accessibilityRole="button" onPress={onOpen} style={({ pressed }) => pressed && { opacity: 0.85 }}>
         <SetCover set={view} px={width} rounded={radius['2xl']} style={shadow.cover} />
         <Txt variant="row" face="serif" weight={600} numberOfLines={2} lang={view.targetLang} style={styles.title}>
           {view.title}
@@ -37,15 +38,15 @@ export function SetCard({ view, progress, onOpen, onPlay, width = 160 }: { view:
             {[view.level, c.common.phrases(progress.total)].filter(Boolean).join(' · ')}
           </Txt>
         </View>
-      </Pressable>
-      <Pressable
+      </Press>
+      <Press
         accessibilityRole="button"
         accessibilityLabel={c.explore.quickPlay(view.title)}
         onPress={onPlay}
         style={({ pressed }) => [styles.play, { top: width - 52 }, pressed && { transform: [{ scale: 0.95 }] }]}
       >
         <Icon name="play_arrow" fill size="lg" color="primaryContainer" />
-      </Pressable>
+      </Press>
     </View>
   );
 }

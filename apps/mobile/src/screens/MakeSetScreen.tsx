@@ -5,7 +5,7 @@
 // without a decision, and a card says where its phrase came from, AI included.
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Switch, TextInput, useWindowDimensions, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createSet, generateCover, updateSet } from '@shared/api/library';
@@ -32,10 +32,12 @@ import { field, placeholderColor } from '../ui/field';
 import { fontFamily } from '../ui/fonts';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseImage } from '../ui/PhraseImage';
+import { Press } from '../ui/Press';
 import { problemText } from '../ui/problems';
 import { PullDownWindow, PullHandle } from '../ui/PullDown';
 import { SwipeDeck, SwipeDeckHandle, SwipeTravel } from '../ui/SwipeDeck';
 import { ToastOffsetContext, useToast } from '../ui/Toast';
+import { Toggle } from '../ui/Toggle';
 import { Txt } from '../ui/Txt';
 import { colors, ColorName, radius, shadow, TARGET, type } from '../ui/theme';
 
@@ -224,9 +226,9 @@ function MakeSet({ request }: { request: MakeRequest }) {
       <PullDownWindow onClose={close} style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <PullHandle style={styles.headerLine}>
           <View style={styles.header}>
-            <Pressable accessibilityRole="button" accessibilityLabel={c.common.close} onPress={close} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
+            <Press accessibilityRole="button" accessibilityLabel={c.common.close} onPress={close} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
               <Icon name="close" size="lg" />
-            </Pressable>
+            </Press>
             <Txt variant="title" face="serif" weight={600} align="center" numberOfLines={1} accessibilityRole="header" style={styles.flex}>
               {into ? c.make.into(into.title) : c.make.title}
             </Txt>
@@ -334,7 +336,7 @@ function AskStep({
         {SUGGEST_MODES.map((m) => {
           const on = mode === m;
           return (
-            <Pressable
+            <Press
               key={m}
               accessibilityRole="radio"
               accessibilityState={{ checked: on }}
@@ -348,7 +350,7 @@ function AskStep({
               <Txt weight={on ? 700 : 500} color={on ? 'onSurface' : 'secondary'} align="center" numberOfLines={1}>
                 {c.make.modes[m]}
               </Txt>
-            </Pressable>
+            </Press>
           );
         })}
       </View>
@@ -576,7 +578,7 @@ const DECISION_TONE: Record<'add' | 'skip' | 'undo', { size: number; bg: string;
 function DecisionButton({ icon, label, name, tone, onPress, disabled }: { icon: IconName; label: string; name: string; tone: keyof typeof DECISION_TONE; onPress: () => void; disabled?: boolean }) {
   const look = DECISION_TONE[tone];
   return (
-    <Pressable
+    <Press
       accessibilityRole="button"
       accessibilityLabel={name}
       accessibilityState={{ disabled: Boolean(disabled) }}
@@ -590,7 +592,7 @@ function DecisionButton({ icon, label, name, tone, onPress, disabled }: { icon: 
       <Txt variant="label" weight={600}>
         {label}
       </Txt>
-    </Pressable>
+    </Press>
   );
 }
 
@@ -641,9 +643,9 @@ function CardFace({ card, position, total, onEdit }: { card: Suggestion; positio
         {onEdit && (
           <View style={styles.cardActions}>
             {clipUrl && (
-              <Pressable accessibilityRole="button" accessibilityLabel={c.make.listen(card.target)} onPress={listen} style={({ pressed }) => [styles.listen, pressed && styles.pressed]}>
+              <Press accessibilityRole="button" accessibilityLabel={c.make.listen(card.target)} onPress={listen} style={({ pressed }) => [styles.listen, pressed && styles.pressed]}>
                 <Icon name="volume_up" />
-              </Pressable>
+              </Press>
             )}
             <Button variant="text" icon="edit" label={c.make.edit} accessibilityLabel={c.make.editLabel(card.target)} onPress={onEdit} />
           </View>
@@ -781,9 +783,9 @@ function SaveStep({
                   <Icon name="auto_awesome" size="sm" color="primaryContainer" />
                 </View>
               )}
-              <Pressable accessibilityRole="button" accessibilityLabel={c.make.remove(card.target)} onPress={() => onRemove(card.key)} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
+              <Press accessibilityRole="button" accessibilityLabel={c.make.remove(card.target)} onPress={() => onRemove(card.key)} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
                 <Icon name="close" size="md" color="secondary" />
-              </Pressable>
+              </Press>
             </View>
           ))}
         </View>
@@ -794,7 +796,7 @@ function SaveStep({
           <Txt weight={600} style={styles.flex} nativeID="with-cover">
             {c.create.withCover}
           </Txt>
-          <Switch value={withCover} onValueChange={setWithCover} accessibilityLabelledBy="with-cover" aria-label={c.create.withCover} />
+          <Toggle value={withCover} onValueChange={setWithCover} accessibilityLabelledBy="with-cover" aria-label={c.create.withCover} />
         </View>
       )}
       <Button

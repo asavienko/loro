@@ -103,14 +103,16 @@ A change that violates one of these is reverted, not discussed.
   get archived) is lost.
 - **App code** (`apps/mobile`): shared, platform-neutral behaviour lives in `src/shared/` (imported
   as `@shared/*`); native replacements for storage, the key-value store, the refresh token, phrase
-  clips, cues, provider sign-in and the Rust core live in `src/platform/` and are swapped in on iOS
-  and Android by resolved path through the `NATIVE` map in `metro.config.js` (a new stand-in needs
-  an entry there). `src/shared/state/` is the pure machine; `src/state/` is the connected React
-  layer around it (store, account, course content, progress sync). Every learner-facing string is in
-  `src/shared/copy/` (en, bg, ru). **One clock:** only `src/shared/state/clock.ts` builds a `Date`
-  or reads `Date.now()` (lint-enforced). State changes go through `transition(state, event)`; the
-  allowed events are in `state/chart.ts`. The app has its own `eslint.config.mjs` and is excluded
-  from the root ESLint/Prettier configs.
+  clips, cues, touch feedback, provider sign-in and the Rust core live in `src/platform/` and are
+  swapped in on iOS and Android by resolved path through the `NATIVE` map in `metro.config.js` (a
+  new stand-in needs an entry there). `src/shared/state/` is the pure machine; `src/state/` is the
+  connected React layer around it (store, account, course content, progress sync). Every
+  learner-facing string is in `src/shared/copy/` (en, bg, ru). Controls press through
+  `src/ui/Press.tsx` and switches through `src/ui/Toggle.tsx`, which give the haptics
+  (lint-enforced). **One clock:** only `src/shared/state/clock.ts` builds a `Date` or reads
+  `Date.now()` (lint-enforced). State changes go through `transition(state, event)`; the allowed
+  events are in `state/chart.ts`. The app has its own `eslint.config.mjs` and is excluded from the
+  root ESLint/Prettier configs.
 - **Generated files are committed and drift-checked** — the UniFFI bindings, the core-rs browser
   build, `apps/mobile/src/ui/iconCodepoints.ts` (`pnpm --filter @loro/mobile icons`) and the OpenAPI
   specs. Never hand-edit them; fix the generator.

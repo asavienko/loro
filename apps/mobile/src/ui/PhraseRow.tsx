@@ -1,9 +1,10 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { languageName } from '@shared/copy';
 import type { Phrase } from '@shared/content';
 import { promptOf } from '@shared/state/catalog';
 import { useCopy, useStore } from '../state/store';
 import { Icon } from './Icon';
+import { Press } from './Press';
 import { Txt } from './Txt';
 import { colors, radius, TARGET } from './theme';
 
@@ -30,7 +31,7 @@ export function PhraseRow({ phrase, detail, leading, isCurrent = false, isPlayin
   const status = [detail, phrase.own && c.phrase.yoursShort].filter(Boolean).join(' · ');
   return (
     <View style={[styles.row, isCurrent && styles.current]}>
-      <Pressable
+      <Press
         accessibilityRole="button"
         accessibilityLabel={playLabel ?? c.phrase.play(title)}
         accessibilityState={{ selected: isCurrent }}
@@ -58,10 +59,10 @@ export function PhraseRow({ phrase, detail, leading, isCurrent = false, isPlayin
             {status ? <Txt variant="label" color="onSurfaceVariant">{` · ${status}`}</Txt> : null}
           </Txt>
         </View>
-      </Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel={c.phrase.details(title)} onPress={onMore} style={({ pressed }) => [styles.more, pressed && styles.pressed]}>
+      </Press>
+      <Press accessibilityRole="button" accessibilityLabel={c.phrase.details(title)} onPress={onMore} style={({ pressed }) => [styles.more, pressed && styles.pressed]}>
         <Icon name="more_vert" color="secondary" />
-      </Pressable>
+      </Press>
     </View>
   );
 }

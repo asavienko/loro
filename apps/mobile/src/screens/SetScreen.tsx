@@ -3,7 +3,7 @@
 // sort, and its phrases. Your own set grows from here.
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { keepOpenedSet } from '@shared/api/contentCache';
 import { deleteSet, fetchSet, saveItem, unsaveItem } from '@shared/api/library';
 import { coursesFor, getTopic, Phrase, TopicTone } from '@shared/content';
@@ -28,6 +28,7 @@ import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
+import { Press } from '../ui/Press';
 import { confirm } from '../ui/confirm';
 import { problemText } from '../ui/problems';
 import { progressLabel } from '../ui/progressLabel';
@@ -297,24 +298,25 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
           {/* Like and More on the left; Play (and shuffle) on the right, and on a line of their own
               when large text leaves no room for both. */}
           <View style={styles.controls}>
-            <Pressable
+            <Press
               accessibilityRole="button"
               accessibilityLabel={c.set.like}
               accessibilityState={{ selected: liked }}
+              haptic="select"
               aria-pressed={liked}
               onPress={() => actions.toggleLike('set', setId)}
               style={({ pressed }) => [styles.iconButton, styles.first, pressed && styles.pressed]}
             >
               <Icon name="favorite" fill={liked} size="lg" color="primaryContainer" />
-            </Pressable>
-            <Pressable
+            </Press>
+            <Press
               accessibilityRole="button"
               accessibilityLabel={c.common.moreOptions}
               onPress={() => setMoreOpen(true)}
               style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
             >
               <Icon name="more_horiz" size="lg" color="secondary" />
-            </Pressable>
+            </Press>
             {/* Where Play picks up, said beside it. */}
             {resumes && (
               <Txt variant="label" weight={600} color="secondary" align="right" style={styles.pausedAt}>
@@ -323,16 +325,16 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
             )}
             <View style={styles.play}>
               {sortedIds.length > 1 && (
-                <Pressable
+                <Press
                   accessibilityRole="button"
                   accessibilityLabel={c.set.shufflePlay}
                   onPress={() => load('set', sortedIds, { shuffle: true })}
                   style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
                 >
                   <Icon name="shuffle" size="lg" color="secondary" />
-                </Pressable>
+                </Press>
               )}
-              <Pressable
+              <Press
                 accessibilityRole="button"
                 accessibilityLabel={bigPauses ? c.set.pauseAll(view.title) : resumes ? c.set.resume(view.title) : c.set.playAll(view.title)}
                 accessibilityState={{ disabled: sortedIds.length === 0 }}
@@ -341,19 +343,19 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
                 style={({ pressed }) => [styles.bigPlay, pressed && { transform: [{ scale: 0.95 }] }, sortedIds.length === 0 && styles.disabled]}
               >
                 <Icon name={bigPauses ? 'pause' : 'play_arrow'} fill size="2xl" color="onPrimary" />
-              </Pressable>
+              </Press>
             </View>
           </View>
           {/* The play order and the sort are one control: it says the order, and changes it. An
               empty set of your own has nothing to order yet. */}
           {sortedIds.length > 0 && (
             <View style={styles.orderRow}>
-              <Pressable accessibilityRole="button" onPress={() => setSortOpen(true)} style={({ pressed }) => [styles.order, pressed && styles.pressed]}>
+              <Press accessibilityRole="button" onPress={() => setSortOpen(true)} style={({ pressed }) => [styles.order, pressed && styles.pressed]}>
                 <Txt variant="label" weight={600} color="secondary">
                   {c.set.playsIn(c.set.sort[sort])}
                 </Txt>
                 <Icon name="keyboard_arrow_down" size="sm" color="secondary" />
-              </Pressable>
+              </Press>
               {showDueNew && (
                 <Button
                   variant="tonal"

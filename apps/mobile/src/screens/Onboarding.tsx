@@ -3,7 +3,7 @@
 // 108), so there is no device voice to check. The step's action stays
 // at the bottom; the step scrolls above it.
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { languageLabel, languageName } from '@shared/copy';
 import { coursesFor, getLanguage, LanguageCode, NATIVE_LANGUAGES } from '@shared/content';
@@ -13,6 +13,7 @@ import { LIMITS } from '@shared/state/limits';
 import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
 import { useCopy, useStore } from '../state/store';
+import { Press } from '../ui/Press';
 import { SignIn, signedInLabel } from './AccountScreen';
 import { Button } from '../ui/Button';
 import { Icon, IconName } from '../ui/Icon';
@@ -184,7 +185,7 @@ function Choice({ legend, options, label, value, onChange }: { legend: string; o
       {options.map((code) => {
         const chosen = value === code;
         return (
-          <Pressable
+          <Press
             key={code}
             accessibilityRole="radio"
             accessibilityState={{ checked: chosen }}
@@ -199,7 +200,7 @@ function Choice({ legend, options, label, value, onChange }: { legend: string; o
             <Txt variant="row" weight={600} lang={code}>
               {label(code)}
             </Txt>
-          </Pressable>
+          </Press>
         );
       })}
     </View>

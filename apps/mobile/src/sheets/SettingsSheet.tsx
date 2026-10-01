@@ -2,7 +2,7 @@
 // course and profile, listening, one screen-reader preference and privacy. Phrases are spoken by the
 // server's voices (plan 108), so there are no device voices to choose here.
 import { useEffect, useRef, useState } from 'react'
-import { StyleSheet, Switch, TextInput, View } from 'react-native'
+import { StyleSheet, TextInput, View } from 'react-native'
 import { copyForNative, languageLabel, languageName } from '@shared/copy'
 import { refreshCourse } from '@shared/api/contentCache'
 import { coursesFor, getLanguage, installedPack, LanguageCode, NATIVE_LANGUAGES } from '@shared/content'
@@ -15,6 +15,7 @@ import { useAccount } from '../state/account'
 import { useCopy, useStore } from '../state/store'
 import { Sheet, SheetOption, SheetSection } from '../ui/Sheet'
 import { useToast } from '../ui/Toast'
+import { Toggle } from '../ui/Toggle'
 import { Txt } from '../ui/Txt'
 import { colors, radius, type } from '../ui/theme'
 
@@ -116,7 +117,7 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
               {c.settings.announceHint}
             </Txt>
           </View>
-          <Switch
+          <Toggle
             accessibilityLabel={c.settings.announceEveryStep}
             accessibilityHint={c.settings.announceHint}
             value={state.prefs.announceEveryStep}
@@ -147,7 +148,7 @@ function UsageSharing() {
             {c.settings.shareUsageHint}
           </Txt>
         </View>
-        <Switch
+        <Toggle
           accessibilityLabel={c.settings.shareUsage}
           accessibilityHint={c.settings.shareUsageHint}
           value={on}

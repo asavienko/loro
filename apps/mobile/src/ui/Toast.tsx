@@ -3,11 +3,12 @@
 // a window of its own over the app, so while one is open the snackbar shows inside the topmost sheet
 // (useToastLayer) instead of underneath it.
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, Pressable, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../state/store';
 import { Icon } from './Icon';
+import { Press } from './Press';
 import { Txt } from './Txt';
 import { colors, radius, shadow, TARGET } from './theme';
 
@@ -145,22 +146,22 @@ function ToastView({ item, dismiss }: { item: ToastItem; dismiss: (id: number) =
         </Txt>
         <View style={styles.actions}>
           {item.also && (
-            <Pressable accessibilityRole="button" onPress={() => run(item.also!)} style={styles.action}>
+            <Press accessibilityRole="button" onPress={() => run(item.also!)} style={styles.action}>
               <Txt variant="body" weight={700} color="primaryFixedDim">
                 {item.also.label}
               </Txt>
-            </Pressable>
+            </Press>
           )}
           {item.action && (
-            <Pressable accessibilityRole="button" onPress={() => run(item.action!)} style={styles.action}>
+            <Press accessibilityRole="button" onPress={() => run(item.action!)} style={styles.action}>
               <Txt variant="body" weight={700} color="primaryFixedDim">
                 {item.action.label}
               </Txt>
-            </Pressable>
+            </Press>
           )}
-          <Pressable accessibilityRole="button" accessibilityLabel={c.common.close} onPress={onDone} style={styles.close}>
+          <Press accessibilityRole="button" accessibilityLabel={c.common.close} onPress={onDone} style={styles.close}>
             <Icon name="close" size="md" color="inverseOnSurface" />
-          </Pressable>
+          </Press>
         </View>
       </View>
     </Animated.View>

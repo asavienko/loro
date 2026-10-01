@@ -1,7 +1,7 @@
 // Home (the web prototype's src/screens/HomeScreen.tsx): exactly one hero, the first that applies
 // (the demo, the review, what to continue, the course done), quiet figures, then what else there is.
 import { ReactNode, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { Album, albumsForCourse } from '@shared/content';
 import { greeting } from '@shared/copy';
 import { useNav } from '@shared/nav/NavContext';
@@ -26,6 +26,7 @@ import { useCopy, useNow, useStore } from '../state/store';
 import { AlbumCover } from '../music/AlbumCover';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
+import { Press } from '../ui/Press';
 import { SetCard } from '../ui/SetCard';
 import { SetRow } from '../ui/SetRow';
 import { Sheet } from '../ui/Sheet';
@@ -245,7 +246,7 @@ function PlayButton({ label, detail, onPress }: { label: string; detail: string 
 function AlbumTeaser({ album, onOpen }: { album: Album; onOpen: () => void }) {
   const c = useCopy();
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`${album.title}, ${c.music.songs(album.songCount)}`} onPress={onOpen} style={({ pressed }) => [styles.teaser, pressed && { opacity: 0.9 }]}>
+    <Press accessibilityRole="button" accessibilityLabel={`${album.title}, ${c.music.songs(album.songCount)}`} onPress={onOpen} style={({ pressed }) => [styles.teaser, pressed && { opacity: 0.9 }]}>
       <AlbumCover url={album.coverUrl} px={64} rounded={10} />
       <View style={styles.flex}>
         <Txt variant="label" weight={700} color="primaryContainer">
@@ -259,7 +260,7 @@ function AlbumTeaser({ album, onOpen }: { album: Album; onOpen: () => void }) {
         </Txt>
       </View>
       <Icon name="chevron_right" color="onSurface" />
-    </Pressable>
+    </Press>
   );
 }
 

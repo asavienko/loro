@@ -4,7 +4,7 @@
 // actions (WCAG 2.5.7), so no move needs a gesture.
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { AccessibilityActionEvent, LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { AccessibilityActionEvent, LayoutChangeEvent, ScrollView, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,12 +14,14 @@ import { findPhrase, findSetView, promptOf } from '@shared/state/catalog';
 import { formatAgo, MINUTE } from '@shared/state/clock';
 import { clip, LIMITS } from '@shared/state/limits';
 import { currentPhraseId, previouslyPlayed, sessionSummary, upNextIds } from '@shared/state/selectors';
+import { tapHaptic } from '@shared/ui/haptics';
 import { isTargetRevealed, queueTitle } from '@shared/ui/phase';
 import { useMySets } from '../state/mySets';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
+import { Press } from '../ui/Press';
 import { PullDownWindow, PullHandle } from '../ui/PullDown';
 import { Sheet, SheetOption } from '../ui/Sheet';
 import { ToastOffsetContext, useToast } from '../ui/Toast';
@@ -92,9 +94,9 @@ export function QueueScreen() {
       <PullDownWindow onClose={onClose} style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <PullHandle style={styles.headerLine}>
           <View style={styles.header}>
-            <Pressable accessibilityRole="button" accessibilityLabel={c.queue.back} onPress={onClose} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
+            <Press accessibilityRole="button" accessibilityLabel={c.queue.back} onPress={onClose} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
               <Icon name="keyboard_arrow_down" size="xl" />
-            </Pressable>
+            </Press>
             <View style={styles.headerText}>
               <Txt variant="title" face="serif" weight={600} align="center" accessibilityRole="header">
                 {c.queue.title}
@@ -106,30 +108,31 @@ export function QueueScreen() {
                 </Txt>
               </Txt>
             </View>
-            <Pressable
+            <Press
               accessibilityRole="button"
               accessibilityLabel={c.queue.shuffle}
               accessibilityState={{ selected: state.player.shuffle }}
+              haptic="select"
               aria-pressed={state.player.shuffle}
               onPress={actions.toggleShuffle}
               style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
             >
               <Icon name="shuffle" size="lg" color={state.player.shuffle ? 'primaryContainer' : 'secondary'} />
-            </Pressable>
+            </Press>
           </View>
         </PullHandle>
 
         <ScrollView style={styles.flex} contentContainerStyle={styles.content}>
           {/* This session so far, the way into its summary (the player's header no longer has one). */}
           {summary && (
-            <Pressable accessibilityRole="button" onPress={nav.openSummary} style={({ pressed }) => [styles.summary, pressed && styles.pressed]}>
+            <Press accessibilityRole="button" onPress={nav.openSummary} style={({ pressed }) => [styles.summary, pressed && styles.pressed]}>
               <Icon name="insights" size="md" color="primaryContainer" />
               <Txt style={styles.flex}>
                 <Txt weight={600}>{c.summary.title}</Txt>
                 <Txt color="secondary">{` · ${c.history.run(summary.phrasesPlayed, summary.points)}`}</Txt>
               </Txt>
               <Icon name="chevron_right" size="md" color="secondary" />
-            </Pressable>
+            </Press>
           )}
           {current && (
             <View>
@@ -392,14 +395,20 @@ function QueueItem({ phraseId, position, again, first, last, onPlayNow, onRemove
         {/* Flat on the page like the rows around it; the tint under it shows only while swiping. */}
         <Animated.View style={[styles.front, swipeStyle]}>
           {/* Not heard yet in this play: led by the prompt, with the target a dashed line (the recall rule). */}
-          <Pressable
+          <Press
             accessibilityRole="button"
             accessibilityLabel={c.queue.playNow(prompt.text)}
             accessibilityHint={c.player.hidden(languageName(phrase.targetLang, c.locale))}
             accessibilityActions={moves}
             onAccessibilityAction={onAction}
             onPressIn={() => moved.set(false)}
-            onPress={() => !moved.get() && onPlayNow()}
+            // Felt only as a press, not as a swipe or drag let go here.
+            haptic="none"
+            onPress={() => {
+              if (moved.get()) return;
+              tapHaptic();
+              onPlayNow();
+            }}
             style={({ pressed }) => [styles.play, pressed && styles.pressed]}
           >
             <Txt variant="label" color="secondary" align="center" style={styles.position}>
@@ -420,11 +429,11 @@ function QueueItem({ phraseId, position, again, first, last, onPlayNow, onRemove
               </View>
               <View style={[styles.hidden, { width: `${Math.min(90, Math.max(30, phrase.target.length * 2.5))}%` }]} />
             </View>
-          </Pressable>
+          </Press>
         </Animated.View>
       </GestureDetector>
       <GestureDetector gesture={drag}>
-        <Pressable
+        <Press
           accessibilityRole="button"
           accessibilityLabel={c.queue.move(prompt.text)}
           accessibilityHint={c.queue.handleHint}
@@ -432,11 +441,16 @@ function QueueItem({ phraseId, position, again, first, last, onPlayNow, onRemove
           onAccessibilityAction={onAction}
           {...({ onKeyDown } as object)}
           onPressIn={() => moved.set(false)}
-          onPress={() => !moved.get() && onMenu()}
+          haptic="none"
+          onPress={() => {
+            if (moved.get()) return;
+            tapHaptic();
+            onMenu();
+          }}
           style={({ pressed }) => [styles.handle, pressed && styles.pressed]}
         >
           <Icon name="drag_handle" size="lg" color="secondary" />
-        </Pressable>
+        </Press>
       </GestureDetector>
     </Animated.View>
   );
