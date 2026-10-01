@@ -1,8 +1,9 @@
 // Phrase clips on iOS and Android (metro.config.js swaps this in for src/shared/audio/speech.ts,
 // whose exports it mirrors): the clip the server's voice recorded for a phrase (plans 106, 108),
 // played through expo-audio at the learner's speed and measured by its own length. There is no
-// device voice: a phrase without a clip fails at once as 'no-clip'. Its waits are timed natively
-// (`after`), so the loop keeps time with the screen locked (P3-11).
+// device voice: a phrase without a clip fails at once as 'no-clip'. Nothing here waits on a React
+// Native timer (its waits are timed natively, `after`) and the audio session stays up between
+// clips, so the loop plays on with the screen locked or the app in the background (P3-11).
 import { createAudioPlayer } from 'expo-audio';
 import { after } from '../audio/media';
 
@@ -25,28 +26,47 @@ const CLIP_CHECK_MS = 8_000;
 const CLIP_LOAD_MS = 5_000;
 
 /**
- * Whether the clip can be fetched. expo-audio reports no load error, so a clip the server can't
- * make (offline, a voice it lacks) is found here, at once, rather than after a silent wait.
+ * Asks whether the clip can be fetched, and calls `answer` once with the result. expo-audio reports
+ * no load error, so a clip the server can't make (offline, a voice it lacks) is found here, at once,
+ * rather than after a silent wait. Returns a cancel.
+ *
+ * A bare XMLHttpRequest, not `fetch`: React Native's `fetch` (whatwg-fetch) settles through
+ * `setTimeout(…, 0)`, and on Android React Native's timers stop once the app leaves the screen, so
+ * with the phone locked the check never answered and the loop stopped after the clip it was in.
+ * The request's own events come straight from the native side.
  */
-async function clipAvailable(url: string, signal: AbortSignal): Promise<boolean> {
-  try {
-    const response = await fetch(url, { method: 'HEAD', signal });
-    return response.ok;
-  } catch {
-    return false;
-  }
+function checkClip(url: string, answer: (ok: boolean) => void): () => void {
+  const request = new XMLHttpRequest();
+  let answered = false;
+  let stopTimer = () => {};
+  const settle = (ok: boolean) => {
+    if (answered) return;
+    answered = true;
+    stopTimer();
+    answer(ok);
+  };
+  stopTimer = after(CLIP_CHECK_MS, () => {
+    settle(false);
+    request.abort();
+  });
+  request.onload = () => settle(request.status >= 200 && request.status < 300);
+  request.onerror = () => settle(false);
+  request.ontimeout = () => settle(false);
+  request.onabort = () => settle(false);
+  request.open('HEAD', url);
+  request.send();
+  return () => {
+    answered = true;
+    stopTimer();
+    request.abort();
+  };
 }
 
 function playClip(url: string, rate: number): Playback {
   let resolve: (r: PlaybackResult) => void = () => {};
   const done = new Promise<PlaybackResult>((r) => (resolve = r));
-  const check = new AbortController();
-  const stopCheck = after(CLIP_CHECK_MS, () => check.abort());
-  let cancelled = false;
   let playing: Playback | null = null;
-  void clipAvailable(url, check.signal).then((ok) => {
-    stopCheck();
-    if (cancelled) return;
+  const stopCheck = checkClip(url, (ok) => {
     if (!ok) return resolve({ status: 'failed', reason: 'silent' });
     playing = startClip(url, rate);
     void playing.done.then(resolve);
@@ -54,9 +74,7 @@ function playClip(url: string, rate: number): Playback {
   return {
     done,
     cancel: () => {
-      cancelled = true;
       stopCheck();
-      check.abort();
       playing?.cancel();
     },
   };
@@ -65,7 +83,10 @@ function playClip(url: string, rate: number): Playback {
 function startClip(url: string, rate: number): Playback {
   let resolve: (r: PlaybackResult) => void = () => {};
   const done = new Promise<PlaybackResult>((r) => (resolve = r));
-  const player = createAudioPlayer({ uri: url }, { updateInterval: 100 });
+  // The audio session stays active between clips: by default expo-audio ends it (iOS) once a clip
+  // finishes and nothing of its own plays, which also stops the module's silent loop
+  // (modules/loro-media), and iOS then suspends the locked app before the next clip.
+  const player = createAudioPlayer({ uri: url }, { updateInterval: 100, keepAudioSessionActive: true });
   let settled = false;
   const settle = (r: PlaybackResult) => {
     if (settled) return;
