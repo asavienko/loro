@@ -17,6 +17,7 @@ import {
 } from '../testing/postgres-schema.js'
 import { AI_DECK_SIZE, LibraryService } from './library.service.js'
 import { ProgressService } from './progress.js'
+import { PushService } from './push.js'
 import { SpeechService, speechFor, utteranceId } from './speech.js'
 import { MAX_DEMO_WAV_BYTES, demoLineLimit } from './synth.js'
 import { resetArtist, resetWriter } from './writers.js'
@@ -1686,5 +1687,91 @@ describePostgres('the library against real PostgreSQL', () => {
     } finally {
       resetWriter()
     }
+  })
+
+  it('tells the learner’s phones when a song is ready, in their language, and forgets a dead token (plan 113)', async () => {
+    const sent: { url: string; body: unknown; auth: string | undefined }[] = []
+    let dead = false
+    const send = ((url: string | URL | Request, init?: RequestInit) => {
+      const body = JSON.parse(init?.body as string) as { to: string }[]
+      sent.push({
+        url: typeof url === 'string' ? url : url instanceof URL ? url.href : url.url,
+        body,
+        auth: (init?.headers as Record<string, string>)['authorization'],
+      })
+      return Promise.resolve(
+        Response.json({
+          data: body.map((m) =>
+            dead && m.to.includes('old')
+              ? { status: 'error', message: 'gone', details: { error: 'DeviceNotRegistered' } }
+              : { status: 'ok', id: 'ticket' },
+          ),
+        }),
+      )
+    }) as typeof fetch
+    vi.stubEnv('EXPO_PUSH_ACCESS_TOKEN', 'expo-secret')
+    const push = new PushService(database, { now: () => now }, send)
+    const told = new LibraryService(database, { now: () => now }, undefined, push)
+    const phone = 'ExponentPushToken[phoneAAAAAAAAAA]'
+    const old = 'ExponentPushToken[oldBBBBBBBBBBBB]'
+    await push.register('gil', { token: phone, lang: 'bg', platform: 'android' })
+    await push.register('gil', { token: old, lang: 'en' })
+    // A token moves with its device: registered by someone else, it is theirs now.
+    await push.register('hal', { token: old, lang: 'ru' })
+    await push.register('gil', { token: old, lang: 'en' })
+    // Someone else can't forget it.
+    await push.forget('hal', phone)
+
+    const { song, album } = await told.generateSong('gil', {
+      setId: 'set-cafe',
+      styleId: 'country',
+      nativeLang: 'bg-BG',
+    })
+    await vi.waitFor(
+      async () => {
+        expect((await told.song('gil', song.id)).status).toBe('ready')
+        expect(sent).toHaveLength(1)
+      },
+      { timeout: 5000 },
+    )
+    expect(sent[0]?.url).toBe('https://exp.host/--/api/v2/push/send')
+    expect(sent[0]?.auth).toBe('Bearer expo-secret')
+    expect(sent[0]?.body).toEqual([
+      {
+        to: phone,
+        title: 'Песента ви е готова',
+        body: `„${song.title}“ е готова за слушане.`,
+        data: { kind: 'song', songId: song.id, albumId: album.id, outcome: 'ready' },
+        sound: 'default',
+      },
+      expect.objectContaining({ to: old, title: 'Your song is ready' }),
+    ])
+
+    // The next song finds the old device gone, and the server forgets its token.
+    dead = true
+    const next = await told.generateSong('gil', {
+      setId: 'set-tapas',
+      styleId: 'country',
+      nativeLang: 'bg-BG',
+      albumId: album.id,
+    })
+    await vi.waitFor(
+      async () => {
+        expect((await told.song('gil', next.song.id)).status).toBe('ready')
+        expect(sent).toHaveLength(2)
+      },
+      { timeout: 5000 },
+    )
+    const kept = await database.query<{ token: string }>(
+      'SELECT token FROM library_push_tokens WHERE user_id = $1 ORDER BY token',
+      ['gil'],
+    )
+    expect(kept.rows.map((r) => r.token)).toEqual([phone])
+    // Signing out forgets the device; deleting the account forgets them all.
+    await push.forget('gil', phone)
+    expect(
+      (await database.query('SELECT 1 FROM library_push_tokens WHERE user_id = $1', ['gil'])).rows,
+    ).toEqual([])
+    vi.unstubAllEnvs()
   })
 })

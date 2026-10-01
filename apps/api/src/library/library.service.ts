@@ -72,6 +72,7 @@ import type {
 import { audioDurationMs } from '@loro/content/audio-duration'
 import { alignLyrics, type HeardSection } from './align.js'
 import { composeLive, liveMusicConfigured } from './music-live.js'
+import { PushService } from './push.js'
 import { transcribeSong, transcriptionConfigured } from './transcribe.js'
 import { imageModelConfigured, textModelConfigured } from '../integrations/models.js'
 import type { StructuredTextModel } from '../integrations/text-model.js'
@@ -252,6 +253,8 @@ export class LibraryService {
     @Inject(SERVER_CLOCK) private readonly clock: ServerClock,
     /** Speaks a demo song's lines when the server has a voice for its language. */
     @Optional() @Inject(SpeechService) private readonly speech?: SpeechService,
+    /** Tells the learner's phone when a song is ready (plan 113). */
+    @Optional() @Inject(PushService) private readonly push?: PushService,
   ) {}
 
   // ---------- seed ----------
@@ -2396,6 +2399,7 @@ export class LibraryService {
     await this.db.query('UPDATE library_albums SET updated_at = $2 WHERE id = $1', [albumId, now])
     void this.render(id, {
       ownerId: userId,
+      albumId,
       chargedDay: utcDay(now),
       title,
       styleId: request.styleId,
@@ -2445,6 +2449,7 @@ export class LibraryService {
     const given = row.lyrics.flatMap((s) => s.lines).length > 0 ? asWritten(row.lyrics) : null
     void this.render(row.id, {
       ownerId: userId,
+      albumId: row.album_id,
       chargedDay: utcDay(now),
       title: row.title,
       styleId: parseContract(z.enum(MUSIC_STYLE_IDS), row.style_id),
@@ -2484,6 +2489,7 @@ export class LibraryService {
     id: string,
     input: {
       ownerId: string
+      albumId: string
       /** The day whose song this spent, given back there if it fails. */
       chargedDay: string
       title: string
@@ -2569,10 +2575,10 @@ export class LibraryService {
       }
       // The sound and the song that plays it are saved together, so a clean-up in between can't
       // take a sound no song points at yet.
-      await this.db.transaction(async (tx) => {
+      const kept = await this.db.transaction(async (tx) => {
         // Removed (or its account deleted) while it was being made: nothing to keep.
         const still = await tx.query('SELECT 1 FROM library_songs WHERE id = $1 FOR UPDATE', [id])
-        if (still.rows.length === 0) return
+        if (still.rows.length === 0) return false
         const audioId = await this.storeAudio(tx, audio.bytes, audio.contentType)
         await tx.query(
           `UPDATE library_songs SET status = 'ready', lyrics = $2, lyrics_by = $3, audio_id = $4, audio_by = $5, duration_ms = $6, voiced = $7, timing_by = $8 WHERE id = $1`,
@@ -2587,7 +2593,16 @@ export class LibraryService {
             timingBy,
           ],
         )
+        return true
       })
+      // The learner's phone hears of it (plan 113); the app's own poll does too.
+      if (kept)
+        await this.push?.songFinished(input.ownerId, {
+          songId: id,
+          albumId: input.albumId,
+          title: input.title,
+          outcome: 'ready',
+        })
     } catch (error) {
       const reason = error instanceof Error ? error.message : 'unknown'
       this.logger.warn(`song ${id} failed: ${reason}`)
@@ -2600,6 +2615,12 @@ export class LibraryService {
         .catch(() => undefined)
       // A song that couldn't be made doesn't count against the day's songs.
       await this.refund(input.ownerId, 'song', input.chargedDay).catch(() => undefined)
+      await this.push?.songFinished(input.ownerId, {
+        songId: id,
+        albumId: input.albumId,
+        title: input.title,
+        outcome: 'failed',
+      })
     }
   }
 

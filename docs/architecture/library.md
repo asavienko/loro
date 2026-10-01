@@ -101,6 +101,17 @@ app forgets what it kept on the device under that account and ends the session.
 A signed-in learner's **progress** follows them through `GET/POST /library/progress`; how it merges,
 when it runs and what happens on a shared phone are in [sync-protocol.md](sync-protocol.md).
 
+**A word when a song is ready** (plan [113](../../plans/113-lyrics-first-songs.md)). On iOS and
+Android the app registers its Expo push token with the UI language it shows
+(`POST /library/push-tokens`, after the first song the learner starts, once the system has allowed
+notifications; `DELETE /library/push-tokens/:token` on sign-out). When a song is ready or couldn't
+be made, `push.ts` sends one message per registered device through Expo's push service, in that
+device's language, with the song and album ids so a tap opens the album; a token the service reports
+as gone is forgotten, and all of a learner's go with their account. The token is the only device
+identifier the server keeps. `PUSH_PROVIDER=off` sends nothing; the app's own poll and local
+notification still tell the learner. A token needs an EAS project id in the app (`EAS_PROJECT_ID` at
+build time); without one the app registers nothing.
+
 ## Visibility and sharing
 
 | Visibility | Who can read it                                     | Listed in Community |

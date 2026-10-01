@@ -14,17 +14,18 @@ server does is of the songs it generated itself, in the API process, to show the
 
 ## What the server holds
 
-| Data                                                         | Where                            |
-| ------------------------------------------------------------ | -------------------------------- |
-| Account: a keyed hash of the email, or the provider subject  | PostgreSQL (`auth_*`)            |
-| Devices, sessions and refresh tokens (hashed)                | PostgreSQL (`auth_*`)            |
-| Pending email codes (hashed, ten minutes)                    | PostgreSQL (`auth_magic_codes`)  |
-| Display name                                                 | PostgreSQL (`library_profiles`)  |
-| The learner's sets, phrases, albums, songs, covers and saves | PostgreSQL (`library_*`)         |
-| Reports the learner made                                     | PostgreSQL (`library_reports`)   |
-| A copy of the learner's progress                             | PostgreSQL (`library_progress`)  |
-| Daily generation and clip counts                             | PostgreSQL (`library_usage`)     |
-| Rows from the earlier app's sync and music routes            | PostgreSQL (`sync_*`, `music_*`) |
+| Data                                                                | Where                              |
+| ------------------------------------------------------------------- | ---------------------------------- |
+| Account: a keyed hash of the email, or the provider subject         | PostgreSQL (`auth_*`)              |
+| Devices, sessions and refresh tokens (hashed)                       | PostgreSQL (`auth_*`)              |
+| Pending email codes (hashed, ten minutes)                           | PostgreSQL (`auth_magic_codes`)    |
+| Display name                                                        | PostgreSQL (`library_profiles`)    |
+| The learner's sets, phrases, albums, songs, covers and saves        | PostgreSQL (`library_*`)           |
+| Reports the learner made                                            | PostgreSQL (`library_reports`)     |
+| A copy of the learner's progress                                    | PostgreSQL (`library_progress`)    |
+| Daily generation and clip counts                                    | PostgreSQL (`library_usage`)       |
+| The Expo push tokens of the learner's devices, with the UI language | PostgreSQL (`library_push_tokens`) |
+| Rows from the earlier app's sync and music routes                   | PostgreSQL (`sync_*`, `music_*`)   |
 
 Email addresses are never stored in plaintext, and rate-limit buckets key on hashes, never raw
 addresses or emails.

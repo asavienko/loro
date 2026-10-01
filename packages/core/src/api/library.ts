@@ -316,6 +316,15 @@ export const RewriteLyricsSchema = z.strictObject({
   instruction: shownText(LIBRARY_TEXT.instruction, 1).optional(),
 })
 
+/** The UI languages a push message can be in (the app's copy locales). */
+export const PUSH_LANGS = ['en', 'bg', 'ru', 'pl', 'cs'] as const
+/** A device's Expo push token (plan 113), with the UI language its messages are written in. */
+export const PushTokenSchema = z.strictObject({
+  token: z.string().regex(/^Expo(?:nent)?PushToken\[[A-Za-z0-9_-]{8,128}\]$/),
+  lang: z.enum(PUSH_LANGS),
+  platform: z.enum(['ios', 'android']).optional(),
+})
+
 /** Trying a failed song again: the language its lines are glossed in, as when it was made. */
 export const RetrySongSchema = z.strictObject({ nativeLang: LibraryLanguageSchema })
 
@@ -336,3 +345,5 @@ export type GenerateNotesRequest = z.infer<typeof GenerateNotesSchema>
 export type GenerateSongRequest = z.infer<typeof GenerateSongSchema>
 export type StartLyricsRequest = z.infer<typeof StartLyricsSchema>
 export type RewriteLyricsRequest = z.infer<typeof RewriteLyricsSchema>
+export type PushLang = (typeof PUSH_LANGS)[number]
+export type PushTokenRequest = z.infer<typeof PushTokenSchema>
