@@ -47,12 +47,14 @@ import { config } from '../common/config.js'
 import { LoroError } from '../common/errors.js'
 import { parseContract } from '../common/parse.js'
 import { DATABASE, type SqlConnection, type SqlDatabase } from '../database/database.js'
-import { patternCover, renderCover, type CoverSpec } from './covers.js'
+import { coverImagePrompt, patternCover, renderCover, renderImageCover } from './covers.js'
 import type {
   AlbumWire,
   BankPhraseWire,
   BankThemeWire,
-  DrawnCoverWire,
+  CoverState,
+  DeckJobWire,
+  DeckWire,
   KeptKind,
   LanguagesWire,
   Owner,
@@ -65,6 +67,8 @@ import type {
   UsageWire,
 } from './library.types.js'
 import { composeLive, liveMusicConfigured } from './music-live.js'
+import { imageModelConfigured, textModelConfigured } from '../integrations/models.js'
+import type { StructuredTextModel } from '../integrations/text-model.js'
 import { registerSpeech, registerSpeechMany, SpeechService, speechFor } from './speech.js'
 import { readTtsRuntimeConfig, type TtsRuntimeConfig } from '../tts/transport.js'
 import { demoLineLimit, synthesizeDemo } from './synth.js'
@@ -72,11 +76,12 @@ import {
   MAX_SONG_LINES,
   assembleLyrics,
   bankPhrases,
-  claudeCover,
-  claudeLyrics,
-  claudeNotes,
+  aiCover,
+  aiLyrics,
+  aiNotes,
   ruleNotes,
-  claudePhrases,
+  aiPhrases,
+  artist,
   writer,
   type SongPhrase,
   type SongSection,
@@ -176,6 +181,13 @@ type CoverTarget =
   | { kind: 'set'; row: SetRow; copy: boolean; subject: CoverSubject }
   | { kind: 'album'; row: AlbumRow; copy: boolean; subject: CoverSubject }
   | { kind: 'song' | 'phrase'; id: string; subject: CoverSubject }
+type CoverKind = CoverTarget['kind']
+/** Where a cover being drawn goes once ready; `copied` when it is the learner's new copy of Loro's. */
+interface CoverPlace {
+  kind: CoverKind
+  id: string
+  copied: boolean
+}
 
 const num = (value: string | number | null | undefined) => Number(value ?? 0)
 /** An empty description is no description. */
@@ -193,49 +205,21 @@ const LANGUAGES: LanguagesWire = {
   languages: V2_LANGUAGES,
 }
 
-/** A deck of suggestions as the app receives it (`POST /library/generate/phrases`). */
-export interface PhraseDeck {
-  provider: 'claude' | 'bank'
-  phrases: WrittenPhrase[]
-  themes: { id: string; title: V2Localized }[]
-}
-/** Claude is still writing the deck: ask again with the same body for it (`202`). */
-export interface StillWriting {
-  status: 'writing'
-}
-
 /**
- * How long one deck request waits for Claude before answering "still writing". The EC2 gateway
- * gives up on a request at 28 s (ec2-deployment.md), so the answer has to leave well before that.
+ * How long notes for one phrase may take before Loro's rules answer instead. They are answered while
+ * the request waits, and the EC2 gateway gives up on a request at 28 s (ec2-deployment.md).
  */
-export const DECK_WAIT_MS = 20_000
-/** How long notes for one phrase may take before Loro's rules answer instead, inside that ceiling. */
 const NOTES_WAIT_MS = 22_000
-/** A deck Claude finished keeps this long for its learner to come back for it. */
-const DECK_KEEP_MS = 5 * 60_000
 /**
- * Claude writes at most this many suggestions to a deck (More asks for the next ones): the learner
+ * The model writes at most this many suggestions to a deck (More asks for the next ones): the learner
  * decides one card at a time, and a short deck is written in a fraction of a dozen's time.
  */
-export const CLAUDE_DECK_SIZE = 6
-
-interface DeckJob {
-  done: Promise<PhraseDeck>
-  answer?: PhraseDeck
-  /** When it started, or finished. */
-  at: number
-}
+export const AI_DECK_SIZE = 6
 
 @Injectable()
 export class LibraryService {
   private readonly logger = new Logger('library')
   private seeded: Promise<void> | undefined
-  /**
-   * Decks Claude is writing or has written, by learner and request: a request that outlasts its
-   * wait is answered "still writing", and the same request asked again joins the deck already
-   * being written instead of spending another (one API process; see library.md).
-   */
-  private readonly decks = new Map<string, DeckJob>()
 
   constructor(
     @Inject(DATABASE) private readonly db: SqlDatabase,
@@ -846,18 +830,50 @@ export class LibraryService {
     return { bytes: audio.body, contentType: audio.content_type }
   }
 
+  /** A ready cover's SVG. One still being drawn has none yet, and is not found. */
   async cover(id: unknown): Promise<string> {
     const coverId = parseContract(
       LibraryIdSchema,
       typeof id === 'string' ? id.replace(/\.svg$/, '') : id,
     )
     const row = (
-      await this.db.query<{ svg: string }>('SELECT svg FROM library_covers WHERE id = $1', [
-        coverId,
-      ])
+      await this.db.query<{ svg: string | null }>(
+        `SELECT svg FROM library_covers WHERE id = $1 AND status = 'ready'`,
+        [coverId],
+      )
+    ).rows[0]
+    if (!row?.svg) throw new LoroError('NOT_FOUND')
+    return row.svg
+  }
+
+  /**
+   * Where a cover stands, for the app that asked for it: `rendering` until it is drawn, then `ready`
+   * with its address. Work lost with its process reads as `failed`, as a song's does.
+   */
+  async coverState(id: unknown): Promise<CoverState> {
+    const coverId = parseContract(
+      LibraryIdSchema,
+      typeof id === 'string' ? id.replace(/\.json$/, '') : id,
+    )
+    const row = (
+      await this.db.query<{ provider: string; status: string; created_at: string | number }>(
+        'SELECT provider, status, created_at FROM library_covers WHERE id = $1',
+        [coverId],
+      )
     ).rows[0]
     if (!row) throw new LoroError('NOT_FOUND')
-    return row.svg
+    const provider = row.provider === 'pattern' ? 'pattern' : 'ai'
+    if (row.status === 'ready') {
+      return { id: coverId, status: 'ready', url: `/library/covers/${coverId}.svg`, provider }
+    }
+    const lost =
+      row.status === 'rendering' && this.clock.now() - num(row.created_at) > RENDER_TIMEOUT_MS
+    return {
+      id: coverId,
+      status: lost ? 'failed' : (row.status as 'rendering' | 'failed'),
+      url: null,
+      provider,
+    }
   }
 
   // ---------- writing: sets ----------
@@ -1619,80 +1635,97 @@ export class LibraryService {
   // ---------- generation ----------
 
   /**
-   * A deck of suggestions: Claude's where it writes (from the day's allowance, `429` when it is
+   * A deck of suggestions: the model's where it writes (from the day's allowance, `429` when it is
    * spent), otherwise the phrase bank's, free, as the app's own copy of the bank would answer.
-   * Given `waitMs`, a deck Claude hasn't finished by then is answered `{status: 'writing'}`, and
-   * asking again with the same request picks it up.
+   * Written while the request waits, for app builds from before `startDeck`.
    */
-  async generatePhrases(userId: string, body: unknown): Promise<PhraseDeck>
-  async generatePhrases(
-    userId: string,
-    body: unknown,
-    waitMs: number,
-  ): Promise<PhraseDeck | StillWriting>
-  async generatePhrases(
-    userId: string,
-    body: unknown,
-    waitMs?: number,
-  ): Promise<PhraseDeck | StillWriting> {
+  async generatePhrases(userId: string, body: unknown): Promise<DeckWire> {
     const request = parseContract(GeneratePhrasesSchema, body)
     const ai = writer()
     if (!ai) return this.bankDeck(userId, request)
-    const now = this.clock.now()
-    for (const [key, job] of this.decks)
-      if (job.answer && now - job.at > DECK_KEEP_MS) this.decks.delete(key)
-    const key = `${userId}:${createHash('sha256').update(JSON.stringify(request)).digest('hex')}`
-    let job = this.decks.get(key)
-    if (!job) {
-      const day = utcDay(now)
-      await this.spend(userId, 'phrases')
-      const started: DeckJob = { done: this.writeDeck(userId, request, ai, day), at: now }
-      started.done.then(
-        (answer) => {
-          started.answer = answer
-          started.at = this.clock.now()
-        },
-        () => {
-          if (this.decks.get(key) === started) this.decks.delete(key)
-        },
-      )
-      this.decks.set(key, started)
-      job = started
-    }
-    const answer = job.answer ?? (await settledWithin(job.done, waitMs))
-    if (!answer) return { status: 'writing' }
-    if (this.decks.get(key) === job) this.decks.delete(key)
-    return answer
+    await this.spend(userId, 'phrases')
+    return this.writeDeck(userId, request, ai, utcDay(this.clock.now()))
   }
 
-  /** Claude's deck, or the bank's when Claude fails: then the allowance is given back. */
+  /**
+   * The same deck, written in the background (plan 111): a model takes longer than the EC2 gateway
+   * waits. The allowance is spent now, so a `429` still answers at once; the app polls
+   * `GET /library/decks/:id`. Without a model the bank answers at once, as a ready deck.
+   */
+  async startDeck(userId: string, body: unknown): Promise<DeckJobWire> {
+    const request = parseContract(GeneratePhrasesSchema, body)
+    const ai = writer()
+    if (!ai) return { id: null, status: 'ready', ...(await this.bankDeck(userId, request)) }
+    await this.spend(userId, 'phrases')
+    const now = this.clock.now()
+    const id = newId('deck')
+    await this.db.query(
+      `INSERT INTO library_deck_jobs(id, owner_id, status, result, created_at) VALUES ($1,$2,'writing',NULL,$3)`,
+      [id, userId, now],
+    )
+    // Answered decks are read within minutes; a day later nobody is waiting for them.
+    await this.db.query('DELETE FROM library_deck_jobs WHERE created_at < $1', [now - DAY_MS])
+    void this.writeDeck(userId, request, ai, utcDay(now)).then(
+      (deck) =>
+        this.db.query(
+          `UPDATE library_deck_jobs SET status = 'ready', result = $2 WHERE id = $1 AND status = 'writing'`,
+          [id, JSON.stringify(deck)],
+        ),
+      async (error: unknown) => {
+        this.logger.warn(`deck ${id} failed: ${error instanceof Error ? error.message : 'unknown'}`)
+        await this.db
+          .query(
+            `UPDATE library_deck_jobs SET status = 'failed' WHERE id = $1 AND status = 'writing'`,
+            [id],
+          )
+          .catch(() => undefined)
+      },
+    )
+    return { id, status: 'writing' }
+  }
+
+  /** A deck the learner asked for: still `writing`, `ready` with its phrases, or `failed`. */
+  async deck(userId: string, id: unknown): Promise<DeckJobWire> {
+    const deckId = parseContract(LibraryIdSchema, id)
+    const row = (
+      await this.db.query<{ status: string; result: DeckWire | null; created_at: string | number }>(
+        'SELECT status, result, created_at FROM library_deck_jobs WHERE id = $1 AND owner_id = $2',
+        [deckId, userId],
+      )
+    ).rows[0]
+    if (!row) throw new LoroError('NOT_FOUND')
+    if (row.status === 'ready' && row.result) return { id: deckId, status: 'ready', ...row.result }
+    // Work lost with its process reads as failed, as a song's does.
+    const lost =
+      row.status === 'writing' && this.clock.now() - num(row.created_at) > RENDER_TIMEOUT_MS
+    return { id: deckId, status: lost || row.status === 'failed' ? 'failed' : 'writing' }
+  }
+
+  /** The model's deck; when it fails, the bank's, and the allowance spent on `day` is given back. */
   private async writeDeck(
     userId: string,
     request: GeneratePhrasesRequest,
-    ai: NonNullable<ReturnType<typeof writer>>,
+    ai: StructuredTextModel,
     day: string,
-  ): Promise<PhraseDeck> {
+  ): Promise<DeckWire> {
     try {
-      const written = await claudePhrases(ai, {
+      const written = await aiPhrases(ai, {
         ...request,
-        count: Math.min(request.count, CLAUDE_DECK_SIZE),
+        count: Math.min(request.count, AI_DECK_SIZE),
       })
-      return {
-        provider: 'claude',
-        phrases: await this.voiced(userId, request, written),
-        themes: [],
-      }
+      const phrases = await this.voiced(userId, request, written)
+      return { provider: 'ai', phrases, themes: [] }
     } catch (error) {
       this.logger.warn(
         `phrase writer failed: ${error instanceof Error ? error.message : 'unknown'}; answering from the bank`,
       )
       // The bank answers instead, free: a writer's failure doesn't cost the learner a deck.
       await this.refund(userId, 'phrases', day)
-      return this.bankDeck(userId, request)
     }
+    return this.bankDeck(userId, request)
   }
 
-  private async bankDeck(userId: string, request: GeneratePhrasesRequest): Promise<PhraseDeck> {
+  private async bankDeck(userId: string, request: GeneratePhrasesRequest): Promise<DeckWire> {
     const phrases = await this.voiced(userId, request, bankPhrases(request))
     const themes =
       phrases.length > 0 ? [] : V2_CONTENT.bank.themes.map((t) => ({ id: t.id, title: t.title }))
@@ -1722,13 +1755,13 @@ export class LibraryService {
   }
 
   /**
-   * Notes for a phrase the learner wrote: Claude's where it writes (from the allowance), otherwise
+   * Notes for a phrase the learner wrote: the model's where it writes (from the allowance), otherwise
    * Loro's written rules, free, labelled as such (plan 108).
    */
   async generateNotes(
     userId: string,
     body: unknown,
-  ): Promise<{ provider: 'claude' | 'rules'; image: string[]; notes: LibraryNotes }> {
+  ): Promise<{ provider: 'ai' | 'rules'; image: string[]; notes: LibraryNotes }> {
     const request = parseContract(GenerateNotesSchema, body)
     const ai = writer()
     if (ai) {
@@ -1736,7 +1769,7 @@ export class LibraryService {
       try {
         // Answered while the request waits, so inside the gateway's ceiling: past it, the rules do.
         const signal = AbortSignal.timeout(NOTES_WAIT_MS)
-        return { provider: 'claude', ...(await claudeNotes(ai, request, signal)) }
+        return { provider: 'ai', ...(await aiNotes(ai, request, signal)) }
       } catch (error) {
         this.logger.warn(
           `notes writer failed: ${error instanceof Error ? error.message : 'unknown'}; answering by the rules`,
@@ -1748,54 +1781,123 @@ export class LibraryService {
   }
 
   /**
-   * A drawn cover (LIB-04) from the day's allowance. With `attachTo` it goes on an item, drawn for the
-   * item's own words: the learner's set or album wears it in place; one of Loro's (read-only, LIB-01)
-   * is copied into the learner's library wearing it; a phrase or song they can read gets it as their
-   * own cover, shown only to them.
+   * A cover (LIB-04) from the day's allowance, drawn in the background (plan 111): an image model
+   * takes longer than the gateway waits, so the app polls `GET /library/covers/:id.json`. With
+   * `attachTo` it is drawn for the item's own words and goes on the item once ready: the learner's
+   * set or album keeps its old cover until then; one of Loro's (read-only, LIB-01) is copied into the
+   * learner's library at once, and the copy takes the cover; a phrase or song they can read gets it
+   * as their own cover, shown only to them. With no model at all the server's pattern is drawn now.
    */
-  async generateCover(userId: string, body: unknown): Promise<DrawnCoverWire> {
+  async generateCover(userId: string, body: unknown): Promise<CoverState> {
     await this.ready()
     const request = parseContract(GenerateCoverSchema, body)
     const target = request.attachTo
       ? await this.coverTarget(userId, request.kind, request.attachTo)
       : null
-    const subject = target?.subject ?? {
-      title: request.title ?? '',
-      description: request.description,
+    const subject = {
+      kind: request.kind,
+      ...(target?.subject ?? { title: request.title ?? '', description: request.description }),
     }
     await this.spend(userId, 'cover')
-    let spec: CoverSpec | null = null
-    let provider: 'claude' | 'pattern' = 'pattern'
-    const ai = writer()
-    if (ai) {
-      try {
-        spec = await claudeCover(ai, { kind: request.kind, ...subject })
-        provider = 'claude'
-      } catch (error) {
-        this.logger.warn(
-          `cover writer failed: ${error instanceof Error ? error.message : 'unknown'}; drawing a pattern`,
-        )
-      }
-    }
-    // A new pattern each time the learner asks again: the seed includes the moment.
-    spec ??= patternCover(`${subject.title}:${this.clock.now()}`)
     const id = newId('cover')
-    const svg = renderCover(spec)
-    let copy: DrawnCoverWire['copy']
+    const now = this.clock.now()
+    const drawNow = !artist() && !writer()
+    let place: CoverPlace | undefined
     try {
-      copy = await this.db.transaction(async (tx) => {
-        await tx.query(
-          'INSERT INTO library_covers(id, owner_id, provider, svg, created_at) VALUES ($1,$2,$3,$4,$5)',
-          [id, userId, provider, svg, this.clock.now()],
-        )
-        return target ? this.wear(tx, userId, target, id, request.nativeLang) : undefined
+      place = await this.db.transaction(async (tx) => {
+        if (drawNow) {
+          // A new pattern each time the learner asks again: the seed includes the moment.
+          const svg = renderCover(patternCover(`${subject.title}:${now}`))
+          await tx.query(
+            `INSERT INTO library_covers(id, owner_id, provider, svg, status, created_at) VALUES ($1,$2,'pattern',$3,'ready',$4)`,
+            [id, userId, svg, now],
+          )
+        } else {
+          await tx.query(
+            `INSERT INTO library_covers(id, owner_id, provider, svg, status, created_at) VALUES ($1,$2,'ai',NULL,'rendering',$3)`,
+            [id, userId, now],
+          )
+        }
+        const placed = target
+          ? await this.coverPlace(tx, userId, target, request.nativeLang)
+          : undefined
+        if (drawNow && placed) await this.wear(tx, userId, placed, id)
+        return placed
       })
     } catch (error) {
-      // Nothing wears it: the day's cover is given back.
+      // Nothing can wear it: the day's cover is given back.
       await this.refund(userId, 'cover').catch(() => undefined)
       throw error
     }
-    return { id, url: `/library/covers/${id}.svg`, provider, ...(copy ? { copy } : {}) }
+    const copy = place?.copied ? { kind: place.kind as 'set' | 'album', id: place.id } : undefined
+    if (drawNow) {
+      return {
+        id,
+        status: 'ready',
+        url: `/library/covers/${id}.svg`,
+        provider: 'pattern',
+        ...(copy ? { copy } : {}),
+      }
+    }
+    void this.drawCover(userId, id, subject, place)
+    return { id, status: 'rendering', url: null, provider: 'ai', ...(copy ? { copy } : {}) }
+  }
+
+  /**
+   * The image model's illustration; failing that, the text model's shape cover; failing that, the
+   * server's pattern, labelled as such. Then the cover is ready and takes its place.
+   */
+  private async drawCover(
+    userId: string,
+    id: string,
+    subject: CoverSubject & { kind: CoverKind },
+    place: CoverPlace | undefined,
+  ): Promise<void> {
+    try {
+      let svg: string | null = null
+      let provider: 'ai' | 'pattern' = 'ai'
+      const images = artist()
+      if (images) {
+        try {
+          svg = renderImageCover(await images.generate({ prompt: coverImagePrompt(subject) }))
+        } catch (error) {
+          this.logger.warn(
+            `cover image failed: ${error instanceof Error ? error.message : 'unknown'}; designing shapes`,
+          )
+        }
+      }
+      const ai = svg ? null : writer()
+      if (ai) {
+        try {
+          svg = renderCover(await aiCover(ai, subject))
+        } catch (error) {
+          this.logger.warn(
+            `cover writer failed: ${error instanceof Error ? error.message : 'unknown'}; drawing a pattern`,
+          )
+        }
+      }
+      if (!svg) {
+        // A new pattern each time the learner asks again: the seed includes the moment.
+        svg = renderCover(patternCover(`${subject.title}:${this.clock.now()}`))
+        provider = 'pattern'
+      }
+      const done = svg
+      await this.db.transaction(async (tx) => {
+        const updated = await tx.query(
+          `UPDATE library_covers SET svg = $2, provider = $3, status = 'ready' WHERE id = $1 AND status = 'rendering'`,
+          [id, done, provider],
+        )
+        if (updated.rowCount && place) await this.wear(tx, userId, place, id)
+      })
+    } catch (error) {
+      this.logger.warn(`cover ${id} failed: ${error instanceof Error ? error.message : 'unknown'}`)
+      await this.db
+        .query(
+          `UPDATE library_covers SET status = 'failed' WHERE id = $1 AND status = 'rendering'`,
+          [id],
+        )
+        .catch(() => undefined)
+    }
   }
 
   /**
@@ -1858,34 +1960,51 @@ export class LibraryService {
     }
   }
 
-  /** Puts a new cover on its item; returns the copy made when the item is one of Loro's. */
-  private async wear(
+  /**
+   * Where a new cover will go, settled when it is asked for: one of Loro's sets or albums is copied
+   * into the learner's library now, wearing Loro's cover until the new one is ready.
+   */
+  private async coverPlace(
     tx: SqlConnection,
     userId: string,
     target: CoverTarget,
-    coverId: string,
     nativeLang: Language | undefined,
-  ): Promise<DrawnCoverWire['copy']> {
-    const now = this.clock.now()
+  ): Promise<CoverPlace> {
     if (target.kind === 'set' || target.kind === 'album') {
-      if (target.copy)
-        return target.kind === 'set'
-          ? { kind: 'set', id: await this.copySet(tx, userId, target.row, coverId, nativeLang) }
-          : { kind: 'album', id: await this.copyAlbum(tx, userId, target.row, coverId) }
-      const table = target.kind === 'set' ? 'library_sets' : 'library_albums'
-      await tx.query(`UPDATE ${table} SET cover_id = $2, updated_at = $3 WHERE id = $1`, [
-        target.row.id,
-        coverId,
-        now,
-      ])
-      return undefined
+      if (!target.copy) return { kind: target.kind, id: target.row.id, copied: false }
+      const id =
+        target.kind === 'set'
+          ? await this.copySet(tx, userId, target.row, target.row.cover_id, nativeLang)
+          : await this.copyAlbum(tx, userId, target.row, target.row.cover_id)
+      return { kind: target.kind, id, copied: true }
+    }
+    return { kind: target.kind, id: target.id, copied: false }
+  }
+
+  /**
+   * Puts a ready cover on its place: a set or album only while the learner still owns it, a phrase or
+   * song as the learner's own cover of it.
+   */
+  private async wear(
+    tx: SqlConnection,
+    userId: string,
+    place: CoverPlace,
+    coverId: string,
+  ): Promise<void> {
+    const now = this.clock.now()
+    if (place.kind === 'set' || place.kind === 'album') {
+      const table = place.kind === 'set' ? 'library_sets' : 'library_albums'
+      await tx.query(
+        `UPDATE ${table} SET cover_id = $2, updated_at = $3 WHERE id = $1 AND owner_id = $4`,
+        [place.id, coverId, now, userId],
+      )
+      return
     }
     await tx.query(
       `INSERT INTO library_item_covers(user_id, kind, item_id, cover_id, updated_at) VALUES ($1,$2,$3,$4,$5)
        ON CONFLICT (user_id, kind, item_id) DO UPDATE SET cover_id = EXCLUDED.cover_id, updated_at = EXCLUDED.updated_at`,
-      [userId, target.kind, target.id, coverId, now],
+      [userId, place.kind, place.id, coverId, now],
     )
-    return undefined
   }
 
   /**
@@ -1897,7 +2016,7 @@ export class LibraryService {
     tx: SqlConnection,
     userId: string,
     row: SetRow,
-    coverId: string,
+    coverId: string | null,
     native: Language | undefined,
   ): Promise<string> {
     const nativeLang = native && native !== row.target_lang ? native : 'en-GB'
@@ -1934,7 +2053,7 @@ export class LibraryService {
     tx: SqlConnection,
     userId: string,
     row: AlbumRow,
-    coverId: string,
+    coverId: string | null,
   ): Promise<string> {
     const id = newId('album-u')
     const now = this.clock.now()
@@ -2134,8 +2253,8 @@ export class LibraryService {
       const ai = writer()
       if (ai) {
         try {
-          sections = await claudeLyrics(ai, { ...input, style: input.styleId })
-          lyricsBy = 'claude'
+          sections = await aiLyrics(ai, { ...input, style: input.styleId })
+          lyricsBy = 'ai'
         } catch (error) {
           this.logger.warn(
             `lyrics writer failed: ${error instanceof Error ? error.message : 'unknown'}; singing the phrases`,
@@ -2351,6 +2470,7 @@ const SYNC_TABLES = [
  * doesn't give the day's generations back.
  */
 async function deleteLibraryOf(tx: SqlConnection, userId: string): Promise<void> {
+  await tx.query('DELETE FROM library_deck_jobs WHERE owner_id = $1', [userId])
   await tx.query(
     `DELETE FROM library_set_refs WHERE set_id IN (SELECT id FROM library_sets WHERE owner_id = $1)
        OR phrase_id IN (SELECT p.id FROM library_phrases p JOIN library_sets s ON s.id = p.set_id WHERE s.owner_id = $1)`,
@@ -2592,29 +2712,12 @@ function utcDay(now: number): string {
   return new Date(now).toISOString().slice(0, 10)
 }
 
-/** What `work` settles to within `ms` (forever when unset), or null if it is still going. */
-async function settledWithin<T>(work: Promise<T>, ms: number | undefined): Promise<T | null> {
-  if (ms === undefined) return work
-  let timer: NodeJS.Timeout | undefined
-  const late = new Promise<null>((resolve) => {
-    timer = setTimeout(() => {
-      resolve(null)
-    }, ms)
-    timer.unref()
-  })
-  try {
-    return await Promise.race([work, late])
-  } finally {
-    clearTimeout(timer)
-  }
-}
-
 export function writersInUse(): UsageWire['writers'] {
-  const ai = Boolean(config.aiApiKey()?.trim())
+  const ai = textModelConfigured()
   return {
-    phrases: ai ? 'claude' : 'bank',
-    cover: ai ? 'claude' : 'pattern',
-    lyrics: ai ? 'claude' : 'phrases',
+    phrases: ai ? 'ai' : 'bank',
+    cover: ai || imageModelConfigured() ? 'ai' : 'pattern',
+    lyrics: ai ? 'ai' : 'phrases',
     music: liveMusicConfigured() ? 'elevenlabs' : 'demo',
   }
 }

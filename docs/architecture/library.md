@@ -127,19 +127,27 @@ are no clips and the device voice speaks, as before.
 
 ## Generation and limits
 
-| Route                            | Claude (`ANTHROPIC_API_KEY`)              | Without it (labelled)                            |
-| -------------------------------- | ----------------------------------------- | ------------------------------------------------ |
-| `POST /library/generate/phrases` | Phrases with pictures and all three notes | The phrase bank, best theme first (`bank`)       |
-| `POST /library/generate/notes`   | Notes and a picture for a typed phrase    | Notes and a picture by Loro's rules (`rules`)    |
-| `POST /library/generate/cover`   | A shape spec designed for the title       | A pattern drawn from the title (`pattern`)       |
-| `POST /library/generate/song`    | Lyrics that sing every phrase             | The set's phrases arranged as a song (`phrases`) |
+| Route                          | A model (`ai`, [ADR-0015](adr/0015-open-model-providers.md)) | Without one (labelled)                           |
+| ------------------------------ | ------------------------------------------------------------ | ------------------------------------------------ |
+| `POST /library/decks`          | Phrases with pictures and all three notes, in the background | The phrase bank, best theme first (`bank`)       |
+| `POST /library/generate/notes` | Notes and a picture for a typed phrase                       | Notes and a picture by Loro's rules (`rules`)    |
+| `POST /library/generate/cover` | An illustration (Muse Image), else a shape spec, background  | A pattern drawn from the title (`pattern`)       |
+| `POST /library/generate/song`  | Lyrics that sing every phrase                                | The set's phrases arranged as a song (`phrases`) |
+
+Text comes from DeepSeek V4.1 Flash on Fireworks (`FIREWORKS_API_KEY`), and from the same model
+through OpenRouter (`OPENROUTER_API_KEY`) when Fireworks fails, with reasoning off; covers are drawn
+by Muse Image through OpenRouter. A deck takes 30–40 s and a cover 15 s or so, longer than the EC2
+gateway waits, so both are written in the background: `POST /library/decks` (202) and the cover
+request return at once and the app polls `GET /library/decks/{id}` (the learner's own) and
+`GET /library/covers/{id}.json`. A set or album keeps its old cover until the new one is ready. The
+older `POST /library/generate/phrases` answers the same deck synchronously, for older app builds.
 
 A phrase's three notes are a mnemonic, a grammar rule and its sounds, in the learner's language. The
-mnemonic is a hook for remembering the phrase: Claude is asked for a word of the learner's it sounds
-like, a picture or tiny scene, a word they know or a pattern of their language, and never for an
-invented etymology or fact (`notesBrief` in `writers.ts`). Loro's rules only use what is true of the
-phrase: a word of its meaning it sounds like, a word it shares with Loro's phrases, or its pieces
-and beats (`notes/memory.ts`).
+mnemonic is a hook for remembering the phrase: the model is asked for a word of the learner's it
+sounds like, a picture or tiny scene, a word they know or a pattern of their language, and never for
+an invented etymology or fact (`notesBrief` in `writers.ts`). Loro's rules only use what is true of
+the phrase: a word of its meaning it sounds like, a word it shares with Loro's phrases, or its
+pieces and beats (`notes/memory.ts`).
 
 A song's sound comes from ElevenLabs Music with `MUSIC_PROVIDER=elevenlabs` and `MUSIC_API_KEY`;
 otherwise the server synthesizes a **demo instrumental** (`synth.ts`: chords, bass, melody and beat
@@ -158,17 +166,18 @@ the day's song back; its owner can make it again (`POST /library/songs/{id}/retr
 day's songs) or remove it (`DELETE /library/songs/{id}`). `GET /library/usage` says which writer
 each kind uses here.
 
-The phrase bank and the rules' notes are free: only Claude's decks and notes spend the day's phrases
-allowance, and a Claude answer that fails gives it back while the bank or the rules answer instead.
-Claude writes six suggestions to a deck (More asks for the next six). A deck it hasn't finished
-within 20 s is answered `202 {status: 'writing'}`, inside the EC2 gateway's 30 s; the same request
-asked again joins the deck being written (one API process holds it, five minutes once written) and
-takes it when done, so a deck is spent once. Notes for one phrase wait at most 22 s for Claude.
+The phrase bank and the rules' notes are free: only a model's decks and notes spend the day's
+phrases allowance, and a model's answer that fails gives it back while the bank or the rules answer
+instead. The model writes six suggestions to a deck (More asks for the next six), so the first card
+comes sooner. Notes for one phrase are answered while the request waits, so they wait at most 22 s
+for the model, inside the EC2 gateway's 30 s; past that the rules answer.
 
-**Covers are never markup from a model.** Claude (or the pattern drawer) produces a spec of at most
-24 circles, rectangles and paths with `#RRGGBB` colours and numeric ranges; `covers.ts` validates it
-and is the only code that writes SVG. Path data may hold only commands and numbers. Covers are
-served with `Content-Security-Policy: default-src 'none'`.
+**Covers are never markup from a model.** An illustration is accepted only as PNG, JPEG or WebP by
+its bytes' signature (at most 2.5 MB) and carried inside the SVG as a base64 `data:` image. A shape
+cover is a spec of at most 24 circles, rectangles and paths with `#RRGGBB` colours and numeric
+ranges, from the text model or the pattern drawer. `covers.ts` validates both and is the only code
+that writes SVG; path data may hold only commands and numbers. Covers are served with
+`Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:`.
 
 **A cover is drawn from the artwork itself.** The artwork of a set, album, song or phrase on its
 page and in the player has a button in its corner (`src/ui/CoverRedraw.tsx`, inside `SetCover`,
@@ -184,11 +193,14 @@ and album, a phrase and its meaning), never for text the app sends:
 | Any phrase or song they can read | The learner's own (`library_item_covers`, by user and id): in the `covers` of their packs (signed-in, by course), shown wherever the phrase or song is, only to them, on every device; kept across reseeds                                          |
 | Someone else's set or album      | None: it keeps its maker's cover (not found)                                                                                                                                                                                                        |
 
-The answer names a copy (`copy: {kind, id}`), and the app opens it. A copy must fit the kept caps
-before the day's cover is spent, and a cover nothing could wear is given back.
+The cover is drawn in the background like any other (above); where it goes is settled when it is
+asked for. A copy of one of Loro's is made at once, wearing Loro's cover until the new one is ready,
+and the first answer names it (`copy: {kind, id}`) so the app opens it while the cover is drawn. A
+copy must fit the kept caps before the day's cover is spent, and a cover nothing could wear is given
+back. Once ready, a cover goes on a set or album only while the learner still owns it.
 
 **Allowances** are counted per learner per UTC day in `library_usage` with one atomic upsert, before
-any provider is asked: Claude's phrase decks and notes (`LIMIT_PHRASES_DAILY`, default 30), covers
+any provider is asked: a model's phrase decks and notes (`LIMIT_PHRASES_DAILY`, default 30), covers
 (`LIMIT_COVER_DAILY`, 10, drawn patterns too) and songs (`LIMIT_SONG_DAILY`, 5, demos too). One
 account keeps at most `LIMIT_SETS_KEPT` (100) sets, `LIMIT_ALBUMS_KEPT` (30) albums and
 `LIMIT_SONGS_KEPT` (120) songs; a course's "My phrases" set, made by the first phrase added on its

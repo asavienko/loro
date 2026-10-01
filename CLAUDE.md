@@ -24,11 +24,13 @@ installs it before learner state loads. Product analytics and session replay go 
 (`apps/mobile/src/analytics`, on by default with an opt-out in Settings, never audio;
 [ADR-0011](docs/architecture/adr/0011-analytics-and-privacy.md)). Email-code sign-in, sharing
 (private/link/public, Community), progress sync and AI generation of phrase sets, covers and songs
-(within per-user daily limits) go through the API's `library` module; without `ANTHROPIC_API_KEY` or
-a music provider the server uses labelled fallbacks (phrase bank, drawn patterns, the set's phrases
-as lyrics, a "Demo sound" instrumental). Every sound is the server's: phrases play the clips of its
-ElevenLabs voices (`TTS_*`, one per language), and the app has no device voice; the list of
-languages comes from `GET /v1/library/languages` (plan
+(within per-user daily limits) go through the API's `library` module: DeepSeek on Fireworks writes
+(the same model through OpenRouter when it fails) and Muse Image draws covers, decks and covers in
+the background ([ADR-0015](docs/architecture/adr/0015-open-model-providers.md)); without
+`FIREWORKS_API_KEY`/`OPENROUTER_API_KEY` or a music provider the server uses labelled fallbacks
+(phrase bank, drawn patterns, the set's phrases as lyrics, a "Demo sound" instrumental). Every sound
+is the server's: phrases play the clips of its ElevenLabs voices (`TTS_*`, one per language), and
+the app has no device voice; the list of languages comes from `GET /v1/library/languages` (plan
 [108](plans/archive/2026-10-01/108-backend-only.md)). Progress stays on the device first
 (AsyncStorage native, browser storage web) as an append-only learner log with a pure state machine;
 FSRS runs in `packages/core-rs` through the `LoroCore` Expo module (`apps/mobile/modules/loro-core`,

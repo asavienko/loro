@@ -16,7 +16,7 @@ import {
 import type { Response } from 'express'
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
 import { OptionalAuthGuard, readerOf, type ReaderRequest } from './library.guard.js'
-import { DECK_WAIT_MS, LibraryService } from './library.service.js'
+import { LibraryService } from './library.service.js'
 
 /** Reading: anyone, with more for the signed-in reader (their own and saved items). */
 @Controller('library')
@@ -120,11 +120,22 @@ export class LibraryReadController {
 
   @Get('covers/:file')
   async cover(@Param('file') file: string, @Res() response: Response): Promise<void> {
+    if (file.endsWith('.json')) {
+      // Where a cover being drawn stands (plan 111): asked again until it is ready.
+      const state = await this.library.coverState(file)
+      response.setHeader('Cache-Control', 'no-store')
+      response.json(state)
+      return
+    }
     const svg = await this.library.cover(file)
     response.setHeader('Content-Type', 'image/svg+xml')
-    // Covers are immutable: a new cover gets a new id.
+    // Covers are immutable: a new cover gets a new id, and its SVG is written once, when it is ready.
     response.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
-    response.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'")
+    // An illustration travels inside as a data: image; nothing else may load.
+    response.setHeader(
+      'Content-Security-Policy',
+      "default-src 'none'; style-src 'unsafe-inline'; img-src data:",
+    )
     response.end(svg)
   }
 }
@@ -254,17 +265,24 @@ export class LibraryWriteController {
     return this.library.report(request.principal.userId, body)
   }
 
-  /** A deck, or `202 {status: 'writing'}` while Claude writes it: the app asks again, the same way. */
+  /** A deck written in the background (plan 111); the app polls `GET decks/:id`. */
+  @Post('decks')
+  @HttpCode(202)
+  startDeck(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    return this.library.startDeck(request.principal.userId, body)
+  }
+
+  @Get('decks/:id')
+  @Header('Cache-Control', 'no-store')
+  deck(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.library.deck(request.principal.userId, id)
+  }
+
+  /** A deck written while the request waits, for app builds from before `decks` (plan 111). */
   @Post('generate/phrases')
   @HttpCode(200)
-  async generatePhrases(
-    @Req() request: AuthenticatedRequest,
-    @Body() body: unknown,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const answer = await this.library.generatePhrases(request.principal.userId, body, DECK_WAIT_MS)
-    if ('status' in answer) res.status(202).setHeader('Retry-After', '1')
-    return answer
+  generatePhrases(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    return this.library.generatePhrases(request.principal.userId, body)
   }
 
   @Post('generate/notes')

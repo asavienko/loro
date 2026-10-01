@@ -195,6 +195,33 @@ ALTER TABLE library_sets ADD COLUMN IF NOT EXISTS inbox boolean NOT NULL DEFAULT
 CREATE UNIQUE INDEX IF NOT EXISTS library_sets_inbox ON library_sets(owner_id, target_lang) WHERE inbox;
 `
 
+/** Plan 111: the writer is named for what it is, not for one vendor; rows written before say `claude`. */
+export const LIBRARY_AI_LABELS_MIGRATION_SQL = `UPDATE library_covers SET provider = 'ai' WHERE provider = 'claude';
+UPDATE library_songs SET lyrics_by = 'ai' WHERE lyrics_by = 'claude';
+`
+
+/**
+ * Plan 111: a cover is drawn in the background. It is `rendering`, without SVG, until the image model
+ * (or a fallback) answers; then it is `ready`, or `failed` if the work itself broke.
+ */
+export const LIBRARY_COVER_JOBS_MIGRATION_SQL = `ALTER TABLE library_covers ALTER COLUMN svg DROP NOT NULL;
+ALTER TABLE library_covers ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'ready';
+`
+
+/**
+ * Plan 111: a deck of suggestions written in the background, read by the learner who asked while
+ * they wait, then cleared after a day.
+ */
+export const LIBRARY_DECK_JOBS_MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS library_deck_jobs (
+  id text PRIMARY KEY,
+  owner_id text NOT NULL,
+  status text NOT NULL,
+  result jsonb,
+  created_at bigint NOT NULL
+);
+CREATE INDEX IF NOT EXISTS library_deck_jobs_created ON library_deck_jobs(created_at);
+`
+
 /**
  * A learner's own cover for a phrase or a song (`kind`), shown only to them, wherever the phrase or
  * song is: Loro's, their own or someone else's. A set or album wears its cover itself (`cover_id`).

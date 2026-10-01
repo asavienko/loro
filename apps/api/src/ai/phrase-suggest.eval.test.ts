@@ -3,8 +3,11 @@ import * as content from '@loro/content'
 import { livePhraseSuggestEnabled, suggestPhrases } from './phrase-suggest.js'
 
 describe('phrase suggest eval corpus', () => {
-  it('keeps live traffic off unless an Anthropic key is configured', () => {
-    expect(livePhraseSuggestEnabled()).toBe(Boolean(process.env['ANTHROPIC_API_KEY']?.trim()))
+  it('keeps live traffic off unless a text model key is configured', () => {
+    expect(livePhraseSuggestEnabled()).toBe(
+      Boolean(process.env['FIREWORKS_API_KEY']?.trim()) ||
+        Boolean(process.env['OPENROUTER_API_KEY']?.trim()),
+    )
   })
 
   it('serves bundled pharmacy lines and stays silent on unknown topics', async () => {

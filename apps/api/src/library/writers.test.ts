@@ -1,16 +1,15 @@
-/** Plan 106: what the writers keep of Claude's answers, and their labelled fallbacks. */
-import { afterEach, describe, expect, it, vi } from 'vitest'
+/** Plans 106, 111: what the writers keep of the model's answers, and their labelled fallbacks. */
+import { afterEach, describe, expect, it } from 'vitest'
 import type { GeneratePhrasesRequest } from '@loro/core/api/library'
-import { AnthropicMessages } from '../integrations/anthropic/messages.js'
+import { ChatCompletions, FIREWORKS_CHAT_URL } from '../integrations/openai-compatible/chat.js'
 import {
   assembleLyrics,
   bankPhrases,
-  claudeLyrics,
-  claudeNotes,
-  claudePhrases,
+  aiLyrics,
+  aiNotes,
+  aiPhrases,
   cleanImage,
   resetWriter,
-  writer,
 } from './writers.js'
 
 const request = (
@@ -32,21 +31,32 @@ const notes = {
   pronunciation: { title: 'A sound', text: 'Watch the r.', ipa: 'ˈo.la', respelling: 'OH-lah' },
 }
 
-/** A Claude client whose one answer is `value`. */
-function answering(value: unknown): AnthropicMessages {
-  const send = () =>
-    Promise.resolve(
+/** A text model whose one answer is `value`, as a chat-completions provider sends it. */
+function answering(
+  value: unknown,
+  seen?: (body: Record<string, unknown>) => void,
+): ChatCompletions {
+  const send = (_url: string | URL | Request, init?: RequestInit) => {
+    seen?.(JSON.parse(init?.body as string) as Record<string, unknown>)
+    return Promise.resolve(
       new Response(
         JSON.stringify({
-          stop_reason: 'end_turn',
-          content: [{ type: 'text', text: JSON.stringify(value) }],
-          usage: { input_tokens: 1, output_tokens: 1 },
+          choices: [
+            {
+              finish_reason: 'stop',
+              message: { role: 'assistant', content: JSON.stringify(value) },
+            },
+          ],
+          usage: { prompt_tokens: 1, completion_tokens: 1 },
         }),
         { status: 200 },
       ),
     )
-  return new AnthropicMessages(
+  }
+  return new ChatCompletions(
     {
+      name: 'test',
+      url: FIREWORKS_CHAT_URL,
       apiKey: 'test',
       model: 'test',
       timeoutMs: 1000,
@@ -93,7 +103,7 @@ describe('the phrase bank', () => {
   })
 })
 
-describe('Claude’s phrases', () => {
+describe('The model’s phrases', () => {
   it('keeps whole, new, short phrases with pictures the app can draw', async () => {
     const ai = answering({
       phrases: [
@@ -115,7 +125,7 @@ describe('Claude’s phrases', () => {
         { target: 'La llave, por favor', native: 'The key, please', image: [], notes },
       ],
     })
-    const phrases = await claudePhrases(ai, request('hotel'))
+    const phrases = await aiPhrases(ai, request('hotel'))
     expect(phrases.map((p) => p.target)).toEqual([
       '¿Tienen habitaciones libres?',
       'La llave, por favor',
@@ -148,7 +158,7 @@ describe('lyrics', () => {
     expect(assembleLyrics([])).toEqual([])
   })
 
-  it('keeps Claude’s claim that a line sings a phrase only when it does', async () => {
+  it('keeps the model’s claim that a line sings a phrase only when it does', async () => {
     const ai = answering({
       sections: [
         {
@@ -161,7 +171,7 @@ describe('lyrics', () => {
         { name: 'chorus', lines: [{ text: 'dos', meaning: 'two', phraseId: 'p-01' }] },
       ],
     })
-    const sections = await claudeLyrics(ai, {
+    const sections = await aiLyrics(ai, {
       targetLang: 'es-ES',
       nativeLang: 'en-GB',
       title: 'T',
@@ -172,9 +182,9 @@ describe('lyrics', () => {
   })
 })
 
-describe('Claude’s notes for a phrase the learner wrote', () => {
+describe('The model’s notes for a phrase the learner wrote', () => {
   it('keeps whole notes and a picture the app can draw', async () => {
-    const written = await claudeNotes(answering({ image: ['nope', 'key'], notes }), {
+    const written = await aiNotes(answering({ image: ['nope', 'key'], notes }), {
       target: 'La llave, por favor',
       native: 'The key, please',
       targetLang: 'es-ES',
@@ -185,156 +195,36 @@ describe('Claude’s notes for a phrase the learner wrote', () => {
   })
 
   it('asks for a mnemonic in the learner’s language that invents nothing', async () => {
-    let body: { system: string; output_config: { format: { schema: unknown } } } | undefined
-    const ai = new AnthropicMessages(
+    let body: Record<string, unknown> | undefined
+    await aiNotes(
+      answering({ image: ['key'], notes }, (sent) => {
+        body = sent
+      }),
       {
-        apiKey: 'test',
-        model: 'test',
-        timeoutMs: 1000,
-        maxTokens: 100,
-        maxRequestBytes: 100_000,
-        maxResponseBytes: 100_000,
-        maxConcurrentRequests: 1,
-      },
-      (_url, init) => {
-        body = JSON.parse(init?.body as string) as typeof body
-        return Promise.resolve(
-          new Response(
-            JSON.stringify({
-              stop_reason: 'end_turn',
-              content: [{ type: 'text', text: JSON.stringify({ image: ['key'], notes }) }],
-              usage: { input_tokens: 1, output_tokens: 1 },
-            }),
-          ),
-        )
+        target: 'Един билет, моля',
+        native: 'Один билет, пожалуйста',
+        targetLang: 'bg-BG',
+        nativeLang: 'ru-RU',
       },
     )
-    await claudeNotes(ai, {
-      target: 'Един билет, моля',
-      native: 'Один билет, пожалуйста',
-      targetLang: 'bg-BG',
-      nativeLang: 'ru-RU',
-    })
-    expect(body?.system).toContain('`mnemonic`: a mnemonic')
-    expect(body?.system).toContain('a Russian word it sounds like')
-    expect(body?.system).toContain('Never invent an etymology')
-    expect(JSON.stringify(body?.output_config.format.schema)).toContain(
+    const system = (body?.['messages'] as { role: string; content: string }[])[0]!
+    expect(system.role).toBe('system')
+    expect(system.content).toContain('`mnemonic`: a mnemonic')
+    expect(system.content).toContain('a Russian word it sounds like')
+    expect(system.content).toContain('Never invent an etymology')
+    expect(JSON.stringify(body?.['response_format'])).toContain(
       'A mnemonic for remembering this phrase',
     )
   })
 
   it('refuses notes that are not whole', async () => {
     await expect(
-      claudeNotes(answering({ image: ['key'], notes: { mnemonic: notes.mnemonic } }), {
+      aiNotes(answering({ image: ['key'], notes: { mnemonic: notes.mnemonic } }), {
         target: 'x',
         native: 'y',
         targetLang: 'es-ES',
         nativeLang: 'en-GB',
       }),
     ).rejects.toThrow()
-  })
-})
-
-describe('the live writer, as configured by the environment', () => {
-  /** What Claude answers over HTTP: the JSON after a thinking block, as a model that thinks sends it. */
-  const live = (value: unknown) =>
-    vi.fn<typeof fetch>().mockImplementation(() =>
-      Promise.resolve(
-        Response.json({
-          stop_reason: 'end_turn',
-          content: [
-            { type: 'thinking', thinking: '', signature: 'sig' },
-            { type: 'text', text: JSON.stringify(value) },
-          ],
-          usage: { input_tokens: 900, output_tokens: 400 },
-        }),
-      ),
-    )
-  const sent = (send: ReturnType<typeof live>) => {
-    const [url, init] = send.mock.calls[0]!
-    return {
-      url,
-      headers: init!.headers as Record<string, string>,
-      body: JSON.parse(init!.body as string) as Record<string, unknown>,
-    }
-  }
-
-  afterEach(() => {
-    vi.unstubAllEnvs()
-    vi.unstubAllGlobals()
-  })
-
-  it('writes nothing without ANTHROPIC_API_KEY', () => {
-    vi.stubEnv('ANTHROPIC_API_KEY', '  ')
-    resetWriter()
-    expect(writer()).toBeNull()
-  })
-
-  it('asks Claude Sonnet 5 at low effort for a structured deck, and reads it past the thinking', async () => {
-    vi.stubEnv('ANTHROPIC_API_KEY', 'sk-ant-test')
-    vi.stubEnv('AI_MODEL_GENERATE', '')
-    vi.stubEnv('AI_EFFORT_GENERATE', undefined)
-    const send = live({
-      phrases: [
-        {
-          target: 'Имате ли свободни стаи?',
-          native: 'Есть свободные номера?',
-          image: ['key'],
-          notes,
-        },
-      ],
-    })
-    vi.stubGlobal('fetch', send)
-    resetWriter()
-    const phrases = await claudePhrases(
-      writer()!,
-      request('гостиница', { targetLang: 'bg-BG', nativeLang: 'ru-RU', count: 6 }),
-    )
-    expect(phrases.map((p) => p.target)).toEqual(['Имате ли свободни стаи?'])
-    const { url, headers, body } = sent(send)
-    expect(url).toBe('https://api.anthropic.com/v1/messages')
-    expect(headers).toMatchObject({ 'x-api-key': 'sk-ant-test', 'anthropic-version': '2023-06-01' })
-    expect(body).toMatchObject({
-      model: 'claude-sonnet-5',
-      max_tokens: 16_000,
-      stream: false,
-      output_config: { effort: 'low', format: { type: 'json_schema' } },
-    })
-    expect(body).not.toHaveProperty('thinking')
-    expect(body['system']).toContain(
-      'Write up to 6 phrases in Bulgarian, each with its meaning in Russian.',
-    )
-    const user = (body['messages'] as { role: string; content: string }[])[0]!
-    expect(JSON.parse(user.content)).toEqual({ mode: 'topic', input: 'гостиница', avoid: [] })
-  })
-
-  it('takes the model and effort from AI_MODEL_GENERATE and AI_EFFORT_GENERATE; an empty effort is left out', async () => {
-    vi.stubEnv('ANTHROPIC_API_KEY', 'sk-ant-test')
-    vi.stubEnv('AI_MODEL_GENERATE', 'claude-haiku-4-5')
-    vi.stubEnv('AI_EFFORT_GENERATE', '')
-    const send = live({ image: ['key'], notes })
-    vi.stubGlobal('fetch', send)
-    resetWriter()
-    await claudeNotes(writer()!, {
-      target: 'La llave, por favor',
-      native: 'The key, please',
-      targetLang: 'es-ES',
-      nativeLang: 'en-GB',
-    })
-    const { body } = sent(send)
-    expect(body['model']).toBe('claude-haiku-4-5')
-    expect(body['output_config']).not.toHaveProperty('effort')
-  })
-
-  it('fails, for the fallback to answer, when the key is refused or the model unknown', async () => {
-    vi.stubEnv('ANTHROPIC_API_KEY', 'sk-ant-wrong')
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>().mockResolvedValue(new Response('{}', { status: 401 })),
-    )
-    resetWriter()
-    await expect(claudePhrases(writer()!, request('hotel'))).rejects.toMatchObject({
-      code: 'configuration',
-    })
   })
 })

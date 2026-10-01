@@ -264,7 +264,7 @@ function RulesNotes({ phraseId }: { phraseId: string }) {
           {c.phrase.notesFailed}
         </Txt>
       )}
-      {phrase.own && account.usage?.writers.phrases === 'claude' && (
+      {phrase.own && account.usage?.writers.phrases === 'ai' && (
         <Button
           variant="tonal"
           icon={status === 'writing' ? 'hourglass_empty' : 'auto_awesome'}

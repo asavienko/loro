@@ -1,11 +1,12 @@
 /**
- * Covers (plan 106). A cover is a small spec of shapes and colours, never markup: Claude writes the
- * spec, or the server draws one from the title, and only `renderCover` turns it into SVG. Nothing a
- * model or a learner writes reaches the SVG as text, so a cover cannot carry a script, a link, an
- * image or words.
+ * Covers (plans 106, 111). A cover is an SVG written only here: an illustration the image model drew,
+ * carried inside as checked image bytes (`renderImageCover`), or a small spec of shapes and colours the
+ * text model wrote or the server drew from the title (`renderCover`). Nothing a model or a learner
+ * writes reaches the SVG as text, so a cover cannot carry a script, a link or markup.
  */
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
+import type { GeneratedImage } from '../integrations/openrouter/images.js'
 
 export const COVER_SIZE = 512
 const MAX_SHAPES = 24
@@ -68,7 +69,7 @@ export const CoverSpecSchema = z.object({
 export type CoverSpec = z.infer<typeof CoverSpecSchema>
 type Shape = CoverSpec['shapes'][number]
 
-/** The JSON schema Claude answers in; `CoverSpecSchema` then checks the ranges. */
+/** The JSON schema the model answers in; `CoverSpecSchema` then checks the ranges. */
 export const COVER_JSON_SCHEMA: Record<string, unknown> = {
   type: 'object',
   additionalProperties: false,
@@ -121,7 +122,7 @@ export const COVER_JSON_SCHEMA: Record<string, unknown> = {
 }
 
 /**
- * Claude's answer as a spec: each shape keeps only its own kind's fields, and a shape out of range
+ * The model's answer as a spec: each shape keeps only its own kind's fields, and a shape out of range
  * is dropped rather than failing the cover. Throws when nothing drawable is left.
  */
 export function readCoverSpec(value: unknown): CoverSpec {
@@ -190,6 +191,47 @@ export function renderCover(spec: CoverSpec): string {
     `<g clip-path="url(#${id}-c)">${parsed.shapes.map(shapeSvg).join('')}</g>`,
     '</svg>',
   ].join('')
+}
+
+/**
+ * An illustration as a cover: its bytes, base64, in an `image` the size of the canvas. The type comes
+ * from a closed set the transport matched against the bytes' signature, and base64 has no quote or
+ * angle bracket, so nothing in the picture can become markup.
+ */
+export function renderImageCover(image: GeneratedImage): string {
+  const type = z.enum(['image/png', 'image/jpeg', 'image/webp']).parse(image.contentType)
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${COVER_SIZE} ${COVER_SIZE}" width="${COVER_SIZE}" height="${COVER_SIZE}">`,
+    `<image width="${COVER_SIZE}" height="${COVER_SIZE}" preserveAspectRatio="xMidYMid slice" href="data:${type};base64,${image.bytes.toString('base64')}"/>`,
+    '</svg>',
+  ].join('')
+}
+
+/**
+ * What the image model is asked to draw (LIB-04): a flat illustration without words. The title and
+ * description are the learner's, bounded by the request schema; the most they can do is change the
+ * picture, which the provider moderates and the learner can draw again.
+ */
+/** What the image model is told a cover is for; a phrase's cover pictures what the phrase says. */
+const IMAGE_SUBJECT = {
+  set: 'a set of everyday phrases',
+  album: 'an album of songs',
+  song: 'a song',
+  phrase: 'one spoken phrase',
+} as const
+
+export function coverImagePrompt(input: {
+  kind: 'set' | 'album' | 'song' | 'phrase'
+  title: string
+  description?: string | undefined
+}): string {
+  const about = input.description ? `, about: ${input.description}` : ''
+  return [
+    'Square cover illustration for a language-learning app.',
+    'Flat, hand-drawn style: simple bold shapes, warm colours, a pale plain background, legible as a small thumbnail.',
+    'Absolutely no text, letters, numbers, words, signs, logos or watermarks. Not a photograph; no realistic faces.',
+    `Subject: ${IMAGE_SUBJECT[input.kind]} titled "${input.title}"${about}.`,
+  ].join('\n')
 }
 
 // ---------- drawn by the server ----------
@@ -338,7 +380,7 @@ export function patternCover(seed: string): CoverSpec {
   }
 }
 
-/** The instructions for Claude's cover, which never contain the learner's text. */
+/** The instructions for the model's cover, which never contain the learner's text. */
 export const COVER_SYSTEM_PROMPT = [
   'You design square cover art for Loro, an app that teaches languages with short spoken phrases and songs.',
   `The canvas is ${COVER_SIZE}×${COVER_SIZE}. Answer with a spec of at most ${MAX_SHAPES} shapes over a two-colour linear gradient:`,
