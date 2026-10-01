@@ -15,6 +15,7 @@ at `e36cc758`.
 | [Q-23](#q-23) | Who reviews the course text in each language, and when?           | open     | Product + content | Calling any course content reviewed |
 | [Q-24](#q-24) | Which desired retention schedules reviews: the core's 50% or 90%? | open     | Product           | The review-date policy              |
 | [Q-25](#q-25) | May the frequency and CEFR lists behind the syllabus be used?     | open     | Product + content | The syllabus vocabulary bands       |
+| [Q-26](#q-26) | Is the American English course written, or adapted from British?  | open     | Product           | Plan 112 batches for en-US          |
 
 <a id="q-08"></a>
 
@@ -117,11 +118,14 @@ Czech translations of everything else, the Polish and Czech UI copy and the API'
 rules, all written by AI (Claude Sonnet 5.5) on 2026-10-02. Needs a reviewer per language and a rule
 for which content may be shown as reviewed.
 
-**Proposed rule (plan [112](../../plans/112-course-content-at-scale.md), 2026-10-01):** verdicts
-live in `packages/content/v2/reviews/<lang>.jsonl`, tied to a hash of the content they checked. Each
-course and level is sampled (5% of each batch, at least 60 phrases, stratified by grammar and
-topic); a batch passes at 3% or fewer critical errors, otherwise its topic is fully reviewed or
-written again. A set shows as reviewed only when every phrase in it is. Reviewers are still needed.
+**Proposed rule (plan [112](../../plans/112-course-content-at-scale.md), revised 2026-10-02):**
+verdicts live in `packages/content/v2/reviews/<course>.jsonl`, tied to a hash of the content they
+checked and to the language checked (the target or an interface language). Each batch is sampled (60
+phrases under 1,200, 5% above, stratified by grammar and topic, plus every judge-flagged or
+model-IPA phrase), translations included; a batch passes at 5% or fewer critical errors per
+language, otherwise its topic is fully reviewed or regenerated with a recorded reason. A set shows
+as reviewed for a language only when every phrase in it is. Reviewers are still needed: phase 1 of
+plan 112 is blocked until one reader per pilot language is named.
 
 <a id="q-24"></a>
 
@@ -145,3 +149,14 @@ SUBTLEX, the Russian National Corpus frequency dictionary, and the Bulgarian, Po
 national corpora's lists. Oxford 3000/5000 and the English Vocabulary Profile are proprietary and
 not used. Needs: each source's licence checked for derived, committed bands, and a fallback for
 Bulgarian, which has the weakest public CEFR inventories.
+
+<a id="q-26"></a>
+
+## Q-26 · Is the American English course written, or adapted from British?
+
+Plan [112](../../plans/112-course-content-at-scale.md) writes seven courses, two of them English.
+Writing en-US from scratch costs a seventh of the budget and lets the two courses drift apart;
+adapting it from en-GB (a variety stage: spelling, vocabulary, present perfect usage, idiom) is a
+small call per set, keeps the courses aligned phrase for phrase (an en-GB phrase and its en-US twin
+could even share a set id suffix), but risks British phrasing with American spelling where the
+adapter is lazy. The owner decides before the first en-US batch; until then en-US has no batch.
