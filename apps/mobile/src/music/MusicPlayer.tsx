@@ -6,6 +6,7 @@ import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-au
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { apiUrl, unreachable } from '@shared/api/client';
 import { fetchSong, type Song } from '@shared/api/library';
+import { onSessionChange, sessionState } from '@shared/api/session';
 import { useLatest } from '@shared/lib/useLatest';
 import { clock } from '@shared/state/clock';
 import type { Album } from '@shared/content';
@@ -196,6 +197,35 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     } else actions.pause();
   }, [state.player.status, status.playing, player, actions]);
 
+  // Another account (or none): the previous one's songs, private ones included, stop playing and
+  // leave the mini player and the lock screen, and its songs being made are no longer asked after.
+  const stopAll = useCallback(() => {
+    loads.current++;
+    wantsPlay.current = false;
+    player.pause();
+    try {
+      player.clearLockScreenControls();
+    } catch {
+      // Nothing was shown.
+    }
+    setQueue([]);
+    setAlbum(null);
+    setIndex(0);
+    setSongInFront(false);
+  }, [player]);
+  useEffect(() => {
+    let user = sessionState().account?.userId ?? null;
+    return onSessionChange((next) => {
+      if (next.status === 'loading') return;
+      const now = next.status === 'signedIn' ? (next.account?.userId ?? null) : null;
+      if (now === user) return;
+      user = now;
+      stopAll();
+      asking.current.clear();
+      setWatched([]);
+    });
+  }, [stopAll]);
+
   const value = useMemo<MusicValue>(
     () => ({
       album,
@@ -228,22 +258,9 @@ export function MusicProvider({ children }: { children: ReactNode }) {
         asking.current.delete(song.id);
         setWatched((list) => (list.some((w) => w.song.id === song.id) ? list : [...list, { song, album: of, since: clock.now() }]));
       },
-      stop: () => {
-        loads.current++;
-        wantsPlay.current = false;
-        player.pause();
-        try {
-          player.clearLockScreenControls();
-        } catch {
-          // Nothing was shown.
-        }
-        setQueue([]);
-        setAlbum(null);
-        setIndex(0);
-        setSongInFront(false);
-      },
+      stop: stopAll,
     }),
-    [songInFront, album, queue, index, status.playing, status.currentTime, status.duration, status.isBuffering, playAlbum, step, player, actions, state.player.status],
+    [songInFront, album, queue, index, status.playing, status.currentTime, status.duration, status.isBuffering, playAlbum, step, player, actions, state.player.status, stopAll],
   );
 
   return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;
