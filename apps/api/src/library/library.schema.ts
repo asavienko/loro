@@ -207,3 +207,17 @@ UPDATE library_songs SET lyrics_by = 'ai' WHERE lyrics_by = 'claude';
 export const LIBRARY_COVER_JOBS_MIGRATION_SQL = `ALTER TABLE library_covers ALTER COLUMN svg DROP NOT NULL;
 ALTER TABLE library_covers ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'ready';
 `
+
+/**
+ * Plan 111: a deck of suggestions written in the background, read by the learner who asked while
+ * they wait, then cleared after a day.
+ */
+export const LIBRARY_DECK_JOBS_MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS library_deck_jobs (
+  id text PRIMARY KEY,
+  owner_id text NOT NULL,
+  status text NOT NULL,
+  result jsonb,
+  created_at bigint NOT NULL
+);
+CREATE INDEX IF NOT EXISTS library_deck_jobs_created ON library_deck_jobs(created_at);
+`

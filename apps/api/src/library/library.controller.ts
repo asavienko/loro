@@ -265,6 +265,19 @@ export class LibraryWriteController {
     return this.library.report(request.principal.userId, body)
   }
 
+  /** A deck written in the background (plan 111); the app polls `GET decks/:id`. */
+  @Post('decks')
+  @HttpCode(202)
+  startDeck(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    return this.library.startDeck(request.principal.userId, body)
+  }
+
+  @Get('decks/:id')
+  @Header('Cache-Control', 'no-store')
+  deck(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.library.deck(request.principal.userId, id)
+  }
+
   @Post('generate/phrases')
   @HttpCode(200)
   generatePhrases(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
