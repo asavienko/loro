@@ -1,4 +1,4 @@
-// A memory hint for a phrase the learner typed (plan 105), from what is true of it: a word that
+// A mnemonic for a phrase the learner typed (plan 105), from what is true of it: a word that
 // sounds like one in the learner's own meaning, a word it shares with a phrase of Loro's, or else
 // its shape — the pieces it breaks into, or the beats of its longest word. The first that fits.
 import { KNOWN_PHRASES, type LanguageCode } from './content.js'

@@ -112,7 +112,8 @@ function notesBrief(targetLang: V2Language, nativeLang: V2Language): string[] {
     'Each phrase also has a picture and three notes:',
     `- \`image\`: one to three icon names that picture what the phrase is about, the main subject first, chosen only from: ${V2_ICON_NAMES.join(', ')}.`,
     `- \`notes\`, written in ${native}, each with a \`title\` of at most five words and a \`text\` of one or two short sentences:`,
-    '  - `mnemonic`: a memory hook for the phrase or its key word: a sound-alike, a picture, a contrast, a word family. It must be true.',
+    `  - \`mnemonic\`: a mnemonic, the one hook that makes this phrase stick for a ${native} speaker. Hang it on the phrase's key word or its sound: a ${native} word it sounds like, a vivid picture or tiny scene that joins that sound to the meaning, a word the learner already knows that shares it, or a pattern from ${native}. Where the key word is the same in ${native}, hook the part that differs. The title is the hook itself. Concrete and memorable: never a definition, usage tip, grammar rule or translation.`,
+    '    Never invent an etymology, a history or a fact. A sound-alike or a picture claims nothing, so use one when unsure.',
     '  - `grammar`: the one rule the phrase shows, accurately.',
     `  - \`pronunciation\`: \`ipa\` is the whole phrase in IPA, in square brackets with stress marks, as ${target} is spoken; \`respelling\` spells how it sounds for a reader of ${native}, the stressed syllable in capitals; \`text\` names the one sound to watch.`,
     `- Quote ${target} words in «guillemets».`,
@@ -170,7 +171,11 @@ const PHRASES_JSON_SCHEMA: Record<string, unknown> = {
             additionalProperties: false,
             required: ['mnemonic', 'grammar', 'pronunciation'],
             properties: {
-              mnemonic: NOTE_JSON,
+              mnemonic: {
+                ...NOTE_JSON,
+                description:
+                  'A mnemonic for remembering this phrase: a sound-alike, picture, scene, known word or pattern. Never an invented fact.',
+              },
               grammar: NOTE_JSON,
               pronunciation: {
                 type: 'object',
