@@ -1,6 +1,9 @@
 [
   { "code": "en-GB", "flag": "🇬🇧", "uiLocale": "en", "canTarget": true },
+  { "code": "en-US", "flag": "🇺🇸", "uiLocale": "en", "canTarget": true },
   { "code": "es-ES", "flag": "🇪🇸", "uiLocale": null, "canTarget": true },
   { "code": "bg-BG", "flag": "🇧🇬", "uiLocale": "bg", "canTarget": true },
-  { "code": "ru-RU", "flag": "🇷🇺", "uiLocale": "ru", "canTarget": true }
+  { "code": "ru-RU", "flag": "🇷🇺", "uiLocale": "ru", "canTarget": true },
+  { "code": "pl-PL", "flag": "🇵🇱", "uiLocale": "pl", "canTarget": true },
+  { "code": "cs-CZ", "flag": "🇨🇿", "uiLocale": "cs", "canTarget": true }
 ]

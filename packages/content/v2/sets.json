@@ -5,7 +5,9 @@
     "subtitle": {
       "en": "Ordering coffee at the counter",
       "bg": "Поръчка на кафе на бара",
-      "ru": "Заказ кофе у стойки"
+      "ru": "Заказ кофе у стойки",
+      "pl": "Zamawianie kawy przy barze",
+      "cs": "Objednávka kávy u pultu"
     },
     "topicId": "eating-out",
     "level": "A1",
@@ -19,7 +21,9 @@
     "subtitle": {
       "en": "Ordering and sharing at the bar",
       "bg": "Поръчка и споделяне в бара",
-      "ru": "Заказ и угощение в баре"
+      "ru": "Заказ и угощение в баре",
+      "pl": "Zamawianie i dzielenie się przy barze",
+      "cs": "Objednávání a sdílení u baru"
     },
     "topicId": "eating-out",
     "level": "A1",
@@ -33,7 +37,9 @@
     "subtitle": {
       "en": "Getting around the city",
       "bg": "Придвижване из града",
-      "ru": "Передвижение по городу"
+      "ru": "Передвижение по городу",
+      "pl": "Poruszanie się po mieście",
+      "cs": "Cestování po městě"
     },
     "topicId": "getting-around",
     "level": "A1",
@@ -47,7 +53,9 @@
     "subtitle": {
       "en": "Buying at the market stall",
       "bg": "Покупки на пазара",
-      "ru": "Покупки на рынке"
+      "ru": "Покупки на рынке",
+      "pl": "Zakupy na straganie",
+      "cs": "Nákup na tržnici"
     },
     "topicId": "everyday",
     "level": "A1",
@@ -61,7 +69,9 @@
     "subtitle": {
       "en": "Getting home by taxi",
       "bg": "С такси до вкъщи",
-      "ru": "На такси домой"
+      "ru": "На такси домой",
+      "pl": "Powrót do domu taksówką",
+      "cs": "Taxíkem domů"
     },
     "topicId": "getting-around",
     "level": "A2",
@@ -75,7 +85,9 @@
     "subtitle": {
       "en": "Talking after the meal",
       "bg": "Разговор след ядене",
-      "ru": "Разговор после еды"
+      "ru": "Разговор после еды",
+      "pl": "Rozmowa po posiłku",
+      "cs": "Povídání po jídle"
     },
     "topicId": "everyday",
     "level": "A2",
@@ -89,7 +101,9 @@
     "subtitle": {
       "en": "Coffee and a bite",
       "bg": "Кафе и нещо сладко",
-      "ru": "Кофе и что-нибудь к нему"
+      "ru": "Кофе и что-нибудь к нему",
+      "pl": "Kawa i przekąska",
+      "cs": "Káva a něco k ní"
     },
     "topicId": "eating-out",
     "level": "A1",
@@ -103,7 +117,9 @@
     "subtitle": {
       "en": "Around town",
       "bg": "Из града",
-      "ru": "По городу"
+      "ru": "По городу",
+      "pl": "W mieście",
+      "cs": "Po městě"
     },
     "topicId": "getting-around",
     "level": "A1",
@@ -114,7 +130,13 @@
   {
     "id": "set-bg-pazar",
     "title": "На пазара",
-    "subtitle": { "en": "At the market", "bg": "На пазара", "ru": "На рынке" },
+    "subtitle": {
+      "en": "At the market",
+      "bg": "На пазара",
+      "ru": "На рынке",
+      "pl": "Na targu",
+      "cs": "Na trhu"
+    },
     "topicId": "everyday",
     "level": "A1",
     "coverIcon": "shopping_basket",
@@ -124,7 +146,13 @@
   {
     "id": "set-bg-zapoznanstvo",
     "title": "Запознанство",
-    "subtitle": { "en": "Meeting people", "bg": "Запознанство", "ru": "Знакомство" },
+    "subtitle": {
+      "en": "Meeting people",
+      "bg": "Запознанство",
+      "ru": "Знакомство",
+      "pl": "Poznawanie ludzi",
+      "cs": "Seznamování"
+    },
     "topicId": "everyday",
     "level": "A1",
     "coverIcon": "handshake",
@@ -134,7 +162,13 @@
   {
     "id": "set-bg-restorant",
     "title": "В ресторанта",
-    "subtitle": { "en": "At the restaurant", "bg": "В ресторанта", "ru": "В ресторане" },
+    "subtitle": {
+      "en": "At the restaurant",
+      "bg": "В ресторанта",
+      "ru": "В ресторане",
+      "pl": "W restauracji",
+      "cs": "V restauraci"
+    },
     "topicId": "eating-out",
     "level": "A2",
     "coverIcon": "table_restaurant",
@@ -147,7 +181,9 @@
     "subtitle": {
       "en": "Ordering coffee or tea at the counter",
       "bg": "Поръчка на кафе или чай на бара",
-      "ru": "Заказ кофе или чая у стойки"
+      "ru": "Заказ кофе или чая у стойки",
+      "pl": "Zamawianie kawy lub herbaty przy ladzie",
+      "cs": "Objednávka kávy nebo čaje u pultu"
     },
     "topicId": "eating-out",
     "level": "A1",
@@ -161,7 +197,9 @@
     "subtitle": {
       "en": "Drinks, rounds and food at a pub",
       "bg": "Питиета, черпене и храна в пъба",
-      "ru": "Напитки, угощение и еда в пабе"
+      "ru": "Напитки, угощение и еда в пабе",
+      "pl": "Drinki, kolejki i jedzenie w pubie",
+      "cs": "Pití, kola a jídlo v hospodě"
     },
     "topicId": "eating-out",
     "level": "A2",
@@ -175,7 +213,9 @@
     "subtitle": {
       "en": "Tickets, platforms, buses and changes",
       "bg": "Билети, перони, автобуси и прехвърляния",
-      "ru": "Билеты, платформы, автобусы и пересадки"
+      "ru": "Билеты, платформы, автобусы и пересадки",
+      "pl": "Bilety, perony, autobusy i przesiadki",
+      "cs": "Jízdenky, nástupiště, autobusy a přestupy"
     },
     "topicId": "getting-around",
     "level": "A1",
@@ -189,7 +229,9 @@
     "subtitle": {
       "en": "Prices, bags and paying at the till",
       "bg": "Цени, торбички и плащане на касата",
-      "ru": "Цены, пакеты и оплата на кассе"
+      "ru": "Цены, пакеты и оплата на кассе",
+      "pl": "Ceny, torby i płacenie przy kasie",
+      "cs": "Ceny, tašky a placení u pokladny"
     },
     "topicId": "everyday",
     "level": "A1",
@@ -203,7 +245,9 @@
     "subtitle": {
       "en": "Greetings, introductions and chat about the weather",
       "bg": "Поздрави, запознанство и разговор за времето",
-      "ru": "Приветствия, знакомство и разговор о погоде"
+      "ru": "Приветствия, знакомство и разговор о погоде",
+      "pl": "Powitania, przedstawianie się i rozmowa o pogodzie",
+      "cs": "Pozdravy, představování a řeči o počasí"
     },
     "topicId": "everyday",
     "level": "A1",
@@ -217,7 +261,9 @@
     "subtitle": {
       "en": "Ordering coffee or tea and asking for the bill",
       "bg": "Поръчка на кафе или чай и искане на сметката",
-      "ru": "Заказываем кофе или чай и просим счёт"
+      "ru": "Заказываем кофе или чай и просим счёт",
+      "pl": "Zamawianie kawy lub herbaty i prośba o rachunek",
+      "cs": "Objednávka kávy nebo čaje a žádost o účet"
     },
     "topicId": "eating-out",
     "level": "A1",
@@ -231,7 +277,9 @@
     "subtitle": {
       "en": "The metro, buses and finding the right stop",
       "bg": "Метро, автобуси и правилната спирка",
-      "ru": "Метро, автобусы и нужная остановка"
+      "ru": "Метро, автобусы и нужная остановка",
+      "pl": "Metro, autobusy i szukanie właściwego przystanku",
+      "cs": "Metro, autobusy a správná zastávka"
     },
     "topicId": "getting-around",
     "level": "A1",
@@ -245,7 +293,9 @@
     "subtitle": {
       "en": "Prices, kilos and paying at the market",
       "bg": "Цени, килограми и плащане на пазара",
-      "ru": "Цены, килограммы и оплата на рынке"
+      "ru": "Цены, килограммы и оплата на рынке",
+      "pl": "Ceny, kilogramy i płacenie na targu",
+      "cs": "Ceny, kila a placení na trhu"
     },
     "topicId": "everyday",
     "level": "A1",
@@ -259,7 +309,9 @@
     "subtitle": {
       "en": "Introducing yourself and meeting someone new",
       "bg": "Представяне и първи запознанства",
-      "ru": "Представляемся и знакомимся"
+      "ru": "Представляемся и знакомимся",
+      "pl": "Przedstawianie się i poznawanie kogoś nowego",
+      "cs": "Představení se a seznámení s někým novým"
     },
     "topicId": "everyday",
     "level": "A1",
@@ -273,12 +325,254 @@
     "subtitle": {
       "en": "A table, a recommendation and a compliment to the kitchen",
       "bg": "Маса, препоръка и похвала към кухнята",
-      "ru": "Столик, совет официанта и комплимент кухне"
+      "ru": "Столик, совет официанта и комплимент кухне",
+      "pl": "Stolik, polecenie dania i komplement dla kuchni",
+      "cs": "Stůl, doporučení a pochvala kuchyni"
     },
     "topicId": "eating-out",
     "level": "A2",
     "coverIcon": "table_restaurant",
     "targetLang": "ru-RU",
     "phraseIds": ["ru-restoran-01", "ru-restoran-02", "ru-restoran-03", "ru-restoran-04"]
+  },
+  {
+    "id": "set-pl-kawiarnia",
+    "title": "W kawiarni",
+    "subtitle": {
+      "en": "Ordering coffee or tea and asking for the bill",
+      "bg": "Поръчка на кафе или чай и искане на сметката",
+      "ru": "Заказываем кофе или чай и просим счёт",
+      "pl": "Zamawiamy kawę lub herbatę i prosimy o rachunek",
+      "cs": "Objednáváme kávu nebo čaj a žádáme o účet"
+    },
+    "topicId": "eating-out",
+    "level": "A1",
+    "coverIcon": "coffee",
+    "targetLang": "pl-PL",
+    "phraseIds": ["pl-kawiarnia-01", "pl-kawiarnia-02", "pl-kawiarnia-03", "pl-kawiarnia-04"]
+  },
+  {
+    "id": "set-pl-miasto",
+    "title": "W mieście",
+    "subtitle": {
+      "en": "Buses, tickets and finding the right stop",
+      "bg": "Автобуси, билети и правилната спирка",
+      "ru": "Автобусы, билеты и нужная остановка",
+      "pl": "Autobusy, bilety i właściwy przystanek",
+      "cs": "Autobusy, jízdenky a správná zastávka"
+    },
+    "topicId": "getting-around",
+    "level": "A1",
+    "coverIcon": "directions_bus",
+    "targetLang": "pl-PL",
+    "phraseIds": ["pl-miasto-01", "pl-miasto-02", "pl-miasto-03", "pl-miasto-04"]
+  },
+  {
+    "id": "set-pl-targ",
+    "title": "Na targu",
+    "subtitle": {
+      "en": "Prices, kilos and asking for something cheaper",
+      "bg": "Цени, килограми и по-евтино",
+      "ru": "Цены, килограммы и просьба подешевле",
+      "pl": "Ceny, kilogramy i prośba o coś tańszego",
+      "cs": "Ceny, kila a prosba o něco levnějšího"
+    },
+    "topicId": "everyday",
+    "level": "A1",
+    "coverIcon": "shopping_basket",
+    "targetLang": "pl-PL",
+    "phraseIds": ["pl-targ-01", "pl-targ-02", "pl-targ-03", "pl-targ-04"]
+  },
+  {
+    "id": "set-pl-znajomosc",
+    "title": "Poznajemy się",
+    "subtitle": {
+      "en": "Introducing yourself and meeting someone new",
+      "bg": "Представяне и първи запознанства",
+      "ru": "Представляемся и знакомимся",
+      "pl": "Przedstawiamy się i poznajemy nowych ludzi",
+      "cs": "Představujeme se a poznáváme nové lidi"
+    },
+    "topicId": "everyday",
+    "level": "A1",
+    "coverIcon": "handshake",
+    "targetLang": "pl-PL",
+    "phraseIds": ["pl-znajomosc-01", "pl-znajomosc-02", "pl-znajomosc-03", "pl-znajomosc-04"]
+  },
+  {
+    "id": "set-pl-restauracja",
+    "title": "W restauracji",
+    "subtitle": {
+      "en": "Asking for a table and talking to the waiter",
+      "bg": "Маса и разговор със сервитьора",
+      "ru": "Просим столик и говорим с официантом",
+      "pl": "Prosimy o stolik i rozmawiamy z kelnerem",
+      "cs": "Žádáme o stůl a mluvíme s číšníkem"
+    },
+    "topicId": "eating-out",
+    "level": "A1",
+    "coverIcon": "table_restaurant",
+    "targetLang": "pl-PL",
+    "phraseIds": ["pl-restauracja-01", "pl-restauracja-02", "pl-restauracja-03", "pl-restauracja-04"]
+  },
+  {
+    "id": "set-cs-kavarna",
+    "title": "V kavárně",
+    "subtitle": {
+      "en": "Ordering a coffee, a tea or something sweet, and paying",
+      "bg": "Поръчка на кафе, чай или нещо сладко и плащане",
+      "ru": "Заказываем кофе, чай или что-нибудь сладкое и платим",
+      "pl": "Zamawiamy kawę, herbatę lub coś słodkiego i płacimy",
+      "cs": "Objednáváme kávu, čaj nebo něco sladkého a platíme"
+    },
+    "topicId": "eating-out",
+    "level": "A1",
+    "coverIcon": "coffee",
+    "targetLang": "cs-CZ",
+    "phraseIds": ["cs-kavarna-01", "cs-kavarna-02", "cs-kavarna-03", "cs-kavarna-04"]
+  },
+  {
+    "id": "set-cs-mesto",
+    "title": "Ve městě",
+    "subtitle": {
+      "en": "Finding a stop, taking the bus and buying a ticket",
+      "bg": "Търсим спирка, качваме се в автобуса и купуваме билет",
+      "ru": "Ищем остановку, едем на автобусе и покупаем билет",
+      "pl": "Szukamy przystanku, jedziemy autobusem i kupujemy bilet",
+      "cs": "Hledáme zastávku, jedeme autobusem a kupujeme jízdenku"
+    },
+    "topicId": "getting-around",
+    "level": "A1",
+    "coverIcon": "map",
+    "targetLang": "cs-CZ",
+    "phraseIds": ["cs-mesto-01", "cs-mesto-02", "cs-mesto-03", "cs-mesto-04"]
+  },
+  {
+    "id": "set-cs-trh",
+    "title": "Na trhu",
+    "subtitle": {
+      "en": "Asking the price, buying fruit and paying by card",
+      "bg": "Питаме за цената, купуваме плодове и плащаме с карта",
+      "ru": "Спрашиваем цену, покупаем фрукты и платим картой",
+      "pl": "Pytamy o cenę, kupujemy owoce i płacimy kartą",
+      "cs": "Ptáme se na cenu, kupujeme ovoce a platíme kartou"
+    },
+    "topicId": "everyday",
+    "level": "A1",
+    "coverIcon": "storefront",
+    "targetLang": "cs-CZ",
+    "phraseIds": ["cs-trh-01", "cs-trh-02", "cs-trh-03", "cs-trh-04"]
+  },
+  {
+    "id": "set-cs-seznameni",
+    "title": "Seznámení",
+    "subtitle": {
+      "en": "Greeting someone, saying you are pleased to meet them and admitting you are a beginner",
+      "bg": "Поздрав, радост от запознанството и признание, че си начинаещ",
+      "ru": "Здороваемся, радуемся знакомству и признаём, что мы новички",
+      "pl": "Witamy się, cieszymy ze znajomości i mówimy, że dopiero się uczymy",
+      "cs": "Zdravíme, těší nás seznámení a přiznáme, že jsme začátečníci"
+    },
+    "topicId": "everyday",
+    "level": "A1",
+    "coverIcon": "handshake",
+    "targetLang": "cs-CZ",
+    "phraseIds": ["cs-seznameni-01", "cs-seznameni-02", "cs-seznameni-03", "cs-seznameni-04"]
+  },
+  {
+    "id": "set-cs-hospoda",
+    "title": "V hospodě",
+    "subtitle": {
+      "en": "A table for two, a beer with svíčková and a thank-you to the kitchen",
+      "bg": "Маса за двама, бира със свичкова и благодарност към кухнята",
+      "ru": "Столик на двоих, пиво со свичковой и спасибо кухне",
+      "pl": "Stolik dla dwojga, piwo ze svíčkovou i podziękowanie dla kuchni",
+      "cs": "Stůl pro dva, pivo se svíčkovou a poděkování kuchyni"
+    },
+    "topicId": "eating-out",
+    "level": "A1",
+    "coverIcon": "sports_bar",
+    "targetLang": "cs-CZ",
+    "phraseIds": ["cs-hospoda-01", "cs-hospoda-02", "cs-hospoda-03", "cs-hospoda-04"]
+  },
+  {
+    "id": "set-us-coffee",
+    "title": "Coffee Shop",
+    "subtitle": {
+      "en": "Ordering at a coffee shop",
+      "bg": "Поръчка в кафене",
+      "ru": "Заказ в кофейне",
+      "pl": "Zamawianie w kawiarni",
+      "cs": "Objednávka v kavárně"
+    },
+    "topicId": "eating-out",
+    "level": "A1",
+    "coverIcon": "coffee",
+    "targetLang": "en-US",
+    "phraseIds": ["us-coffee-01", "us-coffee-02", "us-coffee-03", "us-coffee-04"]
+  },
+  {
+    "id": "set-us-transit",
+    "title": "Getting Around",
+    "subtitle": {
+      "en": "Subway, cabs and directions",
+      "bg": "Метро, таксита и посоки",
+      "ru": "Метро, такси и дорога",
+      "pl": "Metro, taksówki i wskazówki",
+      "cs": "Metro, taxi a cesta"
+    },
+    "topicId": "getting-around",
+    "level": "A1",
+    "coverIcon": "subway",
+    "targetLang": "en-US",
+    "phraseIds": ["us-transit-01", "us-transit-02", "us-transit-03", "us-transit-04"]
+  },
+  {
+    "id": "set-us-grocery",
+    "title": "Grocery Store",
+    "subtitle": {
+      "en": "Finding things and checking out",
+      "bg": "Търсене и плащане в магазина",
+      "ru": "Поиск товаров и касса",
+      "pl": "Szukanie produktów i kasa",
+      "cs": "Hledání zboží a pokladna"
+    },
+    "topicId": "everyday",
+    "level": "A1",
+    "coverIcon": "shopping_basket",
+    "targetLang": "en-US",
+    "phraseIds": ["us-grocery-01", "us-grocery-02", "us-grocery-03", "us-grocery-04"]
+  },
+  {
+    "id": "set-us-meet",
+    "title": "Meeting People",
+    "subtitle": {
+      "en": "Saying hi and chatting",
+      "bg": "Запознанства и разговор",
+      "ru": "Знакомство и разговор",
+      "pl": "Poznawanie ludzi i rozmowa",
+      "cs": "Seznamování a povídání"
+    },
+    "topicId": "everyday",
+    "level": "A1",
+    "coverIcon": "handshake",
+    "targetLang": "en-US",
+    "phraseIds": ["us-meet-01", "us-meet-02", "us-meet-03", "us-meet-04"]
+  },
+  {
+    "id": "set-us-diner",
+    "title": "Diner & Check",
+    "subtitle": {
+      "en": "Tables, restrooms and tipping",
+      "bg": "Маса, тоалетна и бакшиш",
+      "ru": "Столик, туалет и чаевые",
+      "pl": "Stolik, toaleta i napiwki",
+      "cs": "Stůl, toalety a spropitné"
+    },
+    "topicId": "eating-out",
+    "level": "A1",
+    "coverIcon": "restaurant",
+    "targetLang": "en-US",
+    "phraseIds": ["us-diner-01", "us-diner-02", "us-diner-03", "us-diner-04"]
   }
 ]

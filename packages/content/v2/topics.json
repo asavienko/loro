@@ -1,19 +1,37 @@
 [
   {
     "id": "eating-out",
-    "title": { "en": "Eating out", "bg": "Навън за хапване", "ru": "Еда вне дома" },
+    "title": {
+      "en": "Eating out",
+      "bg": "Навън за хапване",
+      "ru": "Еда вне дома",
+      "pl": "Jedzenie poza domem",
+      "cs": "Jídlo venku"
+    },
     "icon": "restaurant",
     "tone": "primary"
   },
   {
     "id": "getting-around",
-    "title": { "en": "Getting around", "bg": "Придвижване", "ru": "Транспорт" },
+    "title": {
+      "en": "Getting around",
+      "bg": "Придвижване",
+      "ru": "Транспорт",
+      "pl": "Poruszanie się",
+      "cs": "Doprava"
+    },
     "icon": "train",
     "tone": "secondary"
   },
   {
     "id": "everyday",
-    "title": { "en": "Everyday life", "bg": "Всекидневие", "ru": "Повседневная жизнь" },
+    "title": {
+      "en": "Everyday life",
+      "bg": "Всекидневие",
+      "ru": "Повседневная жизнь",
+      "pl": "Życie codzienne",
+      "cs": "Každodenní život"
+    },
     "icon": "storefront",
     "tone": "tertiary"
   }
