@@ -22,7 +22,7 @@ dropped on 2026-09-30 and remain in Git history at `52a0e3b`. Delivery status li
 | ----- | ---------------------------------------------------------------------------------------------------- |
 | P3-01 | Continuous hands-free playback: native prompt → a measured pause to say it → target, repeated.       |
 | P3-11 | Background audio with lock-screen / notification transport controls.                                 |
-| P3-31 | Grades Missed / Hard / Easy; the intervals shown come from the real FSRS model in core-rs.           |
+| P3-31 | Grades Missed / Hard / Easy, which show no intervals: the real FSRS model in core-rs schedules them. |
 | P2-24 | How well a phrase is known sets its repetitions (3 while new or shaky, 1 under review; overridable). |
 | AS-01 | Native-quality TTS for every phrase, cached on the device (voice choice: Q-15).                      |
 

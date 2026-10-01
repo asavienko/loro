@@ -311,11 +311,14 @@ export function makeEn(n: Plural) {
       howDidItGo: 'Did you remember it?',
       /** Before the learner's first turn at the phrase in this play. */
       rateAfterTurn: 'Rate once you’ve said it',
-      /** Under each grade: when the phrase comes back if rated so. */
+      /** When a rated phrase comes back, on a phrase's row ("Rated Hard — back in 15 min"). */
       nextIn: (interval: string) => `in ${interval}`,
       rated: (grade: string, when: string) => `Rated ${grade} — back ${when}`,
-      /** After “Rated …” when a Missed or Hard phrase also comes back later in this queue. */
-      requeued: '· again in this queue',
+      /** Beside Undo once the phrase is rated: what the rating did (the grades show no times). */
+      scheduled: 'Next review scheduled',
+      /** …when a Missed or Hard phrase also comes back later in this queue. */
+      backLater: 'Back later in this queue',
+      ratedAs: (grade: string) => `Rated ${grade}`,
       undoFor: (time: string) => `Undo · ${time}`,
       undoLabel: (time: string) => `Undo rating (${time} left)`,
       previous: 'Previous phrase',

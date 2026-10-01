@@ -2,11 +2,10 @@ import { ReactNode, useState } from 'react';
 import { languageLabel } from '@shared/copy';
 import type { Phrase } from '@shared/content';
 import { findPhrase, findSetView, promptOf } from '@shared/state/catalog';
-import { clock } from '@shared/state/clock';
 import { playsOnce } from '@shared/state/machine';
-import { continuation, currentPhraseId, displayLearner, pendingFor, previewDue, sessionSummary, windowLeft } from '@shared/state/selectors';
+import { continuation, currentPhraseId, displayLearner, pendingFor, sessionSummary, windowLeft } from '@shared/state/selectors';
 import type { Grade } from '@shared/state/types';
-import { backIn, endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction } from '@shared/ui/phase';
+import { endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction } from '@shared/ui/phase';
 import { useRate } from '../screens/useRate';
 import { useCopy, useNow, useStore } from '../state/store';
 import { IconName } from './Icon';
@@ -38,16 +37,13 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
   const ended = player.ended && playsOnce(player);
   const key = `${index}:${phrase.id}`;
 
-  /** A grade given a phrase, and when that brings it back, as the player's grades say it. */
-  const ratedAs = (id: string, grade: Grade, at: number, day?: string): MiniRated => {
-    const when = backIn(c, previewDue(state.learner, id, grade, at, day), Math.max(now, at));
-    return { grade, detail: when, label: c.player.rated(c.common.grade[grade], when) };
-  };
+  /** A grade given a phrase, and what it did, as the player says it: not when it comes back (FSRS decides). */
+  const ratedAs = (grade: Grade): MiniRated => ({ grade, detail: c.player.scheduled, label: `${c.player.ratedAs(c.common.grade[grade])}. ${c.player.scheduled}` });
   /** The grade a phrase was given, while it can still be undone. */
   const ratedOf = (id: string) => {
     const pending = pendingFor(state, id);
     if (!pending || windowLeft(pending, Math.max(now, pending.at)) <= 0) return null;
-    return ratedAs(id, pending.grade, pending.at, pending.day);
+    return ratedAs(pending.grade);
   };
 
   /** A phrase's card: the playing one, or a neighbour as it will start. */
@@ -109,7 +105,7 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
       rating,
     });
   const onRate = (grade: Grade) => {
-    if (player.phase === 'rate') setHeld({ key, card: own(<MiniRating rated={ratedAs(phrase.id, grade, clock.now())} />) });
+    if (player.phase === 'rate') setHeld({ key, card: own(<MiniRating rated={ratedAs(grade)} />) });
     rate(grade);
   };
 
