@@ -1,21 +1,26 @@
 // What the lock screen and the notification shade show of the one player (P3-11), from the state
 // alone so it can be tested. It says what the bar above the tabs says: a phrase keeps its target
 // hidden until it has been heard (the recall rule), shows the step of the loop, and offers the three
-// grades whenever the app would; a song shows its album and offers them when it sings this course's
-// phrases.
+// grades whenever the app would: not while a rating's window is open. A song shows its album and
+// offers them when it sings this course's phrases.
 import { apiUrl } from '@shared/api/client';
 import type { Song } from '@shared/api/library';
 import type { Album } from '@shared/content';
 import type { Copy } from '@shared/copy';
 import { findPhrase, findSetView, promptOf } from '@shared/state/catalog';
 import { playsOnce } from '@shared/state/machine';
-import { currentPhraseId, pendingFor, previewDue, sessionSummary, windowLeft } from '@shared/state/selectors';
+import { currentPhraseId, pendingFor, sessionSummary, windowLeft } from '@shared/state/selectors';
 import type { AppState, Grade } from '@shared/state/types';
-import { backIn, endTitle, isTargetRevealed, phaseInstruction, queueTitle } from '@shared/ui/phase';
+import { endTitle, isTargetRevealed, phaseInstruction, queueTitle } from '@shared/ui/phase';
 import type { NowPlaying, NowPlayingGrade } from './media';
 
 /** In the app's order (src/ui/grades.ts). */
 export const GRADE_ORDER: readonly Grade[] = ['missed', 'hard', 'easy'];
+
+/** The three grades as offered: none is ever shown given, since a rated item has none to offer. */
+function gradesFor(c: Copy): NowPlayingGrade[] {
+  return GRADE_ORDER.map((grade) => ({ grade, label: c.common.grade[grade], detail: c.common.grade[grade], selected: false }));
+}
 
 /** A cover the system can draw itself: a picture, not the drawn SVG covers. */
 export function rasterCover(url: string | null | undefined): string | null {
@@ -47,17 +52,10 @@ export function phraseNowPlaying(state: AppState, c: Copy, now: number): NowPlay
         ? c.player.paused
         : phaseInstruction(c, player.phase, prompt.lang, phrase.targetLang);
 
-  let grades: NowPlayingGrade[] | null = null;
-  if (phraseRatable(state)) {
-    const pending = pendingFor(state, phrase.id);
-    const given = pending && windowLeft(pending, Math.max(now, pending.at)) > 0 ? pending : undefined;
-    // The grade given says when it brings the phrase back, as the app's rated line does.
-    const givenDetail = given && c.player.rated(c.common.grade[given.grade], backIn(c, previewDue(state.learner, phrase.id, given.grade, given.at, given.day), Math.max(now, given.at)));
-    grades = GRADE_ORDER.map((grade) => {
-      const selected = given?.grade === grade;
-      return { grade, label: c.common.grade[grade], detail: selected && givenDetail ? givenDetail : c.common.grade[grade], selected };
-    });
-  }
+  // Rated, the grades go until the rating's window closes, as they do in the app.
+  const pending = pendingFor(state, phrase.id);
+  const given = pending !== undefined && windowLeft(pending, Math.max(now, pending.at)) > 0;
+  const grades = phraseRatable(state) && !given ? gradesFor(c) : null;
 
   const set = findSetView(state.learner, phrase.setId);
   return {
@@ -111,13 +109,7 @@ export function songNowPlaying({ song, album, playing, positionMs, durationMs, i
     canPrevious: index > 0,
     positionMs: durationMs > 0 ? Math.round(positionMs) : null,
     durationMs: durationMs > 0 ? Math.round(durationMs) : null,
-    grades:
-      rating.count > 0
-        ? GRADE_ORDER.map((grade) => {
-            const selected = rating.given === grade;
-            return { grade, label: c.common.grade[grade], detail: selected ? c.music.songRated(c.common.grade[grade], rating.count) : c.common.grade[grade], selected };
-          })
-        : null,
+    grades: rating.count > 0 && rating.given === null ? gradesFor(c) : null,
     nextLabel: c.music.next,
     channelName: c.player.dialog,
     hasSilences: false,

@@ -647,6 +647,7 @@ export function makeBg(n: Plural): Copy {
       likeSong: 'Харесай песента',
       rateSong: (n: number) => (n === 1 ? 'Как мина? Оценката ви преговаря фразата в песента.' : `Как мина? Оценката ви преговаря ${n}-те фрази в песента.`),
       songRated: (grade: string, n: number) => (n === 1 ? `${grade}: фразата ѝ е преговорена.` : `${grade}: ${n}-те ѝ фрази са преговорени.`),
+      songReviewed: (n: number) => (n === 1 ? 'Фразата ѝ е преговорена.' : `${n}-те ѝ фрази са преговорени.`),
       songReady: (title: string) => `„${title}“ е готова`,
       songFailed: (title: string) => `„${title}“ не можа да бъде направена. Можете да опитате пак от албума ѝ.`,
       play: 'Пусни',

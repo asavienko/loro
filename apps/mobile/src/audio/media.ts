@@ -4,11 +4,14 @@
 import { requireOptionalNativeModule } from 'expo-modules-core';
 import type { Grade } from '@shared/state/types';
 
-/** One grade as the lock screen shows it: its name, and what it says once given. */
+/**
+ * One grade as the lock screen shows it. The grades go once one is given (as in the app), so none is
+ * sent selected; `detail` and `selected` stay in the native modules' contract.
+ */
 export interface NowPlayingGrade {
   grade: Grade;
   label: string;
-  /** The grade given ("Rated Easy — back in 3 days"): the selected button's spoken label. */
+  /** The button's spoken label: its name. */
   detail: string;
   selected: boolean;
 }

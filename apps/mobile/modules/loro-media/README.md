@@ -25,10 +25,11 @@ its clip watchdogs and the store's save are timed through it (`after` in `src/au
   from Android 13 the system builds its controls from the session.
 - The system's media controls have five slots. While the item can be rated they hold play or pause,
   then Missed, Hard, Easy (the app's icons, `res/drawable/loro_media_grade_*`, traced from the
-  Material Symbols glyphs in `assets/fonts/MaterialSymbols.ttf`; the grade given shows `task_alt`)
-  and Next. "Previous" gives way to the grades, as on the bar above the tabs; headset previous and
-  next still work. Without grades (a queue that has ended, a song that sings none of the course's
-  phrases) the standard previous, play or pause and next show.
+  Material Symbols glyphs in `assets/fonts/MaterialSymbols.ttf`; a grade sent `selected` would show
+  `task_alt`, though the app sends none) and Next. "Previous" gives way to the grades, as on the bar
+  above the tabs; headset previous and next still work. Without grades (a queue that has ended, a song
+  that sings none of the course's phrases, an item rated within its five-minute window) the standard
+  previous, play or pause and next show.
 - `Playback` holds, while the player plays: the audio focus for the whole session (expo-audio is set
   to mix on Android, so it asks for none per clip) — a call or another app pauses the player, and a
   short interruption resumes it; a receiver for headphones being unplugged (pause); a partial wake

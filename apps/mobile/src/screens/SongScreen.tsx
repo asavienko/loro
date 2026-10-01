@@ -21,7 +21,7 @@ import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
 import { PullDownWindow, PullHandle } from '../ui/PullDown';
-import { GradeRow, RatedLine, RatingLine } from '../ui/Rating';
+import { GradeRow, RatedPanel, RatingLine } from '../ui/Rating';
 import { Txt } from '../ui/Txt';
 import { colors, radius, shadow, TARGET } from '../ui/theme';
 import { useRoom } from '../ui/useRoom';
@@ -218,18 +218,22 @@ function SongRating({ song }: { song: Song }) {
   return (
     <View style={styles.rating}>
       {rated ? (
-        <RatedLine
-          text={c.music.songRated(c.common.grade[rated.grade], given.length)}
+        <RatedPanel
+          grade={rated.grade}
+          title={c.player.ratedAs(c.common.grade[rated.grade])}
+          text={c.music.songReviewed(given.length)}
           undo={{ label: c.player.undoFor(formatElapsed(left)), accessibilityLabel: c.player.undoLabel(formatElapsed(left)), onPress: () => actions.unratePhrases(song.id) }}
         />
       ) : (
-        <RatingLine>
-          <Txt variant="label" weight={500} color="secondary" align="center">
-            {c.music.rateSong(ratable.length)}
-          </Txt>
-        </RatingLine>
+        <>
+          <RatingLine>
+            <Txt variant="label" weight={500} color="secondary" align="center">
+              {c.music.rateSong(ratable.length)}
+            </Txt>
+          </RatingLine>
+          <GradeRow onRate={rate} />
+        </>
       )}
-      <GradeRow selected={rated?.grade ?? null} onRate={rate} />
     </View>
   );
 }

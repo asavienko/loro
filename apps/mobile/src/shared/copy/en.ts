@@ -679,6 +679,8 @@ export function makeEn(n: Plural) {
       likeSong: 'Like this song',
       rateSong: (n: number) => (n === 1 ? 'How did it go? Your rating reviews the phrase it sings.' : `How did it go? Your rating reviews the ${n} phrases it sings.`),
       songRated: (grade: string, n: number) => (n === 1 ? `${grade}: its phrase is reviewed.` : `${grade}: its ${n} phrases are reviewed.`),
+      /** Under the grade a song was given ("Rated Hard"): what the rating did. */
+      songReviewed: (n: number) => (n === 1 ? 'Its phrase is reviewed.' : `Its ${n} phrases are reviewed.`),
       songReady: (title: string) => `“${title}” is ready`,
       songFailed: (title: string) => `“${title}” couldn’t be made. You can try again from its album.`,
       play: 'Play',
