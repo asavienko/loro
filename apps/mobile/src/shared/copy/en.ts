@@ -719,9 +719,6 @@ export function makeEn(n: Plural) {
       phrasesBody: 'From a topic, a few words or a text.',
       songTitle: 'A song from a set',
       songBody: 'Hear your phrases in a song.',
-      coverTitle: 'Covers',
-      coverBody: 'Every set and album you make can get its own drawn cover.',
-      coverNothing: 'Make a set or a song first; then draw it a cover here.',
       left: (count: number) => n(count, { one: `${count} left today`, other: `${count} left today` }),
       none: 'None left today',
       /** Who makes it on this server, as a card's small print. */
