@@ -2,8 +2,8 @@ node_modules/
 .expo/
 .expo-export/
 dist-web/
-android/
-ios/
+/android/
+/ios/
 *.log
 .env*
 !.env.example

@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["LoroMediaModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.loromedia.LoroMediaModule"]
+  }
+}

@@ -1,0 +1,19 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- The player keeps going with the screen locked: a media-playback foreground service, and the
+       CPU kept awake through the loop's silences while it plays. -->
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+  <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+  <application>
+    <!-- Not exported: the system's media controls reach it through its media session. -->
+    <service
+      android:name="expo.modules.loromedia.LoroMediaService"
+      android:exported="false"
+      android:foregroundServiceType="mediaPlayback">
+      <intent-filter>
+        <action android:name="androidx.media3.session.MediaSessionService" />
+      </intent-filter>
+    </service>
+  </application>
+</manifest>
