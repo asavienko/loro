@@ -17,7 +17,15 @@ import { FallbackTextModel, type StructuredTextModel } from './text-model.js'
  * only to those that honour every parameter sent, so the JSON schema is never silently dropped.
  */
 export const OPENROUTER_PRIVACY = { data_collection: 'deny' } as const
-const OPENROUTER_TEXT_ROUTING = { provider: { ...OPENROUTER_PRIVACY, require_parameters: true } }
+/**
+ * DeepSeek reasons before it answers unless told not to: measured 2026-10-01, a 12-phrase deck on
+ * Fireworks took 111 s with 7,217 reasoning tokens, and 32–34 s without, at the same quality.
+ */
+const FIREWORKS_TEXT_OPTIONS = { reasoning_effort: 'none' }
+const OPENROUTER_TEXT_OPTIONS = {
+  provider: { ...OPENROUTER_PRIVACY, require_parameters: true },
+  reasoning: { effort: 'none' },
+}
 
 export interface TextBudget {
   /** The whole chain's deadline: the fallback gets what the primary leaves. */
@@ -52,6 +60,7 @@ export function textModel(
           apiKey: fireworks,
           model: config.fireworksModel(),
           timeoutMs: openRouter ? Math.min(primaryTimeoutMs, timeoutMs) : timeoutMs,
+          extraBody: FIREWORKS_TEXT_OPTIONS,
           ...limits,
         },
         send,
@@ -67,7 +76,7 @@ export function textModel(
           apiKey: openRouter,
           model: config.openRouterTextModel(),
           timeoutMs,
-          extraBody: OPENROUTER_TEXT_ROUTING,
+          extraBody: OPENROUTER_TEXT_OPTIONS,
           ...limits,
         },
         send,

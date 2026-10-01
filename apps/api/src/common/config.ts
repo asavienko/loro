@@ -31,7 +31,7 @@ export const config = {
    */
   fireworksApiKey: (): string | undefined => trimmed(process.env['FIREWORKS_API_KEY']),
   fireworksModel: (): string =>
-    process.env['FIREWORKS_MODEL'] ?? 'accounts/deepseek-ai/models/deepseek-v4p1-flash',
+    process.env['FIREWORKS_MODEL'] ?? 'accounts/fireworks/models/deepseek-v4p1-flash',
   openRouterApiKey: (): string | undefined => trimmed(process.env['OPENROUTER_API_KEY']),
   openRouterTextModel: (): string =>
     process.env['OPENROUTER_TEXT_MODEL'] ?? 'deepseek/deepseek-v4.1-flash',
