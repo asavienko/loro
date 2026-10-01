@@ -9,6 +9,7 @@
 // progress rejoins theirs when they sign in here again.
 import { useEffect, useRef } from 'react';
 import { AppState as AppLifecycle } from 'react-native';
+import { describeError, metric, reportError, since } from '@shared/analytics/telemetry';
 import { kvGet, kvRemove, kvSet } from '@shared/api/kv';
 import { fetchProgress, syncProgress } from '@shared/api/progress';
 import { useLatest } from '@shared/lib/useLatest';
@@ -65,6 +66,9 @@ export function useProgressSync(): void {
     if (status !== 'signedIn' || !userId) return;
     if (running.current) return running.current;
     running.current = (async () => {
+      const started = performance.now();
+      // What the sync did, for its metric: `kept` the device's copy, `merged` the account's in, or `switched` accounts.
+      let outcome = 'kept';
       try {
         const owner = await kvGet(OWNER_KEY);
         if (owner && owner !== userId) {
@@ -78,6 +82,7 @@ export function useProgressSync(): void {
           let learner = theirs ?? { ...initialLearner(), profile: { ...current.learner.profile, name: '' } };
           if (left) learner = mergeLearner(learner, left);
           actions.restore(JSON.parse(serializeState({ ...current, learner, pending: [] })));
+          outcome = 'switched';
           if (left) {
             await syncProgress(learner);
             await kvRemove(stashKey(userId));
@@ -85,11 +90,17 @@ export function useProgressSync(): void {
         } else {
           const before = latest.current.learner;
           const merged = await syncProgress(before);
-          if (merged !== before) actions.mergeRemote(merged);
+          if (merged !== before) {
+            actions.mergeRemote(merged);
+            outcome = 'merged';
+          }
         }
         await kvSet(OWNER_KEY, userId);
         Object.assign(lastSync, { userId, done: true, failed: false });
-      } catch {
+        metric('progress_sync', { outcome, duration_ms: since(started), log_length: latest.current.learner.log.length });
+      } catch (error) {
+        metric('progress_sync', { outcome: 'failed', duration_ms: since(started), ...describeError(error) });
+        reportError('progress sync', error);
         // Offline or refused: the next change, foreground or sign-in tries again.
         // A failure for another account than the last says nothing about whether that one synced.
         Object.assign(lastSync, lastSync.userId === userId ? { failed: true } : { userId, done: false, failed: true });

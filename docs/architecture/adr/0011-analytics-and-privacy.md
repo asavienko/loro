@@ -43,6 +43,35 @@ be off by default with an allowlist of properties:
 - **Never audio.** Replay captures pixels, not sound; the audio promise above is unchanged.
 - A build without `EXPO_PUBLIC_POSTHOG_KEY` sends nothing.
 
+### Logs, errors and metrics (amended 2026-10-01)
+
+The same PostHog project also receives what the app needs to be operated, under the same opt-out
+(PostHog stops all of it at once):
+
+- **Error tracking:** native crashes (through `@posthog/react-native-plugin`, sent on the next
+  launch), uncaught JavaScript exceptions and unhandled promise rejections, plus failures the app
+  recovers from but must not hide (a save that didn't reach storage, an unreadable saved progress,
+  storage or content that failed to open). Console errors are not captured as exceptions; replay
+  already holds the console.
+- **Logs** go to PostHog's logs product as service `loro-mobile`: every failed API request (at
+  `info` when the server couldn't be reached, `warn` when it refused, `error` for a 5xx or an
+  unreadable reply) and the recovered failures above.
+- **Metrics** are events with numeric properties, since PostHog's React Native SDK has no metrics
+  API: `api_request` (route, method, status, error code, `duration_ms`) for every request,
+  `progress_sync` (outcome, `duration_ms`), `course_refresh` (course, whether a copy was installed,
+  pack size, `duration_ms`) and `app_start` (`boot_ms`, `ready_ms`).
+- Every event carries `course`, `ui_lang` and `onboarded` as super properties.
+- Shared code reports through one seam, `src/shared/analytics/telemetry.ts`, which sends nothing
+  until `src/analytics/posthog.ts` sets PostHog as its sink. Attributes are scalars the code chose:
+  never phrase text, words the learner wrote, or tokens. A request's path is sent as its route, with
+  ids, share codes and query strings replaced (`/library/sets/:id/songs`); a segment that is not one
+  of the API's route words is treated as an id.
+
+Rejected: Sentry or another crash reporter beside PostHog (a second processor to declare, and
+replay, logs and errors would not share a person and session); a separate metrics backend
+(OpenTelemetry collector, Prometheus pushgateway) for a handful of client timings that PostHog
+insights already chart.
+
 ## Consequences
 
 - Voice data is never in Loro's possession, so it cannot be breached or leaked by Loro.

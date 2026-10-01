@@ -16,6 +16,7 @@ import {
   RENAMED_PHRASE_IDS,
   TARGET_LANGUAGES,
 } from '../content';
+import { log, reportError } from '../analytics/telemetry';
 import { OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { clock, isLocalDayOf } from './clock';
 // The same limits the forms apply, for data that arrives by sync or migration.
@@ -456,6 +457,9 @@ function loadWithoutStray({ saved, pending }: Stored, initial: (device: Device) 
   lastWritten = saved;
   const fromSaved = saved ? parseState(saved, device) : null;
   const fromPending = pending ? parseState(pending, device) : null;
+  // Saved progress that can't be read starts the learner again: never quietly.
+  if (saved && !fromSaved) log.error('saved progress unreadable', { length: saved.length, written_by_newer: writtenByNewer(saved) });
+  if (pending && !fromPending) log.warn('pending progress unreadable', { length: pending.length });
   pendingFor = pending !== null ? 'loaded' : null;
   if (!fromPending) return fromSaved ?? initial(device);
   return fromSaved ? { ...fromPending, learner: mergeLearner(fromPending.learner, fromSaved.learner) } : fromPending;
@@ -539,7 +543,9 @@ async function writeState(state: AppState): Promise<SaveResult> {
   } catch (error) {
     // The session still works; the shell tells the learner that progress isn't being kept.
     const full = typeof DOMException !== 'undefined' && error instanceof DOMException && (error.name === 'QuotaExceededError' || error.code === 22);
-    return full ? 'full' : 'unavailable';
+    const result = full ? 'full' : 'unavailable';
+    reportError('save', error, { result });
+    return result;
   }
 }
 

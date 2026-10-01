@@ -22,12 +22,12 @@ nothing.
 
 ### The app (build time)
 
-| Variable                   | Default                    | Effect                                                                                                                     |
-| -------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `EXPO_PUBLIC_API_URL`      | `http://localhost:3000/v1` | The API the app loads courses, sign-in and generation from                                                                 |
-| `EXPO_PUBLIC_WEB_URL`      | —                          | HTTPS web origin for links shared from a phone; unset, they are `loro://` links                                            |
-| `EXPO_PUBLIC_POSTHOG_KEY`  | —                          | PostHog project key; unset, no analytics or session replay ([ADR-0011](../architecture/adr/0011-analytics-and-privacy.md)) |
-| `EXPO_PUBLIC_POSTHOG_HOST` | `https://eu.i.posthog.com` | PostHog host                                                                                                               |
+| Variable                   | Default                    | Effect                                                                                                                                           |
+| -------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `EXPO_PUBLIC_API_URL`      | `http://localhost:3000/v1` | The API the app loads courses, sign-in and generation from                                                                                       |
+| `EXPO_PUBLIC_WEB_URL`      | —                          | HTTPS web origin for links shared from a phone; unset, they are `loro://` links                                                                  |
+| `EXPO_PUBLIC_POSTHOG_KEY`  | —                          | PostHog project key; unset, no analytics, session replay, logs or error tracking ([ADR-0011](../architecture/adr/0011-analytics-and-privacy.md)) |
+| `EXPO_PUBLIC_POSTHOG_HOST` | `https://eu.i.posthog.com` | PostHog host                                                                                                                                     |
 
 `EXPO_PUBLIC_*` values are public and baked into a build: never put secrets there, and rebuild after
 changing one. Expo reads them from the environment or `apps/mobile/.env`; the APK runner ignores
