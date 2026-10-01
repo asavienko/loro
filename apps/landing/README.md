@@ -2,8 +2,9 @@
 
 Loro's one-page site (F-09): what the app does, a working demo of the player, and the newest Android
 build to download, with every earlier one. Plain HTML, CSS and JavaScript modules with no build
-step, so any static host serves this folder as it is. Where it is served is
-[Q-27](../../docs/decisions/open-questions.md#q-27).
+step, so any static host serves this folder as it is. It is served from AWS Amplify Hosting by
+`pnpm landing:deploy` ([landing-deployment.md](../../docs/process/landing-deployment.md)); its
+domain is [Q-27](../../docs/decisions/open-questions.md#q-27).
 
 ```bash
 pnpm --filter @loro/landing dev        # http://localhost:4173 (module scripts don't load from file://)

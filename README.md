@@ -6,6 +6,9 @@ again, then rate how it went. The rating schedules the phrase with FSRS. Courses
 Bulgarian, British and American English, Russian, Polish and Czech; the app speaks English (British
 or American), Bulgarian, Russian, Polish and Czech.
 
+**Website:** <https://main.d8avifn92wmt4.amplifyapp.com/> — what Loro is, a demo of the player, and
+the newest Android build to download.
+
 This repository holds the app, the API, the shared packages and their documentation.
 
 ## Status
@@ -59,7 +62,7 @@ Everything under `docs/` is indexed in [`docs/README.md`](docs/README.md).
 | [`packages/content/`](packages/content/README.md) | The app's seed content (`v2/`) and the first app's Spanish catalog, with their checks                             |
 | `docs/`                                           | All documentation — product, architecture, design, process, decisions                                             |
 | [`plans/`](plans/README.md)                       | Active plans and the archive of finished ones                                                                     |
-| `infra/`, `secrets/`                              | The EC2 templates and proxy configuration; the SOPS-encrypted environment files                                   |
+| `infra/`, `secrets/`                              | The EC2 and landing-page templates and proxy configuration; the SOPS-encrypted environment files                  |
 | `scripts/`                                        | Local CI, Android builds, secrets, and EC2 provisioning, deployment and backups                                   |
 
 ## Key architectural decisions
