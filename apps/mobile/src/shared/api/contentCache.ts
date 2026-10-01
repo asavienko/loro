@@ -20,6 +20,7 @@ import {
   LanguageList,
   removeSet,
 } from '../content';
+import { describeError, log, metric, reportError, since } from '../analytics/telemetry';
 import { fetchLanguages, fetchPack, type SetDetail } from './library';
 import { kvGet, kvRemove, kvSet } from './kv';
 
@@ -60,8 +61,9 @@ export async function restoreContent(): Promise<LanguageCode[]> {
       const raw = await kvGet(packKey(lang));
       const pack: unknown = raw ? JSON.parse(raw) : null;
       if (isPack(pack)) packs.push(pack);
-    } catch {
+    } catch (error) {
       // An unreadable copy is downloaded again.
+      log.warn('saved pack unreadable', { course: lang, ...describeError(error) });
     }
   }
   if (packs.length > 0) installPacks(packs);
@@ -117,16 +119,26 @@ async function refreshLanguages(): Promise<void> {
   }
 }
 
+/** Measured (`course_refresh`): how long it took, whether the learner had a copy meanwhile, what changed. */
 async function download(lang: LanguageCode): Promise<boolean> {
-  const [pack] = await Promise.all([fetchPack(lang), refreshLanguages()]);
-  const same = installedPack(lang)?.version === pack.version;
-  if (!same) installPacks([pack]);
-  // Saved again after signing out forgot it, even when nothing in it changed.
-  if (!same || !saved.has(lang)) {
-    await kvSet(packKey(lang), JSON.stringify(pack));
-    saved.add(lang);
+  const started = performance.now();
+  const hadCopy = installedPack(lang) !== undefined;
+  try {
+    const [pack] = await Promise.all([fetchPack(lang), refreshLanguages()]);
+    const same = installedPack(lang)?.version === pack.version;
+    if (!same) installPacks([pack]);
+    // Saved again after signing out forgot it, even when nothing in it changed.
+    if (!same || !saved.has(lang)) {
+      await kvSet(packKey(lang), JSON.stringify(pack));
+      saved.add(lang);
+    }
+    metric('course_refresh', { course: lang, ok: true, had_copy: hadCopy, changed: !same, sets: pack.sets.length, phrases: pack.phrases.length, duration_ms: since(started) });
+    return !same;
+  } catch (error) {
+    metric('course_refresh', { course: lang, ok: false, had_copy: hadCopy, duration_ms: since(started), ...describeError(error) });
+    reportError('course refresh', error, { course: lang, had_copy: hadCopy });
+    throw error;
   }
-  return !same;
 }
 
 /** A change to one of the learner's sets, shown at once and kept with the course's saved pack. */
