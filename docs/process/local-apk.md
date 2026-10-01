@@ -31,8 +31,9 @@ ending in `/v1`) to a server the phone can reach; a release build refuses cleart
 (`https://…/shared/CODE`) instead of only in the app (`loro://shared/CODE`).
 `EXPO_PUBLIC_POSTHOG_KEY` (and optionally `EXPO_PUBLIC_POSTHOG_HOST`) turns on analytics and session
 replay ([ADR-0011](../architecture/adr/0011-analytics-and-privacy.md)). The runner clears every
-other `EXPO_PUBLIC_*` value and ignores dotenv files; no secrets belong in the build. Note that the
-EC2 gateway doesn't expose `/v1/library/*` yet ([ec2-deployment.md](ec2-deployment.md)).
+other `EXPO_PUBLIC_*` value and ignores dotenv files; no secrets belong in the build. The EC2
+gateway's `ApiUrl` serves the library once it runs the current gateway, nginx `accounts` profile and
+API with `AccountAccess=enabled` ([ec2-deployment.md](ec2-deployment.md)).
 
 ## Upload to GitHub
 
