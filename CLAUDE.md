@@ -177,22 +177,23 @@ cd packages/core-rs && cargo test <name>
 
 ## Where things live
 
-| Path                                       | What                                                             |
-| ------------------------------------------ | ---------------------------------------------------------------- |
-| `apps/mobile/app/`                         | expo-router routes                                               |
-| `apps/mobile/src/shared/`                  | Content, state machine, persistence, copy, notes, generator      |
-| `apps/mobile/src/state/`                   | Store, account, course content, progress sync (React)            |
-| `apps/mobile/src/music/`                   | Song rows, albums, the music players                             |
-| `apps/mobile/src/platform/`                | Native storage, speech, cues, Rust core, Intl polyfills          |
-| `apps/mobile/src/{screens,sheets,ui,nav}/` | The UI                                                           |
-| `apps/mobile/modules/loro-core/`           | Expo module over the Rust core (UniFFI)                          |
-| `apps/mobile/modules/loro-media/`          | Expo module: the player on the lock screen and shade (P3-11)     |
-| `apps/api/`                                | NestJS backend                                                   |
-| `packages/core/`                           | Shared TS domain and API contracts — used by the API and content |
-| `packages/core-rs/`                        | Rust: FSRS (and the older `/v1/sync` merge and clocks)           |
-| `packages/content/`                        | Server catalogs, review gates; `v2/` is the app's seeded content |
-| `apps/api/src/library/`                    | Packs, sharing, limits, AI phrases/covers/songs, progress sync   |
-| `docs/`                                    | All documentation — start at `docs/README.md`                    |
+| Path                                       | What                                                                           |
+| ------------------------------------------ | ------------------------------------------------------------------------------ |
+| `apps/mobile/app/`                         | expo-router routes                                                             |
+| `apps/mobile/src/shared/`                  | Content, state machine, persistence, copy, notes, generator                    |
+| `apps/mobile/src/state/`                   | Store, account, course content, progress sync (React)                          |
+| `apps/mobile/src/music/`                   | Song rows, albums, the music players                                           |
+| `apps/mobile/src/platform/`                | Native storage, speech, cues, Rust core, Intl polyfills                        |
+| `apps/mobile/src/{screens,sheets,ui,nav}/` | The UI                                                                         |
+| `apps/mobile/modules/loro-core/`           | Expo module over the Rust core (UniFFI)                                        |
+| `apps/mobile/modules/loro-media/`          | Expo module: the player on the lock screen and shade (P3-11)                   |
+| `apps/api/`                                | NestJS backend                                                                 |
+| `packages/core/`                           | Shared TS domain and API contracts — used by the API and content               |
+| `packages/core-rs/`                        | Rust: FSRS (and the older `/v1/sync` merge and clocks)                         |
+| `packages/content/`                        | Server catalogs, review gates; `v2/` is the app's seeded content               |
+| `apps/api/src/library/`                    | Packs, sharing, limits, AI phrases/covers/songs, progress sync                 |
+| `apps/api/src/authoring/`                  | The offline course writer (`author:run`, plan 112); never in the server bundle |
+| `docs/`                                    | All documentation — start at `docs/README.md`                                  |
 
 ## Open questions
 
