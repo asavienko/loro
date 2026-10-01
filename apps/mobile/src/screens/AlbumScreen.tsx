@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { deleteAlbum, deleteSong, fetchAlbum, generateCover, retrySong, saveItem, unsaveItem, type AlbumDetail, type Song } from '@shared/api/library';
+import { deleteAlbum, deleteSong, fetchAlbum, retrySong, saveItem, unsaveItem, type AlbumDetail, type Song } from '@shared/api/library';
 import { useNav } from '@shared/nav/NavContext';
 import { AlbumCover } from '../music/AlbumCover';
 import { clockTime, useMusic } from '../music/MusicPlayer';
@@ -37,7 +37,6 @@ export function AlbumScreen({ id }: { id: string }) {
   const content = useContent();
   const [detail, setDetail] = useState<AlbumDetail | null>(null);
   const [failed, setFailed] = useState(false);
-  const [drawing, setDrawing] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const { state } = useStore();
@@ -125,18 +124,6 @@ export function AlbumScreen({ id }: { id: string }) {
   const byline = album.owner === 'loro' ? c.music.loro : mine ? c.share.yours : album.author ? c.share.by(album.author) : c.share.byLearner;
   const isPlaying = (song: Song) => music.song?.id === song.id && music.playing;
 
-  const drawCover = async () => {
-    setDrawing(true);
-    try {
-      await generateCover({ kind: 'album', title: album.title, ...(album.description ? { description: album.description } : {}), attachTo: album.id });
-      await Promise.all([load(), content.refresh(), account.refreshUsage()]);
-    } catch (error) {
-      toast(problemText(c, error));
-    } finally {
-      setDrawing(false);
-    }
-  };
-
   const remove = async () => {
     if (!(await confirm(c.share.deleteAlbumConfirm(album.title), c.share.delete, c.common.cancel))) return;
     try {
@@ -168,17 +155,7 @@ export function AlbumScreen({ id }: { id: string }) {
         <Button variant="icon" icon="arrow_back" color="onSurface" accessibilityLabel={c.common.back} onPress={back} />
       </View>
       <View style={styles.hero}>
-        <View>
-          <AlbumCover url={album.coverUrl} px={200} rounded={16} />
-          {drawing && (
-            <View style={styles.drawing}>
-              <ActivityIndicator color={colors.onPrimary} />
-              <Txt variant="label" color="onSurface">
-                {c.share.coverMaking}
-              </Txt>
-            </View>
-          )}
-        </View>
+        <AlbumCover url={album.coverUrl} px={200} rounded={16} redraw={{ kind: 'album', album, onDrawn: () => void load() }} />
         <Txt variant="label" weight={700} color="primaryContainer" style={styles.kicker}>
           {c.music.album.toLocaleUpperCase(c.locale)}
         </Txt>
@@ -201,7 +178,6 @@ export function AlbumScreen({ id }: { id: string }) {
           <>
             <Button variant="icon" icon="share" color="onSurface" accessibilityLabel={c.share.share} onPress={() => nav.share({ kind: 'album', ...album }, () => void load())} />
             <Button variant="icon" icon="edit" color="onSurface" accessibilityLabel={c.createSet.editTitle} onPress={() => setRenaming(true)} />
-            <Button variant="icon" icon="palette" color="onSurface" accessibilityLabel={c.share.cover} disabled={drawing} onPress={() => void drawCover()} />
             <Button variant="icon" icon="delete" color="onSurface" accessibilityLabel={c.share.delete} onPress={() => void remove()} />
           </>
         ) : (
@@ -313,7 +289,6 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 48, width: '100%', maxWidth: 720, alignSelf: 'center' },
   top: { flexDirection: 'row', paddingHorizontal: 8 },
   hero: { alignItems: 'center', gap: 6, paddingHorizontal: 24 },
-  drawing: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: 'rgba(33,27,24,0.6)', borderRadius: 16 },
   kicker: { marginTop: 12, letterSpacing: 1 },
   actions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingTop: 16, paddingHorizontal: 16 },
   songs: { paddingTop: 20, gap: 2, paddingHorizontal: 12 },

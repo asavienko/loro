@@ -5,6 +5,7 @@ import { contentRevision, findSet, getTopic, SETS, TopicTone, TOPICS } from '@sh
 import type { SetView } from '@shared/state/catalog';
 import { Icon, IconName } from './Icon';
 import { ContentBadges } from './ContentBadges';
+import { CoverRedraw } from './CoverRedraw';
 import { RemoteCover } from './RemoteCover';
 import { colors, ColorName } from './theme';
 
@@ -42,6 +43,7 @@ export function SetCover({
   rounded = 16,
   style,
   badges = true,
+  redraw = false,
 }: {
   set: Pick<SetView, 'topicId' | 'coverIcon'> & { id?: string; phraseIds?: string[] };
   /** The square's side; under 96 px the glyph stands alone, larger. */
@@ -50,6 +52,8 @@ export function SetCover({
   style?: ViewStyle;
   /** The phrase icon when it has phrases and the song icon when songs are sung from it, in its corner (plan 107). */
   badges?: boolean;
+  /** A button in its corner draws a served set a new cover (CoverRedraw). */
+  redraw?: boolean;
 }) {
   const served = findSet(set.id);
   const coverUrl = served?.coverUrl;
@@ -58,12 +62,15 @@ export function SetCover({
   const cover = coverUrl ? <RemoteCover url={coverUrl} px={px} rounded={rounded} style={style} fallback={drawn} /> : drawn;
   const phrases = (set.phraseIds ?? served?.phraseIds ?? []).length > 0;
   const songs = (served?.songCount ?? 0) > 0;
-  if (!badges || px < 40 || (!phrases && !songs)) return cover;
+  const badged = badges && px >= 40 && (phrases || songs);
+  const item = redraw && served ? served : null;
+  if (!badged && !item) return cover;
   // The cover keeps its own style (its shadow needs its background); the frame only holds the badges.
   return (
     <View style={{ width: px, height: px }}>
       {cover}
-      <ContentBadges phrases={phrases} songs={songs} px={px} />
+      {badged && <ContentBadges phrases={phrases} songs={songs} px={px} />}
+      {item && <CoverRedraw item={{ kind: 'set', set: item }} width={px} height={px} rounded={rounded} />}
     </View>
   );
 }

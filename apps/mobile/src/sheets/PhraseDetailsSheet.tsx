@@ -73,7 +73,7 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
       <View>
         {/* The picture beside the phrase; at large text the words wrap under it. */}
         <View style={styles.head}>
-          <PhraseImage icons={phrase.image} tone={(topicId && getTopic(topicId)?.tone) || 'secondary'} width={80} height={80} />
+          <PhraseImage icons={phrase.image} tone={(topicId && getTopic(topicId)?.tone) || 'secondary'} width={80} height={80} phrase={phrase} />
           <View style={styles.headText}>
             <Txt variant="displaySm" face="serif" italic weight={600} lang={phrase.targetLang}>
               {phrase.target}

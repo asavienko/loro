@@ -1,18 +1,40 @@
 // A phrase's picture (plan 105; the web prototype's src/ui/PhraseImage.tsx): its main icon large on
 // its topic's colour, up to two more in small discs at the corners, sized by the shorter side so a
-// tile, the player's cover and a card's band are one composition. Decorative: the phrase and its
-// meaning are text.
+// tile, the player's cover and a card's band are one composition. A cover the learner drew for the
+// phrase shows instead. Decorative: the phrase and its meaning are text.
 import { StyleSheet, View, ViewStyle } from 'react-native';
-import type { TopicTone } from '@shared/content';
+import type { Phrase, TopicTone } from '@shared/content';
+import { CoverRedraw } from './CoverRedraw';
 import { Icon, IconName } from './Icon';
+import { RemoteCover } from './RemoteCover';
 import { TONE } from './SetCover';
 
-export function PhraseImage({ icons, tone = 'secondary', width, height, rounded = 16, style }: { icons: readonly string[]; tone?: TopicTone; width: number; height: number; rounded?: number; style?: ViewStyle }) {
+export function PhraseImage({
+  icons,
+  tone = 'secondary',
+  width,
+  height,
+  rounded = 16,
+  style,
+  phrase,
+  redraw = false,
+}: {
+  icons: readonly string[];
+  tone?: TopicTone;
+  width: number;
+  height: number;
+  rounded?: number;
+  style?: ViewStyle;
+  /** The phrase pictured: the learner's own cover of it shows when they drew one. */
+  phrase?: Phrase;
+  /** A button in its corner draws the phrase a new cover (CoverRedraw). */
+  redraw?: boolean;
+}) {
   const [main, ...rest] = icons as readonly IconName[];
   const side = Math.min(width, height);
   const small = side < 96;
   const disc = side * 0.26;
-  return (
+  const drawn = (
     <View
       accessible={false}
       importantForAccessibility="no-hide-descendants"
@@ -33,6 +55,15 @@ export function PhraseImage({ icons, tone = 'secondary', width, height, rounded 
             <Icon name={icon} size={Math.round(side * 0.15)} color={TONE[tone].ink} />
           </View>
         ))}
+    </View>
+  );
+  const coverUrl = phrase?.coverUrl;
+  const art = coverUrl ? <RemoteCover url={coverUrl} px={width} height={height} rounded={rounded} style={style} fallback={drawn} /> : drawn;
+  if (!redraw || !phrase) return art;
+  return (
+    <View style={{ width, height }}>
+      {art}
+      <CoverRedraw item={{ kind: 'phrase', phrase }} width={width} height={height} rounded={rounded} />
     </View>
   );
 }

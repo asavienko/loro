@@ -87,6 +87,8 @@ export interface Phrase {
   durationMs: PhraseJson['durationMs'] | null;
   /** Held in one of the learner's own sets: theirs to edit and delete. */
   own: boolean;
+  /** The learner's own drawn cover of it, shown instead of its icons; only they see it. */
+  coverUrl?: string;
 }
 
 export interface PhraseSet {
@@ -173,6 +175,14 @@ export interface ContentPack {
   phrases: PhraseWire[];
   bank: { themes: BankTheme[]; phrases: BankPhraseWire[] };
   albums: Album[];
+  /** The learner's own covers of the course's phrases and songs, by id (absent from older copies). */
+  covers?: ItemCovers;
+}
+
+/** Covers a learner drew for phrases and songs: paths under the API, by id. */
+export interface ItemCovers {
+  phrases: Record<string, string>;
+  songs: Record<string, string>;
 }
 
 /** Sets opened from outside the learner's packs (a shared link, Community), kept so their phrases stay known. */
@@ -190,6 +200,9 @@ export const BANK_PHRASES: BankPhrase[] = [];
 export const ALBUMS: Album[] = [];
 
 const phraseById = new Map<string, Phrase>();
+/** Every installed course's covers of phrases and songs, as URLs (one id is in one course). */
+const phraseCovers = new Map<string, string>();
+const songCovers = new Map<string, string>();
 const setById = new Map<string, PhraseSet>();
 const bankById = new Map<string, BankPhrase>();
 const packs = new Map<LanguageCode, ContentPack>();
@@ -243,6 +256,7 @@ function phraseOf(p: PhraseWire, set: PhraseSet): Phrase {
     audio: p.audio ? (Object.fromEntries(Object.entries(p.audio).map(([lang, url]) => [lang, apiUrl(url)])) as Phrase['audio']) : null,
     durationMs: p.durationMs ?? null,
     own: set.owner === 'me',
+    ...(phraseCovers.has(p.id) ? { coverUrl: phraseCovers.get(p.id) } : {}),
   };
 }
 
@@ -256,6 +270,12 @@ function rebuild(): void {
   setById.clear();
   for (const set of [...sets, ...extraSets]) setById.set(set.id, set);
   replace(SETS, [...sets, ...extraSets]);
+  phraseCovers.clear();
+  songCovers.clear();
+  for (const pack of all) {
+    for (const [id, url] of Object.entries(pack.covers?.phrases ?? {})) phraseCovers.set(id, url);
+    for (const [id, url] of Object.entries(pack.covers?.songs ?? {})) songCovers.set(id, url);
+  }
   phraseById.clear();
   const phrases: Phrase[] = [];
   for (const wire of wires) {
@@ -323,6 +343,26 @@ export function removeSet(id: string): ContentPack | undefined {
   return next;
 }
 
+/**
+ * A cover the learner just drew for a phrase or a song, put into its course's pack at once so it
+ * shows before the pack is downloaded again. Returns the pack it changed.
+ */
+export function applyItemCover(targetLang: LanguageCode, kind: 'phrase' | 'song', id: string, url: string): ContentPack | undefined {
+  const pack = packs.get(targetLang);
+  if (!pack) return undefined;
+  const covers = pack.covers ?? { phrases: {}, songs: {} };
+  const key = kind === 'phrase' ? 'phrases' : 'songs';
+  const next: ContentPack = { ...pack, covers: { ...covers, [key]: { ...covers[key], [id]: url } } };
+  packs.set(targetLang, next);
+  rebuild();
+  return next;
+}
+
+/** The learner's own drawn cover of a song, when they drew one. */
+export function songCoverUrl(id: string | null | undefined): string | undefined {
+  return id ? songCovers.get(id) : undefined;
+}
+
 /** Adds sets opened from outside the packs (a shared link, Community), replacing older copies. */
 export function installExtras(more: ExtraSets): void {
   const ids = new Set(more.sets.map((s) => s.id));
@@ -335,14 +375,15 @@ export function installExtras(more: ExtraSets): void {
 
 /**
  * Keeps only Loro's own sets and albums in every installed pack (after signing out: the packs held
- * the learner's own and saved ones too) and forgets the sets opened from outside them. Returns the
+ * the learner's own and saved ones too, and their covers of phrases and songs) and forgets the sets
+ * opened from outside them. Returns the
  * packs as they are now, to be saved.
  */
 export function keepOnlyLoros(): ContentPack[] {
   for (const [lang, pack] of packs) {
     const sets = pack.sets.filter((s) => s.owner === 'loro');
     const ids = new Set(sets.map((s) => s.id));
-    packs.set(lang, { ...pack, sets, phrases: pack.phrases.filter((p) => ids.has(p.setId)), albums: pack.albums.filter((a) => a.owner === 'loro') });
+    packs.set(lang, { ...pack, sets, phrases: pack.phrases.filter((p) => ids.has(p.setId)), albums: pack.albums.filter((a) => a.owner === 'loro'), covers: { phrases: {}, songs: {} } });
   }
   extras = { sets: [], phrases: [] };
   rebuild();

@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { keepOpenedSet } from '@shared/api/contentCache';
-import { deleteSet, fetchSet, generateCover, saveItem, unsaveItem } from '@shared/api/library';
+import { deleteSet, fetchSet, saveItem, unsaveItem } from '@shared/api/library';
 import { coursesFor, getTopic, Phrase, TopicTone } from '@shared/content';
 import { languageName } from '@shared/copy';
 import { useNav } from '@shared/nav/NavContext';
@@ -112,7 +112,6 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
   const [sortOpen, setSortOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [picking, setPicking] = useState(false);
-  const [drawing, setDrawing] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const account = useAccount();
@@ -203,19 +202,6 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
   const served = view.content;
   /** One of the learner's own sets (plan 108): theirs to fill and arrange. */
   const mine = served?.owner === 'me';
-  const drawCover = async () => {
-    if (!served) return;
-    setDrawing(true);
-    try {
-      await generateCover({ kind: 'set', title: served.title, ...(served.description ? { description: served.description } : {}), attachTo: served.id });
-      await content.refresh();
-      void account.refreshUsage();
-    } catch (error) {
-      toast(problemText(c, error));
-    } finally {
-      setDrawing(false);
-    }
-  };
   const removeServed = async () => {
     if (!served || !(await confirm(c.share.deleteSetConfirm(served.title), c.share.delete, c.common.cancel))) return;
     try {
@@ -264,7 +250,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
           {/* Cover and title side by side, whatever the title's length, so sibling sets share one
               layout; only very large text puts the title under the cover. */}
           <View style={styles.headRow}>
-            <SetCover set={view} px={96} rounded={radius['2xl']} style={shadow.cover} />
+            <SetCover set={view} px={96} rounded={radius['2xl']} style={shadow.cover} redraw />
             <View style={styles.headText}>
               <View style={styles.kicker}>
                 {mine ? (
@@ -529,15 +515,6 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
               onPress={() => {
                 setMoreOpen(false);
                 nav.makeSet({ setId });
-              }}
-            />
-            <SheetOption
-              icon="palette"
-              label={drawing ? c.share.coverMaking : c.share.cover}
-              disabled={drawing}
-              onPress={() => {
-                setMoreOpen(false);
-                void drawCover();
               }}
             />
             <SheetOption

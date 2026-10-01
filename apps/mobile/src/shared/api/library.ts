@@ -158,8 +158,23 @@ export const unsaveItem = (kind: 'set' | 'album', id: string) =>
 export const setDisplayName = (displayName: string) =>
   api<{ displayName: string | null }>('/library/profile', { method: 'POST', body: { displayName }, auth: 'required' });
 
-export const generateCover = (body: { kind: 'set' | 'album'; title: string; description?: string; attachTo?: string }) =>
-  api<{ id: string; url: string; provider: 'claude' | 'pattern' }>('/library/generate/cover', { method: 'POST', body, auth: 'required', timeoutMs: 120_000 });
+/** What a cover is drawn for: a set or album wears it; a phrase's or song's is the learner's own. */
+export type CoverKind = 'set' | 'album' | 'song' | 'phrase';
+
+/** A cover just drawn; `copy` is the learner's new copy of one of Loro's sets or albums that wears it. */
+export interface DrawnCover {
+  id: string;
+  url: string;
+  provider: 'claude' | 'pattern';
+  copy?: { kind: 'set' | 'album'; id: string };
+}
+
+/**
+ * A drawn cover (plan 106). With `attachTo` it goes on that item, drawn for the item's own words:
+ * the learner's set or album in place, a copy of one of Loro's, or their own cover of a phrase or song.
+ */
+export const generateCover = (body: { kind: CoverKind; title?: string; description?: string; attachTo?: string; nativeLang?: LanguageCode }) =>
+  api<DrawnCover>('/library/generate/cover', { method: 'POST', body, auth: 'required', timeoutMs: 120_000 });
 
 export const generateSong = (body: { setId: string; styleId: SongStyle; nativeLang: LanguageCode; title?: string; albumId?: string }) =>
   api<{ song: Song; album: Album }>('/library/generate/song', { method: 'POST', body, auth: 'required', timeoutMs: 60_000 });
