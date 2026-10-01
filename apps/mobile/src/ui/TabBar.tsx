@@ -33,7 +33,17 @@ export function TabBar({ current, onNavigate }: { current: Tab; onNavigate: (tab
               style={({ pressed }) => [styles.tab, pressed && { backgroundColor: colors.surfaceContainer }]}
             >
               <Icon name={tab.icon} fill={active} size="lg" color={active ? 'primaryContainer' : 'secondary'} />
-              <Txt variant="caption" weight={active ? 700 : 500} color={active ? 'primaryContainer' : 'secondary'}>
+              {/* One line, whole words: a long label ("Библиотека") on a narrow screen shrinks a little rather than breaking. */}
+              <Txt
+                variant="caption"
+                weight={active ? 700 : 500}
+                color={active ? 'primaryContainer' : 'secondary'}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+                maxFontSizeMultiplier={1.4}
+                style={styles.label}
+              >
                 {c.tabs[tab.label]}
               </Txt>
             </Pressable>
@@ -46,6 +56,7 @@ export function TabBar({ current, onNavigate }: { current: Tab; onNavigate: (tab
 
 const styles = StyleSheet.create({
   bar: { backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.surfaceContainerHigh },
-  row: { height: 56, flexDirection: 'row', width: '100%', maxWidth: 1024, alignSelf: 'center' },
-  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2 },
+  row: { minHeight: 56, flexDirection: 'row', width: '100%', maxWidth: 1024, alignSelf: 'center' },
+  tab: { flex: 1, minWidth: 0, paddingHorizontal: 2, paddingVertical: 4, alignItems: 'center', justifyContent: 'center', gap: 2 },
+  label: { maxWidth: '100%' },
 });

@@ -8,6 +8,7 @@ import { useCopy, useStore } from '../state/store';
 import { Icon } from './Icon';
 import { Txt } from './Txt';
 import { colors, radius, shadow, TARGET } from './theme';
+import { useRoom } from './useRoom';
 
 /**
  * The top bar (the web's src/ui/NavigationHeader.tsx): the avatar that opens Settings (or Back on
@@ -17,6 +18,7 @@ export function TopBar({ title, titleLang, onBack, onOpenSettings, action }: { t
   const c = useCopy();
   const { state } = useStore();
   const insets = useSafeAreaInsets();
+  const { compact } = useRoom();
   const points = pointsOf(state.learner);
   const { name, targetLang } = state.learner.profile;
   return (
@@ -59,6 +61,9 @@ export function TopBar({ title, titleLang, onBack, onOpenSettings, action }: { t
               italic={Boolean(titleLang)}
               lang={titleLang}
               numberOfLines={titleLang ? 2 : 1}
+              // A page's name shrinks a little on a narrow screen rather than losing its end.
+              adjustsFontSizeToFit={!titleLang}
+              minimumFontScale={0.8}
               accessibilityRole="header"
             >
               {title}
@@ -72,9 +77,12 @@ export function TopBar({ title, titleLang, onBack, onOpenSettings, action }: { t
             <Txt variant="body" weight={700} color="onPrimaryFixed">
               {new Intl.NumberFormat(c.locale).format(points)}
             </Txt>
-            <Txt variant="label" weight={500} color="secondary">
-              {c.nav.pointsShort(points)}
-            </Txt>
+            {/* On a compact screen the star says it; the label still names the points. */}
+            {!compact && (
+              <Txt variant="label" weight={500} color="secondary">
+                {c.nav.pointsShort(points)}
+              </Txt>
+            )}
           </View>
         )}
       </View>

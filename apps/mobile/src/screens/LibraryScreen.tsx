@@ -28,6 +28,7 @@ import { AlbumsView } from './AlbumsView';
 import { useAccount } from '../state/account';
 import { onDevice } from '../state/upload';
 import { useCopy, useNow, useStore } from '../state/store';
+import { Banner } from '../ui/Banner';
 import { Button, Chip } from '../ui/Button';
 import { RecallChart, WeeklyChart } from '../ui/Charts';
 import { PhraseRow } from '../ui/PhraseRow';
@@ -108,12 +109,9 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
         </View>
 
         {signedOut && waiting.phrases.length + waiting.sets.length > 0 && (
-          <View style={styles.onDevice}>
-            <Txt variant="label" style={styles.onDeviceText}>
-              {c.library.onDevice(waiting.phrases.length, waiting.sets.length)}
-            </Txt>
-            <Button variant="primarySm" label={c.account.signIn} onPress={nav.openAccount} />
-          </View>
+          <Banner action={<Button variant="primarySm" label={c.account.signIn} onPress={nav.openAccount} />} style={styles.onDevice}>
+            <Txt variant="label">{c.library.onDevice(waiting.phrases.length, waiting.sets.length)}</Txt>
+          </Banner>
         )}
 
         {segment === 'albums' ? (
@@ -243,8 +241,7 @@ function SetList({ ids, view, now }: { ids: string[]; view: LibraryView; now: nu
 }
 
 const styles = StyleSheet.create({
-  onDevice: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.xl, backgroundColor: colors.surfaceContainerLow, padding: 12 },
-  onDeviceText: { flex: 1 },
+  onDevice: { borderRadius: radius.xl, backgroundColor: colors.surfaceContainerLow, padding: 12 },
   screen: { flex: 1, backgroundColor: colors.surface },
   content: { width: '100%', maxWidth: 768, alignSelf: 'center', paddingHorizontal: PAGE_PAD, paddingTop: 16, paddingBottom: 24, gap: 12 },
   segments: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: radius.full, backgroundColor: colors.surfaceContainerLow },

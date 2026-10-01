@@ -1,6 +1,6 @@
-// What a cover holds (plan 107): the phrase icon, the song icon, or both, in its top left corner (a
-// card's play button has the bottom right). A set is phrases (and songs, when some are sung from
-// it); an album is songs.
+// What a cover holds (plan 107), in its top left corner (a card's play button has the bottom right):
+// the phrase icon when it has phrases, the song icon when it has songs, both when it has both. A set
+// is phrases (and songs, when some are sung from it); an album is songs.
 import { StyleSheet, View } from 'react-native';
 import { Icon } from './Icon';
 import { colors, radius } from './theme';

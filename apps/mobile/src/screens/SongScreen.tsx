@@ -25,12 +25,14 @@ import { useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
 import { colors, radius, shadow, TARGET } from '../ui/theme';
 import { GRADES } from './grades';
+import { useRoom } from '../ui/useRoom';
 
 export function SongScreen() {
   const c = useCopy();
   const nav = useNav();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { compact } = useRoom();
   const music = useMusic();
   const { state, actions } = useStore();
   const [meanings, setMeanings] = useState(true);
@@ -73,7 +75,7 @@ export function SongScreen() {
         </View>
         <View style={{ width: TARGET }} />
       </View>
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}>
+      <ScrollView contentContainerStyle={[styles.content, compact && styles.compactContent, { paddingBottom: insets.bottom + 32 }]}>
         <View style={styles.cover}>
           <AlbumCover url={music.album?.coverUrl ?? null} px={220} rounded={20} />
         </View>
@@ -201,6 +203,7 @@ function SongRating({ song }: { song: Song }) {
   const c = useCopy();
   const { state, actions } = useStore();
   const { announce } = useToast();
+  const { compact } = useRoom();
   const now = useNow(1000);
   const phraseIds = [...new Set(song.sections.flatMap((s) => s.lines).flatMap((l) => (l.phraseId ? [l.phraseId] : [])))].filter((id) => findPhrase(state.learner, id));
   if (phraseIds.length === 0) return null;
@@ -245,8 +248,9 @@ function SongRating({ song }: { song: Song }) {
               onPress={() => rate(grade)}
               style={({ pressed }) => [styles.grade, { backgroundColor: bg }, selected && styles.gradeSelected, pressed && { opacity: 0.8 }]}
             >
-              <Icon name={selected ? 'task_alt' : icon} size="sm" color={ink} />
-              <Txt weight={selected ? 700 : 600} color={ink}>
+              {/* As in the phrase player: a compact screen keeps the words whole and lets the colours tell the grades apart. */}
+              {(!compact || selected) && <Icon name={selected ? 'task_alt' : icon} size="sm" color={ink} />}
+              <Txt weight={selected ? 700 : 600} color={ink} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={styles.shrink}>
                 {c.common.grade[grade]}
               </Txt>
             </Pressable>
@@ -275,6 +279,7 @@ const styles = StyleSheet.create({
   topText: { flex: 1, alignItems: 'center' },
   kind: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   content: { paddingHorizontal: 24, gap: 12, width: '100%', maxWidth: 560, alignSelf: 'center' },
+  compactContent: { paddingHorizontal: 16 },
   cover: { alignItems: 'center', paddingVertical: 12 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   heart: { width: TARGET, height: TARGET, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
@@ -290,7 +295,8 @@ const styles = StyleSheet.create({
   rating: { gap: 6, paddingTop: 8 },
   ratingLine: { minHeight: TARGET, flexDirection: 'row', alignItems: 'center', gap: 8 },
   grades: { flexDirection: 'row', gap: 8 },
-  grade: { flex: 1, minHeight: 52, borderRadius: radius['2xl'], alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
+  grade: { flex: 1, minHeight: 52, paddingHorizontal: 4, borderRadius: radius['2xl'], alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
+  shrink: { flexShrink: 1 },
   gradeSelected: { borderWidth: 2, borderColor: colors.onSurface },
   lyricsHead: { flexDirection: 'row', alignItems: 'center', paddingTop: 16 },
   section: { gap: 4, paddingTop: 8 },

@@ -3,7 +3,7 @@ import { languageName } from '@shared/copy';
 import type { Phrase } from '@shared/content';
 import { promptOf } from '@shared/state/catalog';
 import { useCopy, useStore } from '../state/store';
-import { Icon, type IconName } from './Icon';
+import { Icon } from './Icon';
 import { Txt } from './Txt';
 import { colors, radius, TARGET } from './theme';
 
@@ -19,12 +19,10 @@ interface PhraseRowProps {
   onPlay: () => void;
   playLabel?: string;
   onMore: () => void;
-  /** Where phrases and songs share a list (a set's page, plan 107): the phrase icon before its prompt. */
-  kindIcon?: IconName;
 }
 
 /** A two-line track row (the web's src/ui/PhraseRow.tsx): the target, then the prompt · status. */
-export function PhraseRow({ phrase, detail, leading, isCurrent = false, isPlaying = false, hideTarget = false, onPlay, playLabel, onMore, kindIcon }: PhraseRowProps) {
+export function PhraseRow({ phrase, detail, leading, isCurrent = false, isPlaying = false, hideTarget = false, onPlay, playLabel, onMore }: PhraseRowProps) {
   const c = useCopy();
   const { state } = useStore();
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
@@ -55,13 +53,10 @@ export function PhraseRow({ phrase, detail, leading, isCurrent = false, isPlayin
           >
             {title}
           </Txt>
-          <View style={styles.second}>
-          {kindIcon && <Icon name={kindIcon} size={14} color="secondary" />}
-          <Txt variant="label" color="secondary" style={styles.flex}>
+          <Txt variant="label" color="secondary">
             {hideTarget ? c.player.hidden(languageName(phrase.targetLang, c.locale)) : <Txt variant="label" color="secondary" lang={prompt.lang}>{prompt.text}</Txt>}
             {status ? <Txt variant="label" color="onSurfaceVariant">{` · ${status}`}</Txt> : null}
           </Txt>
-          </View>
         </View>
       </Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel={c.phrase.details(title)} onPress={onMore} style={({ pressed }) => [styles.more, pressed && styles.pressed]}>
@@ -78,7 +73,5 @@ const styles = StyleSheet.create({
   pressed: { backgroundColor: colors.surfaceContainer },
   leading: { width: 24, alignItems: 'center' },
   text: { flex: 1, minWidth: 0 },
-  second: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  flex: { flex: 1, minWidth: 0 },
   more: { width: TARGET, height: TARGET, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
 });

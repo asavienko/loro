@@ -10,6 +10,7 @@ import { AlbumCover } from '../music/AlbumCover';
 import { CoverSheet } from '../sheets/CoverSheet';
 import { remaining, useAccount } from '../state/account';
 import { useCopy, useStore } from '../state/store';
+import { Banner } from '../ui/Banner';
 import { Button } from '../ui/Button';
 import { Icon, IconName } from '../ui/Icon';
 import { resetTime } from '../ui/problems';
@@ -51,13 +52,9 @@ export function CreateScreen() {
         </Txt>
 
         {!signedIn && (
-          <View style={styles.signIn}>
-            <Icon name="account_circle" size="2xl" color="primaryContainer" />
-            <Txt variant="row" style={{ flex: 1 }}>
-              {c.account.needed}
-            </Txt>
-            <Button variant="primarySm" label={c.account.signIn} onPress={nav.openAccount} />
-          </View>
+          <Banner icon="account_circle" action={<Button variant="primarySm" label={c.account.signIn} onPress={nav.openAccount} />} style={styles.signIn}>
+            <Txt variant="row">{c.account.needed}</Txt>
+          </Banner>
         )}
 
         <Card
@@ -142,32 +139,40 @@ export function CreateScreen() {
   );
 }
 
-/** One kind of thing to make; a song's card is told apart by its music icon (plan 107). */
+/**
+ * One kind of thing to make; a song's card is told apart by its music icon (plan 107). The icon sits
+ * beside the title, so the description has the card's whole width; what's left today and where it
+ * comes from share the last line.
+ */
 function Card({ icon, title, body, note, writer, tone, onPress }: { icon: IconName; title: string; body: string; note?: string; writer?: string; tone: 'phrases' | 'music' | 'plain'; onPress?: () => void }) {
   const content = (
     <>
-      <View style={[styles.cardIcon, tone === 'phrases' ? styles.cardIconPhrases : tone === 'music' ? styles.cardIconMusic : null]}>
-        <Icon name={icon} size="xl" color={tone === 'music' ? 'onTertiaryFixed' : 'primaryContainer'} />
-      </View>
-      <View style={{ flex: 1, gap: 4 }}>
-        <Txt variant="title" face="serif" weight={600}>
+      <View style={styles.cardHead}>
+        <View style={[styles.cardIcon, tone === 'phrases' ? styles.cardIconPhrases : tone === 'music' ? styles.cardIconMusic : null]}>
+          <Icon name={icon} size="lg" color={tone === 'music' ? 'onTertiaryFixed' : 'primaryContainer'} />
+        </View>
+        <Txt variant="title" face="serif" weight={600} style={styles.flex}>
           {title}
         </Txt>
-        <Txt variant="body" color="secondary">
-          {body}
-        </Txt>
-        {writer && (
-          <Txt variant="label" color="secondary">
-            {writer}
-          </Txt>
-        )}
-        {note && (
-          <Txt variant="label" weight={700} color="primaryContainer">
-            {note}
-          </Txt>
-        )}
+        {onPress && <Icon name="chevron_right" color="secondary" />}
       </View>
-      {onPress && <Icon name="chevron_right" color="secondary" />}
+      <Txt variant="body" color="secondary">
+        {body}
+      </Txt>
+      {(note || writer) && (
+        <View style={styles.cardFoot}>
+          {note && (
+            <Txt variant="label" weight={700} color="primaryContainer">
+              {note}
+            </Txt>
+          )}
+          {writer && (
+            <Txt variant="label" color="secondary">
+              {writer}
+            </Txt>
+          )}
+        </View>
+      )}
     </>
   );
   if (!onPress) return <View style={styles.card}>{content}</View>;
@@ -180,10 +185,13 @@ function Card({ icon, title, body, note, writer, tone, onPress }: { icon: IconNa
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.surface },
-  content: { padding: 20, paddingBottom: 48, gap: 14, width: '100%', maxWidth: 720, alignSelf: 'center' },
-  signIn: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: radius['2xl'], backgroundColor: colors.primaryFixed },
-  card: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: radius['2xl'], backgroundColor: colors.surfaceContainerLow, ...shadow.card },
-  cardIcon: { width: 52, height: 52, borderRadius: radius.xl, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceContainerHigh },
+  content: { padding: 16, paddingBottom: 48, gap: 12, width: '100%', maxWidth: 720, alignSelf: 'center' },
+  signIn: { backgroundColor: colors.primaryFixed },
+  flex: { flex: 1, minWidth: 0 },
+  card: { gap: 8, padding: 16, borderRadius: radius['2xl'], backgroundColor: colors.surfaceContainerLow, ...shadow.card },
+  cardHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  cardFoot: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: 10, rowGap: 2 },
+  cardIcon: { width: 40, height: 40, borderRadius: radius.xl, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceContainerHigh },
   cardIconPhrases: { backgroundColor: colors.primaryFixed },
   cardIconMusic: { backgroundColor: colors.tertiaryFixed },
   pressed: { opacity: 0.85 },
