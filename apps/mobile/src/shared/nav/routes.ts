@@ -80,6 +80,8 @@ export function parseRoute(hash: string): Route {
 
 export function formatRoute(route: Route): string {
   const params = new URLSearchParams();
+  // The query as text: the URLSearchParams Expo installs on iOS and Android has no `size`.
+  const query = () => params.toString();
   switch (route.name) {
     case 'home':
       return '#/';
@@ -88,10 +90,10 @@ export function formatRoute(route: Route): string {
       if (route.topic) params.set('topic', route.topic);
       if (route.level) params.set('level', route.level);
       if (route.tag) params.set('tag', route.tag);
-      return `#/explore${params.size ? `?${params}` : ''}`;
+      return `#/explore${query() ? `?${query()}` : ''}`;
     case 'library':
       if (route.view) params.set('view', route.view);
-      return `#/library${params.size ? `?${params}` : ''}`;
+      return `#/library${query() ? `?${query()}` : ''}`;
     case 'create':
       return '#/create';
     case 'set':
