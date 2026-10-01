@@ -3,7 +3,7 @@ import { afterEach, before, describe, it } from 'node:test';
 import { setTokenSource } from '../api/client';
 import { installOwnSet } from '../content/fixture';
 import { fresh } from '../state/testing';
-import { readPhrases, SUGGEST_URL } from './remote';
+import { readPhrases, SUGGEST_URL, writePhrases } from './remote';
 import { fromWritten, suggest } from './suggest';
 import type { SuggestRequest } from './types';
 
@@ -104,6 +104,34 @@ describe('suggest', () => {
     const result = await suggest(fresh().learner, request, { exclude: new Set(), avoid: [] });
     assert.equal(result.writer, 'bank');
     assert.deepEqual(result.suggestions.map((s) => [s.source, s.bankId]), [['bank', 'bank-pharmacy-es-01']]);
+  });
+
+  it('waits while the server writes the deck in the background (plan 111)', async () => {
+    const asked: string[] = [];
+    const answers = [
+      { id: 'deck-1a2b3c', status: 'writing' },
+      { id: 'deck-1a2b3c', status: 'writing' },
+      { id: 'deck-1a2b3c', status: 'ready', provider: 'ai', phrases: [w('Necesito algo para la tos', 'I need something for a cough')], themes: [] },
+    ];
+    globalThis.fetch = (async (url: string, options: RequestInit) => {
+      asked.push(`${options.method ?? 'GET'} ${url}`);
+      return Response.json(answers.shift());
+    }) as typeof fetch;
+    const written = await writePhrases(request, [], undefined, { pollMs: 1, polls: 5 });
+    assert.equal(written.provider, 'ai');
+    assert.deepEqual(written.phrases.map((p) => p.target), ['Necesito algo para la tos']);
+    assert.deepEqual(asked, [`POST ${SUGGEST_URL}`, `GET ${SUGGEST_URL}/deck-1a2b3c`, `GET ${SUGGEST_URL}/deck-1a2b3c`]);
+  });
+
+  it('fails when the deck could not be written, and stops asking when the learner leaves', async () => {
+    globalThis.fetch = (async (_url: string, options: RequestInit) =>
+      Response.json(options.method === 'POST' ? { id: 'deck-1a2b3c', status: 'writing' } : { id: 'deck-1a2b3c', status: 'failed' })) as typeof fetch;
+    await assert.rejects(writePhrases(request, [], undefined, { pollMs: 1, polls: 5 }));
+    globalThis.fetch = (async () => Response.json({ id: 'deck-1a2b3c', status: 'writing' })) as typeof fetch;
+    const leaving = new AbortController();
+    const pending = writePhrases(request, [], leaving.signal, { pollMs: 50, polls: 5 });
+    leaving.abort();
+    await assert.rejects(pending);
   });
 
   it('fails when the server fails or answers nonsense: the device has no phrases of its own', async () => {
