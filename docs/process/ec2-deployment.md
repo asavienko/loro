@@ -75,7 +75,9 @@ What passes through, on library routes:
   `kind`, `q`, `sort`, `exp`, `sig` and `v`. Bodies up to 4 MiB (a learner's progress can reach 3.8
   MB; account routes keep 1 MiB). Cookies and caller forwarding headers never pass. The Lambda names
   the caller's address (`requestContext.http.sourceIp`) to nginx, which sends it to the API as
-  `X-Real-IP`, replacing anything the caller sent.
+  `X-Real-IP`, replacing anything the caller sent. The release runs the API with `TRUST_PROXY=1`, so
+  sign-in limits count per learner rather than for everyone behind nginx; the API takes the header
+  only from a loopback or private-network peer (nginx arrives through Docker's bridge).
 - **Responses**: JSON and text as text; audio, covers and anything else base64-encoded, so song
   audio, ranges (`206`, `Content-Range`, `Accept-Ranges`) and clips arrive byte-exact. The API's
   `Cache-Control`, `ETag`, `Content-Security-Policy` and `Retry-After` pass through; a reply without

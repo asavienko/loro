@@ -41,7 +41,9 @@ A learner can delete their library (`POST /library/me/delete`) or their whole ac
   `404`.
 - Inputs are validated with Zod; errors are RFC 9457 problem details with no stack traces or
   internal text.
-- Auth attempts are rate-limited per IP; generation is capped per learner per day.
+- Auth attempts are rate-limited per IP (behind the EC2 gateway, the learner's address that its
+  nginx sets in `X-Real-IP`, trusted only with `TRUST_PROXY=1` from a private peer); generation is
+  capped per learner per day.
 - Covers are SVG written only by `covers.ts` from a validated shape spec, never model markup, and
   are served with `Content-Security-Policy: default-src 'none'`. Titles and names refuse links.
 - Song audio URLs are signed (`LIBRARY_URL_SECRET`) and expire after about 12 hours.

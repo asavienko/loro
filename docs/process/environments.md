@@ -22,6 +22,7 @@ no staging or production environment yet.
 | `DATABASE_URL`                               | PostgreSQL for accounts, the library and sync                                              |
 | `AUTH_*`, `GOOGLE_*`, `APPLE_*`              | Sign-in: signing keys, email-code delivery, provider client IDs                            |
 | `CORS_ALLOWED_ORIGINS`                       | Browser origins; local Compose includes 8081 and 8082                                      |
+| `TRUST_PROXY=1`                              | Behind the EC2 gateway's nginx only: auth limits key on its `X-Real-IP` (private peers)    |
 | `ANTHROPIC_API_KEY`, `AI_MODEL_GENERATE`     | Claude writes phrase decks, lyrics and covers; empty uses the labelled fallbacks           |
 | `MUSIC_PROVIDER`, `MUSIC_API_KEY`            | `elevenlabs` sings songs; `stub` (default) gives the labelled "Demo sound" instrumental    |
 | `TTS_PROVIDER`, `TTS_API_KEY`, `TTS_VOICE_*` | `elevenlabs` renders phrase audio with the Q-15 voices; `stub` (default) spends nothing    |
