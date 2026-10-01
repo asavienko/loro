@@ -4,14 +4,16 @@
 // show that one. Only one sounds at a time: a song pauses the phrase loop, and the loop pauses it.
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { apiUrl, unreachable } from '@shared/api/client';
 import { fetchSong, type Song } from '@shared/api/library';
 import { onSessionChange, sessionState } from '@shared/api/session';
 import { useLatest } from '@shared/lib/useLatest';
+import { notifyLocally } from '@shared/push';
 import { clock } from '@shared/state/clock';
 import type { Album } from '@shared/content';
 import { backgroundPlayback } from '../audio/media';
+import { pushRegistered } from '../state/push';
 import { useCopy, useStore } from '../state/store';
 import { useToast } from '../ui/Toast';
 
@@ -145,6 +147,14 @@ export function MusicProvider({ children }: { children: ReactNode }) {
             if (now.status === 'ready')
               toast(c.music.songReady(now.title), { tone: 'success', action: { label: c.music.play, run: () => playLatest.current(of, [now], 0) } });
             else toast(c.music.songFailed(now.title));
+            // In the background the toast waits for the learner's return; the phone says it now
+            // (plan 113), unless the server's own push is on its way to this device.
+            if (AppState.currentState !== 'active' && !pushRegistered())
+              void notifyLocally({
+                title: now.status === 'ready' ? c.music.songReadyTitle : c.music.songFailedTitle,
+                body: now.status === 'ready' ? c.music.songReady(now.title) : c.music.songFailed(now.title),
+                data: { kind: 'song', songId: now.id, albumId: now.albumId, outcome: now.status === 'ready' ? 'ready' : 'failed' },
+              });
           },
           (error: unknown) => {
             // Offline: ask again later. Gone (removed, signed out) or refused: stop asking.

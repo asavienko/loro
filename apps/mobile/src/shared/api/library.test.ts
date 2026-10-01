@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { afterEach, before, describe, it } from 'node:test';
 import { API_URL, ApiError, setTokenSource } from './client';
-import { fetchUsage, generateCover } from './library';
+import { fetchUsage, generateCover, rewriteLyrics, writeLyrics } from './library';
 
 const original = globalThis.fetch;
 before(() => setTokenSource({ access: async () => 'token', renew: async () => null }));
@@ -46,6 +46,35 @@ describe('generateCover (plan 111)', () => {
     const asked = server({ id: 'cover-1', url: '/library/covers/cover-1.svg', provider: 'claude' });
     assert.deepEqual(await generateCover(body, fast), { id: 'cover-1', url: '/library/covers/cover-1.svg', provider: 'ai' });
     assert.equal(asked.length, 1);
+  });
+});
+
+describe('writeLyrics and rewriteLyrics (plan 113)', () => {
+  const ask = { setId: 'set-cafe', styleId: 'lullaby' as const, nativeLang: 'en-GB' as const };
+  const draft = (status: 'writing' | 'ready' | 'failed', revision = 1) => ({ id: 'lyrics-1', setId: 'set-cafe', styleId: 'lullaby', title: 'Café', status, sections: [], lyricsBy: status === 'ready' ? 'claude' : null, revision, instruction: null, updatedAt: 1 });
+
+  it('waits while the server writes the draft, asking where it stands, and reads an older writer as `ai`', async () => {
+    const asked = server(draft('writing'), draft('writing'), draft('ready'));
+    const written = await writeLyrics(ask, fast);
+    assert.equal(written.status, 'ready');
+    assert.equal(written.lyricsBy, 'ai');
+    assert.deepEqual(asked, ['POST /library/lyrics', 'GET /library/lyrics/lyrics-1', 'GET /library/lyrics/lyrics-1']);
+  });
+
+  it('sends what the learner asked to change, and nothing when they asked for new lyrics', async () => {
+    const bodies: unknown[] = [];
+    globalThis.fetch = (async (_url: string, options: RequestInit) => {
+      bodies.push(options.body === undefined ? undefined : JSON.parse(options.body as string));
+      return Response.json(draft('ready', 2));
+    }) as typeof fetch;
+    assert.equal((await rewriteLyrics('lyrics-1', 'A shorter chorus', fast)).revision, 2);
+    await rewriteLyrics('lyrics-1', undefined, fast);
+    assert.deepEqual(bodies, [{ instruction: 'A shorter chorus' }, {}]);
+  });
+
+  it('stops waiting, still `writing`, when it takes longer than the app waits', async () => {
+    server(...Array.from({ length: 10 }, () => draft('writing')));
+    assert.equal((await writeLyrics(ask, { pollMs: 1, polls: 2 })).status, 'writing');
   });
 });
 

@@ -9,6 +9,7 @@ import { formatRoute, Route, Tab } from '@shared/nav/routes';
 import { findPhrase, findSetView } from '@shared/state/catalog';
 import { derive, POINTS } from '@shared/state/memory';
 import { useLatest } from '@shared/lib/useLatest';
+import { onNotificationTap } from '@shared/push';
 import { added } from '@shared/generate/deck';
 import type { MakeSession } from '@shared/generate/session';
 import { AddPhraseSheet } from '../sheets/AddPhraseSheet';
@@ -146,6 +147,8 @@ export function Shell({ children }: { children: ReactNode }) {
   useSaveWarning();
   useDeviceUpload();
   useQueueFollowsContent();
+  // A tap on a song's notification (plan 113) opens its album.
+  useEffect(() => onNotificationTap((tap) => nav.openAlbum(tap.albumId)), [nav]);
 
   return (
     <NavContext.Provider value={nav}>
