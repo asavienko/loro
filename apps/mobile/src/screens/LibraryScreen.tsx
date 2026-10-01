@@ -17,6 +17,7 @@ import {
   learningIds,
   likedPhraseIds,
   likedSetIds,
+  likedSetView,
   phraseProgress,
   recallBuckets,
   recentlyMissedIds,
@@ -135,7 +136,7 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
           {segment === 'phrases' ? (
             <PhraseList ids={phraseIds[view]()} view={view} now={now} />
           ) : (
-            <SetList ids={view === 'ownSets' ? yourSetIds : likedSetIds(learner)} view={view} now={now} />
+            <SetList ids={view === 'ownSets' ? yourSetIds : likedSetIds(learner)} view={view} now={now} liked={view === 'ownSets'} />
           )}
           {view === 'mine' && (
             <View style={styles.actions}>
@@ -218,12 +219,13 @@ function PhraseList({ ids, view, now }: { ids: string[]; view: LibraryView; now:
   );
 }
 
-function SetList({ ids, view, now }: { ids: string[]; view: LibraryView; now: number }) {
+/** Sets as rows; `liked` puts the learner's own "Liked phrases" first, which every learner has. */
+function SetList({ ids, view, now, liked = false }: { ids: string[]; view: LibraryView; now: number; liked?: boolean }) {
   const c = useCopy();
   const nav = useNav();
   const { state } = useStore();
   const learner = displayLearner(state);
-  const sets = ids.map((id) => findSetView(state.learner, id)).filter((v): v is SetView => Boolean(v));
+  const sets = [...(liked ? [likedSetView(state.learner, c.library.likedPhrases)] : []), ...ids.map((id) => findSetView(state.learner, id)).filter((v): v is SetView => Boolean(v))];
   if (sets.length === 0) return <Txt color="secondary" style={styles.empty}>{c.library.empty[view as 'ownSets' | 'likedSets']}</Txt>;
   return (
     <>

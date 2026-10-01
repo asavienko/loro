@@ -12,7 +12,7 @@ import { findSet, songCoverUrl } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
 import { formatElapsed } from '@shared/state/clock';
 import { RATING_WINDOW_MS } from '@shared/state/memory';
-import { isLiked, windowLeft } from '@shared/state/selectors';
+import { isLiked, LIKED_ID, windowLeft } from '@shared/state/selectors';
 import type { Grade } from '@shared/state/types';
 import { AlbumCover } from '../music/AlbumCover';
 import { clockTime, useMusic } from '../music/MusicPlayer';
@@ -91,7 +91,7 @@ export function SongScreen() {
         contentContainerStyle={[styles.content, compact && styles.compactContent, { paddingBottom: insets.bottom + 32 }]}
       >
         <View style={[styles.cover, { marginHorizontal: compact ? -16 : -24 }]}>
-          <AlbumCover url={songCoverUrl(song.id) ?? music.album?.coverUrl ?? null} px={coverWidth} height={coverHeight} rounded={0} redraw={{ kind: 'song', song }} />
+          <AlbumCover url={songCoverUrl(song.id) ?? music.album?.coverUrl ?? null} px={coverWidth} height={coverHeight} rounded={0} redraw={{ kind: 'song', song }} liked={music.album?.id === LIKED_ID} />
         </View>
         <View style={styles.titleRow}>
           <Txt variant="displaySm" face="serif" weight={600} accessibilityRole="header" style={{ flex: 1 }}>

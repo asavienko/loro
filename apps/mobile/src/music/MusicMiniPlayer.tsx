@@ -5,7 +5,7 @@
 import { useRouter } from 'expo-router';
 import type { Song } from '@shared/api/library';
 import { clock } from '@shared/state/clock';
-import { windowLeft } from '@shared/state/selectors';
+import { LIKED_ID, windowLeft } from '@shared/state/selectors';
 import type { PendingRating } from '@shared/state/types';
 import { barRating } from '@shared/ui/rating';
 import { useCopy, useStore } from '../state/store';
@@ -30,7 +30,7 @@ export function MusicMiniPlayer() {
     const status = look.playing ? `${c.music.songKind} · ${kind}` : c.player.paused;
     return (
       <MiniCard
-        cover={<AlbumCover url={music.album?.coverUrl ?? null} px={44} rounded={8} badges={false} />}
+        cover={<AlbumCover url={music.album?.coverUrl ?? null} px={44} rounded={8} badges={false} liked={music.album?.id === LIKED_ID} />}
         badge="music_note"
         title={
           <Txt variant="row" weight={600} color="inverseOnSurface" numberOfLines={1}>

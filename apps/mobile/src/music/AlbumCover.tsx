@@ -9,7 +9,8 @@ import { colors } from '../ui/theme';
 
 /**
  * `badges`: the song icon in its corner (plan 107), an album being songs. `redraw`: the album or song
- * it pictures, given a button in the corner that draws it a new cover (CoverRedraw).
+ * it pictures, given a button in the corner that draws it a new cover (CoverRedraw). `liked`: the
+ * learner's "Liked songs", a heart where an album without a cover shows a record.
  */
 export function AlbumCover({
   url,
@@ -19,6 +20,7 @@ export function AlbumCover({
   style,
   badges = true,
   redraw,
+  liked = false,
 }: {
   url: string | null;
   px: number;
@@ -28,13 +30,14 @@ export function AlbumCover({
   style?: ViewStyle;
   badges?: boolean;
   redraw?: CoverItem;
+  liked?: boolean;
 }) {
   const plain = (
     <View
       accessible={false}
-      style={[{ width: px, height, borderRadius: rounded, backgroundColor: colors.surfaceContainerHigh, alignItems: 'center', justifyContent: 'center' }, style]}
+      style={[{ width: px, height, borderRadius: rounded, backgroundColor: liked ? colors.primaryFixed : colors.surfaceContainerHigh, alignItems: 'center', justifyContent: 'center' }, style]}
     >
-      <Icon name="album" size={Math.round(Math.min(px, height) * 0.45)} color="primaryContainer" />
+      <Icon name={liked ? 'favorite' : 'album'} fill={liked} size={Math.round(Math.min(px, height) * 0.45)} color="primaryContainer" />
     </View>
   );
   const cover = url ? <RemoteCover url={url} px={px} height={height} rounded={rounded} style={style} fallback={plain} /> : plain;
