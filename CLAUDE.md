@@ -26,11 +26,14 @@ installs it before learner state loads. Product analytics and session replay go 
 (private/link/public, Community), progress sync and AI generation of phrase sets, covers and songs
 (within per-user daily limits) go through the API's `library` module; without `ANTHROPIC_API_KEY` or
 a music provider the server uses labelled fallbacks (phrase bank, drawn patterns, the set's phrases
-as lyrics, a "Demo sound" instrumental). Progress stays on the device first (AsyncStorage native,
-browser storage web) as an append-only learner log with a pure state machine; FSRS runs in
-`packages/core-rs` through the `LoroCore` Expo module (`apps/mobile/modules/loro-core`, UniFFI) on
-native and the committed WASM browser build on the web. The API (NestJS + PostgreSQL) is deployed to
-a restricted EC2 host.
+as lyrics, a "Demo sound" instrumental). Every sound is the server's: phrases play the clips of its
+ElevenLabs voices (`TTS_*`, one per language), and the app has no device voice; the list of
+languages comes from `GET /v1/library/languages` (plan
+[108](plans/archive/2026-10-01/108-backend-only.md)). Progress stays on the device first
+(AsyncStorage native, browser storage web) as an append-only learner log with a pure state machine;
+FSRS runs in `packages/core-rs` through the `LoroCore` Expo module (`apps/mobile/modules/loro-core`,
+UniFFI) on native and the committed WASM browser build on the web. The API (NestJS + PostgreSQL) is
+deployed to a restricted EC2 host.
 
 ## Keep this file current
 

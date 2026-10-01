@@ -3,12 +3,16 @@
 - **Requirement IDs:** `AI-06` (make a set), `F-04` (accounts and sync), `P3-01` (continuous
   playback)
 - **Milestone:** Main app
-- **Status:** 🟡 Started 2026-09-30 at the owner's request. Scope 1–4 landed the same day (7f22e979,
-  7a5d2eea, bbf36b8f, 9b36525b, c84ebae4, 9314c379); scope 5 (clips only) on 2026-10-01, with
-  `TTS_VOICE_EN_GB` set to ElevenLabs' premade "Alice" (`Xb7hH8MSUJpSbSDYk0k2`, British) for English
-  prompts until the owner picks one (Q-15); scope 6 (languages from the API) the same day. **Left:**
-  the signed-in verification run below against the deployed API. Hearing anything needs
-  `TTS_PROVIDER=elevenlabs` with `TTS_API_KEY` and a voice per language on the server.
+- **Status:** ✅ Done 2026-10-01. Scope 1–4 landed on 2026-09-30 (7f22e979, 7a5d2eea, bbf36b8f,
+  9b36525b, c84ebae4, 9314c379); scope 5 (clips only, c6e62372) and 6 (languages from the API,
+  c0b19e08 and e2d8b6e8) on 2026-10-01, with `TTS_VOICE_EN_GB` set to ElevenLabs' premade "Alice"
+  (`Xb7hH8MSUJpSbSDYk0k2`, British) for English prompts until the owner picks one (Q-15). Verified
+  on 2026-10-01: the web app against a local API with ElevenLabs played a phrase's English prompt
+  and Spanish target from server clips; the deployed EC2 API, through the public gateway, signed a
+  learner in with an email code, answered Make a set from the phrase bank without spending the
+  allowance, and made a set with one of Loro's phrases, a bank phrase and a typed phrase whose notes
+  the rules wrote and whose clips rendered. The one-time upload of a device's sets is covered by the
+  app's and the API's tests, not by a live run.
 - **Owner request, 2026-09-30:** "I want to make all the functionality work with the existing
   backend, so all the sound phrase generation should work with the backend. All the data should come
   from the backend."
