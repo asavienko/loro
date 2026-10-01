@@ -1,6 +1,7 @@
 // Albums, in Library (plan 107; the Music tab of plan 106): Loro's album of every set sung, the
-// learner's own and the ones they saved, and what others have shared in this course, with search and
-// order. Songs live in their sets and play in the one player; albums group them.
+// learner's own (their "Liked songs" first, which every learner has) and the ones they saved, and what
+// others have shared in this course, with search and order. Songs live in their sets and play in the
+// one player; albums group them.
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
@@ -9,7 +10,7 @@ import { fetchCommunityAlbums, type CommunitySort } from '@shared/api/library';
 import { Album, albumsForCourse } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
 import { AlbumCard } from '../music/AlbumCard';
-import { LikedSongs } from '../music/LikedSongs';
+import { likedAlbum, useLikedSongs } from '../music/LikedSongs';
 import { useCopy, useStore } from '../state/store';
 import { Button, Chip } from '../ui/Button';
 import { field, placeholderColor } from '../ui/field';
@@ -25,7 +26,8 @@ export function AlbumsView() {
   const target = state.learner.profile.targetLang;
   const albums = albumsForCourse(target);
   const loro = albums.filter((a) => a.owner === 'loro');
-  const mine = albums.filter((a) => a.owner === 'me');
+  const likedSongs = useLikedSongs();
+  const mine = [likedAlbum(c, target, likedSongs), ...albums.filter((a) => a.owner === 'me')];
   const saved = albums.filter((a) => a.owner === 'other' && a.saved);
   const [community, setCommunity] = useState<Album[] | null>(null);
   // Why the list couldn't load: no connection, or the server failed (either way no endless spinner).
@@ -68,9 +70,8 @@ export function AlbumsView() {
   return (
     <View style={styles.stack}>
       <Button variant="tonal" icon="music_note" label={c.music.makeSong} onPress={() => nav.makeSong()} style={styles.make} />
-      <LikedSongs />
+      <Shelf title={c.music.yours} albums={mine} width={card} />
       <Shelf title={c.music.loro} albums={loro} width={card} empty={c.music.empty} />
-      {mine.length > 0 && <Shelf title={c.music.yours} albums={mine} width={card} />}
       {saved.length > 0 && <Shelf title={c.music.saved} albums={saved} width={card} />}
       <Shelf
         title={c.community.albums}

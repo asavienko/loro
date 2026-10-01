@@ -43,7 +43,7 @@ phrases.
 | Home    | The daily loop, and Loro's album of the course sung                                        |
 | Explore | Loro's course, the learner's own and saved sets, Community sets, Make a set with AI        |
 | Create  | Making sets and songs, with today's allowance and who makes them beside each               |
-| Library | Progress: liked, due, learned phrases; the learner's sets; Albums (Loro's, theirs, shared) |
+| Library | Progress: liked, due, learned phrases; the learner's sets; Albums (theirs, Loro's, shared) |
 
 Songs live in their sets: a set's page lists its phrases and its songs in one list, a song marked
 with the music note; the set's Play plays its phrases, and a song plays when tapped. Covers say what
@@ -52,10 +52,14 @@ sung from it (`songCount` on every set); an album the song icon. Phrases and son
 the bar above the tabs and `/player` show what was started last (a song wears a music-note badge),
 and starting one pauses the other. A song has a heart (a `song:<id>` like) and Missed / Hard / Easy,
 which review every phrase of the learner's course it sings (`RATE_PHRASES`, the usual window and
-undo). The one player — a song or a phrase — takes the lock screen and notification shade with its
-grades, and plays on with the screen locked (`modules/loro-media`). Everything is in the app's light
-palette, drawn covers included (light grounds; Loro's covers carry the seed revision in their ids,
-since covers are served as immutable).
+undo). Every learner has a "Liked phrases" set (first in Library's sets) and a "Liked songs" album
+(first among their albums), made on the device from their synced likes, so they are there signed in
+or not: most recently liked first, played like any set or album, an item gone when unliked
+(`LIKED_ID`, `likedSetView`, `src/music/LikedSongs.tsx`). They are never stored on the server. The
+one player — a song or a phrase — takes the lock screen and notification shade with its grades, and
+plays on with the screen locked (`modules/loro-media`). Everything is in the app's light palette,
+drawn covers included (light grounds; Loro's covers carry the seed revision in their ids, since
+covers are served as immutable).
 
 ## Accounts
 

@@ -458,6 +458,8 @@ export function makeEn(n: Plural) {
       addPhrase: 'Add your phrase',
       /** The learner's set for phrases added on their own (plan 108). */
       myPhrases: 'My phrases',
+      /** Every learner's set of the phrases they liked. */
+      likedPhrases: 'Liked phrases',
       onDevice: (phrases: number, sets: number) => `On this device only: ${phrases} of your phrases, ${sets} of your sets. Sign in to keep them in your account; they come with their progress.`,
       uploaded: 'Your phrases and sets from this device are in your account now.',
       newSet: 'New set',
@@ -677,6 +679,7 @@ export function makeEn(n: Plural) {
     },
     music: {
       likedSongs: 'Liked songs',
+      likedEmpty: 'Tap the heart on a song to keep it here.',
       songKind: 'Song',
       likeSong: 'Like this song',
       rateSong: (n: number) => (n === 1 ? 'How did it go? Your rating reviews the phrase it sings.' : `How did it go? Your rating reviews the ${n} phrases it sings.`),

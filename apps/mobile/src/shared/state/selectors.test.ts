@@ -26,7 +26,7 @@ import {
 import { courseSets, findSamePhrase, findSetView, keyOf, phraseKey } from './catalog';
 import { fullPlayMs, pauseMs, RATE_HOLD_MS } from './timing';
 import { cafe, DAY, done, fresh, load, MINUTE, playPhrase, run, T0 } from './testing';
-import { memoryOf, points, repeatsFor } from './selectors';
+import { LIKED_ID, likedSetView, memoryOf, points, repeatsFor } from './selectors';
 import type { Grade, LogEntry } from './types';
 
 const rated = (grade: 'missed' | 'hard' | 'easy', now: number) => [
@@ -326,5 +326,19 @@ describe('library and summary (onboarding/library review)', () => {
     const summary = sessionSummary(withOther, T0 + 10)!;
     assert.equal(summary.repetitions, 0);
     assert.equal(summary.points, 0);
+  });
+});
+
+describe('liked', () => {
+  it('the liked phrases set holds the course’s liked phrases, most recently liked first', () => {
+    let s = run(fresh(), { type: 'TOGGLE_LIKE', kind: 'phrase', id: 'cafe-02', now: T0 }, { type: 'TOGGLE_LIKE', kind: 'phrase', id: 'cafe-01', now: T0 + 1 });
+    s = run(s, { type: 'TOGGLE_LIKE', kind: 'phrase', id: 'bg-kafene-01', now: T0 + 2 });
+    const set = likedSetView(s.learner, 'Liked phrases');
+    assert.deepEqual(set.phraseIds, ['cafe-01', 'cafe-02'], 'another course’s phrase stays out');
+    assert.equal(set.id, LIKED_ID);
+    assert.equal(set.targetLang, s.learner.profile.targetLang);
+    s = run(s, { type: 'TOGGLE_LIKE', kind: 'phrase', id: 'cafe-01', now: T0 + 3 });
+    assert.deepEqual(likedSetView(s.learner, 'Liked phrases').phraseIds, ['cafe-02'], 'unliked, it leaves');
+    assert.deepEqual(likedSetView(fresh().learner, 'Liked phrases').phraseIds, [], 'every learner has one, empty at first');
   });
 });

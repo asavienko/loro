@@ -135,6 +135,8 @@ export interface Album {
   saved: boolean;
   /** The learner's own public album that reports took out of Community. */
   hidden?: boolean;
+  /** Its songs aren't all known yet (the learner's liked songs, being fetched or offline): no count shows. */
+  counting?: boolean;
   /** In Community: how many learners keep it in their library. */
   savedBy?: number;
   songCount: number;

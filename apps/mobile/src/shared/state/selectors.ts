@@ -573,6 +573,17 @@ export function likedPhraseIds(learner: LearnerState): string[] {
   return likedIds(learner, 'phrase').filter((id) => findPhrase(learner, id)?.targetLang === learner.profile.targetLang);
 }
 
+/**
+ * Every learner's two collections of what they liked, built from their likes on any device, signed in
+ * or not: the "Liked phrases" set and the "Liked songs" album share this id in their routes.
+ */
+export const LIKED_ID = 'liked';
+
+/** The "Liked phrases" set: the course's liked phrases, most recently liked first, under `title`. */
+export function likedSetView(learner: LearnerState, title: string): SetView {
+  return { id: LIKED_ID, title, content: null, topicId: null, level: null, coverIcon: 'favorite', targetLang: learner.profile.targetLang, phraseIds: likedPhraseIds(learner) };
+}
+
 export function likedSetIds(learner: LearnerState): string[] {
   return likedIds(learner, 'set').filter((id) => findSetView(learner, id)?.targetLang === learner.profile.targetLang);
 }

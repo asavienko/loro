@@ -2,7 +2,7 @@
 // cover, adds songs or deletes it; anyone else who can see it saves it to their library. A song
 // still being made shows as such and turns playable when it is ready.
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { deleteAlbum, deleteSong, fetchAlbum, retrySong, saveItem, unsaveItem, type AlbumDetail, type Song } from '@shared/api/library';
@@ -207,7 +207,7 @@ export function AlbumScreen({ id }: { id: string }) {
           </Txt>
         )}
         {songs.map((song, index) => (
-          <SongRow
+          <AlbumSongRow
             key={song.id}
             song={song}
             index={index}
@@ -234,7 +234,28 @@ export function AlbumScreen({ id }: { id: string }) {
   );
 }
 
-function SongRow({ song, index, current, playing, onPlay, onRetry, onRemove, acting = false }: { song: Song; index: number; current: boolean; playing: boolean; onPlay: () => void; onRetry?: () => void; onRemove?: () => void; acting?: boolean }) {
+/** A song of an album's page: its place, title and kind; beside it, the owner's retry and remove, or `after`. */
+export function AlbumSongRow({
+  song,
+  index,
+  current,
+  playing,
+  onPlay,
+  onRetry,
+  onRemove,
+  acting = false,
+  after,
+}: {
+  song: Song;
+  index: number;
+  current: boolean;
+  playing: boolean;
+  onPlay: () => void;
+  onRetry?: () => void;
+  onRemove?: () => void;
+  acting?: boolean;
+  after?: ReactNode;
+}) {
   const c = useCopy();
   const ready = song.status === 'ready';
   const meta = [c.music.style[song.styleId], song.durationMs ? clockTime(song.durationMs / 1000) : null, song.audioBy === 'demo' ? (song.voiced ? c.music.spokenDemo : c.music.demoSound) : song.audioBy === 'elevenlabs' ? c.music.sung : null]
@@ -279,6 +300,7 @@ function SongRow({ song, index, current, playing, onPlay, onRetry, onRemove, act
       </Pressable>
       {onRetry && <Button variant="icon" icon="refresh" color="onSurface" accessibilityLabel={c.music.retrySong(song.title)} disabled={acting} onPress={onRetry} />}
       {onRemove && <Button variant="icon" icon="delete" color="onSurface" accessibilityLabel={c.music.removeSong} disabled={acting} onPress={onRemove} />}
+      {after}
     </View>
   );
 }
