@@ -36,6 +36,18 @@ remain in Git history at `e36cc758`. Delivery status lives in
 | AI-05 | Every AI path is signed-in, limited, schema-validated, and has a labelled fallback that still works. |
 | AI-06 | AI phrase suggestions are marked as unchecked by a native speaker and are added only explicitly.     |
 
+## Course content
+
+Plan [112](../../plans/112-course-content-at-scale.md);
+[ADR-0016](../architecture/adr/0016-course-content-at-scale.md).
+
+| ID    | Requirement                                                                                                                                    |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| CC-01 | Every course teaches at least 10,000 phrases across A1–C2, covering its syllabus (topics, situations, grammar, vocabulary), as measured.       |
+| CC-02 | Levels run A1–C2, and the learner chooses where to start; no estimated placement score is shown.                                               |
+| CC-03 | A course's phrases download by level and a set's notes when it is opened; both stay on the device and work offline.                            |
+| CC-04 | Every Loro set and phrase carries machine-readable provenance and review status, and the app says honestly what no native speaker has checked. |
+
 ## Library and sharing
 
 | ID     | Requirement                                                                                                                                        |

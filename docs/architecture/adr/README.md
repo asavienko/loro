@@ -12,8 +12,9 @@ actually considered, what we chose, and the consequences we accepted.
 | [0008](0008-backend-nestjs-postgres.md) | NestJS + Postgres over a BaaS         | Accepted | 2026-07-28 |
 | [0011](0011-analytics-and-privacy.md)   | Privacy posture and the audio promise | Accepted | 2026-07-28 |
 | [0015](0015-open-model-providers.md)    | DeepSeek writes, Muse Image draws     | Accepted | 2026-10-01 |
+| [0016](0016-course-content-at-scale.md) | Course content at 10,000 per course   | Accepted | 2026-10-01 |
 
-The next new record is 0016; numbers are never reused.
+The next new record is 0017; numbers are never reused.
 
 ### Removed records
 
