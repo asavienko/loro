@@ -2881,5 +2881,2885 @@
   },
   "bank-booking-bg-05.pronunciation": {
     "ru-RU": { "title": "TRYAB-va", "text": "«Ря» в «трябва» — мягкое «р»: TRYAB-va." }
+  },
+  "bank-health-en-01.mnemonic": {
+    "bg-BG": {
+      "title": "Chemist като chemistry",
+      "text": "«Chemist» е от семейството на «chemistry»: началото «chem-» е познатото «хим-» от „химия“. В Британия така се нарича и аптеката (често «chemist's»), и фармацевтът, който работи в нея; думата «pharmacy» също се разбира."
+    },
+    "ru-RU": {
+      "title": "Chemist — как chemistry",
+      "text": "«Chemist» — родственник слова «chemistry»: начало «chem-» — это знакомое «хим-» из слова «химия». В Британии так называют и аптеку (часто «chemist's»), и работающего в ней фармацевта; слово «pharmacy» тоже поймут."
+    }
+  },
+  "bank-health-en-01.grammar": {
+    "bg-BG": {
+      "title": "«The nearest»: прилагателно + -est",
+      "text": "«Where's» е «where is». Късите прилагателни образуват превъзходна степен с «-est»: «near» → «the nearest» („най-близкият“). Пред превъзходната степен винаги стои «the»: «the nearest chemist»."
+    },
+    "ru-RU": {
+      "title": "«The nearest»: прилагательное + -est",
+      "text": "«Where's» — это «where is». Короткие прилагательные образуют превосходную степень с помощью «-est»: «near» → «the nearest» («ближайший»). Перед превосходной степенью всегда стоит «the»: «the nearest chemist»."
+    }
+  },
+  "bank-health-en-01.pronunciation": {
+    "bg-BG": {
+      "title": "Ch се чете «к»",
+      "text": "«Ch» в «chemist» се произнася «к», както в «chemistry», а не като «ч» в «cheese». Ударението е върху първата сричка: KEM-ist."
+    },
+    "ru-RU": {
+      "title": "Ch читается как «к»",
+      "text": "«Ch» в «chemist» произносится как «к», как в «chemistry», а не как «ч» в «cheese». Ударение падает на первый слог: KEM-ist."
+    }
+  },
+  "bank-health-en-02.mnemonic": {
+    "bg-BG": {
+      "title": "Cough звучи като кашлица",
+      "text": "Кажете «cough» на глас и ще чуете самата кашлица: «коф». Странно е само изписването, затова запомнете първо звука, а после буквите."
+    },
+    "ru-RU": {
+      "title": "Cough звучит как кашель",
+      "text": "Произнесите «cough» вслух — и вы услышите сам кашель: «коф». Странным остаётся только написание, поэтому сначала запомните звук, потом буквы."
+    }
+  },
+  "bank-health-en-02.grammar": {
+    "bg-BG": {
+      "title": "«Have you got» и «anything»",
+      "text": "«Have you got…?» е обичайният британски начин да попитате «Do you have…?», без «do». Във въпрос обичайната дума е «anything». Пред болестта има «a»: «a cough», «a cold»."
+    },
+    "ru-RU": {
+      "title": "«Have you got» и «anything»",
+      "text": "«Have you got…?» — обычный британский способ спросить «Do you have…?», без «do». В вопросе обычно употребляют «anything». Перед названием болезни нужен артикль «a»: «a cough», «a cold»."
+    }
+  },
+  "bank-health-en-02.pronunciation": {
+    "bg-BG": {
+      "title": "F в cough, th в anything",
+      "text": "«Cough» завършва на «ф», като «off»: «коф». «Gh» не се чете. «Th» в «anything» е безгласното, издишано: езикът е леко между зъбите, без «с» и без «т»."
+    },
+    "ru-RU": {
+      "title": "F в cough, th в anything",
+      "text": "«Cough» заканчивается на «ф», как «off»: «коф». Буквы «gh» не читаются. «Th» в «anything» — глухое, воздушное: кончик языка слегка между зубами, без «с» и без «т»."
+    }
+  },
+  "bank-health-en-03.mnemonic": {
+    "bg-BG": {
+      "title": "Head + ache",
+      "text": "«Headache» е просто «head» (глава) + «ache» (болка), точно като „главоболие“. По същия начин са образувани «toothache» и «earache»: научете «ache» веднъж и можете да назовете болка навсякъде по тялото."
+    },
+    "ru-RU": {
+      "title": "Head + ache",
+      "text": "«Headache» — это просто «head» (голова) + «ache» (боль), как «головная боль». Так же устроены «toothache» и «earache»: выучите «ache» один раз и сможете назвать боль в любой части тела."
+    }
+  },
+  "bank-health-en-03.grammar": {
+    "bg-BG": {
+      "title": "«I've had… since»",
+      "text": "За нещо, което е започнало в миналото и още продължава, английският използва сегашно перфектно време (present perfect): «I've had…», а не «I have… since». «Since» се употребява с начална точка (this morning, Monday), а «for» – с продължителност (for two days)."
+    },
+    "ru-RU": {
+      "title": "«I've had… since»",
+      "text": "Для состояния, которое началось в прошлом и продолжается сейчас, английский использует present perfect: «I've had…», а не «I have… since». «Since» ставится с моментом начала (this morning, Monday), а «for» — с длительностью (for two days)."
+    }
+  },
+  "bank-health-en-03.pronunciation": {
+    "bg-BG": {
+      "title": "«Ache» се римува с «cake»",
+      "text": "«Ache» в «headache» се чете «ейк» и се римува с «cake»: «ch» тук е «к», а не «ч». Ударението е върху първата сричка: HED-ayk."
+    },
+    "ru-RU": {
+      "title": "«Ache» рифмуется с «cake»",
+      "text": "«Ache» в «headache» читается «эйк» и рифмуется с «cake»: «ch» здесь — это «к», а не «ч». Ударение на первом слоге: HED-ayk."
+    }
+  },
+  "bank-health-en-04.mnemonic": {
+    "bg-BG": {
+      "title": "Думи, които вече знаете",
+      "text": "И двете дълги думи са международни и ги има в български: «алергия» и «пеницилин». Така че вече ги знаете – ново е само ударението."
+    },
+    "ru-RU": {
+      "title": "Слова, которые вы уже знаете",
+      "text": "Оба длинных слова международные, в русском есть «аллергия» и «пенициллин»: вы их уже знаете, новым остаётся только ударение."
+    }
+  },
+  "bank-health-en-04.grammar": {
+    "bg-BG": {
+      "title": "«Allergic to»",
+      "text": "«Allergic» е прилагателно, затова се съчетава с «I'm» и иска предлог «to»: «allergic to penicillin», «allergic to nuts». Съществителното е «allergy»: «a penicillin allergy»."
+    },
+    "ru-RU": {
+      "title": "«Allergic to»",
+      "text": "«Allergic» — прилагательное, поэтому оно идёт с «I'm» и требует предлога «to» (а не «on», как русское «на»): «allergic to penicillin», «allergic to nuts». Существительное — «allergy»: «a penicillin allergy»."
+    }
+  },
+  "bank-health-en-04.pronunciation": {
+    "bg-BG": {
+      "title": "G звучи като «дж»",
+      "text": "В «allergic» «g» се чете като «дж» в «jam», а ударението пада върху «ler»: uh-LUR-jik. В «penicillin» то е върху «cil»: pen-i-SIL-in."
+    },
+    "ru-RU": {
+      "title": "G звучит как «дж»",
+      "text": "В «allergic» буква «g» читается как «дж», как в «jam», а ударение падает на «ler»: uh-LUR-jik. В «penicillin» оно стоит на «cil»: pen-i-SIL-in."
+    }
+  },
+  "bank-health-en-05.mnemonic": {
+    "bg-BG": {
+      "title": "GP – първият лекар",
+      "text": "«GP» е съкращение от «general practitioner» – личния лекар, при когото в Британия отивате първо, преди да стигнете до специалист. Кажете буквите на глас – «джи-пи» – и си представете лекаря от вашия квартал."
+    },
+    "ru-RU": {
+      "title": "GP — первый врач",
+      "text": "«GP» — сокращение от «general practitioner», то есть семейный врач: в Британии к нему идут первым делом, раньше любого специалиста. Произнесите буквы вслух — «джи-пи» — и представьте врача по соседству."
+    }
+  },
+  "bank-health-en-05.grammar": {
+    "bg-BG": {
+      "title": "«I'd like», «a» и «an»",
+      "text": "«I'd like» („I would like“) е учтивият начин да поискате нещо; «I want» звучи рязко. Членът следва звука, а не буквата: «an appointment» (гласен звук), но «a GP» (започва със съгласния звук «дж»)."
+    },
+    "ru-RU": {
+      "title": "«I'd like», «a» и «an»",
+      "text": "«I'd like» («I would like») — вежливый способ попросить; «I want» звучит резко. Артикль зависит от звука, а не от буквы: «an appointment» (гласный звук), но «a GP» (начинается с согласного звука «дж»)."
+    }
+  },
+  "bank-health-en-05.pronunciation": {
+    "bg-BG": {
+      "title": "Ударение: uh-POINT-ment",
+      "text": "Ударението е върху средната сричка: uh-POINT-ment, с «ой» като в «boy». Първата сричка е слабо «ъ», а не «ап»."
+    },
+    "ru-RU": {
+      "title": "Ударение: uh-POINT-ment",
+      "text": "Ударение падает на средний слог: uh-POINT-ment, с «ой», как в «boy». Первый слог — краткий нейтральный звук «uh», а не «ап»."
+    }
+  },
+  "bank-hotel-en-01.mnemonic": {
+    "bg-BG": {
+      "title": "Booking.com в едно изречение",
+      "text": "Вероятно познавате «Booking.com»: «to book» е глаголът за резервиране. Думата «book» („книга“) е и глагол: «I've booked a room» значи „направил съм резервация за стая“."
+    },
+    "ru-RU": {
+      "title": "Booking.com в одном предложении",
+      "text": "Вы, наверное, знаете «Booking.com»: «to book» — глагол «бронировать». Слово «book» («книга») бывает и глаголом: «I've booked a room» значит «я забронировал номер»."
+    }
+  },
+  "bank-hotel-en-01.grammar": {
+    "bg-BG": {
+      "title": "«I've booked» – действие с резултат",
+      "text": "Сегашното перфектно време «I've booked» свързва минало действие с настоящето: стаята е резервирана и това е важно на рецепцията. «For two nights» показва продължителността: «for» + период от време."
+    },
+    "ru-RU": {
+      "title": "«I've booked» — результат сейчас",
+      "text": "Present perfect «I've booked» связывает прошлое действие с настоящим: номер забронирован, и это важно сейчас, на ресепшене. «For two nights» показывает срок: «for» + период времени."
+    }
+  },
+  "bank-hotel-en-01.pronunciation": {
+    "bg-BG": {
+      "title": "«Booked» е една сричка",
+      "text": "След «k» окончанието «-ed» звучи като «т»: «booked» е «букт», една сричка, с кратко «у» като в «good». Не казвайте «бу-кед»."
+    },
+    "ru-RU": {
+      "title": "«Booked» — один слог",
+      "text": "После «k» окончание «-ed» звучит как «т»: «booked» — это «букт», один слог, с коротким «у», как в «good». Не говорите «бу-кед»."
+    }
+  },
+  "bank-hotel-en-02.mnemonic": {
+    "bg-BG": {
+      "title": "Break + fast",
+      "text": "«Breakfast» е «break» (прекъсвам) + «fast»: храната, която прекъсва дългия нощен пост. Тук «fast» значи „пост“, а не „бърз“."
+    },
+    "ru-RU": {
+      "title": "Break + fast",
+      "text": "«Breakfast» — это «break» (прервать) + «fast»: еда, которая прерывает долгий ночной пост. Здесь «fast» значит «пост», а не «быстрый»."
+    }
+  },
+  "bank-hotel-en-02.grammar": {
+    "bg-BG": {
+      "title": "Страдателен залог: «is served»",
+      "text": "Закуската не сервира никого – тя се сервира от хотела. Страдателният залог е «is/are» + минало причастие: «is served», «are included». Въпросителните думи стоят първи, без «do»: «What time is breakfast served?»"
+    },
+    "ru-RU": {
+      "title": "Пассив: «is served»",
+      "text": "Завтрак никого не обслуживает — его подают в отеле. Пассив образуется так: «is/are» + причастие прошедшего времени: «is served», «are included». Вопросительные слова стоят первыми, без «do»: «What time is breakfast served?»"
+    }
+  },
+  "bank-hotel-en-02.pronunciation": {
+    "bg-BG": {
+      "title": "BREK-fust, а не break-fast",
+      "text": "«Ea» е кратко, като в «bed», а ударението е върху първата сричка: BREK-fust. Последната сричка е слаба, затова «fast» не звучи като самата дума «fast»."
+    },
+    "ru-RU": {
+      "title": "BREK-fust, а не break-fast",
+      "text": "«Ea» здесь краткое, как в «bed», а ударение на первом слоге: BREK-fust. Последний слог слабый, поэтому «fast» не звучит как отдельное слово «fast»."
+    }
+  },
+  "bank-hotel-en-03.mnemonic": {
+    "bg-BG": {
+      "title": "Международна дума",
+      "text": "«Extra» е международна дума, която вероятно вече употребявате („екстра“). Същата рамка, «Could I have an extra…?», върши работа за възглавница, одеяло, закачалка или ключ."
+    },
+    "ru-RU": {
+      "title": "Международное слово",
+      "text": "«Extra» — международное слово, которое вы наверняка уже используете («экстра»). Та же конструкция «Could I have an extra…?» подходит для подушки, одеяла, вешалки или ключа."
+    }
+  },
+  "bank-hotel-en-03.grammar": {
+    "bg-BG": {
+      "title": "«Could I have…?» и «an»",
+      "text": "«Could I have…?» е учтивият британски начин да поискате нещо, по-мек от «I want». «An» се ползва пред гласен звук: «an extra towel», но «a towel»."
+    },
+    "ru-RU": {
+      "title": "«Could I have…?» и «an»",
+      "text": "«Could I have…?» — вежливый британский способ попросить что-то, мягче, чем «I want». «An» ставится перед гласным звуком: «an extra towel», но «a towel»."
+    }
+  },
+  "bank-hotel-en-03.pronunciation": {
+    "bg-BG": {
+      "title": "Нямо l и «towel» от две срички",
+      "text": "«L» в «could» не се чете: «куд», с кратко «у». «Towel» е от две срички – TOW-ul, с «ау» като в «cow», а не «тоу-ел»."
+    },
+    "ru-RU": {
+      "title": "Немое l и «towel» из двух слогов",
+      "text": "«L» в «could» не читается: «куд», с коротким «у». В «towel» два слога — TOW-ul, с «ау», как в «cow», а не «тоу-эл»."
+    }
+  },
+  "bank-hotel-en-04.mnemonic": {
+    "bg-BG": {
+      "title": "Hot като в hot dog",
+      "text": "«Hot» е първата дума в «hot dog» („хот-дог“) – наденица, поднесена гореща. Представете си студен душ и кажете «no hot water»."
+    },
+    "ru-RU": {
+      "title": "Hot как в hot dog",
+      "text": "«Hot» — первое слово в «hot dog» («хот-дог»), сосиски, которую подают горячей. Представьте холодный душ и скажите «no hot water»."
+    }
+  },
+  "bank-hotel-en-04.grammar": {
+    "bg-BG": {
+      "title": "«There's no…»",
+      "text": "«There's no…» („there is no“) показва, че нещо липсва: «There's no hot water», «There's no Wi-Fi». Мястото се добавя с «in»: «in my room». Не казвайте «I haven't hot water»."
+    },
+    "ru-RU": {
+      "title": "«There's no…»",
+      "text": "«There's no…» («there is no») говорит, что чего-то нет: «There's no hot water», «There's no Wi-Fi». Место добавляется с «in»: «in my room». Не говорите «I haven't hot water»."
+    }
+  },
+  "bank-hotel-en-04.pronunciation": {
+    "bg-BG": {
+      "title": "Заоблено w, меко h",
+      "text": "В «water» звукът «w» се образува със заоблени устни, без да докосвате зъбите: не «в», а кратко «у» („уо-тър“). «H» в «hot» е лек дъх, без стържене в гърлото – не като българското «х»."
+    },
+    "ru-RU": {
+      "title": "Округлое w, мягкое h",
+      "text": "В «water» звук «w» образуется округлёнными губами без касания зубов: это не «в», а краткое «у» («уо-тэ»). «H» в «hot» — лёгкий выдох, без трения в горле, не русское «х»."
+    }
+  },
+  "bank-hotel-en-05.mnemonic": {
+    "bg-BG": {
+      "title": "Check-out е позната дума",
+      "text": "Сайтовете за резервации навсякъде използват «check-in» и «check-out», така че може би вече ги знаете („чекаут“). «Bags» е всекидневната дума за багаж."
+    },
+    "ru-RU": {
+      "title": "Check-out — знакомое слово",
+      "text": "Сайты бронирования везде используют «check-in» и «check-out», так что вы, возможно, уже знаете их («чек-аут»). «Bags» — повседневное слово для багажа."
+    }
+  },
+  "bank-hotel-en-05.grammar": {
+    "bg-BG": {
+      "title": "«Can we» + глагол, «after» + съществително",
+      "text": "След «can» идва глаголът в основна форма, без «to»: «Can we leave…?». «After» е предлог, затова след него стоят съществително или форма с -ing: «after check-out», «after checking out»."
+    },
+    "ru-RU": {
+      "title": "«Can we» + глагол, «after» + существительное",
+      "text": "После «can» идёт глагол без «to»: «Can we leave…?». «After» — предлог, поэтому после него стоит существительное или форма на -ing: «after check-out», «after checking out»."
+    }
+  },
+  "bank-hotel-en-05.pronunciation": {
+    "bg-BG": {
+      "title": "Кратко a и звучно z в «bags»",
+      "text": "«Bags» има краткото «a» от «cat», а последният звук е «z»: «bagz». Дръжте «g» звучно – не го превръщайте в «к» накрая."
+    },
+    "ru-RU": {
+      "title": "Краткое a и звонкое z в «bags»",
+      "text": "В «bags» краткий звук «a», как в «cat», а последний звук — «z»: «bagz». Не оглушайте «g» на конце, не превращайте его в «к»."
+    }
+  },
+  "bank-clothes-en-01.mnemonic": {
+    "bg-BG": {
+      "title": "Medium = среден",
+      "text": "«Medium» идва от латинската дума за „среда, среден“, както и «Mediterranean» („сред земите“ – Средиземно море). Това е размерът между «small» и «large»: на етикетите пише S, M или L."
+    },
+    "ru-RU": {
+      "title": "Medium = средний",
+      "text": "«Medium» восходит к латинскому слову «середина», как и «Mediterranean» («посреди земель» — Средиземное море). Это размер между «small» и «large»: на бирках пишут S, M или L."
+    }
+  },
+  "bank-clothes-en-01.grammar": {
+    "bg-BG": {
+      "title": "«In» за размер и цвят",
+      "text": "С размер и цвят се казва «in»: «in a medium», «in black», «in a smaller size». «Do you have…?» пита дали магазинът го има."
+    },
+    "ru-RU": {
+      "title": "«In» для размера и цвета",
+      "text": "Для размера и цвета говорят «in»: «in a medium», «in black», «in a smaller size». «Do you have…?» спрашивает, есть ли это в магазине."
+    }
+  },
+  "bank-clothes-en-01.pronunciation": {
+    "bg-BG": {
+      "title": "Th в «this», дълго ee в «medium»",
+      "text": "В «this» «th» е звучно: езикът е леко между зъбите, а не «з» или «д», и «i» е кратко. «Medium» започва с дълго «и»: MEE-dee-um."
+    },
+    "ru-RU": {
+      "title": "Th в «this», долгое ee в «medium»",
+      "text": "В «this» «th» звонкое: язык слегка между зубами, а не «з» и не «д», и «i» краткое. «Medium» начинается с долгого «и»: MEE-dee-um."
+    }
+  },
+  "bank-clothes-en-02.mnemonic": {
+    "bg-BG": {
+      "title": "Try it ON: върху себе си",
+      "text": "Представете си как ризата се слага ВЪРХУ раменете ви: «try» (пробвам) я «on» (върху себе си). Малката дума «on» е същината, затова я пазете накрая."
+    },
+    "ru-RU": {
+      "title": "Try it ON: на себя",
+      "text": "Представьте, как рубашка надевается НА плечи: вы «try» (пробуете) её «on» (на себя). Маленькое слово «on» здесь главное, поэтому не теряйте его в конце."
+    }
+  },
+  "bank-clothes-en-02.grammar": {
+    "bg-BG": {
+      "title": "«Try on»: местоимението е в средата",
+      "text": "«Try on» е фразов глагол. Местоимението застава между двете му части: «try it on», «try them on», но не «try on it». Съществителното може да е от двете страни: «try on this shirt» или «try this shirt on»."
+    },
+    "ru-RU": {
+      "title": "«Try on»: местоимение посередине",
+      "text": "«Try on» — фразовый глагол. Местоимение стоит между двумя его частями: «try it on», «try them on», но не «try on it». Существительное может стоять по любую сторону: «try on this shirt» или «try this shirt on»."
+    }
+  },
+  "bank-clothes-en-02.pronunciation": {
+    "bg-BG": {
+      "title": "Слабо «can»",
+      "text": "В «Can I try this on?» думата «can» е слаба, почти «кън», а ударението пада върху «try» и «on». «Th» в «this» е звучното: езикът е леко между зъбите."
+    },
+    "ru-RU": {
+      "title": "Слабое «can»",
+      "text": "В «Can I try this on?» слово «can» слабое, почти «кн», а ударение падает на «try» и «on». «Th» в «this» звонкое: язык слегка между зубами."
+    }
+  },
+  "bank-clothes-en-03.mnemonic": {
+    "bg-BG": {
+      "title": "Стая за преобличане",
+      "text": "«Changing room» е просто стая, в която се «change» (преобличате): сваляте едни дрехи, обличате други. В магазините се казва и «fitting room», но «changing room» е обичайната британска дума."
+    },
+    "ru-RU": {
+      "title": "Комната для переодевания",
+      "text": "«Changing room» — просто комната, где вы «change» (переодеваетесь): снимаете одну одежду, надеваете другую. В магазинах говорят и «fitting room», но обычное британское слово — «changing room»."
+    }
+  },
+  "bank-clothes-en-03.grammar": {
+    "bg-BG": {
+      "title": "«Where are» с множествено число",
+      "text": "«Are» се употребява с множествено число: «Where are the changing rooms?», но «Where is the changing room?». В «changing room» думата с -ing казва за какво служи стаята, както в «waiting room» и «dining room»."
+    },
+    "ru-RU": {
+      "title": "«Where are» с множественным числом",
+      "text": "«Are» идёт с существительными во множественном числе: «Where are the changing rooms?», но «Where is the changing room?». В «changing room» слово с -ing показывает назначение комнаты, как в «waiting room» и «dining room»."
+    }
+  },
+  "bank-clothes-en-03.pronunciation": {
+    "bg-BG": {
+      "title": "«-ing» е един носов звук",
+      "text": "«Ng» в «changing» е един звук, образуван в задната част на устата, без отделно «г» или «к» след него. Кажете CHAYN-jing, със «дж» като в «jam» по средата."
+    },
+    "ru-RU": {
+      "title": "«-ing» — один носовой звук",
+      "text": "«Ng» в «changing» — один звук, образуемый в задней части рта, без отдельного «г» или «к» после него. Скажите CHAYN-jing, с «дж», как в «jam», посередине."
+    }
+  },
+  "bank-clothes-en-04.mnemonic": {
+    "bg-BG": {
+      "title": "«I'm afraid» омекотява лошата новина",
+      "text": "«I'm afraid» не значи, че ви е страх. То слага мека възглавничка под лошата новина, като „страхувам се, че…“ или „за съжаление“. Представете си как връщате сако с лека усмивка."
+    },
+    "ru-RU": {
+      "title": "«I'm afraid» смягчает плохую новость",
+      "text": "«I'm afraid» не значит, что вам страшно. Это мягкая подушечка под плохую новость, как русское «боюсь, что…». Представьте, что вы возвращаете пиджак с лёгкой улыбкой."
+    }
+  },
+  "bank-clothes-en-04.grammar": {
+    "bg-BG": {
+      "title": "«A bit» омекотява",
+      "text": "«A bit» + прилагателно прави оплакването по-меко: «a bit tight», «a bit big», «a bit short». Британците омаловажават, затова «a bit tight» може да значи доста тясно."
+    },
+    "ru-RU": {
+      "title": "«A bit» смягчает",
+      "text": "«A bit» + прилагательное смягчает претензию: «a bit tight», «a bit big», «a bit short». Британцы склонны преуменьшать, поэтому «a bit tight» может означать «довольно тесно»."
+    }
+  },
+  "bank-clothes-en-04.pronunciation": {
+    "bg-BG": {
+      "title": "Кратко i в «bit»",
+      "text": "«I» в «bit» е кратко и отпуснато – съвсем различно от дългото «и» в «beat»: «bit» е „малко парче“, «beat» е „удар“. Кажете «bit» бързо, без да го проточвате."
+    },
+    "ru-RU": {
+      "title": "Краткое i в «bit»",
+      "text": "«I» в «bit» краткое и расслабленное, совсем не такое, как долгое «ии» в «beat»: «bit» — «чуть-чуть», «beat» — «удар». Произносите «bit» быстро, не растягивая."
+    }
+  },
+  "bank-clothes-en-05.mnemonic": {
+    "bg-BG": {
+      "title": "«Sale» звучи като «sail»",
+      "text": "Виждали сте «SALE» по витрините навсякъде. Кажете го «сейл», като «sail» – платното на лодка: двете думи звучат еднакво."
+    },
+    "ru-RU": {
+      "title": "«Sale» звучит как «sail»",
+      "text": "Вы видели «SALE» на витринах повсюду. Произнесите «сейл», как «sail» — парус лодки: эти два слова звучат одинаково."
+    }
+  },
+  "bank-clothes-en-05.grammar": {
+    "bg-BG": {
+      "title": "«In the sale»",
+      "text": "В Британия артикулите с намалена цена са «in the sale»: «Is this in the sale?». «On sale» е обичайното американско изразяване. «The sale» е целият период на намаления."
+    },
+    "ru-RU": {
+      "title": "«In the sale»",
+      "text": "В Британии товары со сниженной ценой находятся «in the sale»: «Is this in the sale?». «On sale» — обычный американский вариант. «The sale» — весь период распродажи."
+    }
+  },
+  "bank-clothes-en-05.pronunciation": {
+    "bg-BG": {
+      "title": "Две звучни th",
+      "text": "«This» и «the» започват със звучното «th»: езикът е леко между зъбите, не «з» или «д». «Sale» има «ей» като в «day» и се римува с «tail»."
+    },
+    "ru-RU": {
+      "title": "Два звонких th",
+      "text": "«This» и «the» начинаются со звонкого «th»: язык слегка между зубами, а не «з» и не «д». В «sale» звук «эй», как в «day», и слово рифмуется с «tail»."
+    }
+  },
+  "bank-meeting-en-01.mnemonic": {
+    "bg-BG": {
+      "title": "«Do» два пъти",
+      "text": "Отбийте го с два пръста: «What DO you DO?». Първото «do» е само помощен глагол, второто значи „работя като“. Въпросът е за работата или следването ви."
+    },
+    "ru-RU": {
+      "title": "«Do» дважды",
+      "text": "Отстучите на двух пальцах: «What DO you DO?». Первое «do» — всего лишь вспомогательный глагол, второе означает «работать кем-то». Вопрос о вашей работе или учёбе."
+    }
+  },
+  "bank-meeting-en-01.grammar": {
+    "bg-BG": {
+      "title": "Работа или в момента?",
+      "text": "«What do you do?» (просто сегашно време) пита за обичайната ви работа. «What are you doing?» (сегашно продължително) пита какво правите в момента. Добър отговор е «I'm a nurse» или «I work in a bank»."
+    },
+    "ru-RU": {
+      "title": "Работа или то, что сейчас?",
+      "text": "«What do you do?» (present simple) спрашивает о вашей постоянной работе. «What are you doing?» (present continuous) — о том, чем вы заняты прямо сейчас. Хороший ответ: «I'm a nurse» или «I work in a bank»."
+    }
+  },
+  "bank-meeting-en-01.pronunciation": {
+    "bg-BG": {
+      "title": "W не е «в»",
+      "text": "«W» в «what» се образува със заоблени устни, без допир до зъбите: не «вот», а «уот». Гласната е кратко, заоблено «о»."
+    },
+    "ru-RU": {
+      "title": "W — не «в»",
+      "text": "«W» в «what» образуется округлёнными губами без касания зубов: не «вот», а «уот». Гласный — краткое округлое «о»."
+    }
+  },
+  "bank-meeting-en-02.mnemonic": {
+    "bg-BG": {
+      "title": "Дълга опашка",
+      "text": "Представете си дълга опашка на автобусна спирка и попитайте човека до вас: «Have you been here long?». Думата «long» носи целия въпрос – не е нужно да казвате «a long time»."
+    },
+    "ru-RU": {
+      "title": "Длинная очередь",
+      "text": "Представьте длинную очередь на автобусной остановке и спросите соседа: «Have you been here long?». Слово «long» несёт весь вопрос — «a long time» говорить не нужно."
+    }
+  },
+  "bank-meeting-en-02.grammar": {
+    "bg-BG": {
+      "title": "Present perfect за „досега“",
+      "text": "За да попитате от колко време някой е на дадено място до този момент, английският използва present perfect: «Have you been here long?», а не «Are you here long?». «Long» самостоятелно се употребява във въпроси и отрицания; в утвърдително изречение се казва «a long time» или «for two weeks»."
+    },
+    "ru-RU": {
+      "title": "Present perfect для «до сих пор»",
+      "text": "Чтобы спросить, как давно человек где-то находится, английский использует present perfect: «Have you been here long?», а не «Are you here long?». «Long» отдельно употребляется в вопросах и отрицаниях; в утвердительных предложениях говорят «a long time» или «for two weeks»."
+    }
+  },
+  "bank-meeting-en-02.pronunciation": {
+    "bg-BG": {
+      "title": "Меко h",
+      "text": "«H» в «have» и «here» е лек дъх, като когато замъглявате огледало, без стържене в гърлото – не като българското «х». В «long» «ng» е един носов звук, без отчетливо «г» след него."
+    },
+    "ru-RU": {
+      "title": "Мягкое h",
+      "text": "«H» в «have» и «here» — лёгкий выдох, как будто вы дышите на зеркало, без трения в горле, это не русское «х». В «long» «ng» — один носовой звук, без отчётливого «г» после него."
+    }
+  },
+  "bank-meeting-en-03.mnemonic": {
+    "bg-BG": {
+      "title": "Свят ден за почивка",
+      "text": "«Holiday» започва като «holy day» („свят ден“): специален почивен ден. В Британия днес значи цяло пътуване или време далеч от работа – онова, което американците наричат «vacation»."
+    },
+    "ru-RU": {
+      "title": "Священный выходной",
+      "text": "«Holiday» возникло из «holy day» («священный день»): особого выходного. В Британии сегодня так называют целую поездку или время вдали от работы — то, что американцы называют «vacation»."
+    }
+  },
+  "bank-meeting-en-03.grammar": {
+    "bg-BG": {
+      "title": "«On holiday», а не «in»",
+      "text": "Това е устойчив израз: «on holiday», «on business», «on a trip». Не «in holiday» или «at holiday». Въпросът се образува с «Are you…?», без «do»."
+    },
+    "ru-RU": {
+      "title": "«On holiday», а не «in»",
+      "text": "Это устойчивое выражение: «on holiday», «on business», «on a trip». Не «in holiday» и не «at holiday». Вопрос образуется с «Are you…?», без «do»."
+    }
+  },
+  "bank-meeting-en-03.pronunciation": {
+    "bg-BG": {
+      "title": "HOL-i-day: ударение на първата сричка",
+      "text": "Ударението е върху първата сричка: HOL-i-day, с кратко, заоблено «о» и слаба средна сричка. Не слагайте ударение накрая, като в «холи-ДЕЙ». «H» е лек дъх."
+    },
+    "ru-RU": {
+      "title": "HOL-i-day: ударение на первый слог",
+      "text": "Ударение падает на первый слог: HOL-i-day, с кратким округлым «о» и слабым средним слогом. Не ставьте ударение на конце, как в «холи-ДЕЙ». «H» — лёгкий выдох."
+    }
+  },
+  "bank-meeting-en-04.mnemonic": {
+    "bg-BG": {
+      "title": "Започнете със «sorry»",
+      "text": "Започнете със «Sorry,», както правят британците преди почти всичко неудобно: звучи приятелски, а не слабо. Представете си, че се усмихвате, докато го казвате – останалата част от изречението идва от само себе си."
+    },
+    "ru-RU": {
+      "title": "Начните с «sorry»",
+      "text": "Начните со «Sorry,», как делают британцы перед чем-то неловким: это звучит дружелюбно, а не слабо. Представьте, что вы улыбаетесь, когда говорите это, — остальная часть фразы пойдёт сама."
+    }
+  },
+  "bank-meeting-en-04.grammar": {
+    "bg-BG": {
+      "title": "«Good» или «well»?",
+      "text": "След «my English is…» се слага прилагателно: «good», «not very good». С глагола «speak» се слага наречие: «I speak English well». «Isn't» е «is not»."
+    },
+    "ru-RU": {
+      "title": "«Good» или «well»?",
+      "text": "После «my English is…» ставится прилагательное: «good», «not very good». С глаголом «speak» нужно наречие: «I speak English well». «Isn't» — это «is not»."
+    }
+  },
+  "bank-meeting-en-04.pronunciation": {
+    "bg-BG": {
+      "title": "ING-glish",
+      "text": "«English» започва с кратко «i» като в «bit», а не с «е»: ING-glish. След «ng» се чува ясно «g», за разлика от «singer», където «g» не се чува."
+    },
+    "ru-RU": {
+      "title": "ING-glish",
+      "text": "«English» начинается с краткого «i», как в «bit», а не с «э»: ING-glish. После «ng» отчётливо слышно «g», в отличие от «singer», где «g» не произносится."
+    }
+  },
+  "bank-meeting-en-05.mnemonic": {
+    "bg-BG": {
+      "title": "Know-how наобратно",
+      "text": "«Know-how» („ноу-хау“) е заемка в много езици, така че може би вече знаете двойката. Този въпрос просто обръща двете думи: «How do you know…?»"
+    },
+    "ru-RU": {
+      "title": "Know-how наоборот",
+      "text": "«Know-how» («ноу-хау») — заимствование во многих языках, так что вы, возможно, уже знаете эту пару. Этот вопрос просто ставит два слова в обратном порядке: «How do you know…?»"
+    }
+  },
+  "bank-meeting-en-05.grammar": {
+    "bg-BG": {
+      "title": "«How», а не „откъде“",
+      "text": "Най-често английският пита «How do you know…?» („как го познавате“), а не „откъде“, защото отговорът е връзка: «We work together», «She's my cousin». «Know» е глагол за състояние, затова остава в просто сегашно време: «do you know», а не «are you knowing»."
+    },
+    "ru-RU": {
+      "title": "«How», а не «откуда»",
+      "text": "Чаще всего по-английски спрашивают «How do you know…?» («как вы знакомы»), а не «откуда», потому что ответ — это связь: «We work together», «She's my cousin». «Know» — глагол состояния, поэтому остаётся в present simple: «do you know», а не «are you knowing»."
+    }
+  },
+  "bank-meeting-en-05.pronunciation": {
+    "bg-BG": {
+      "title": "Нямо k в «know»",
+      "text": "«Know» звучи точно като «no»: «k» не се чете. В «how» «h» е лек дъх, а «ow» е звукът от «cow»."
+    },
+    "ru-RU": {
+      "title": "Немое k в «know»",
+      "text": "«Know» звучит точно как «no»: «k» не читается. В «how» «h» — лёгкий выдох, а «ow» — тот же звук, что в «cow»."
+    }
+  },
+  "bank-weather-en-01.mnemonic": {
+    "bg-BG": {
+      "title": "Supposed = предполагаем",
+      "text": "«Supposed» значи „предполагаем“: прогнозата предполага дъжд. Представете си как водещият на времето по телевизията сочи облак и казва «it's supposed to rain later»: очаква се, но не е сигурно."
+    },
+    "ru-RU": {
+      "title": "Supposed = предполагаемый",
+      "text": "«Supposed» значит «предполагаемый»: по прогнозу ожидается дождь. Представьте, что ведущий прогноза погоды показывает на облако и говорит «it's supposed to rain later»: ожидается, но не наверняка."
+    }
+  },
+  "bank-weather-en-01.grammar": {
+    "bg-BG": {
+      "title": "«Be supposed to» = очаква се",
+      "text": "«Be supposed to» + глагол казва какво се очаква, често според прогноза или разписание: «It's supposed to rain», «The shop is supposed to open at nine». Звучи по-малко уверено от «It will rain»."
+    },
+    "ru-RU": {
+      "title": "«Be supposed to» = ожидается",
+      "text": "«Be supposed to» + глагол говорит о том, что ожидается, часто по прогнозу или расписанию: «It's supposed to rain», «The shop is supposed to open at nine». Звучит менее уверенно, чем «It will rain»."
+    }
+  },
+  "bank-weather-en-01.pronunciation": {
+    "bg-BG": {
+      "title": "«Supposed to» се слива",
+      "text": "«Supposed to» се произнася като една дума – suh-POHS-tuh: «d» изчезва, а «to» е слабо «tuh». Окончанието «-er» в «later» е обикновено «uh», без «r»."
+    },
+    "ru-RU": {
+      "title": "«Supposed to» сливается",
+      "text": "«Supposed to» произносится как одно слово — suh-POHS-tuh: «d» исчезает, а «to» слабое — «tuh». Окончание «-er» в «later» — простое «uh», без «r»."
+    }
+  },
+  "bank-weather-en-02.mnemonic": {
+    "bg-BG": {
+      "title": "Fore + cast",
+      "text": "«Fore-» значи „преди“, както във «foresee» („предвиждам“), а «cast» значи „хвърлям“: «forecast» е предположение, хвърлено напред във времето."
+    },
+    "ru-RU": {
+      "title": "Fore + cast",
+      "text": "«Fore-» значит «заранее», как в «foresee» («предвидеть»), а «cast» — «бросать»: «forecast» — это догадка, брошенная вперёд во времени."
+    }
+  },
+  "bank-weather-en-02.grammar": {
+    "bg-BG": {
+      "title": "«The forecast for…»",
+      "text": "«What's» е «what is». «For» казва за кой ден се отнася прогнозата: «for tomorrow», «for the weekend». «Tomorrow» не иска «on» или «in»."
+    },
+    "ru-RU": {
+      "title": "«The forecast for…»",
+      "text": "«What's» — это «what is». «For» говорит, на какой день прогноз: «for tomorrow», «for the weekend». Перед «tomorrow» не нужны «on» и «in»."
+    }
+  },
+  "bank-weather-en-02.pronunciation": {
+    "bg-BG": {
+      "title": "FORE-cast, to-MOR-row",
+      "text": "«Forecast» има ударение върху първата сричка – FOR-kahst, с дълго «ah» в британския английски. В «tomorrow» ударението е върху «mor»: tuh-MOR-oh."
+    },
+    "ru-RU": {
+      "title": "FORE-cast, to-MOR-row",
+      "text": "В «forecast» ударение на первом слоге — FOR-kahst, в британском английском с долгим «ah». В «tomorrow» ударение падает на «mor»: tuh-MOR-oh."
+    }
+  },
+  "bank-weather-en-03.mnemonic": {
+    "bg-BG": {
+      "title": "Времето като във фризер",
+      "text": "«Freezing» е формата с -ing на «freeze», глагола във «freezer» („фризер“). Представете си, че излизате навън в отворен фризер."
+    },
+    "ru-RU": {
+      "title": "Погода как в морозилке",
+      "text": "«Freezing» — форма с -ing от «freeze», глагола в «freezer» («морозилка»). Представьте, что вы вышли на улицу, как в открытую морозилку."
+    }
+  },
+  "bank-weather-en-03.grammar": {
+    "bg-BG": {
+      "title": "За времето е нужно «it»",
+      "text": "Английското твърдение има нужда от подлог, затова разговорът за времето започва с «it»: «It's freezing», «It's raining», «It's sunny». Не пропускайте «it»."
+    },
+    "ru-RU": {
+      "title": "О погоде нужно «it»",
+      "text": "В английском утверждении нужно подлежащее, поэтому о погоде говорят с «it»: «It's freezing», «It's raining», «It's sunny». Не опускайте «it»."
+    }
+  },
+  "bank-weather-en-03.pronunciation": {
+    "bg-BG": {
+      "title": "Звучни z и th",
+      "text": "Средата на «freezing» е звучно «z», а не «s», и «ee» е дълго. В «there» «th» е звучно: езикът е леко между зъбите, а не «д» или «з»."
+    },
+    "ru-RU": {
+      "title": "Звонкие z и th",
+      "text": "Середина «freezing» — звонкое «z», а не «s», и «ee» долгое. В «there» «th» звонкое: язык слегка между зубами, а не «д» или «з»."
+    }
+  },
+  "bank-weather-en-04.mnemonic": {
+    "bg-BG": {
+      "title": "Като кипящ чайник",
+      "text": "Водата е най-гореща, когато кипи, затова в много горещ ден британците казват, че е «boiling» – както казват «freezing» за много студено. Представете си чайник, който свири."
+    },
+    "ru-RU": {
+      "title": "Жара, как у кипящего чайника",
+      "text": "Вода самая горячая, когда кипит, поэтому в очень жаркий день британцы говорят «boiling» — так же, как «freezing» про сильный холод. Представьте свистящий чайник."
+    }
+  },
+  "bank-weather-en-04.grammar": {
+    "bg-BG": {
+      "title": "«Really boiling», а не «very»",
+      "text": "«Boiling» вече значи „много горещо“, затова се съчетава с «really» или «absolutely», а не с «very»: «really boiling». Същото важи за «freezing», «huge» и «exhausted»."
+    },
+    "ru-RU": {
+      "title": "«Really boiling», а не «very»",
+      "text": "«Boiling» уже значит «очень жарко», поэтому с ним говорят «really» или «absolutely», а не «very»: «really boiling». То же относится к «freezing», «huge» и «exhausted»."
+    }
+  },
+  "bank-weather-en-04.pronunciation": {
+    "bg-BG": {
+      "title": "Английското r не се търкаля",
+      "text": "«R» в «really» не се търкаля: връхчето на езика се извива назад, без да докосва нищо, а устните леко се заобляват. «Boiling» има «ой» като в «boy»."
+    },
+    "ru-RU": {
+      "title": "Английское r не раскатывается",
+      "text": "«R» в «really» не раскатывается: кончик языка загибается назад, ничего не касаясь, а губы слегка округляются. В «boiling» звук «ой», как в «boy»."
+    }
+  },
+  "bank-weather-en-05.mnemonic": {
+    "bg-BG": {
+      "title": "Малка сянка",
+      "text": "«Umbrella» идва от латинската дума за „сянка“ – «umbra»: това е буквално малка сянка, която носите над главата си."
+    },
+    "ru-RU": {
+      "title": "Маленькая тень",
+      "text": "«Umbrella» восходит к латинскому слову «umbra» — «тень»: это буквально маленькая тень, которую вы носите над головой."
+    }
+  },
+  "bank-weather-en-05.grammar": {
+    "bg-BG": {
+      "title": "«You'd better» + глагол",
+      "text": "«You'd better» („you had better“) е силен съвет: направете го, иначе може да стане нещо лошо. След него идва глаголът в основна форма, без «to»: «You'd better take…», «You'd better not forget»."
+    },
+    "ru-RU": {
+      "title": "«You'd better» + глагол",
+      "text": "«You'd better» («you had better») — настоятельный совет: сделайте это, иначе может быть плохо. После него идёт глагол без «to»: «You'd better take…», «You'd better not forget»."
+    }
+  },
+  "bank-weather-en-05.pronunciation": {
+    "bg-BG": {
+      "title": "um-BREL-uh: ударение в средата",
+      "text": "«Umbrella» има ударение върху втората сричка: um-BREL-uh. Първата сричка е кратка и слаба, с «u» като в «cup», а последната е слабо «uh»."
+    },
+    "ru-RU": {
+      "title": "um-BREL-uh: ударение посередине",
+      "text": "В «umbrella» ударение на втором слоге: um-BREL-uh. Первый слог краткий и слабый, с «u», как в «cup», а последний — слабое «uh»."
+    }
+  },
+  "bank-plans-en-01.mnemonic": {
+    "bg-BG": {
+      "title": "Free = празно в календара",
+      "text": "«Free» значи „незает“, а също и „безплатен“. Представете си календар, в който за уикенда няма нищо записано: този уикенд е «free»."
+    },
+    "ru-RU": {
+      "title": "Free = пусто в ежедневнике",
+      "text": "«Free» значит «свободный, не занятый» и «бесплатный». Представьте ежедневник, где на выходные ничего не записано: эти выходные «free»."
+    }
+  },
+  "bank-plans-en-01.grammar": {
+    "bg-BG": {
+      "title": "Без предлог пред «this weekend»",
+      "text": "Думи като «this», «next» и «last» вършат работата на предлог: «this weekend», «next week», «last night». Не добавяйте «in» или «on»."
+    },
+    "ru-RU": {
+      "title": "Без предлога перед «this weekend»",
+      "text": "Слова «this», «next» и «last» заменяют предлог: «this weekend», «next week», «last night». Не добавляйте «in» или «on»."
+    }
+  },
+  "bank-plans-en-01.pronunciation": {
+    "bg-BG": {
+      "title": "Week-END",
+      "text": "В «weekend» главното ударение е върху втората част: week-END. «W» се образува със заоблени устни: «week» започва като «we» („уи“), а не като „ви“."
+    },
+    "ru-RU": {
+      "title": "Week-END",
+      "text": "В «weekend» главное ударение падает на вторую часть: week-END. «W» образуется округлёнными губами: «week» начинается как «we» («уи»), а не «ви»."
+    }
+  },
+  "bank-plans-en-02.mnemonic": {
+    "bg-BG": {
+      "title": "Fancy идва от fantasy",
+      "text": "«Fancy» е съкратена форма на «fantasy» („фантазия“). Ако «fancy» нещо, то грабва въображението ви – ви се прави. В Британия «a drink» често значи халба или чаша навън."
+    },
+    "ru-RU": {
+      "title": "Fancy — от fantasy",
+      "text": "«Fancy» — сокращённая форма от «fantasy» («фантазия»). Если вы «fancy» что-то, оно захватывает ваше воображение: вам этого хочется. В Британии «a drink» часто значит пинту или бокал где-нибудь вне дома."
+    }
+  },
+  "bank-plans-en-02.grammar": {
+    "bg-BG": {
+      "title": "«Fancy» + съществително или -ing",
+      "text": "Като глагол «fancy» значи „ще ми се“ и се използва със съществително или форма с -ing: «Do you fancy a drink?», «Do you fancy going out?», не «fancy to go». С човек значи „привлича ме“, така че «Do you fancy Sam?» е съвсем различен въпрос."
+    },
+    "ru-RU": {
+      "title": "«Fancy» + существительное или -ing",
+      "text": "Как глагол «fancy» значит «хочется» и употребляется с существительным или формой на -ing: «Do you fancy a drink?», «Do you fancy going out?», но не «fancy to go». С человеком оно значит «нравиться как партнёр», так что «Do you fancy Sam?» — совсем другой вопрос."
+    }
+  },
+  "bank-plans-en-02.pronunciation": {
+    "bg-BG": {
+      "title": "Отворено a във «fancy»",
+      "text": "«A» във «fancy» е отвореният звук от «cat»: челюстта е ниско, между «е» и «а». В «going» гласната се плъзга – GOH-ing: не е чисто «о»."
+    },
+    "ru-RU": {
+      "title": "Открытый a в «fancy»",
+      "text": "«A» в «fancy» — открытый звук, как в «cat»: челюсть опущена, звук между «э» и «а». В «going» гласный скользит — GOH-ing: это не чистое «о»."
+    }
+  },
+  "bank-plans-en-03.mnemonic": {
+    "bg-BG": {
+      "title": "Cinema, съкратено от cinematograph",
+      "text": "«Cinema» има същия корен като нашето «кино»: и двете са съкратено от „кинематограф“ («cinematograph»). В Британия ходите на cinema; американците казват «movie theater»."
+    },
+    "ru-RU": {
+      "title": "Cinema — сокращение от cinematograph",
+      "text": "«Cinema» имеет тот же корень, что и русское «кино»: оба слова — сокращения от «кинематограф» («cinematograph»). В Британии ходят в cinema, а американцы говорят «movie theater»."
+    }
+  },
+  "bank-plans-en-03.grammar": {
+    "bg-BG": {
+      "title": "«Half six» значи 6:30",
+      "text": "Британците казват «half six» за 6:30: съкратено е от «half past six» („шест и половина“) и никога не значи 5:30. С часовете се употребява «at»: «at half six», «at seven». «Let's» + глагол в основна форма е предложение."
+    },
+    "ru-RU": {
+      "title": "«Half six» — это 6:30",
+      "text": "Британцы говорят «half six» про 6:30: это сокращение от «half past six». Осторожно: русское «половина шестого» — это 5:30, а английское «half six» — 6:30. С точным временем употребляется «at»: «at half six», «at seven». «Let's» + глагол без «to» — предложение."
+    }
+  },
+  "bank-plans-en-03.pronunciation": {
+    "bg-BG": {
+      "title": "Нямо l в «half»",
+      "text": "«L» в «half» не се чете: «хаф», с дълго «ah». В «cinema» ударението е върху първата сричка: SIN-uh-muh, а не «си-НЕ-ма»."
+    },
+    "ru-RU": {
+      "title": "Немое l в «half»",
+      "text": "«L» в «half» не читается: «хаф», с долгим «ah». В «cinema» ударение на первом слоге: SIN-uh-muh, а не «си-НЕ-ма»."
+    }
+  },
+  "bank-plans-en-04.mnemonic": {
+    "bg-BG": {
+      "title": "Тичане след часовника",
+      "text": "Представете си човек, който тича по улицата и поглежда часовника: това е «running late». Идиом е, затова го учете като цяло."
+    },
+    "ru-RU": {
+      "title": "Бег наперегонки с часами",
+      "text": "Представьте человека, который бежит по улице и поглядывает на часы: это «running late». Это идиома, поэтому учите её целиком."
+    }
+  },
+  "bank-plans-en-04.grammar": {
+    "bg-BG": {
+      "title": "«I'm running late»: още съм на път",
+      "text": "Сегашното продължително време «I'm running late» описва какво става в момента и предупреждава за закъснение: на път сте и ще пристигнете късно. «I'm late» значи, че вече сте закъснели."
+    },
+    "ru-RU": {
+      "title": "«I'm running late»: я ещё в пути",
+      "text": "Present continuous «I'm running late» описывает то, что происходит сейчас, и предупреждает о задержке: вы в пути и приедете поздно. «I'm late» значит, что вы уже опоздали."
+    }
+  },
+  "bank-plans-en-04.pronunciation": {
+    "bg-BG": {
+      "title": "«U» като в «cup» в «running»",
+      "text": "«Running» има краткото, отпуснато «u» от «cup»: RUN-ing, по-близо до «а», отколкото до «о». Краят е един носов звук «ng», без «g»."
+    },
+    "ru-RU": {
+      "title": "«U» как в «cup» в «running»",
+      "text": "В «running» краткий расслабленный звук «u», как в «cup»: RUN-ing, ближе к «а», чем к «о». Окончание — один носовой звук «ng», без «g»."
+    }
+  },
+  "bank-plans-en-05.mnemonic": {
+    "bg-BG": {
+      "title": "Денят на Сатурн",
+      "text": "«Saturday» е „денят на Сатурн“: започва точно като планетата Сатурн, наречена на същия римски бог. Представете си планетата с пръстените, надвиснала над плановете ви за уикенда."
+    },
+    "ru-RU": {
+      "title": "День Сатурна",
+      "text": "«Saturday» — «день Сатурна»: слово начинается точно как название планеты Сатурн, названной в честь того же римского бога. Представьте планету с кольцами над вашими планами на выходные."
+    }
+  },
+  "bank-plans-en-05.grammar": {
+    "bg-BG": {
+      "title": "«On» с дните от седмицата",
+      "text": "Пред ден от седмицата се слага «on»: «on Friday», «on Saturday» (а пред час – «at»: «at seven»). «Make it» значи „успявам да дойда“, а «How about…?» предлага алтернатива."
+    },
+    "ru-RU": {
+      "title": "«On» с днями недели",
+      "text": "Перед днём недели ставится «on»: «on Friday», «on Saturday» (а перед временем — «at»: «at seven»). «Make it» значит «успеть, суметь прийти», а «How about…?» предлагает альтернативу."
+    }
+  },
+  "bank-plans-en-05.pronunciation": {
+    "bg-BG": {
+      "title": "Дълго ah в «can't»",
+      "text": "В британския английски «can't» има дълго «ah» – KAHNT – и ясно «t» накрая, докато «can» е бързо «kn». Именно дългата гласна различава «I can't» от «I can»."
+    },
+    "ru-RU": {
+      "title": "Долгое ah в «can't»",
+      "text": "В британском английском в «can't» долгий «ah» — KAHNT — и чёткое «t» в конце, тогда как «can» — быстрое «kn». Именно долгий гласный отличает «I can't» от «I can»."
+    }
+  },
+  "bank-airport-en-01.mnemonic": {
+    "bg-BG": {
+      "title": "«Check-in» вече го знаете",
+      "text": "Вероятно вече казвате «чекирам се»: думата идва точно оттук. Представете си гишето с табела «check-in» и добавете отпред «Where do I…?»."
+    },
+    "ru-RU": {
+      "title": "«Check-in» вы уже знаете",
+      "text": "В русском есть «чек-ин»: слово пришло именно отсюда. Представьте стойку с табличкой «check-in» и добавьте в начале «Where do I…?»."
+    }
+  },
+  "bank-airport-en-01.grammar": {
+    "bg-BG": {
+      "title": "Въпроси с «do»",
+      "text": "След «where» пред подлога стои «do»: «Where do I check in?». Основният глагол остава в основна форма, без окончание."
+    },
+    "ru-RU": {
+      "title": "Вопросы с «do»",
+      "text": "После «where» перед подлежащим нужен «do»: «Where do I check in?». Основной глагол остаётся в начальной форме, без окончаний."
+    }
+  },
+  "bank-airport-en-01.pronunciation": {
+    "bg-BG": {
+      "title": "Звучно z в «please»",
+      "text": "Дръжте гласа до края на «please»: думата свършва на z, не на s. В българския съгласните в края на думата оглушават, затова слушайте бръмченето."
+    },
+    "ru-RU": {
+      "title": "Звонкое z в «please»",
+      "text": "Держите голос до самого конца «please»: слово заканчивается на z, а не на s. В русском звонкие согласные в конце слова оглушаются, поэтому прислушайтесь к жужжанию."
+    }
+  },
+  "bank-airport-en-02.mnemonic": {
+    "bg-BG": {
+      "title": "Чакане пред празния изход",
+      "text": "Представете си таблото със заминаващите полети, на което изходът още е празен: «announced» е мигът, когато се появи номер, а «yet» чака в края на въпроса като пътник пред празния изход."
+    },
+    "ru-RU": {
+      "title": "Ожидание у пустого выхода",
+      "text": "Представьте табло вылетов, где выход пока пуст: «announced» — это момент, когда появляется номер, а «yet» ждёт в конце вопроса, как пассажир у пустого выхода."
+    }
+  },
+  "bank-airport-en-02.grammar": {
+    "bg-BG": {
+      "title": "«Yet» и Present Perfect",
+      "text": "«Has… been announced yet?» пита дали нещо очаквано вече се е случило. «Yet» стои накрая, а глаголът е в Present Perfect: «has been announced» („е бил обявен“)."
+    },
+    "ru-RU": {
+      "title": "«Yet» и Present Perfect",
+      "text": "«Has… been announced yet?» спрашивает, случилось ли уже то, чего ждали. «Yet» стоит в конце, а глагол стоит в Present Perfect: «has been announced» («был объявлен»)."
+    }
+  },
+  "bank-airport-en-02.pronunciation": {
+    "bg-BG": {
+      "title": "«Announced» завършва на -nst",
+      "text": "Краят на «announced» е бързо t след s: три звука подред, n, s, t, без да добавяте гласна. Ударението пада на втората сричка: a-NOUNCED."
+    },
+    "ru-RU": {
+      "title": "«Announced» заканчивается на -nst",
+      "text": "Конец слова «announced» — быстрое t после s: три звука подряд, n, s, t, без добавочного гласного. Ударение падает на второй слог: a-NOUNCED."
+    }
+  },
+  "bank-airport-en-03.mnemonic": {
+    "bg-BG": {
+      "title": "Багаж за ръката",
+      "text": "Названието казва какво е: багаж, който носите в ръка. Българският прави същото име, «ръчен багаж», така че представете си малка чанта в ръката си."
+    },
+    "ru-RU": {
+      "title": "Багаж в руке",
+      "text": "Название говорит само за себя: вещи, которые носишь в руке. По-русски «ручная кладь» устроено так же, так что представьте небольшую сумку в руке."
+    }
+  },
+  "bank-airport-en-03.grammar": {
+    "bg-BG": {
+      "title": "«As», а не «like»",
+      "text": "«As» казва какво е нещо или за какво служи: «OK as hand luggage» („става за ръчен багаж“). «Like» значи „подобен на“ и тук не върши работа. На български и за двете се казва «като»."
+    },
+    "ru-RU": {
+      "title": "«As», а не «like»",
+      "text": "«As» говорит, чем что-то служит или считается: «OK as hand luggage» («подойдёт как ручная кладь»). «Like» значит «похожий на» и здесь не подходит. По-русски оба слова передаются через «как»."
+    }
+  },
+  "bank-airport-en-03.pronunciation": {
+    "bg-BG": {
+      "title": "Кратко u в «luggage»",
+      "text": "U в «luggage» е краткият, отпуснат звук от «cup»: нито ясно «а», нито «у». Краят е бързо «идж», както в «village»."
+    },
+    "ru-RU": {
+      "title": "Краткий звук u в «luggage»",
+      "text": "U в «luggage» — краткий, расслабленный звук, как в «cup»: не чёткое «а» и не «у». Окончание — быстрое «идж», как в «village»."
+    }
+  },
+  "bank-airport-en-04.mnemonic": {
+    "bg-BG": {
+      "title": "Точно върху часовника",
+      "text": "Представете си самолета, паркиран точно върху циферблата в планираната минута: «on time» значи точно тогава. «In time» е друго: достатъчно рано, за да успееш."
+    },
+    "ru-RU": {
+      "title": "Точно на циферблате",
+      "text": "Представьте самолёт, припаркованный прямо на циферблате в запланированную минуту: «on time» — это ровно тогда. «In time» — другое: успеть к сроку."
+    }
+  },
+  "bank-airport-en-04.grammar": {
+    "bg-BG": {
+      "title": "«On time» и «in time»",
+      "text": "«On time» значи в определения момент: полетът излита on time. «In time» значи достатъчно рано за нещо: «We got there in time for the flight» („успяхме за полета“). В българския и за двете се казва «навреме»."
+    },
+    "ru-RU": {
+      "title": "«On time» и «in time»",
+      "text": "«On time» — в назначенный момент: рейс вылетает on time. «In time» — достаточно рано для чего-то: «We got there in time for the flight» («мы успели на рейс»). По-русски для обоих случаев есть одно слово — «вовремя»."
+    }
+  },
+  "bank-airport-en-04.pronunciation": {
+    "bg-BG": {
+      "title": "«Paris»: ударение в началото",
+      "text": "Ударението е на първата сричка: PA-riss. Краят е ясно s, а не «ж», както в «Париж». Втората гласна е кратка и слаба."
+    },
+    "ru-RU": {
+      "title": "«Paris»: ударение на первом слоге",
+      "text": "Ударение на первом слоге: PA-riss. Слово кончается на s, а не на «ж», как в слове «Париж». Второй гласный краткий и слабый."
+    }
+  },
+  "bank-airport-en-05.mnemonic": {
+    "bg-BG": {
+      "title": "Куфар за костюм",
+      "text": "«Suitcase» е «suit» („костюм“) + «case» („куфар“): куфар за костюм. Представете си един спретнат костюм, сгънат в куфара, който още не се е появил на лентата за багаж."
+    },
+    "ru-RU": {
+      "title": "Футляр для костюма",
+      "text": "«Suitcase» — это «suit» («костюм») + «case» («футляр, чехол»): чемодан для костюма. Представьте аккуратно сложенный костюм внутри чемодана, который так и не выехал на ленту."
+    }
+  },
+  "bank-airport-en-05.grammar": {
+    "bg-BG": {
+      "title": "«Has» за един, «have» за повече",
+      "text": "Present Perfect, «has/have» + причастие, свързва миналото с настоящето: куфарът още го няма. Един куфар е с «hasn't», няколко чанти са с «haven't»: «My bags haven't arrived»."
+    },
+    "ru-RU": {
+      "title": "«Has» для одного, «have» для нескольких",
+      "text": "Present Perfect, «has/have» + причастие, связывает прошлое с настоящим: чемодана до сих пор нет. Один чемодан — «hasn't», несколько сумок — «haven't»: «My bags haven't arrived»."
+    }
+  },
+  "bank-airport-en-05.pronunciation": {
+    "bg-BG": {
+      "title": "«Arrived»: звучно v",
+      "text": "В «arrived» краят е само d след звучно v: uh-RYVD, две срички, без допълнителна гласна. Не оглушавайте v до f."
+    },
+    "ru-RU": {
+      "title": "«Arrived»: звонкое v",
+      "text": "В «arrived» окончание — просто d после звонкого v: uh-RYVD, два слога, без лишнего гласного. Не оглушайте v до f."
+    }
+  },
+  "bank-help-en-01.mnemonic": {
+    "bg-BG": {
+      "title": "Протегната ръка",
+      "text": "Ръката е помощ: представете си човек, който ви подава ръка да станете. И във вашия език картината е същата, „подавам ръка“, така че «give me a hand» се отгатва лесно."
+    },
+    "ru-RU": {
+      "title": "Протянутая рука",
+      "text": "Рука — это помощь: представьте человека, который протягивает вам руку, чтобы поднять. По-русски картина та же, «протянуть руку помощи», поэтому «give me a hand» легко угадать."
+    }
+  },
+  "bank-help-en-01.grammar": {
+    "bg-BG": {
+      "title": "«Could you…?»: учтива молба",
+      "text": "«Could you…?» е учтивият начин да поискате помощ. След «could» глаголът е без «to»: «give», а не „to give“."
+    },
+    "ru-RU": {
+      "title": "«Could you…?»: вежливая просьба",
+      "text": "«Could you…?» — вежливый способ попросить о помощи. После «could» стоит глагол без «to»: «give», а не «to give»."
+    }
+  },
+  "bank-help-en-01.pronunciation": {
+    "bg-BG": {
+      "title": "Меко h, кратко a",
+      "text": "H в «hand» е само издишване от гърлото, много по-меко от вашето «х». Гласната е кратка и отворена, като в «trap», а не «е»."
+    },
+    "ru-RU": {
+      "title": "Мягкое h, краткое a",
+      "text": "H в «hand» — лишь выдох из горла, куда мягче русского «х». Гласный краткий и открытый, как в «trap», а не «э»."
+    }
+  },
+  "bank-help-en-02.mnemonic": {
+    "bg-BG": {
+      "title": "Emergency идва от «emerge»",
+      "text": "«Emergency» е нещо, което внезапно изниква, появява се от нищото. В Британия за линейка се набира 999, а 112 също работи."
+    },
+    "ru-RU": {
+      "title": "Emergency — от «emerge»",
+      "text": "«Emergency» — это то, что внезапно возникает, появляется из ниоткуда. В Британии за скорой звонят на 999, и 112 тоже работает."
+    }
+  },
+  "bank-help-en-02.grammar": {
+    "bg-BG": {
+      "title": "Учтиви молби с «please»",
+      "text": "Повелителното наклонение е просто глаголът в основна форма, без подлог: «Call an ambulance». Добавете «please» в началото или в края, за да е учтиво: «Please call…» или «Call…, please». Следващото изречение назовава ситуацията: «It's an emergency»."
+    },
+    "ru-RU": {
+      "title": "Вежливые просьбы с «please»",
+      "text": "Повелительная форма — просто глагол без подлежащего: «Call an ambulance». Поставьте «please» в начало или в конец, чтобы получилось вежливо: «Please call…» или «Call…, please». Следующее предложение называет ситуацию: «It's an emergency»."
+    }
+  },
+  "bank-help-en-02.pronunciation": {
+    "bg-BG": {
+      "title": "AM-byuh-lunss и ih-MUR-jen-see",
+      "text": "«Ambulance» е с ударение на първата сричка: AM-byuh-lunss. В «emergency» ударението е на втората сричка, ih-MUR-jen-see: дълга гласна като в «bird», без звука r, а g се чете като «дж»."
+    },
+    "ru-RU": {
+      "title": "AM-byuh-lunss и ih-MUR-jen-see",
+      "text": "В «ambulance» ударение на первом слоге: AM-byuh-lunss. В «emergency» ударение на втором слоге, ih-MUR-jen-see: долгий гласный, как в «bird», звука r нет, а g читается как «дж»."
+    }
+  },
+  "bank-help-en-03.mnemonic": {
+    "bg-BG": {
+      "title": "Steal, stole, stolen",
+      "text": "Изречете трите форми като броилка, преди да кажете фразата: steal, stole, stolen. И трите започват със st, а «o» от «stole» се връща в «stolen»."
+    },
+    "ru-RU": {
+      "title": "Steal, stole, stolen",
+      "text": "Произнесите три формы, как считалочку, прежде чем сказать фразу: steal, stole, stolen. Все начинаются на st, а «o» из «stole» возвращается в «stolen»."
+    }
+  },
+  "bank-help-en-03.grammar": {
+    "bg-BG": {
+      "title": "«Someone's» значи «someone has»",
+      "text": "Present Perfect, «has» + причастие, съобщава скорошна новина, която още има значение. Тук «'s» е «has», а не «is», защото «stolen» е причастие."
+    },
+    "ru-RU": {
+      "title": "«Someone's» значит «someone has»",
+      "text": "Present Perfect, «has» + причастие, сообщает свежую новость, которая ещё важна. Здесь «'s» — это «has», а не «is», потому что «stolen» — причастие."
+    }
+  },
+  "bank-help-en-03.pronunciation": {
+    "bg-BG": {
+      "title": "Плъзгащото се o в «stolen»",
+      "text": "Гласната в «stolen» е плъзгане: започва от слабо „ъ“ и преминава към „у“, а не е чисто кратко «о». Кажете бавно STOH-lun и оставете устните да се закръглят по пътя."
+    },
+    "ru-RU": {
+      "title": "Скользящий о в «stolen»",
+      "text": "Гласный в «stolen» — скольжение: он начинается с нейтрального звука, почти «э», и переходит к «у», а не чистое краткое «о». Скажите медленно STOH-lun, позволяя губам округлиться по пути."
+    }
+  },
+  "bank-help-en-04.mnemonic": {
+    "bg-BG": {
+      "title": "Две стари познати",
+      "text": "И двете думи ги има и във вашия език: «полиция» и «станция». Съединете ги наум: станция със синя лампа над вратата."
+    },
+    "ru-RU": {
+      "title": "Старые знакомые",
+      "text": "Оба слова есть и в русском: «полиция» и «станция». Соедините их в уме: станция с синим фонарём над дверью."
+    }
+  },
+  "bank-help-en-04.grammar": {
+    "bg-BG": {
+      "title": "«Police station»: две съществителни",
+      "text": "В «police station» първото съществително казва що за станция е и не взема -s: «police station», «bus station», «train station». «Where's» е съкратено «where is»."
+    },
+    "ru-RU": {
+      "title": "«Police station»: два существительных",
+      "text": "В «police station» первое существительное говорит, что это за станция, и не принимает -s: «police station», «bus station», «train station». «Where's» — сокращение от «where is»."
+    }
+  },
+  "bank-help-en-04.pronunciation": {
+    "bg-BG": {
+      "title": "po-LEESS: ударение на -lice",
+      "text": "Ударението в «police» е на втората сричка, както в «полиция»: puh-LEESS, с краен s. «-tion» в «station» се чете «шън»: STAY-shun."
+    },
+    "ru-RU": {
+      "title": "po-LEESS: ударение на -lice",
+      "text": "Ударение в «police» на втором слоге, как в слове «полиция»: puh-LEESS, с конечным s. «-tion» в «station» — это «ш»: STAY-shun."
+    }
+  },
+  "bank-help-en-05.mnemonic": {
+    "bg-BG": {
+      "title": "Pass + port",
+      "text": "«Passport» ви позволява да минете («pass») през пристанище («port»): «pass» + «port». Това е документът, който не бива да губите."
+    },
+    "ru-RU": {
+      "title": "Pass + port",
+      "text": "«Passport» позволяет пройти («pass») через порт («port»): «pass» + «port». Это тот документ, который нельзя терять."
+    }
+  },
+  "bank-help-en-05.grammar": {
+    "bg-BG": {
+      "title": "«What should I do?»",
+      "text": "«Should» дава или иска съвет, а след него глаголът е без «to»: «What should I do?» („Какво да направя?“). Никога не взима «to» или -s."
+    },
+    "ru-RU": {
+      "title": "«What should I do?»",
+      "text": "«Should» даёт совет или просит его, а после него стоит глагол без «to»: «What should I do?» («Что мне делать?»). Он никогда не принимает «to» или -s."
+    }
+  },
+  "bank-help-en-05.pronunciation": {
+    "bg-BG": {
+      "title": "Без r в «passport»",
+      "text": "Британският английски не произнася r пред съгласна: PAHSS-pawt, с дълго отворено «а» и дълго «о». Ударението е върху първата сричка."
+    },
+    "ru-RU": {
+      "title": "Без r в «passport»",
+      "text": "В британском английском r перед согласным не произносится: PAHSS-pawt, с долгим открытым «а» и долгим «о». Ударение падает на первый слог."
+    }
+  },
+  "bank-work-en-01.mnemonic": {
+    "bg-BG": {
+      "title": "Маса, столове и часовник",
+      "text": "Представете си кръгла маса със столове и часовник, който сочи десет. «Meeting» е това, което става, когато хората се срещат («meet»), плюс -ing."
+    },
+    "ru-RU": {
+      "title": "Стол, стулья и часы",
+      "text": "Представьте круглый стол со стульями и часы, показывающие десять. «Meeting» — это то, что происходит, когда люди встречаются («meet»), плюс -ing."
+    }
+  },
+  "bank-work-en-01.grammar": {
+    "bg-BG": {
+      "title": "«I've got» значи «I have»",
+      "text": "В британския английски често се казва «I've got» вместо «I have». Това е сегашно време: «got» не го прави минало. «At» върви с часове: «at ten»."
+    },
+    "ru-RU": {
+      "title": "«I've got» значит «I have»",
+      "text": "В британском английском часто говорят «I've got» вместо «I have». Это настоящее время: «got» не делает фразу прошедшей. «At» ставится при указании часов: «at ten»."
+    }
+  },
+  "bank-work-en-01.pronunciation": {
+    "bg-BG": {
+      "title": "Дълго ee, кратко i",
+      "text": "В «meeting» първата гласна е дълга: MEE-. Втората е кратка и отпусната: -ting. Не давайте на двете срички една и съща гласна."
+    },
+    "ru-RU": {
+      "title": "Долгое ee, краткое i",
+      "text": "В «meeting» первый гласный долгий: MEE-. Второй краткий и расслабленный: -ting. Не произносите оба слога с одним и тем же «и»."
+    }
+  },
+  "bank-work-en-02.mnemonic": {
+    "bg-BG": {
+      "title": "Финална линия в петък",
+      "text": "Представете си финална линия, начертана в петък, а докладът вече я е пресякъл. «By» значи „не по-късно от“."
+    },
+    "ru-RU": {
+      "title": "Финишная черта в пятницу",
+      "text": "Представьте финишную черту, проведённую в пятницу, а отчёт уже пересёк её. «By» значит «не позже»."
+    }
+  },
+  "bank-work-en-02.grammar": {
+    "bg-BG": {
+      "title": "«By» не е «until»",
+      "text": "«By Friday» значи „най-късно в петък“: краен срок. «Until Friday» значи „чак до петък“ и после спира. В българския и за двете има една дума, «до»."
+    },
+    "ru-RU": {
+      "title": "«By» — не «until»",
+      "text": "«By Friday» значит «не позже пятницы»: крайний срок. «Until Friday» значит «вплоть до пятницы», а потом заканчивается. По-русски для обоих слов есть одно «до»."
+    }
+  },
+  "bank-work-en-02.pronunciation": {
+    "bg-BG": {
+      "title": "Меко английско r",
+      "text": "Произнасяйте r във «Friday» и «report» с леко повдигнат език, който нищо не докосва: без вибриране. В края на «report» r изобщо няма, а ударението е на -PORT."
+    },
+    "ru-RU": {
+      "title": "Мягкое английское r",
+      "text": "Произносите r в «Friday» и «report» с загнутым языком, который ничего не касается: никакой вибрации. В конце «report» r нет вовсе, а ударение падает на -PORT."
+    }
+  },
+  "bank-work-en-03.mnemonic": {
+    "bg-BG": {
+      "title": "Редица от петъци",
+      "text": "Представете си редица от петъци в календара, а вие във всеки: на дивана с лаптоп. Окончанието -s в «Fridays» значи „всеки петък“."
+    },
+    "ru-RU": {
+      "title": "Ряд пятниц",
+      "text": "Представьте ряд пятниц в календаре: в каждой вы на диване с ноутбуком. Окончание -s в «Fridays» значит «каждую пятницу»."
+    }
+  },
+  "bank-work-en-03.grammar": {
+    "bg-BG": {
+      "title": "«On Fridays» значи всеки петък",
+      "text": "Ден от седмицата с -s описва навик: «on Fridays» е всеки петък, а «on Friday» е един конкретен петък. За рутина се ползва Present Simple: «I work»."
+    },
+    "ru-RU": {
+      "title": "«On Fridays» значит по пятницам",
+      "text": "Название дня с -s описывает привычку: «on Fridays» — это по пятницам, а «on Friday» — одна конкретная пятница. Для привычек используется Present Simple: «I work»."
+    }
+  },
+  "bank-work-en-03.pronunciation": {
+    "bg-BG": {
+      "title": "Без r в «work»",
+      "text": "В «work» няма звук r: гласната е дълго «ъ», като в «bird», после k. «From» е кратко и слабо, като „фръм“."
+    },
+    "ru-RU": {
+      "title": "Без r в «work»",
+      "text": "В «work» звука r нет: гласный долгий, как в «bird», затем k. «From» быстрое и слабое, как «фрэм»."
+    }
+  },
+  "bank-work-en-04.mnemonic": {
+    "bg-BG": {
+      "title": "Дума по дума",
+      "text": "Дума по дума това е въпросът, който вече задавате: „Имаш ли минутка?“. Представете си колега, който чука по бюрото ви и вдига един пръст."
+    },
+    "ru-RU": {
+      "title": "Слово в слово",
+      "text": "Слово в слово это вопрос, который вы уже задаёте по-русски: «У тебя есть минутка?». Представьте коллегу, который стучит по вашему столу и поднимает один палец."
+    }
+  },
+  "bank-work-en-04.grammar": {
+    "bg-BG": {
+      "title": "Отговор с «have»",
+      "text": "Краткият отговор повтаря «have»: «Yes, I have» или «Sorry, I haven't». Не отговаряйте «Yes, I got»: звучи като минало време."
+    },
+    "ru-RU": {
+      "title": "Ответ с «have»",
+      "text": "Краткий ответ повторяет «have»: «Yes, I have» или «Sorry, I haven't». Не отвечайте «Yes, I got»: это звучит как прошедшее время."
+    }
+  },
+  "bank-work-en-04.pronunciation": {
+    "bg-BG": {
+      "title": "MIN-it, а не mi-NOOT",
+      "text": "Съществителното «minute» има две кратки срички с ударение в началото: MIN-it. Не пренасяйте ударението и дългото «у» от българската „минута“."
+    },
+    "ru-RU": {
+      "title": "MIN-it, а не mi-NOOT",
+      "text": "Существительное «minute» состоит из двух кратких слогов с ударением в начале: MIN-it. Не переносите ударение и долгое «у» из русской «минуты»."
+    }
+  },
+  "bank-work-en-05.mnemonic": {
+    "bg-BG": {
+      "title": "Залез над списъка със задачи",
+      "text": "Представете си залеза и последната задача от списъка, отметната. Дума по дума съвпада с български: „до края на деня“ е «by the end of the day»."
+    },
+    "ru-RU": {
+      "title": "Закат над списком дел",
+      "text": "Представьте закат и последнюю задачу в списке, отмеченную галочкой. Слово в слово совпадает с русским: «до конца дня» — это «by the end of the day»."
+    }
+  },
+  "bank-work-en-05.grammar": {
+    "bg-BG": {
+      "title": "«I'll» за обещание",
+      "text": "«I'll» (I will) е начинът да обещаете или предложите нещо на работа. След него идва глагол без «to»: «I'll finish», а не „I'll to finish“. Съответства на «ще» + глагол."
+    },
+    "ru-RU": {
+      "title": "«I'll» для обещания",
+      "text": "«I'll» (I will) — так на работе обещают или предлагают что-то сделать. После него глагол без «to»: «I'll finish», а не «I'll to finish». Это аналог будущего времени: «закончу»."
+    }
+  },
+  "bank-work-en-05.pronunciation": {
+    "bg-BG": {
+      "title": "Къси, слаби думички",
+      "text": "Ударение носят «finish», «end» и «day». «By», «of» и «the» са бързи и слаби: «of» е просто „ъв“, а «the» пред гласна звучи като „thee“."
+    },
+    "ru-RU": {
+      "title": "Короткие слабые слова",
+      "text": "Ударение несут «finish», «end» и «day». «By», «of» и «the» быстрые и слабые: «of» — просто «эв», а «the» перед гласным звучит как «thee»."
+    }
+  },
+  "bank-phone-en-01.mnemonic": {
+    "bg-BG": {
+      "title": "Дума, която те пропуска",
+      "text": "«Password» е «pass» + «word»: думата, която пазачът иска, преди да ви пусне. Нашата «парола» е заета от френското «parole», „дума“, така че идеята е същата."
+    },
+    "ru-RU": {
+      "title": "Слово, которое пропускает",
+      "text": "«Password» — это «pass» + «word»: слово, которое требует страж, прежде чем пропустить вас. Русский «пароль» заимствован из французского «parole», «слово», так что идея та же."
+    }
+  },
+  "bank-phone-en-01.grammar": {
+    "bg-BG": {
+      "title": "Съществително + съществително",
+      "text": "В английския първото съществително описва второто, без «of» или «for»: «Wi-Fi password» („парола за Wi-Fi“), «phone charger», «bus ticket». Главното съществително е последно."
+    },
+    "ru-RU": {
+      "title": "Существительное + существительное",
+      "text": "В английском первое существительное описывает второе, без «of» или «for»: «Wi-Fi password» («пароль от Wi-Fi»), «phone charger», «bus ticket». Главное слово стоит последним."
+    }
+  },
+  "bank-phone-en-01.pronunciation": {
+    "bg-BG": {
+      "title": "Ударение на първата сричка",
+      "text": "В «Wi-Fi» и «password» ударението е на първата сричка: WY-fy, PAHSS-werd. Първата гласна на «password» е дълго, отворено «а»."
+    },
+    "ru-RU": {
+      "title": "Ударение на первом слоге",
+      "text": "В «Wi-Fi» и «password» ударение на первом слоге: WY-fy, PAHSS-werd. Первый гласный в «password» — долгий открытый «а»."
+    }
+  },
+  "bank-phone-en-02.mnemonic": {
+    "bg-BG": {
+      "title": "Телефон, който «умира»",
+      "text": "И на български телефонът „умира“, когато батерията свършва. Представете си червената иконка на батерията като линия на пулс, която се изравнява."
+    },
+    "ru-RU": {
+      "title": "Телефон, который «умирает»",
+      "text": "И по-русски телефон «умирает», когда садится батарея. Представьте красный значок батареи как линию пульса, которая становится ровной."
+    }
+  },
+  "bank-phone-en-02.grammar": {
+    "bg-BG": {
+      "title": "«Borrow» не е «lend»",
+      "text": "«Borrow» е да вземеш назаем и да върнеш, а «lend» е да дадеш назаем: «Could I borrow your charger?» е същото като «Could you lend me your charger?». Не ги бъркайте: на български и в двата случая казваме „назаем“, а в английския глаголите са различни."
+    },
+    "ru-RU": {
+      "title": "«Borrow» — не «lend»",
+      "text": "«Borrow» — взять у кого-то с возвратом, «lend» — дать кому-то: «Could I borrow your charger?» значит то же, что «Could you lend me your charger?». По-русски для обоих есть «одолжить», а в английском глаголы разные."
+    }
+  },
+  "bank-phone-en-02.pronunciation": {
+    "bg-BG": {
+      "title": "«Ch» и «j» в «charger»",
+      "text": "«Charger» започва с «ч», както в «church», а g се чете като «дж». В британския английски в края няма r: CHAH-juh."
+    },
+    "ru-RU": {
+      "title": "«Ch» и «j» в «charger»",
+      "text": "«Charger» начинается на «ч», как в «church», а g читается как «дж». В британском английском в конце r нет: CHAH-juh."
+    }
+  },
+  "bank-phone-en-03.mnemonic": {
+    "bg-BG": {
+      "title": "Да позвъни телефонът",
+      "text": "«To ring» значи да накараш нечий телефон да звънне. Българският ползва същата картина, „звънна“, така че си представете екран, светнал с вашето име."
+    },
+    "ru-RU": {
+      "title": "Чтобы зазвонил телефон",
+      "text": "«To ring» — сделать так, чтобы у кого-то зазвонил телефон. По-русски та же картина, «позвонить» от «звон», так что представьте экран, на котором горит ваше имя."
+    }
+  },
+  "bank-phone-en-03.grammar": {
+    "bg-BG": {
+      "title": "«Ring» + човек, без «to»",
+      "text": "В британския английски се казва «ring someone» без предлог: «ring you», а не „ring to you“. «Ring» е обичайната британска дума за обаждане; «call» също върши работа и е американският избор."
+    },
+    "ru-RU": {
+      "title": "«Ring» + человек, без «to»",
+      "text": "В британском английском говорят «ring someone» без предлога: «ring you», а не «ring to you». «Ring» — обычное британское слово для звонка; «call» тоже подходит и является американским вариантом."
+    }
+  },
+  "bank-phone-en-03.pronunciation": {
+    "bg-BG": {
+      "title": "ng без g",
+      "text": "В «ring» «ng» е един звук в задната част на устата. Не прибавяйте g или k след него и преминете направо към «you»."
+    },
+    "ru-RU": {
+      "title": "ng без g",
+      "text": "В «ring» «ng» — один звук в задней части рта. Не добавляйте после него g или k и сразу переходите к «you»."
+    }
+  },
+  "bank-phone-en-04.mnemonic": {
+    "bg-BG": {
+      "title": "Празни чертички",
+      "text": "«Signal» е същата дума като българския «сигнал». Представете си чертичките в ъгъла на екрана, всички празни: нито една, и точно това значи «any» тук."
+    },
+    "ru-RU": {
+      "title": "Пустые деления",
+      "text": "«Signal» — то же слово, что русский «сигнал». Представьте деления сети в углу экрана, все пустые: ни одного, и именно это здесь значит «any»."
+    }
+  },
+  "bank-phone-en-04.grammar": {
+    "bg-BG": {
+      "title": "Едно отрицание стига",
+      "text": "В английския едно отрицание е достатъчно: «can't get any signal», а не „can't get no signal“. Българският иска две, като «не… никакъв», затова е лесно да добавите второ."
+    },
+    "ru-RU": {
+      "title": "Достаточно одного отрицания",
+      "text": "В английском хватает одного отрицания: «can't get any signal», а не «can't get no signal». Русский требует двух, как «нет… никакой», поэтому легко добавить второе."
+    }
+  },
+  "bank-phone-en-04.pronunciation": {
+    "bg-BG": {
+      "title": "G в «signal»",
+      "text": "В «signal» g се произнася: SIG-nul, с кратко i. Сравнете със «sign», където g е нямо, а гласната е дълга."
+    },
+    "ru-RU": {
+      "title": "G в «signal»",
+      "text": "В «signal» g произносится: SIG-nul, с кратким i. Сравните со «sign», где g не читается, а гласный долгий."
+    }
+  },
+  "bank-phone-en-05.mnemonic": {
+    "bg-BG": {
+      "title": "„Текст ми“",
+      "text": "«Text» е кратко писмено съобщение, а тук съществителното става глагол: «text me» значи „прати ми съобщение“ и звучи почти като „текст ми“. Представете си балонче с пин за адрес, което лети към телефона ви."
+    },
+    "ru-RU": {
+      "title": "«Text me» — «пришли текст»",
+      "text": "«Text» — короткое письменное сообщение, и здесь существительное стало глаголом: «text me» значит «пришли мне сообщение». Представьте облачко с меткой адреса, летящее на ваш телефон."
+    }
+  },
+  "bank-phone-en-05.grammar": {
+    "bg-BG": {
+      "title": "Първо човекът, без «to»",
+      "text": "С «text», «send» и «give» човекът стои пръв и «to» отпада: «text me the address». С «to» редът се обръща: «text the address to me»."
+    },
+    "ru-RU": {
+      "title": "Сначала человек, без «to»",
+      "text": "С «text», «send» и «give» сначала идёт человек, а «to» опускается: «text me the address». С «to» порядок меняется: «text the address to me»."
+    }
+  },
+  "bank-phone-en-05.pronunciation": {
+    "bg-BG": {
+      "title": "uh-DRESS: ударение накрая",
+      "text": "Ударението в «address» е на втората сричка: uh-DRESS. Първата гласна е слабо „ъ“, а не пълно «а», за разлика от българския «адрес»."
+    },
+    "ru-RU": {
+      "title": "uh-DRESS: ударение в конце",
+      "text": "Ударение в «address» на втором слоге: uh-DRESS. Первый гласный — слабый, почти «э», а не полноценное «а», в отличие от русского «адрес»."
+    }
+  },
+  "bank-family-en-01.mnemonic": {
+    "bg-BG": {
+      "title": "Стари семейни думи",
+      "text": "«Brother» и «sister» са роднини на «брат» и «сестра»: чувате br-…-r в едната и s-…-str в другата. Идват от общи прародители."
+    },
+    "ru-RU": {
+      "title": "Старые семейные слова",
+      "text": "«Brother» и «sister» — родственники слов «брат» и «сестра»: слышно br-…-r в одном и s-…-str в другом. У них общие предки."
+    }
+  },
+  "bank-family-en-01.grammar": {
+    "bg-BG": {
+      "title": "«A» пред всяко съществително",
+      "text": "Съществително в единствено число иска «a» (или «the», «my»): «a brother and a sister». Често се пропуска, затова повторете «a» пред всяко съществително."
+    },
+    "ru-RU": {
+      "title": "«A» перед каждым существительным",
+      "text": "Исчисляемое существительное в единственном числе требует «a» (или «the», «my»): «a brother and a sister». Русскоговорящие часто его пропускают, поэтому повторяйте «a» перед каждым существительным."
+    }
+  },
+  "bank-family-en-01.pronunciation": {
+    "bg-BG": {
+      "title": "Звучно th в «brother»",
+      "text": "«Th» в «brother» е звучно: поставете върха на езика леко между зъбите и оставете гласа да бръмчи, както в «the». Гласната е краткото „ъ“ от «cup»."
+    },
+    "ru-RU": {
+      "title": "Звонкое th в «brother»",
+      "text": "«Th» в «brother» звонкое: слегка поставьте кончик языка между зубами и дайте голосу звучать, как в «the». Гласный — краткий звук, как в «cup»."
+    }
+  },
+  "bank-family-en-02.mnemonic": {
+    "bg-BG": {
+      "title": "Учтиво почукване",
+      "text": "Представете си учтиво почукване на врата: «any» пита дали изобщо има такива, затова му е мястото във въпросите."
+    },
+    "ru-RU": {
+      "title": "Вежливый стук",
+      "text": "Представьте вежливый стук в дверь: «any» спрашивает, есть ли они вообще, поэтому ему место в вопросах."
+    }
+  },
+  "bank-family-en-02.grammar": {
+    "bg-BG": {
+      "title": "Child, children",
+      "text": "Множественото число на «child» е «children», а не „childs“: неправилна форма, без -s. Заучете го заедно с man → men и person → people."
+    },
+    "ru-RU": {
+      "title": "Child, children",
+      "text": "Множественное число от «child» — «children», а не «childs»: неправильная форма без -s. Выучите её вместе с man → men и person → people."
+    }
+  },
+  "bank-family-en-02.pronunciation": {
+    "bg-BG": {
+      "title": "Две гласни: child и children",
+      "text": "«Child» е с дългия звук «ай», а «children» е с кратко i: CHIL-drun. Не вмъквайте гласна между l и d."
+    },
+    "ru-RU": {
+      "title": "Два гласных: child и children",
+      "text": "В «child» звучит долгий «ай», а в «children» — краткий i: CHIL-drun. Не вставляйте гласный между l и d."
+    }
+  },
+  "bank-family-en-03.mnemonic": {
+    "bg-BG": {
+      "title": "Началото на «мама»",
+      "text": "«Mum» звучи като първата половина на «мама»: и двете са построени върху «м», което бебетата издават рано. Британските деца казват «mum», американските — «mom»."
+    },
+    "ru-RU": {
+      "title": "Начало слова «мама»",
+      "text": "«Mum» звучит как первая половина слова «мама»: оба слова основаны на звуке «м», который младенцы произносят одним из первых. Британские дети говорят «mum», американские — «mom»."
+    }
+  },
+  "bank-family-en-03.grammar": {
+    "bg-BG": {
+      "title": "-s след he, she и it",
+      "text": "В Present Simple само «he», «she» и «it» получават -s: «my mum lives», но «I live» и «my parents live»."
+    },
+    "ru-RU": {
+      "title": "-s после he, she и it",
+      "text": "В Present Simple -s получают только «he», «she» и «it»: «my mum lives», но «I live» и «my parents live»."
+    }
+  },
+  "bank-family-en-03.pronunciation": {
+    "bg-BG": {
+      "title": "Дълго aw и плъзгащо ow",
+      "text": "«Small» е с дълго, закръглено «о», не кратко. «Town» се плъзга от «а» към «у», като в «now», а не като «ton»."
+    },
+    "ru-RU": {
+      "title": "Долгое aw и скользящее ow",
+      "text": "«Small» — с долгим округлым «о», а не коротким. «Town» скользит от «а» к «у», как в «now», а не как «ton»."
+    }
+  },
+  "bank-family-en-04.mnemonic": {
+    "bg-BG": {
+      "title": "Daughter се римува с water",
+      "text": "Представете си я с чаша в ръка: в британския английски «daughter» се римува с «water», DAW-tuh и WAW-tuh. Буквите gh не се четат."
+    },
+    "ru-RU": {
+      "title": "Daughter рифмуется с water",
+      "text": "Представьте её со стаканом в руке: в британском английском «daughter» рифмуется с «water», DAW-tuh и WAW-tuh. Буквы gh не читаются."
+    }
+  },
+  "bank-family-en-04.grammar": {
+    "bg-BG": {
+      "title": "Възрастта се казва с «be»",
+      "text": "В английския възрастта се казва с «be»: «my daughter is five», «I'm thirty». «Years old» не е задължително, а «have» никога не се използва."
+    },
+    "ru-RU": {
+      "title": "Возраст выражается через «be»",
+      "text": "В английском возраст выражают с «be»: «my daughter is five», «I'm thirty». «Years old» можно опустить, а «have» не используется."
+    }
+  },
+  "bank-family-en-04.pronunciation": {
+    "bg-BG": {
+      "title": "Нямо gh",
+      "text": "Буквите gh в «daughter» не се четат, а гласната е дълго «о»: DAW-tuh, без r в края."
+    },
+    "ru-RU": {
+      "title": "Немое gh",
+      "text": "Буквы gh в «daughter» не читаются, а гласный — долгий «о»: DAW-tuh, без r в конце."
+    }
+  },
+  "bank-family-en-05.mnemonic": {
+    "bg-BG": {
+      "title": "Grand + parents",
+      "text": "«Grand» + «parents»: родителите на вашите родители. Представете си голяма семейна снимка с двама белокоси хора в средата."
+    },
+    "ru-RU": {
+      "title": "Grand + parents",
+      "text": "«Grand» + «parents»: родители ваших родителей. Представьте большую семейную фотографию с двумя седыми людьми в центре."
+    }
+  },
+  "bank-family-en-05.grammar": {
+    "bg-BG": {
+      "title": "Present Continuous за уговорен план",
+      "text": "За вече уговорен план английският ползва Present Continuous: «We're visiting… on Sunday», което звучи по-естествено от «We will visit». «On» върви с дните."
+    },
+    "ru-RU": {
+      "title": "Present Continuous для договорённого плана",
+      "text": "Для уже согласованного плана английский использует Present Continuous: «We're visiting… on Sunday», что звучит естественнее, чем «We will visit». «On» ставится перед днями недели."
+    }
+  },
+  "bank-family-en-05.pronunciation": {
+    "bg-BG": {
+      "title": "W и v",
+      "text": "Произнасяйте w със закръглени устни и без зъби, а v с горните зъби върху долната устна: «we're» и «visiting» са добра двойка за упражнение. Ударението в «visiting» е на първата сричка: VIZ-i-ting."
+    },
+    "ru-RU": {
+      "title": "W и v",
+      "text": "Произносите w с округлёнными губами и без зубов, а v с верхними зубами на нижней губе: «we're» и «visiting» — удобная пара для тренировки. Ударение в «visiting» на первом слоге: VIZ-i-ting."
+    }
+  },
+  "bank-booking-en-01.mnemonic": {
+    "bg-BG": {
+      "title": "Име в книгата",
+      "text": "«Book» е да запишете маса в книга: представете си книгата за резервации на ресторанта с вашето име на страницата. Глаголът и книгата са една и съща дума."
+    },
+    "ru-RU": {
+      "title": "Имя в книге",
+      "text": "«Book» — записать столик в книгу: представьте книгу бронирования ресторана с вашим именем на странице. Глагол и книга — одно и то же слово."
+    }
+  },
+  "bank-booking-en-01.grammar": {
+    "bg-BG": {
+      "title": "«I'd like to» + глагол",
+      "text": "«I'd like» (I would like) е по-мек и учтив от «I want». След него идва «to» и глагол без окончание: «I'd like to book»."
+    },
+    "ru-RU": {
+      "title": "«I'd like to» + глагол",
+      "text": "«I'd like» (I would like) мягче и вежливее, чем «I want». После него идёт «to» и глагол без окончания: «I'd like to book»."
+    }
+  },
+  "bank-booking-en-01.pronunciation": {
+    "bg-BG": {
+      "title": "Кратко «у» в «book»",
+      "text": "«Book» е с кратка, отпусната гласна, като в «good» и «look», а не с дългото «у» от «boot». «Four» е дълго и без звук r."
+    },
+    "ru-RU": {
+      "title": "Краткий «у» в «book»",
+      "text": "«Book» — с кратким расслабленным гласным, как в «good» и «look», а не с долгим «у» из «boot». «Four» долгое и без звука r."
+    }
+  },
+  "bank-booking-en-02.mnemonic": {
+    "bg-BG": {
+      "title": "Table е плоска дъска",
+      "text": "«Table» идва от латинското «tabula», плоска дъска — от същия корен е и «таблица». Представете си плоска дъска, подредена за вечеря, с часовник, който сочи осем."
+    },
+    "ru-RU": {
+      "title": "Table — плоская доска",
+      "text": "«Table» восходит к латинскому «tabula» — «плоская доска», тому же корню, что и «таблица». Представьте плоскую доску, накрытую к ужину, и часы, показывающие восемь."
+    }
+  },
+  "bank-booking-en-02.grammar": {
+    "bg-BG": {
+      "title": "«At» за часове",
+      "text": "«At» върви с часове: «at eight», «at half past seven». Дните са с «on» («on Friday»), а месеците с «in» («in May»)."
+    },
+    "ru-RU": {
+      "title": "«At» для времени по часам",
+      "text": "«At» употребляется с часами: «at eight», «at half past seven». Дни недели идут с «on» («on Friday»), месяцы — с «in» («in May»)."
+    }
+  },
+  "bank-booking-en-02.pronunciation": {
+    "bg-BG": {
+      "title": "Две срички в «table»",
+      "text": "«Table» е от две срички, TAY-bul: във втората няма истинска гласна, само бързо «b» и «l» с върха на езика зад горните зъби. «Eight» е дълго «ей» с ясно t накрая."
+    },
+    "ru-RU": {
+      "title": "Два слога в «table»",
+      "text": "«Table» состоит из двух слогов, TAY-bul: во втором нет настоящей гласной, только быстрое «b» и «l» с кончиком языка за верхними зубами. «Eight» — долгое «эй» с чётким t на конце."
+    }
+  },
+  "bank-booking-en-03.mnemonic": {
+    "bg-BG": {
+      "title": "Записано под P",
+      "text": "Представете си домакина, който плъзга пръст по страницата на книгата за резервации, докато спре на буквата P. Резервацията е записана «under» фамилията ви."
+    },
+    "ru-RU": {
+      "title": "Записано на букву P",
+      "text": "Представьте, как хозяин ведёт пальцем по странице книги бронирования, пока не остановится на букве P. Бронь записана «under» вашей фамилией."
+    }
+  },
+  "bank-booking-en-03.grammar": {
+    "bg-BG": {
+      "title": "«Under», а не «on»",
+      "text": "Резервацията е «under» име: «under Petrov». В българския казваме „на името на“, но английският ползва «under»."
+    },
+    "ru-RU": {
+      "title": "«Under», а не «on»",
+      "text": "Бронь «under» фамилией: «under Petrov». По-русски говорят «на фамилию», но английский использует «under»."
+    }
+  },
+  "bank-booking-en-03.pronunciation": {
+    "bg-BG": {
+      "title": "SEV-n: ударение в началото",
+      "text": "Ударението в «seven» е на първата сричка: SEV-n, а втората почти изчезва. Не слагайте ударение на последната сричка."
+    },
+    "ru-RU": {
+      "title": "SEV-n: ударение в начале",
+      "text": "Ударение в «seven» на первом слоге: SEV-n, а второй слог почти исчезает. Не ставьте ударение на последний слог."
+    }
+  },
+  "bank-booking-en-04.mnemonic": {
+    "bg-BG": {
+      "title": "Задължителна резервация",
+      "text": "Представете си табелата на вратата на претъпкан ресторант: „Booking essential“, резервацията е задължителна. Въпросът ви е учтивата версия на тази табела."
+    },
+    "ru-RU": {
+      "title": "Бронь обязательна",
+      "text": "Представьте табличку на двери переполненного ресторана: «Booking essential», бронирование обязательно. Ваш вопрос — вежливая версия этой таблички."
+    }
+  },
+  "bank-booking-en-04.grammar": {
+    "bg-BG": {
+      "title": "«Do we need to…?»",
+      "text": "В ежедневната реч «need» е обикновен глагол, затова въпросът е с «do»: «Do we need to…?». Следващият глагол идва след «to» без окончание: «to book»."
+    },
+    "ru-RU": {
+      "title": "«Do we need to…?»",
+      "text": "В повседневной речи «need» — обычный глагол, поэтому вопрос строится с «do»: «Do we need to…?». Следующий глагол стоит после «to» в начальной форме: «to book»."
+    }
+  },
+  "bank-booking-en-04.pronunciation": {
+    "bg-BG": {
+      "title": "Дълго ee, звучно d",
+      "text": "«Need» е с дълго «и» и завършва на звучно d, не на t: задръжте го дълго и ясно пред «to»: NEED tuh BOOK."
+    },
+    "ru-RU": {
+      "title": "Долгое ee, звонкое d",
+      "text": "«Need» — с долгим «и», заканчивается звонким d, а не t: произнесите его долго и чётко перед «to»: NEED tuh BOOK."
+    }
+  },
+  "bank-booking-en-05.mnemonic": {
+    "bg-BG": {
+      "title": "Задраскано с X",
+      "text": "«Cancel» е да зачеркнете име от книгата с голямо X. Представете си сервитьора, който прави това с вашата маса."
+    },
+    "ru-RU": {
+      "title": "Зачёркнуто крестом",
+      "text": "«Cancel» — вычеркнуть имя из книги большим крестом. Представьте официанта, который делает это с вашим столиком."
+    }
+  },
+  "bank-booking-en-05.grammar": {
+    "bg-BG": {
+      "title": "«For tonight»",
+      "text": "Резервацията е «for» момент: «for tonight», «for Friday», «for seven». «Tonight» не взема предлог, затова никога „in tonight“."
+    },
+    "ru-RU": {
+      "title": "«For tonight»",
+      "text": "Бронь делается «for» какое-то время: «for tonight», «for Friday», «for seven». У «tonight» нет собственного предлога, поэтому никогда не говорят «in tonight»."
+    }
+  },
+  "bank-booking-en-05.pronunciation": {
+    "bg-BG": {
+      "title": "CAN-sul и tuh-NITE",
+      "text": "«Cancel» е с ударение в началото: CAN-sul, с краткото отворено «а» от «cat». «Tonight» е обратното: tuh-NITE, със слаба първа сричка."
+    },
+    "ru-RU": {
+      "title": "CAN-sul и tuh-NITE",
+      "text": "«Cancel» — с ударением в начале: CAN-sul, с кратким открытым «а», как в «cat». «Tonight» наоборот: tuh-NITE, слабый первый слог."
+    }
+  },
+  "bank-health-ru-01.mnemonic": {
+    "bg-BG": {
+      "title": "Аптека: същата дума",
+      "text": "«Аптека» е същата дума като българската „аптека“. Идва от гръцка дума за „склад“, от която е и английското „apothecary“: мястото, където се пазят лекарствата."
+    }
+  },
+  "bank-health-ru-01.grammar": {
+    "bg-BG": {
+      "title": "Прилагателното следва рода",
+      "text": "«Аптека» е от женски род, затова прилагателното завършва на «-ая»: «ближайшая аптека». В руския няма член (като „-та“ в „аптеката“) и няма „е“ в сегашно време."
+    }
+  },
+  "bank-health-ru-01.pronunciation": {
+    "bg-BG": {
+      "title": "Без гласна: «где здесь»",
+      "text": "«Где здесь» има две групи съгласни, «гд» и «зд»: произнесете ги без гласна между тях. В «ближайшая» ударението е на «-жай-», а окончанието «-шая» се свива до бързо „шъ-я“."
+    }
+  },
+  "bank-health-ru-02.mnemonic": {
+    "bg-BG": {
+      "title": "«Головная боль» е главоболие",
+      "text": "«Головная боль» е „главоболие“: «голова» е „глава“ (в руския «глава» най-често значи „глава на книга“ или „ръководител“) плюс «боль» („болка“). Внимание: «боли» тук е съществително в родителен падеж, а не българският глагол „боли“."
+    }
+  },
+  "bank-health-ru-02.grammar": {
+    "bg-BG": {
+      "title": "«От» + родителен падеж",
+      "text": "«От» + родителен падеж казва за какво е лекарството: «от головной боли», «от кашля» („за кашлица“). «Что-нибудь» е „нещо“. «У вас есть…?» е руското „Имате ли…?“, буквално „при вас има…?“."
+    }
+  },
+  "bank-health-ru-02.pronunciation": {
+    "bg-BG": {
+      "title": "Слаби «о» пред ударението",
+      "text": "В «головной» ударението пада на последната сричка «-ной», затова двете по-ранни «о» отслабват: гъ-лъв-НОЙ. Пред звучното «г» «т» в «от» се произнася като «д»: «ад головной»."
+    }
+  },
+  "bank-health-ru-03.mnemonic": {
+    "bg-BG": {
+      "title": "Горло е гърло",
+      "text": "«Горло» е „гърло“: същата славянска дума, в която руското «о» отговаря на българското «ъ». А «болит» е „боли“. Така «болит горло» е почти „боли гърло“."
+    }
+  },
+  "bank-health-ru-03.grammar": {
+    "bg-BG": {
+      "title": "Болното място е подлогът",
+      "text": "В «У меня болит…» (буквално „при мен боли…“) болното място е подлогът, затова глаголът се съгласува с него: «болит горло» (едно), но «болят уши» (няколко). В българското „боли ме гърлото“ човекът е в „ме“, а в руския стои в «у меня»."
+    }
+  },
+  "bank-health-ru-03.pronunciation": {
+    "bg-BG": {
+      "title": "Ударение на -лит",
+      "text": "Ударението е на последната сричка на «болит», затова първото «о» е слабо, като кратко „ъ“. «Л» е меко пред «и», както в българското „боли“: бъ-ЛИТ."
+    }
+  },
+  "bank-health-ru-04.mnemonic": {
+    "bg-BG": {
+      "title": "На мен, «нужно», при лекаря",
+      "text": "Кажете го като малка история: «мне» („на мен“), «нужно» („нужно е“, същият корен като „нужда“ и „нужен“), «к врачу» („при лекаря“). Така руснаците „имат нужда“: човекът е „на мен“, не „аз“."
+    }
+  },
+  "bank-health-ru-04.grammar": {
+    "bg-BG": {
+      "title": "«К» + дателен падеж",
+      "text": "«К» значи „при, към (човек)“ и иска дателен падеж: «врач» става «к врачу». Глаголът „отивам“ се пропуска: «Мне нужно к врачу» е „Трябва да отида при лекаря“."
+    }
+  },
+  "bank-health-ru-04.pronunciation": {
+    "bg-BG": {
+      "title": "Меко «ч», ударение на -чу",
+      "text": "«Ч» в руския винаги е меко, по-меко от българското „ч“: езикът е плосък и напред. Ударението е на последната сричка, затова «а» пред него е слабо: връ-ЧУ."
+    }
+  },
+  "bank-health-ru-05.mnemonic": {
+    "bg-BG": {
+      "title": "Аллергия: алергия с двойно «лл»",
+      "text": "«Аллергия» е „алергия“ с двойно «лл» и окончанието «-ия», което има и в «история» и «география». «Орехи» са „ядки“: в руския «орех» е всяка ядка, а не само орехът."
+    }
+  },
+  "bank-health-ru-05.grammar": {
+    "bg-BG": {
+      "title": "Алергия «на» + винителен падеж",
+      "text": "В руския е „алергия на“, а не „към“, както в българския: «аллергия на» + винителен падеж, тук «орехи». «У меня…» („при мен е…“) е обичайният начин да кажете „имам“."
+    }
+  },
+  "bank-health-ru-05.pronunciation": {
+    "bg-BG": {
+      "title": "Слабо «о», груб «х»",
+      "text": "В «орехи» ударението е на «-ре-», затова първото «о» е слабо „ъ“. «Х» е като българското „х“, малко по-меко пред «и». «Аллергия» има само едно ударение, на «-ги-»."
+    }
+  },
+  "bank-hotel-ru-01.mnemonic": {
+    "bg-BG": {
+      "title": "«Бронь» от «бронировать»",
+      "text": "И в българския има „бронирам“. «Бронь» е кратката разговорна дума за резервация, от същото семейство като «бронировать» и «бронирование» в сайтовете на хотелите."
+    }
+  },
+  "bank-hotel-ru-01.grammar": {
+    "bg-BG": {
+      "title": "«На» + винителен падеж: на име",
+      "text": "«На» + винителен падеж значи „на името на“: «фамилия» става «фамилию». Самото фамилно име не се променя: «на фамилию Иванов»."
+    }
+  },
+  "bank-hotel-ru-01.pronunciation": {
+    "bg-BG": {
+      "title": "Иванов завършва на «ф»",
+      "text": "Много фамилии на «-ов» (Иванов, Петров, Смирнов) са с ударение на последната сричка, а крайното «в» се чете «ф»: звучна съгласна в края на думата става беззвучна. Внимание: в българското „Иванов“ ударението е по-напред."
+    }
+  },
+  "bank-hotel-ru-02.mnemonic": {
+    "bg-BG": {
+      "title": "Закуска ≠ завтрак",
+      "text": "Лесно е да се объркате: руското «завтрак» е българската „закуска“ (сутрешното хранене), а руската «закуска» е нещо за хапване преди основното ястие. Запомнете ритъма «завтрак, обед, ужин» („закуска, обяд, вечеря“)."
+    }
+  },
+  "bank-hotel-ru-02.grammar": {
+    "bg-BG": {
+      "title": "«Во сколько?»: в колко часа",
+      "text": "«Во сколько…?» е устойчивият начин да попитате „в колко часа…?“: «в» става «во» пред плътна група съгласни като «ск». В руския няма «часа», докато българското „в колко часа“ го има. В сегашно време няма глагол: «Во сколько завтрак?» е „В колко (часа) закуската?“."
+    }
+  },
+  "bank-hotel-ru-02.pronunciation": {
+    "bg-BG": {
+      "title": "«В» звучи като «ф» в завтрак",
+      "text": "В «завтрак» «в» се произнася като «ф», защото е пред беззвучното «т»: ЗАФ-трък, както в българското „в колко“ → „ф колко“. Не казвайте „зав“. Последното «а» е слабо."
+    }
+  },
+  "bank-hotel-ru-03.mnemonic": {
+    "bg-BG": {
+      "title": "Полотенце от полотно",
+      "text": "«Полотенце» идва от «полотно»: същата дума като „платно“. Кърпата е малко парче плат."
+    }
+  },
+  "bank-hotel-ru-03.grammar": {
+    "bg-BG": {
+      "title": "«Пожалуйста» след глагола",
+      "text": "«Принесите, пожалуйста, …» е обичайният ред за учтива молба: «пожалуйста» стои веднага след глагола, между запетаи. «Одно» е от среден род, като «полотенце» (докато българската „кърпа“ е от женски род: „една кърпа“), а съществителните от среден род изглеждат еднакво като допълнение и в основната си форма, затова «ещё одно полотенце» не се променя."
+    }
+  },
+  "bank-hotel-ru-03.pronunciation": {
+    "bg-BG": {
+      "title": "«Щ» не е „шт“",
+      "text": "Руското «щ» не е „шт“ като в българския. Това е дълго меко «ш»: като „ш“, проточено, с плосък език, напред. «Ещё» се чете йи-ЩО, а «ё» винаги е ударено."
+    }
+  },
+  "bank-hotel-ru-04.mnemonic": {
+    "bg-BG": {
+      "title": "Горячая вода: вода, която гори",
+      "text": "«Горячий» е от същия корен като «гореть» („горя“) и като българското „горещ“. «Горячая вода» е „топлата вода“ от крана."
+    }
+  },
+  "bank-hotel-ru-04.grammar": {
+    "bg-BG": {
+      "title": "«Нет» иска родителен падеж",
+      "text": "След «нет» („няма“) идва родителен падеж: «вода» става «воды», «горячая» става «горячей». В българския след „няма“ формата не се променя, а в руския окончанията се сменят. «Номер» тук е хотелската стая, не числото."
+    }
+  },
+  "bank-hotel-ru-04.pronunciation": {
+    "bg-BG": {
+      "title": "Гласната «ы»",
+      "text": "«Ы» е твърдият събрат на «и»: произнесете „и“ с езика, отдръпнат назад и плосък, почти „ъ-и“. «Воды» завършва на него, а ударението е на последната сричка: въ-ДЪИ."
+    }
+  },
+  "bank-hotel-ru-05.mnemonic": {
+    "bg-BG": {
+      "title": "Чемо-ДАН: куфарът на Дан",
+      "text": "Ударението в «чемодан» е на последната сричка «-дан»: представете си Дан, който влачи куфар: «чемо-ДАН». На руски «чемодан» е куфар."
+    }
+  },
+  "bank-hotel-ru-05.grammar": {
+    "bg-BG": {
+      "title": "«Можно» + инфинитив",
+      "text": "«Можно» + инфинитив пита за разрешение и няма нужда от «я»: «Можно оставить…?» е „Може ли да оставя…?“. Руският тук ползва инфинитив, а не «да»-конструкция. «До» значи „до“ и иска родителен падеж: «вечер» става «до вечера»."
+    }
+  },
+  "bank-hotel-ru-05.pronunciation": {
+    "bg-BG": {
+      "title": "Слаби гласни, силно -дан",
+      "text": "Само «-дан» е ударено, затова «е» и «о» пред него са слаби: чи-мъ-ДАН. «Ч» е меко, както винаги в руския."
+    }
+  },
+  "bank-clothes-ru-01.mnemonic": {
+    "bg-BG": {
+      "title": "При вас, има ли…?",
+      "text": "Представете си как посочвате продавача: «у вас есть» е „при вас има ли…?“. Тези три думи започват почти всеки въпрос „Имате ли…?“."
+    }
+  },
+  "bank-clothes-ru-01.grammar": {
+    "bg-BG": {
+      "title": "«В» + предложен падеж",
+      "text": "«В» („в“) + предложен падеж: «размер» става «в размере», «другой» става «в другом». За мъжки род: «-е» при съществителното, «-ом» при прилагателното. В българския казвате просто „в друг размер“."
+    }
+  },
+  "bank-clothes-ru-01.pronunciation": {
+    "bg-BG": {
+      "title": "Неударено «е» накрая е „и“",
+      "text": "Неударено «е» в края на думата е кратко „и“, не „е“: «размере» завършва на „-ри“. Ударенията са на «-ме-» и на последната сричка в «другом»: дру-ГОМ."
+    }
+  },
+  "bank-clothes-ru-02.mnemonic": {
+    "bg-BG": {
+      "title": "Премерете го",
+      "text": "«Примерить» е «при-» + «мерить» („меря“): пробата е премерване на дрехата върху вас. Същият корен е в „мерка“ и „мярка“."
+    }
+  },
+  "bank-clothes-ru-02.grammar": {
+    "bg-BG": {
+      "title": "Свършен вид: една проба",
+      "text": "«Примерить» е свършен вид: една проба, която ще приключи. Несвършеният му двойник е «примерять» (повтарящо се или продължаващо действие). След «можно» за една проба се ползва свършеният вид."
+    }
+  },
+  "bank-clothes-ru-02.pronunciation": {
+    "bg-BG": {
+      "title": "Меко «ть», ударение на -ме-",
+      "text": "Крайното «ть» е меко «т»: средата на езика се повдига, сякаш добавяте лек „й“. Ударението е на «-ме-»: при-МЕ-рить."
+    }
+  },
+  "bank-clothes-ru-03.mnemonic": {
+    "bg-BG": {
+      "title": "Нибудь: „бъди“",
+      "text": "«-нибудь» завършва на «будь» („бъди“): «что-нибудь» е „каквото и да е“, значи „нещо“. Представете си етикет с цена и попитайте за нещо по-евтино."
+    }
+  },
+  "bank-clothes-ru-03.grammar": {
+    "bg-BG": {
+      "title": "по- + сравнителна степен",
+      "text": "«Дешевле» е сравнителната степен на «дешёвый» („евтин“) и не се променя. Представката «по-» я смекчава: «подешевле» е „малко по-евтино“. Не бъркайте с българското „по-“: в руския сравнителната степен е в края (-ле, -ее), а «по-» значи „малко“."
+    }
+  },
+  "bank-clothes-ru-03.pronunciation": {
+    "bg-BG": {
+      "title": "«Ш» винаги е твърдо",
+      "text": "«Ш» в руския е винаги твърдо, дори пред «е»: «ше» е „ше“, не „шье“. Ударението е на «-ше-»: пъ-ди-ШЕВ-ле."
+    }
+  },
+  "bank-clothes-ru-04.mnemonic": {
+    "bg-BG": {
+      "title": "Велико: прекалено голямо",
+      "text": "«Велик» е същата дума като българското „велик“. За дреха значи „прекалено голямо за мен“. Научете двойката: «велико» (голямо) и «мало» (малко)."
+    }
+  },
+  "bank-clothes-ru-04.grammar": {
+    "bg-BG": {
+      "title": "Кратките прилагателни значат „прекалено…“",
+      "text": "Кратките форми «велик, велика, велико, велики» значат „прекалено голям за мен“ и се съгласуват с предмета: «это» е от среден род, затова «велико». На кого не става, е в дателен падеж: «мне». Например: «Юбка мне велика»."
+    }
+  },
+  "bank-clothes-ru-04.pronunciation": {
+    "bg-BG": {
+      "title": "Ударение на последната сричка",
+      "text": "«Велико» е ударено на «-ко», затова първите две гласни са слаби: ви-ли-КО. «Л» е меко пред «и». Внимание: в «великий» („велик“) ударението е на «-ли-»."
+    }
+  },
+  "bank-clothes-ru-05.mnemonic": {
+    "bg-BG": {
+      "title": "«Смотрю»: смотровая площадка",
+      "text": "«Смотрю» е „гледам“, от същия корен като «смотровая площадка» — място за наблюдение, където отивате само да гледате. «Просто» значи „само“ (и в българския има „просто“), затова «Я просто смотрю» казва, че само разглеждате."
+    }
+  },
+  "bank-clothes-ru-05.grammar": {
+    "bg-BG": {
+      "title": "Едно сегашно време",
+      "text": "Руският има едно сегашно време за „гледам“ и „гледам в момента“: «я смотрю». Окончанието «-ю» е за «я» („аз“), където българският има „-м“ („гледам“)."
+    }
+  },
+  "bank-clothes-ru-05.pronunciation": {
+    "bg-BG": {
+      "title": "Ударение на -рю",
+      "text": "Ударението в «смотрю» е на последната сричка, затова първото «о» е слабо: смъ-ТРЮ. «Р» е меко пред «ю»."
+    }
+  },
+  "bank-meeting-ru-01.mnemonic": {
+    "bg-BG": {
+      "title": "Заето: занимавам се",
+      "text": "«Заниматься» е „занимавам се“: същата дума като в българския. И «занято» на вратата на тоалетната е „заето“."
+    }
+  },
+  "bank-meeting-ru-01.grammar": {
+    "bg-BG": {
+      "title": "«Заниматься» + творителен падеж",
+      "text": "«Заниматься» иска творителен падеж без предлог: «чем?» е творителният на «что». Отговорът също: «Я занимаюсь спортом» („занимавам се със спорт“). В българския има предлог „с“, в руския има само окончание."
+    }
+  },
+  "bank-meeting-ru-01.pronunciation": {
+    "bg-BG": {
+      "title": "Ударение на -ма-",
+      "text": "«Занимаетесь» има пет срички с ударение на третата, «-ма-»: зъ-ни-МА-йи-тись. Околните гласни са слаби, а крайното «сь» е меко."
+    }
+  },
+  "bank-meeting-ru-02.mnemonic": {
+    "bg-BG": {
+      "title": "«Ты» е „ти“",
+      "text": "«Ты» е „ти“, а «вы» е „Вие“: разликата е същата като в българския. «На ты» е „на ти“."
+    }
+  },
+  "bank-meeting-ru-02.grammar": {
+    "bg-BG": {
+      "title": "«Давайте»: хайде",
+      "text": "«Давайте» (учтивата или множествена форма на «давай», „хайде“) въвежда предложение; тук глаголът е изпуснат. След «на», «ты» и «вы» не се променят: «на ты», «на вы»."
+    }
+  },
+  "bank-meeting-ru-02.pronunciation": {
+    "bg-BG": {
+      "title": "«Ты» не е „ти“",
+      "text": "Гласната в «ты» е «ы» — твърдо „и“, при което езикът е отдръпнат назад, почти „ъ-и“. Сравнете «ти» (меко) и «ты» (твърдо): буквата решава звука. Не го бъркайте с българското „ти“."
+    }
+  },
+  "bank-meeting-ru-03.mnemonic": {
+    "bg-BG": {
+      "title": "«Язык» е „език“",
+      "text": "«Язык» е „език“: и в двата езика една дума значи и „език“ (орган), и „език“ (говор)."
+    }
+  },
+  "bank-meeting-ru-03.grammar": {
+    "bg-BG": {
+      "title": "«Учить» иска допълнение",
+      "text": "«Учить» иска пряко допълнение: «Я учу русский язык» („уча руски език“). Мъжки неодушевен предмет изглежда еднакво във винителен падеж, затова «русский язык» не се променя. Не го бъркайте с «учиться» („уча се“, като ученик), което не приема пряко допълнение."
+    }
+  },
+  "bank-meeting-ru-03.pronunciation": {
+    "bg-BG": {
+      "title": "Двойно «с», слабо «я»",
+      "text": "Двойното «сс» в «русский» се задържа малко по-дълго: РУС-ски. В «язык» ударението е на последната сричка, затова «я» става слабо „йи“: йи-ЗЪИК."
+    }
+  },
+  "bank-meeting-ru-04.mnemonic": {
+    "bg-BG": {
+      "title": "«Жив-» като „жив“",
+      "text": "«Живёте» е от «жив-» като в „жив“ и „живея“. Внимание: руското «живот» е „корем“, а „живот“ на руски е «жизнь»."
+    }
+  },
+  "bank-meeting-ru-04.grammar": {
+    "bg-BG": {
+      "title": "Сегашно време за продължаващото",
+      "text": "Руският (като българския) ползва сегашно време за нещо, което е започнало в миналото и продължава: «Вы давно здесь живёте?» е „Отдавна ли живеете тук?“. «Давно» значи „отдавна“."
+    }
+  },
+  "bank-meeting-ru-04.pronunciation": {
+    "bg-BG": {
+      "title": "«Жи» звучи като „жъи“",
+      "text": "След «ж», «ш» и «ц» буквата «и» се чете «ы»: «жи» е „жъи“, не „жи“. «Ё» винаги е ударено: жъи-ВЬО-те."
+    }
+  },
+  "bank-meeting-ru-05.mnemonic": {
+    "bg-BG": {
+      "title": "по- … -ски: всеки език",
+      "text": "Една рецепта за всеки език: «по-» отпред и «-ски» накрая: «по-английски», «по-русски», «по-болгарски» (на руски българският е «болгарский»)."
+    }
+  },
+  "bank-meeting-ru-05.grammar": {
+    "bg-BG": {
+      "title": "«По-…-ски» след говорить",
+      "text": "След «говорить» езикът е наречие: «по-английски», не прилагателно: «говорить по-русски» („говоря руски“). «Вы говорите» е учтивата форма с окончание «-ите»."
+    }
+  },
+  "bank-meeting-ru-05.pronunciation": {
+    "bg-BG": {
+      "title": "Слаби «о» пред ударението",
+      "text": "«Говорите» е ударено на «-ри-», затова и двете «о» са слаби: гъ-въ-РИ-те. В «английски» ударението е на «-лий-»: ан-ГЛИЙ-ски, с твърдо «г»."
+    }
+  },
+  "bank-weather-ru-01.mnemonic": {
+    "bg-BG": {
+      "title": "Погода: пагода под дъжда",
+      "text": "«Погода» звучи като „пагода“: представете си пагода под дъжда. Внимание: за времето в руския не се казва «время» (това е „време“ като час), а «погода»."
+    }
+  },
+  "bank-weather-ru-01.grammar": {
+    "bg-BG": {
+      "title": "«Какая» следва «погода»",
+      "text": "«Какая» е женският род на «какой», защото «погода» е от женски род, както повечето думи на «-а»: «какая» („каква“), «какой» („какъв“), «какое» („какво“)."
+    }
+  },
+  "bank-weather-ru-01.pronunciation": {
+    "bg-BG": {
+      "title": "Сегодня се чете севодня",
+      "text": "В «сегодня» «г» се произнася като «в»: се-ВОД-ня. Същото става в окончанията «-ого» и «-его»."
+    }
+  },
+  "bank-weather-ru-02.mnemonic": {
+    "bg-BG": {
+      "title": "Жара: от корена на жарить",
+      "text": "«Жара» е от корена «жар-», като в „жар“, „жарава“, „жарък“; «жарить» е „пека, пържа“. Българската „жега“ е руското «жара»."
+    }
+  },
+  "bank-weather-ru-02.grammar": {
+    "bg-BG": {
+      "title": "«Ну и…» + съществително",
+      "text": "«Ну и» + съществително прави възклицание „каква…“: «Ну и жара» („Каква жега“), «Ну и погода», «Ну и день». Няма глагол."
+    }
+  },
+  "bank-weather-ru-02.pronunciation": {
+    "bg-BG": {
+      "title": "Твърдо «ж», ударение накрая",
+      "text": "«Жара» е с ударение на последната сричка, затова първото «а» е слабо: жъ-РА. «Ж» е като българското „ж“ — винаги твърдо."
+    }
+  },
+  "bank-weather-ru-03.mnemonic": {
+    "bg-BG": {
+      "title": "Дождь е „дъжд“",
+      "text": "«Дождь» е „дъжд“: същата дума, в която руското «о» отговаря на българското «ъ»."
+    }
+  },
+  "bank-weather-ru-03.grammar": {
+    "bg-BG": {
+      "title": "«Будет» + съществително: „ще има“",
+      "text": "В руския няма «то» за времето: «будет дождь» е „ще има дъжд“, където «дождь» е подлогът. «Будет» е бъдеще време на «быть» („съм“). Въпросът „да/не“ е само с възходяща интонация, без «ли»: «Завтра будет дождь?»."
+    }
+  },
+  "bank-weather-ru-03.pronunciation": {
+    "bg-BG": {
+      "title": "Дождь се чете дошт",
+      "text": "«Дождь» се пише с «жд», а се чете „дошт'“: звучните «жд» стават беззвучни «шт», а мекият знак оставя лек „й“ накрая. Българите знаят подобно нещо: „дъжд“ се чете „дъшт“."
+    }
+  },
+  "bank-weather-ru-04.mnemonic": {
+    "bg-BG": {
+      "title": "Зонтик: покривало срещу слънце",
+      "text": "«Зонтик» идва от нидерландското zondek („покривка срещу слънце“, zon е „слънце“): чадър, който първо е пазел от слънце."
+    }
+  },
+  "bank-weather-ru-04.grammar": {
+    "bg-BG": {
+      "title": "«С собой»: със себе си",
+      "text": "«Возьми» е повелителна форма за «ты» от «взять» („взема“); учтиво е «возьмите». «С собой» („със себе си“) не се променя, независимо кой взема чадъра."
+    }
+  },
+  "bank-weather-ru-04.pronunciation": {
+    "bg-BG": {
+      "title": "Мекият знак във «возьми»",
+      "text": "Мекият знак във «возьми» прави «з» меко пред «м»: добавете лек „й“. Ударението е на последната сричка: вазь-МИ."
+    }
+  },
+  "bank-weather-ru-05.mnemonic": {
+    "bg-BG": {
+      "title": "Холодно и хладно",
+      "text": "«Холодно» е роднина на българското „хладно“ и „хлад“. Но в руския «холодно» е „студено“, докато българското „хладно“ е по-меко."
+    }
+  },
+  "bank-weather-ru-05.grammar": {
+    "bg-BG": {
+      "title": "Без „е“ за температурата",
+      "text": "За времето руският ползва наречие без подлог: «холодно» („студено“), «жарко» („горещо“), «тепло» („топло“). «На улице» (буквално „на улицата“) значи „навън“."
+    }
+  },
+  "bank-weather-ru-05.pronunciation": {
+    "bg-BG": {
+      "title": "Груб «х», слабо «о»",
+      "text": "В «холодно» е ударена само първата сричка: ХО-лъд-нъ. «Х» е като българското „х“, а неударените «о» се свиват до „ъ“."
+    }
+  },
+  "bank-plans-ru-01.mnemonic": {
+    "bg-BG": {
+      "title": "Делать е „правя“, не „деля“",
+      "text": "Внимание: «делать» е „правя“, не „деля“. „Деля“ на руски е «делить». Така «Что ты делаешь?» е „Какво правиш?“. Коренът е в «дело» („работа, въпрос“)."
+    }
+  },
+  "bank-plans-ru-01.grammar": {
+    "bg-BG": {
+      "title": "Сегашно време за планове",
+      "text": "Руският често ползва сегашно време за планове (както и българският): «Что ты делаешь завтра?». «Вечером» е в творителен падеж и не иска предлог: «завтра вечером» е „утре вечер“."
+    }
+  },
+  "bank-plans-ru-01.pronunciation": {
+    "bg-BG": {
+      "title": "«Что» се чете што",
+      "text": "«Что» се пише «чт», а се чете „што“, не „что“. В «вечером» ударението е на «ве-», а окончанието «-ером» е слабо: ВЕ-чи-ръм."
+    }
+  },
+  "bank-plans-ru-02.mnemonic": {
+    "bg-BG": {
+      "title": "Удобно крие доб-",
+      "text": "«Удобно» е като българското „удобно“ и крие корена «доб-», както в «добрый» („добър“) и „удобство“: удобното е добро за вас."
+    }
+  },
+  "bank-plans-ru-02.grammar": {
+    "bg-BG": {
+      "title": "Дателен падеж + удобно",
+      "text": "Човекът е в дателен падеж, следван от наречие, без глагол: «Тебе удобно?» („На теб удобно ли е?“), «Мне удобно». Часът е «в семь», без «часов». В българския казвате „в седем (часа)“."
+    }
+  },
+  "bank-plans-ru-02.pronunciation": {
+    "bg-BG": {
+      "title": "«В семь» звучи като фсем",
+      "text": "Пред беззвучното «с» предлогът «в» се чете «ф»: „фсемь“, почти една дума. Мекият знак запазва «м» меко. Същото е и в българското „в седем“ → „ф седем“."
+    }
+  },
+  "bank-plans-ru-03.mnemonic": {
+    "bg-BG": {
+      "title": "Давай: хайде",
+      "text": "«Давай» е същата дума като „давай“ (от „давам“), но на руски значи и „хайде“. «Давай встретимся» е „Хайде да се срещнем“. «Встреча» е „среща“."
+    }
+  },
+  "bank-plans-ru-03.grammar": {
+    "bg-BG": {
+      "title": "Давай + форма за «мы»",
+      "text": "«Давай» + формата за «мы» от свършен глагол значи „хайде да…“: «встретимся» („да се срещнем“), «пойдём» („да вървим“). Няма «да», за разлика от българското „хайде да…“. Окончанието «-ся» е „се“ и показва взаимност: „срещаме се“."
+    }
+  },
+  "bank-plans-ru-03.pronunciation": {
+    "bg-BG": {
+      "title": "Четири съгласни: встр",
+      "text": "«Встретимся» започва с четири съгласни, [фстрь]: «в» се чете като «ф», а гласна не се добавя. Ударението е на «-стре-», а окончанието «-мся» е „мсья“."
+    }
+  },
+  "bank-plans-ru-04.mnemonic": {
+    "bg-BG": {
+      "title": "«Позд-» в «опаздываю»",
+      "text": "Чувате ли съгласните п-з-д от «поздно» („късно“) в «опаздываю»? Това е частта, която значи „късно“. «Извини» е като „извини“: същата дума."
+    }
+  },
+  "bank-plans-ru-04.grammar": {
+    "bg-BG": {
+      "title": "Несвършен вид: закъснявам",
+      "text": "«Опаздываю» е несвършен вид: закъснявате в момента. Свършеният «опоздаю» гледа напред („ще закъснея“). «Извини» е неофициално; на непознат се казва «извините»."
+    }
+  },
+  "bank-plans-ru-04.pronunciation": {
+    "bg-BG": {
+      "title": "Ударение на -паз-, твърдо «ы»",
+      "text": "Поставете ударението на «-паз-»: първото «о» става слабо „ъ“. «Ы» в «-ды-» е твърдото „и“, с отдръпнат назад език: ъ-ПАЗ-дъи-въ-ю."
+    }
+  },
+  "bank-plans-ru-05.mnemonic": {
+    "bg-BG": {
+      "title": "Получится: ще се получи",
+      "text": "«Получится» е «получить» („получа“) + «-ся» („се“): като в разговорното „ще се получи“."
+    }
+  },
+  "bank-plans-ru-05.grammar": {
+    "bg-BG": {
+      "title": "Свършените глаголи сочат бъдещето",
+      "text": "Свършеният глагол няма сегашно време: формата, която прилича на сегашна, е бъдеще: «получится» е „ще се получи“, «не получится» е „няма да стане“. «Может» значи „може би“ и въвежда меко предложение."
+    }
+  },
+  "bank-plans-ru-05.pronunciation": {
+    "bg-BG": {
+      "title": "-тся се чете ц",
+      "text": "«-тся» се чете «ц»: «получится» завършва на „-чи-цъ“, а не на „т-ся“. Ударението е на «-лу-»."
+    }
+  },
+  "bank-airport-ru-01.mnemonic": {
+    "bg-BG": {
+      "title": "«Стойка»: където се стои",
+      "text": "«Регистрация» е „регистрация“ — думата, която познавате от всяко летище. «Стойка» е гише или щанд. В думата се крие «стоять» („стоя“): стоите пред него, за да се регистрирате."
+    }
+  },
+  "bank-airport-ru-01.grammar": {
+    "bg-BG": {
+      "title": "Втората дума е в родителен падеж",
+      "text": "Където българският казва „за“ (гише за регистрация), руският променя окончанието на второто съществително: «регистрация» става «регистрации» в «стойка регистрации» („гише на регистрацията“). В сегашно време няма дума за „е“, затова «Где…?» стига."
+    }
+  },
+  "bank-airport-ru-01.pronunciation": {
+    "bg-BG": {
+      "title": "Ударение на «стра», а «ци» е „цы“",
+      "text": "Ударението е върху «стра» (ри-ги-СТРА-цы-и), останалите срички се скъсяват. След «ц» буквата «и» се чете като «ы» — нещо между „и“ и „ъ“, — затова «ци» е „цы“, а не „ци“."
+    }
+  },
+  "bank-airport-ru-02.mnemonic": {
+    "bg-BG": {
+      "title": "Изходът към самолета",
+      "text": "«Выход» е „изход“ — гейтът е изходът към самолета. «Посадка» идва от «садиться» („сядам“): качването е мигът, в който заемате мястото си."
+    }
+  },
+  "bank-airport-ru-02.grammar": {
+    "bg-BG": {
+      "title": "«С» + родителен падеж значи „от“",
+      "text": "«С» + родителен падеж значи „от“. Затова «выход» става «выхода», а «какой» — «какого»."
+    }
+  },
+  "bank-airport-ru-02.pronunciation": {
+    "bg-BG": {
+      "title": "г се чете «в», д се чете «т»",
+      "text": "В «какого» буквата «г» се чете «в»: ка-КО-ва. В «посадка» «д» пред «к» звучи като «т»: па-САТ-ка."
+    }
+  },
+  "bank-airport-ru-03.mnemonic": {
+    "bg-BG": {
+      "title": "«Ручная» идва от «рука»",
+      "text": "«Ручная» идва от «рука» („ръка“): «ручная кладь» е ръчен багаж, точно както на български. «Кладь» е товар, багаж."
+    }
+  },
+  "bank-airport-ru-03.grammar": {
+    "bg-BG": {
+      "title": "«У меня»: „имам“",
+      "text": "В говоримия руски не се ползва глагол „имам“: казва се „при мен“ («у меня») и после предметът. «Есть» („има“) се пропуска, когато се казва какво точно имате, както тук."
+    }
+  },
+  "bank-airport-ru-03.pronunciation": {
+    "bg-BG": {
+      "title": "Ударение на -ня и -на",
+      "text": "В «меня» ударението пада върху «я», затова «е» пред него се скъсява до кратко «и»: ми-НЯ. «Ручная» се ударява на «на», а «ч» е винаги меко, по-меко от българското „ч“."
+    }
+  },
+  "bank-airport-ru-04.mnemonic": {
+    "bg-BG": {
+      "title": "Прозорец: окото на къщата",
+      "text": "«Окно» идва от «око» — като българското „око“: прозорецът е окото на къщата. Казвайки «у окна», представете си око, което гледа навън."
+    }
+  },
+  "bank-airport-ru-04.grammar": {
+    "bg-BG": {
+      "title": "«Можно» + съществително",
+      "text": "«Можно» значи „може ли“. Ако веднага след него сложите съществително, то е нещото, което искате: «Можно место?» е „Може ли място?“. След «у» („до“) съществителното е в родителен падеж: «окно» става «окна»."
+    }
+  },
+  "bank-airport-ru-04.pronunciation": {
+    "bg-BG": {
+      "title": "Твърдо ж, бързо «пожалуйста»",
+      "text": "«Ж» винаги е твърдо, като българското „ж“, и в «можно», и в «пожалуйста». В «пожалуйста» ударението е на «жа», «й» почти не се чува, а последните две гласни са слаби: пъ-ЖА-лъ-стъ."
+    }
+  },
+  "bank-airport-ru-05.mnemonic": {
+    "bg-BG": {
+      "title": "Куфар, който не е долетял",
+      "text": "«Прилетел» е «при-» (като в „пристигам“) + «лететь» („летя“): „долетял“. Куфар, който «не прилетел», не е пристигнал."
+    }
+  },
+  "bank-airport-ru-05.grammar": {
+    "bg-BG": {
+      "title": "при-, у-, вы-: накъде",
+      "text": "Приставките при «лететь» („летя“) показват посоката: «прилететь» е „долетя“, «улететь» — „отлетя“, «вылететь» — „излетя“. Учете ги по двойки: «прилетел» („долетял“) и «улетел» („отлетял“)."
+    }
+  },
+  "bank-airport-ru-05.pronunciation": {
+    "bg-BG": {
+      "title": "Ударение накрая, гласните отслабват",
+      "text": "Двете дълги думи са с ударение на последната сричка: «чемодан» е чи-ма-ДАН, «прилетел» е при-ли-ТЕЛ. Неударените гласни се скъсяват: първото «е» и «о» в «чемодан» звучат като „и“ и „а“."
+    }
+  },
+  "bank-help-ru-01.mnemonic": {
+    "bg-BG": {
+      "title": "Помощ от «мочь»",
+      "text": "«Помочь» („да помогна“) е образувано от «мочь» („мога“) — корена, който се чува и в «могли». Същият корен има и в българските „мога“, „помогна“ и „помощ“."
+    }
+  },
+  "bank-help-ru-01.grammar": {
+    "bg-BG": {
+      "title": "Смекчаване с «не… бы»",
+      "text": "Отрицателен въпрос с «бы» е учтивият начин да помолите: «Вы не могли бы…?» е „Не бихте ли могли…?“. «Могли» е минала форма, а «бы» я превръща в „бихте могли“."
+    }
+  },
+  "bank-help-ru-01.pronunciation": {
+    "bg-BG": {
+      "title": "Плоско ы и ударение на ли",
+      "text": "«Ы» е плоско «и», изговорено с езика, дръпнат назад, и с неокръглени устни: «вы» е „вы“, не „ви“. В «могли» ударението е на «ли», затова първото «о» се чете като «а»: ма-ГЛИ."
+    }
+  },
+  "bank-help-ru-02.mnemonic": {
+    "bg-BG": {
+      "title": "«Скорая»: бързата",
+      "text": "«Скорая помощь» е точно „Бърза помощ“: «скорый» значи „бърз“. В разговор казват само «скорая» — „Бързата“."
+    }
+  },
+  "bank-help-ru-02.grammar": {
+    "bg-BG": {
+      "title": "Винителен падеж: -ая става -ую",
+      "text": "Онова, което викате, е допълнение, затова е във винителен падеж. Женските прилагателни на -ая стават -ую: «скорая» → «скорую». Окончанието -ите прави подканата учтива (към «вы»)."
+    }
+  },
+  "bank-help-ru-02.pronunciation": {
+    "bg-BG": {
+      "title": "Ударение на първата сричка",
+      "text": "«Вызовите» и «скорую» са с ударение на първата сричка: ВЫ-за-ви-те, СКО-ру-ю. Неударено «о» във «вызовите» се чете като кратко «а»."
+    }
+  },
+  "bank-help-ru-03.mnemonic": {
+    "bg-BG": {
+      "title": "Коренът на крадеца: «кра-»",
+      "text": "«Телефон» ви е познат. Новото е «украли» — от «красть» („крада“); от същия корен е и «кража», както в българските „крада“ и „кражба“."
+    }
+  },
+  "bank-help-ru-03.grammar": {
+    "bg-BG": {
+      "title": "Без подлог: „откраднаха“",
+      "text": "«Украли» е минало време, мн.ч., без «они» („те“). Руският го употребява, когато крадецът е неизвестен — както и българският: „откраднаха ми…“. «У меня украли телефон» е буквално „при мен откраднаха телефон“."
+    }
+  },
+  "bank-help-ru-03.pronunciation": {
+    "bg-BG": {
+      "title": "Меко л и ударение накрая",
+      "text": "Ударението е на «кра» в «украли» и на «фон» в «телефон», както и на български. «Л» пред «и» е меко, както в българското „лице“."
+    }
+  },
+  "bank-help-ru-04.mnemonic": {
+    "bg-BG": {
+      "title": "«Ближайшее»: най-близкото",
+      "text": "«Ближайшее» идва от «близко» („близо“) и значи „най-близкото“. «Полиция» и «отделение» ви са познати от български, така че изразът почти се чете сам."
+    }
+  },
+  "bank-help-ru-04.grammar": {
+    "bg-BG": {
+      "title": "Прилагателното следва съществителното",
+      "text": "«Отделение» е среден род, затова прилагателното е на -ее: «ближайшее». При мъжки род би било «ближайший», при женски — «ближайшая». «Полиции» е родителен падеж („на полицията“)."
+    }
+  },
+  "bank-help-ru-04.pronunciation": {
+    "bg-BG": {
+      "title": "Три ударения в дълъг израз",
+      "text": "Ударените срички — «жай», «ле», «ли» — се казват ясно, останалите се скъсяват. «Ж» и «ш» са винаги твърди, а «ше» след тях звучи като «шы»."
+    }
+  },
+  "bank-help-ru-05.mnemonic": {
+    "bg-BG": {
+      "title": "«Кто» + «нибудь»: някой",
+      "text": "«Кто-нибудь» е „някой“: «кто» („кой“) плюс «нибудь», същата частица като в «что-нибудь» („нещо“). Представете си, че го провиквате през пълна зала, а после добавяте езика."
+    }
+  },
+  "bank-help-ru-05.grammar": {
+    "bg-BG": {
+      "title": "«-нибудь» във въпроси",
+      "text": "«Кто-нибудь» е „някой“ — формата във въпроси и молби, когато не знаете дали има такъв. «Кто-то» е „някой“ за конкретен човек, за когото знаете, че съществува."
+    }
+  },
+  "bank-help-ru-05.pronunciation": {
+    "bg-BG": {
+      "title": "Меко т накрая, ударение накрая",
+      "text": "В «кто-нибудь» главното ударение е на «кто», а «буд» запазва леко второстепенно ударение; крайното «дь» се чете като меко «т»: ни-БУТЬ. «Говорит» е с ударение на края: га-ва-РИТ."
+    }
+  },
+  "bank-work-ru-01.mnemonic": {
+    "bg-BG": {
+      "title": "Работа и „робот“",
+      "text": "«Работаю» („работя“) идва от «работа» — корен, от който е и думата „робот“ (чешки „robota“). «Удалённо» значи „дистанционно“ и съдържа «даль» („далечина“), същия корен като в «далеко» и българското „далеч“."
+    }
+  },
+  "bank-work-ru-01.grammar": {
+    "bg-BG": {
+      "title": "«По пятницам»: всеки петък",
+      "text": "«По» + мн.ч. на деня в дателен падеж значи „редовно в тези дни“: «по пятницам» е „всеки петък“. За един конкретен петък се казва «в пятницу»."
+    }
+  },
+  "bank-work-ru-01.pronunciation": {
+    "bg-BG": {
+      "title": "ё винаги е ударено",
+      "text": "Буквата «ё» винаги е ударена: «удалённо» е у-да-ЛЁ-на. В «работаю» ударението е на «бо» (ра-БО-та-ю), а останалите «а» и «о» се скъсяват."
+    }
+  },
+  "bank-work-ru-02.mnemonic": {
+    "bg-BG": {
+      "title": "«Прислать»: изпрати го насам",
+      "text": "«Прислать» е «при-» („към мен“) + «слать» („пращам“): „изпрати ми го“. «Отчёт» е като българското „отчет“ — същата дума, същото значение."
+    }
+  },
+  "bank-work-ru-02.grammar": {
+    "bg-BG": {
+      "title": "Свършен вид за еднократна молба",
+      "text": "«Прислать» е от свършен вид: един акт, който ще бъде завършен. Несвършеният «присылать» значи „да пращаш редовно“. След «можешь» за еднократна молба се слага глагол от свършен вид."
+    }
+  },
+  "bank-work-ru-02.pronunciation": {
+    "bg-BG": {
+      "title": "Меко ть, а тч се сливат",
+      "text": "Крайното «ть» в «прислать» е меко «т»: при-СЛАТЬ. В «отчёт» «т» и «ч» се сливат, а «ё» е ударено: ат-ЧОТ."
+    }
+  },
+  "bank-work-ru-03.mnemonic": {
+    "bg-BG": {
+      "title": "Числото след думата: свиване на рамене",
+      "text": "«Минут на десять» чуйте като свиване на рамене: когато «десять» върви след «минут», говорещият има предвид „десетина, плюс-минус“. «Минут» е „минути“, както знаете от „минута“."
+    }
+  },
+  "bank-work-ru-03.grammar": {
+    "bg-BG": {
+      "title": "Числото след съществителното: приблизително",
+      "text": "Числителното след съществителното означава приблизително: «минут на десять» е „десетина минути“. Точният вариант е «на десять минут». «Опоздаю» е от свършен вид и значи „ще закъснея“."
+    }
+  },
+  "bank-work-ru-03.pronunciation": {
+    "bg-BG": {
+      "title": "Ударение на ЗДА, меко ть",
+      "text": "В «опоздаю» ударението е на «зда», а двете «о» се скъсяват до «а»: а-па-ЗДА-ю. «Десять» е с ударение на «де» и завършва с меко «ть»."
+    }
+  },
+  "bank-work-ru-04.mnemonic": {
+    "bg-BG": {
+      "title": "«Пере-» + «нести»: пренасям",
+      "text": "«Перенести» е «пере-» („през, на друго място“) + «нести» („нося“): взимате срещата и я пренасяте за утре. Сравнете българските „пренеса“ и „пренасям“."
+    }
+  },
+  "bank-work-ru-04.grammar": {
+    "bg-BG": {
+      "title": "Женско -а става -у",
+      "text": "Женско съществително на -а получава -у, когато е допълнение: «встреча» става «встречу». След това «на» + винителен назовава новото време: «на завтра», «на пятницу»."
+    }
+  },
+  "bank-work-ru-04.pronunciation": {
+    "bg-BG": {
+      "title": "в звучи като ф",
+      "text": "Както и на български, «в» пред беззвучна съгласна звучи като «ф»: «встречу» е ФСТРЕ-чу, а в «завтра» — ЗАФ-тра. Групите съгласни се казват без вмъкната гласна."
+    }
+  },
+  "bank-work-ru-05.mnemonic": {
+    "bg-BG": {
+      "title": "Малка минутка",
+      "text": "«Минутка» е като на български: „Имаш ли минутка?“ — същата дума. На руски казват «у тебя есть» („при теб има“)."
+    }
+  },
+  "bank-work-ru-05.grammar": {
+    "bg-BG": {
+      "title": "Умалителната наставка -ка",
+      "text": "Наставката «-ка» прави съществителното по-малко и по-мило: «минута» → «минутка». Така молбата звучи по-леко: искате съвсем малка услуга."
+    }
+  },
+  "bank-work-ru-05.pronunciation": {
+    "bg-BG": {
+      "title": "«Есть» започва с й",
+      "text": "«Есть» започва със звук „й“ (ЙЕСТЬ) и завършва с меко «ть». В «тебя» ударението е на «я», затова първото «е» се скъсява до «и»: ти-БЯ."
+    }
+  },
+  "bank-phone-ru-01.mnemonic": {
+    "bg-BG": {
+      "title": "Пароль е „парола“",
+      "text": "«Пароль» идва от френското „parole“ („дума“), както и българското „парола“. «Вайфай» е начинът, по който руснаците пишат „wifi“."
+    }
+  },
+  "bank-phone-ru-01.grammar": {
+    "bg-BG": {
+      "title": "«Пароль от…»: паролата за",
+      "text": "«От» + родителен падеж свързва парола или ключ с онова, което отваря: «пароль от вайфая», «ключ от квартиры» („ключ от апартамента“). «Вайфай» се променя като мъжко съществително: «вайфая»."
+    }
+  },
+  "bank-phone-ru-01.pronunciation": {
+    "bg-BG": {
+      "title": "Меко ль, ударение на ро и фа",
+      "text": "Крайното «ль» в «пароль» е меко «л»: па-РОЛЬ с език, опрян в небцето, без добавена гласна. «Какой» е с ударение на края: ка-КОЙ."
+    }
+  },
+  "bank-phone-ru-02.mnemonic": {
+    "bg-BG": {
+      "title": "Телефон, който е седнал",
+      "text": "«Сел» е от «сесть» („сядам“): представете си телефона, който е „седнал“, защото няма сили. Същият корен има в българските „сядам“ и „седна“."
+    }
+  },
+  "bank-phone-ru-02.grammar": {
+    "bg-BG": {
+      "title": "Минало време по род",
+      "text": "Глаголът в минало време следва рода на подлога: «телефон» е мъжки, затова «сел». За батерия се казва «батарея села» (женски род, -а). Лицето се слага най-напред с «у меня», „при мен“."
+    }
+  },
+  "bank-phone-ru-02.pronunciation": {
+    "bg-BG": {
+      "title": "Меко с в «сел»",
+      "text": "Буквата «е» омеква съгласната пред нея: «сел» е „сьел“, не „сел“, а «меня» звучи като ми-НЯ. «Телефон» е с ударение на последната сричка."
+    }
+  },
+  "bank-phone-ru-03.mnemonic": {
+    "bg-BG": {
+      "title": "«Звонить»: звън на камбана",
+      "text": "«Звонить» идва от «звон» — като българските „звън“ и „звъня“. «Пере-» добавя „обратно“: звъните отново."
+    }
+  },
+  "bank-phone-ru-03.grammar": {
+    "bg-BG": {
+      "title": "Звъня на някого: дателен падеж",
+      "text": "На руски звъните „на“ някого, затова човекът след «перезвонить» е в дателен падеж: «тебе», «вам», «ему». Формата «перезвоню» е от свършен вид и вече значи „ще звънна пак“."
+    }
+  },
+  "bank-phone-ru-03.pronunciation": {
+    "bg-BG": {
+      "title": "Дълго ж в «позже»",
+      "text": "«Перезвоню» завършва с ударената сричка: пе-ре-зва-НЮ, с меко и кратко «ню». В «позже» «зж» се слива в едно дълго «ж»: ПОЖ-же."
+    }
+  },
+  "bank-phone-ru-04.mnemonic": {
+    "bg-BG": {
+      "title": "«Слышно»: от «слух»",
+      "text": "«Слышно» е от същия корен като «слух» и «слушать» — като българските „слух“ и „слушам“. «Плохо слышно» е „чува се зле“."
+    }
+  },
+  "bank-phone-ru-04.grammar": {
+    "bg-BG": {
+      "title": "Без подлог: «слышно»",
+      "text": "«Слышно» е безличен израз: „чува се“. Човекът, когото чувате или не чувате, е във винителен падеж: «тебя», а при учтивост — «вас»: «Вас плохо слышно»."
+    }
+  },
+  "bank-phone-ru-04.pronunciation": {
+    "bg-BG": {
+      "title": "Плоско ы, гърлено х",
+      "text": "«Ы» в «слышно» е плоско «и», изговорено по-назад в устата, не обикновеното «и»: слыш-на. «Х» в «плохо» е същото като българското „х“."
+    }
+  },
+  "bank-phone-ru-05.mnemonic": {
+    "bg-BG": {
+      "title": "«Обмен»: размяна",
+      "text": "«Обменяемся» е от «обмен» — като българските „обмен“ и „обменя“: размяна на номера, като в обменно бюро."
+    }
+  },
+  "bank-phone-ru-05.grammar": {
+    "bg-BG": {
+      "title": "«Давай» + ние: „хайде да“",
+      "text": "«Давай» + форма за «мы» от свършен вид значи „хайде да“: «давай обменяемся». Разменяното е в творителен падеж: «номерами»."
+    }
+  },
+  "bank-phone-ru-05.pronunciation": {
+    "bg-BG": {
+      "title": "Едно ударение в дълга дума",
+      "text": "В «обменяемся» само «ня» е ударено: аб-ми-НЯ-ем-ся. Останалите срички се скъсяват, а окончанието «-ся» е меко „ся“."
+    }
+  },
+  "bank-family-ru-01.mnemonic": {
+    "bg-BG": {
+      "title": "«Старший»: по-големият",
+      "text": "«Старший» идва от «старый» („стар“), а «младший» — от «молодой» („млад“); сравнете българските „стар“ и „млад“. «Брат» е „брат“."
+    }
+  },
+  "bank-family-ru-01.grammar": {
+    "bg-BG": {
+      "title": "По-голям или по-малък",
+      "text": "На руски обикновено се уточнява кой брат или коя сестра: «старший» е по-голям, «младший» — по-малък. Прилагателното следва рода: «старший брат», но «старшая сестра»."
+    }
+  },
+  "bank-family-ru-01.pronunciation": {
+    "bg-BG": {
+      "title": "жи и ши се четат жы, шы",
+      "text": "След «ж» и «ш» буквата «и» се чете като «ы»: «старший» е СТАР-шый, «живёт» е жы-ВЁТ. И двете съгласни са винаги твърди, а «ё» е винаги ударено."
+    }
+  },
+  "bank-family-ru-02.mnemonic": {
+    "bg-BG": {
+      "title": "Дочь и „дъщеря“",
+      "text": "«Дочь» е близка до българското „дъщеря“: и двете започват с «д» и имат общ древен корен."
+    }
+  },
+  "bank-family-ru-02.grammar": {
+    "bg-BG": {
+      "title": "Възрастта е в дателен падеж",
+      "text": "На руски възрастта се „дава на“ човека: «моей дочери» е дателната форма на «моя дочь», следвана от числото и «лет». След 5 се казва «лет»; при 1 — «год», при 2–4 — «года»."
+    }
+  },
+  "bank-family-ru-02.pronunciation": {
+    "bg-BG": {
+      "title": "Слаби гласни, меко ть",
+      "text": "В «моей» ударението е на «ей»: ма-ЕЙ. В «дочери» е на «до», а останалите гласни се скъсяват. «Пять» завършва с меко «ть»: след „пят“ езикът се повдига към небцето."
+    }
+  },
+  "bank-family-ru-03.mnemonic": {
+    "bg-BG": {
+      "title": "Неделя: денят на възкресението",
+      "text": "«Воскресенье» е „неделя“, но буквално значи „възкресение“, от «воскреснуть». Внимание: на руски «неделя» е седмица, а не ден."
+    }
+  },
+  "bank-family-ru-03.grammar": {
+    "bg-BG": {
+      "title": "«К» + дателен падеж: при някого",
+      "text": "За да отидете при човек, казвате «к» + дателен падеж: «к бабушке» е „при баба“. За да сте при него, казвате «у» + родителен: «у бабушки»."
+    }
+  },
+  "bank-family-ru-03.pronunciation": {
+    "bg-BG": {
+      "title": "к става г пред б",
+      "text": "Беззвучен звук се озвучава пред звучен: «к» пред «б» звучи като «г», затова «к бабушке» е г-БА-буш-ке. «Воскресенье» е с ударение на «се»: въс-кри-СЕ-нье."
+    }
+  },
+  "bank-family-ru-04.mnemonic": {
+    "bg-BG": {
+      "title": "Сестра е „сестра“",
+      "text": "«Сестра» е същата дума като българското „сестра“. «Мы с сестрой» значи буквално „ние със сестра“."
+    }
+  },
+  "bank-family-ru-04.grammar": {
+    "bg-BG": {
+      "title": "«Мы с сестрой»: със сестра ми",
+      "text": "«Мы с сестрой» е буквално „ние със сестра“ и значи „със сестра ми“. Съществителното след «с» е в творителен падеж (-ой при женски имена на -а), а прилагателното е в мн.ч.: «похожи»."
+    }
+  },
+  "bank-family-ru-04.pronunciation": {
+    "bg-BG": {
+      "title": "Дълго «с» и ударение накрая",
+      "text": "«С сестрой» се казва като едно цяло: двете «с» се сливат в дълго «с», а ударението е на последната сричка: с-сис-ТРОЙ. «Очень» е с ударение на «о» и завършва с меко «нь»."
+    }
+  },
+  "bank-family-ru-05.mnemonic": {
+    "bg-BG": {
+      "title": "«Дети» и «дете»",
+      "text": "«Дети» е близко до „дете“ и „деца“: коренът е «дет-». Внимание: «дети» е само мн.ч., докато българското „дете“ е единствено число."
+    }
+  },
+  "bank-family-ru-05.grammar": {
+    "bg-BG": {
+      "title": "Дете и деца: две думи",
+      "text": "Единственото число на «дети» не е «детя»: едно дете е «ребёнок». Учете двойката «ребёнок» / «дети». «У вас есть…?» е учтивото „имате ли…?“."
+    }
+  },
+  "bank-family-ru-05.pronunciation": {
+    "bg-BG": {
+      "title": "Меко т, кратък край",
+      "text": "«Есть» започва със звук „й“ (ЙЕСТЬ) и завършва с меко «ть». И «дети» има меко «т»: езикът се повдига към небцето, ДЕ-ти, а крайното «и» е съвсем кратко."
+    }
+  },
+  "bank-booking-ru-01.mnemonic": {
+    "bg-BG": {
+      "title": "«Четверых»: четвъртият ден",
+      "text": "«Четверых» („четирима“) е от «четыре» („четири“); същият корен е в «четверг» (четвъртък) — четвъртият ден от седмицата."
+    }
+  },
+  "bank-booking-ru-01.grammar": {
+    "bg-BG": {
+      "title": "«Я хочу» + инфинитив",
+      "text": "«Я хочу» + инфинитив значи „искам да…“: «хочу забронировать». Руският тук ползва инфинитив, а не «да»-конструкция. Това не е грубо: така обикновено се казва какво искате да направите. «Хотеть» е неправилен глагол: «я хочу», «ты хочешь», «он хочет», но «мы хотим», «вы хотите», «они хотят»."
+    }
+  },
+  "bank-booking-ru-01.pronunciation": {
+    "bg-BG": {
+      "title": "Ударението „скача“ от дума на дума",
+      "text": "Ударението е на четири думи: ха-ЧУ, за-бра-НИ-ра-вать, СТО-лик, чит-ви-РЫХ. «Я» и «на» остават леки. «Ч» в «хочу» и «четверых» е винаги меко."
+    }
+  },
+  "bank-booking-ru-02.mnemonic": {
+    "bg-BG": {
+      "title": "Свободный: свободен",
+      "text": "«Свободный» идва от «свобода» — същото като българските „свободен“ и „свобода“. Свободната маса е „на свобода“."
+    }
+  },
+  "bank-booking-ru-02.grammar": {
+    "bg-BG": {
+      "title": "«На восемь»: за осем часа",
+      "text": "«На» + число показва за кой час резервирате: «на восемь» е „за осем часа“, а «часов» се изпуска в речта. За осем души казвате «на восьмерых»."
+    }
+  },
+  "bank-booking-ru-02.pronunciation": {
+    "bg-BG": {
+      "title": "Плоско ы, меко ь накрая",
+      "text": "В «свободный» ударението е на «бод», а в окончанието «-ный» има плоско «ы»: свъ-БОД-ный. «Восемь» е с ударение на «во» и завършва с меко «мь»."
+    }
+  },
+  "bank-booking-ru-03.mnemonic": {
+    "bg-BG": {
+      "title": "«Веранда»: верандата",
+      "text": "«Веранда» е „верандата“, която познавате; в Русия така се казва лятната тераса на кафене или ресторант. Представете си своя «столик» навън, на верандата, на слънце."
+    }
+  },
+  "bank-booking-ru-03.grammar": {
+    "bg-BG": {
+      "title": "«На» + предложен падеж: на място",
+      "text": "За да кажете къде е нещо, руският използва «в» или «на» + предложен падеж с окончание най-често -е: «веранда» става «на веранде». Много места искат «на», а не «в»: «на веранде», «на улице», «на балконе». В «Можно столик…?» („може ли маса…?“) няма глагол."
+    }
+  },
+  "bank-booking-ru-03.pronunciation": {
+    "bg-BG": {
+      "title": "Ударение на -ран-",
+      "text": "В «веранде» ударението е на «ран»: ви-РАН-де. Първото «е» е слабо, като кратко „и“, а «д» пред крайното «е» е меко, почти „дь“."
+    }
+  },
+  "bank-booking-ru-04.mnemonic": {
+    "bg-BG": {
+      "title": "«Детский»: детски",
+      "text": "«Детский» е „детски“ — от «дети»; «стульчик» е „столче“, малък «стул». Руският «стул» е това, което на български наричаме „стол“."
+    }
+  },
+  "bank-booking-ru-04.grammar": {
+    "bg-BG": {
+      "title": "«Нам нужен…»: трябва ни",
+      "text": "На руски се казва „на нас е нужен…“: хората са в дателен падеж («нам», «мне»), а «нужен» следва рода на нужното нещо: «нужен» (м.), «нужна» (ж.), «нужно» (ср.), «нужны» (мн.)."
+    }
+  },
+  "bank-booking-ru-04.pronunciation": {
+    "bg-BG": {
+      "title": "тск се чете цк",
+      "text": "В «детский» буквите «тск» се четат «цк»: ДЕЦ-кий. В «стульчик» «ль» пред «ч» е меко: СТУЛЬ-чик."
+    }
+  },
+  "bank-booking-ru-05.mnemonic": {
+    "bg-BG": {
+      "title": "Заранее: преди да е рано",
+      "text": "«Заранее» е «за-» + «рано», като българското „рано“: значи „предварително“. «Надо» е „трябва“."
+    }
+  },
+  "bank-booking-ru-05.grammar": {
+    "bg-BG": {
+      "title": "«Надо» + инфинитив",
+      "text": "«Надо» + инфинитив значи „трябва“ — подлог не е нужен. Глаголът е от несвършен вид («бронировать»), защото питате за общото правило, а не за една завършена резервация."
+    }
+  },
+  "bank-booking-ru-05.pronunciation": {
+    "bg-BG": {
+      "title": "Слаби гласни в «заранее»",
+      "text": "Ударенията са върху «на», «ни» и «ра»; всяко друго «а» и «о» отслабва до кратко неясно „ъ“: НА-дъ, бръ-НИ-ръ-вать, зъ-РА-ни-йъ. Крайното «ть» в «бронировать» е меко."
+    }
   }
 }

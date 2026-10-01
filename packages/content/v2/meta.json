@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-01.5",
+  "version": "2026-10-01.6",
   "review": {
     "es-ES": "Phrases and notes revised in round 3; awaiting native Spanish review.",
     "bg-BG": "New in round 3; awaiting native Bulgarian review.",
@@ -8,7 +8,11 @@
     "notes": "bg-BG and ru-RU versions of the notes (note-translations.json) await native review.",
     "bank": "The phrase bank (bank.json) is new for Make a set; its Spanish, Bulgarian and every translation await native review.",
     "notes-complete": "Every phrase now has all three notes (mnemonic, grammar, sounds with IPA and respelling) and an image: the 60 notes added for the course, their bg-BG and ru-RU versions and the IPA await native review.",
-    "mnemonics-round-5": "The first note is a mnemonic, a hook for remembering the phrase. Round 5 rewrote the 37 that were definitions, usage tips or grammar, or trivial for a Russian speaker (21 course and 16 bank phrases, 86 notes in en-GB, bg-BG and ru-RU), as sound-alikes, pictures and known words; they await native review."
+    "mnemonics-round-5": "The first note is a mnemonic, a hook for remembering the phrase. Round 5 rewrote the 37 that were definitions, usage tips or grammar, or trivial for a Russian speaker (21 course and 16 bank phrases, 86 notes in en-GB, bg-BG and ru-RU), as sound-alikes, pictures and known words; they await native review.",
+    "en-GB": "New on 2026-10-01: the British English course (five sets) for Bulgarian and Russian speakers, written by Claude Sonnet 5.5; its phrases, glosses, notes, IPA and their bg-BG and ru-RU versions await native English, Bulgarian and Russian review.",
+    "ru-RU": "New on 2026-10-01: the Russian course (five sets) for English and Bulgarian speakers, written by Claude Sonnet 5.5; its phrases, glosses, notes, IPA and their bg-BG versions await native Russian and Bulgarian review.",
+    "bank-en-ru": "New on 2026-10-01: the bank's English and Russian phrases (five per theme) and their notes' translations, written by Claude Sonnet 5.5, await native review.",
+    "rules-en-ru": "New on 2026-10-01: the API's written grammar rules and sound tips for English and Russian (apps/api/src/library/notes/grammar.ts, tips.ts), written by Claude Sonnet 5.5, await native review."
   },
   "renamedPhraseIds": {
     "phrase-1": "cafe-01",

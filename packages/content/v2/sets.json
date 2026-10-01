@@ -140,5 +140,145 @@
     "coverIcon": "table_restaurant",
     "targetLang": "bg-BG",
     "phraseIds": ["bg-rest-01", "bg-rest-02", "bg-rest-03", "bg-rest-04"]
+  },
+  {
+    "id": "set-en-cafe",
+    "title": "Café Counter",
+    "subtitle": {
+      "en": "Ordering coffee or tea at the counter",
+      "bg": "Поръчка на кафе или чай на бара",
+      "ru": "Заказ кофе или чая у стойки"
+    },
+    "topicId": "eating-out",
+    "level": "A1",
+    "coverIcon": "coffee",
+    "targetLang": "en-GB",
+    "phraseIds": ["en-cafe-01", "en-cafe-02", "en-cafe-03", "en-cafe-04"]
+  },
+  {
+    "id": "set-en-pub",
+    "title": "At the Pub",
+    "subtitle": {
+      "en": "Drinks, rounds and food at a pub",
+      "bg": "Питиета, черпене и храна в пъба",
+      "ru": "Напитки, угощение и еда в пабе"
+    },
+    "topicId": "eating-out",
+    "level": "A2",
+    "coverIcon": "sports_bar",
+    "targetLang": "en-GB",
+    "phraseIds": ["en-pub-01", "en-pub-02", "en-pub-03", "en-pub-04"]
+  },
+  {
+    "id": "set-en-transport",
+    "title": "Tube, Bus & Train",
+    "subtitle": {
+      "en": "Tickets, platforms, buses and changes",
+      "bg": "Билети, перони, автобуси и прехвърляния",
+      "ru": "Билеты, платформы, автобусы и пересадки"
+    },
+    "topicId": "getting-around",
+    "level": "A1",
+    "coverIcon": "subway",
+    "targetLang": "en-GB",
+    "phraseIds": ["en-transport-01", "en-transport-02", "en-transport-03", "en-transport-04"]
+  },
+  {
+    "id": "set-en-shops",
+    "title": "At the Shops",
+    "subtitle": {
+      "en": "Prices, bags and paying at the till",
+      "bg": "Цени, торбички и плащане на касата",
+      "ru": "Цены, пакеты и оплата на кассе"
+    },
+    "topicId": "everyday",
+    "level": "A1",
+    "coverIcon": "shopping_basket",
+    "targetLang": "en-GB",
+    "phraseIds": ["en-shops-01", "en-shops-02", "en-shops-03", "en-shops-04"]
+  },
+  {
+    "id": "set-en-smalltalk",
+    "title": "Hello & Small Talk",
+    "subtitle": {
+      "en": "Greetings, introductions and chat about the weather",
+      "bg": "Поздрави, запознанство и разговор за времето",
+      "ru": "Приветствия, знакомство и разговор о погоде"
+    },
+    "topicId": "everyday",
+    "level": "A1",
+    "coverIcon": "forum",
+    "targetLang": "en-GB",
+    "phraseIds": ["en-smalltalk-01", "en-smalltalk-02", "en-smalltalk-03", "en-smalltalk-04"]
+  },
+  {
+    "id": "set-ru-kafe",
+    "title": "В кафе",
+    "subtitle": {
+      "en": "Ordering coffee or tea and asking for the bill",
+      "bg": "Поръчка на кафе или чай и искане на сметката",
+      "ru": "Заказываем кофе или чай и просим счёт"
+    },
+    "topicId": "eating-out",
+    "level": "A1",
+    "coverIcon": "coffee",
+    "targetLang": "ru-RU",
+    "phraseIds": ["ru-kafe-01", "ru-kafe-02", "ru-kafe-03", "ru-kafe-04"]
+  },
+  {
+    "id": "set-ru-gorod",
+    "title": "В городе",
+    "subtitle": {
+      "en": "The metro, buses and finding the right stop",
+      "bg": "Метро, автобуси и правилната спирка",
+      "ru": "Метро, автобусы и нужная остановка"
+    },
+    "topicId": "getting-around",
+    "level": "A1",
+    "coverIcon": "subway",
+    "targetLang": "ru-RU",
+    "phraseIds": ["ru-gorod-01", "ru-gorod-02", "ru-gorod-03", "ru-gorod-04"]
+  },
+  {
+    "id": "set-ru-rynok",
+    "title": "На рынке",
+    "subtitle": {
+      "en": "Prices, kilos and paying at the market",
+      "bg": "Цени, килограми и плащане на пазара",
+      "ru": "Цены, килограммы и оплата на рынке"
+    },
+    "topicId": "everyday",
+    "level": "A1",
+    "coverIcon": "shopping_basket",
+    "targetLang": "ru-RU",
+    "phraseIds": ["ru-rynok-01", "ru-rynok-02", "ru-rynok-03", "ru-rynok-04"]
+  },
+  {
+    "id": "set-ru-znakomstvo",
+    "title": "Знакомство",
+    "subtitle": {
+      "en": "Introducing yourself and meeting someone new",
+      "bg": "Представяне и първи запознанства",
+      "ru": "Представляемся и знакомимся"
+    },
+    "topicId": "everyday",
+    "level": "A1",
+    "coverIcon": "handshake",
+    "targetLang": "ru-RU",
+    "phraseIds": ["ru-znakomstvo-01", "ru-znakomstvo-02", "ru-znakomstvo-03", "ru-znakomstvo-04"]
+  },
+  {
+    "id": "set-ru-restoran",
+    "title": "В ресторане",
+    "subtitle": {
+      "en": "A table, a recommendation and a compliment to the kitchen",
+      "bg": "Маса, препоръка и похвала към кухнята",
+      "ru": "Столик, совет официанта и комплимент кухне"
+    },
+    "topicId": "eating-out",
+    "level": "A2",
+    "coverIcon": "table_restaurant",
+    "targetLang": "ru-RU",
+    "phraseIds": ["ru-restoran-01", "ru-restoran-02", "ru-restoran-03", "ru-restoran-04"]
   }
 ]

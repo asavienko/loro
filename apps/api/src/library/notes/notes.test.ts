@@ -8,11 +8,13 @@ import { describe, expect, it } from 'vitest'
 import { knownStress, transcribeBulgarian } from './bg.js'
 import { KNOWN_PHRASES, type PhraseNotes } from './content.js'
 import { transcribeSpanish } from './es.js'
-import { BULGARIAN_GRAMMAR, SPANISH_GRAMMAR } from './grammar.js'
-import { DEVICE_NOTE_LANGUAGES, deviceNotes } from './index.js'
+import { BULGARIAN_GRAMMAR, ENGLISH_GRAMMAR, RUSSIAN_GRAMMAR, SPANISH_GRAMMAR } from './grammar.js'
+import { DEVICE_NOTE_LANGUAGES, deviceNotes, SPELLING_NOTE_LANGUAGES } from './index.js'
+import { learnedSounds } from './learned.js'
 import { memoryNote, pieces } from './memory.js'
 import { bulgarianNumber, spanishNumber } from './numbers.js'
 import { pictureFor, WORD_ICONS } from './picture.js'
+import { ENGLISH_SOUND_TIPS, RUSSIAN_SOUND_TIPS } from './tips.js'
 
 const LORO = KNOWN_PHRASES
 
@@ -68,13 +70,14 @@ const REVIEWED: Record<string, string> = {
 
 describe('the device’s sound rules', () => {
   it('transcribe Loro’s own phrases as the course does, but for reviewed differences', () => {
-    const differ = LORO.filter(
+    const ruled = LORO.filter((p) => DEVICE_NOTE_LANGUAGES.includes(p.targetLang))
+    const differ = ruled.filter(
       (p) =>
         (p.targetLang === 'es-ES' ? transcribeSpanish(p.target) : transcribeBulgarian(p.target))
           .ipa !== p.notes.pronunciation.ipa,
     )
     expect(differ.map((p) => p.id).sort()).toEqual(Object.keys(REVIEWED).sort())
-    expect(LORO.length - differ.length, 'most phrases match exactly').toBeGreaterThanOrEqual(140)
+    expect(ruled.length - differ.length, 'most phrases match exactly').toBeGreaterThanOrEqual(140)
   })
 
   it('Spanish: stress from the spelling, glides, soft consonants and n before the next consonant', () => {
@@ -112,9 +115,12 @@ describe('the device’s sound rules', () => {
 })
 
 describe('notes worked out by the rules', () => {
-  it('cover every course language', () => {
+  it('cover every course language, by its sounds or by its spelling', () => {
     for (const lang of V2_COURSES)
-      expect(DEVICE_NOTE_LANGUAGES.includes(lang), `${lang} has no sound rules yet`).toBe(true)
+      expect(
+        DEVICE_NOTE_LANGUAGES.includes(lang) !== SPELLING_NOTE_LANGUAGES.includes(lang),
+        `${lang} has exactly one way to its notes`,
+      ).toBe(true)
   })
 
   it('give every phrase, as any learner could type it, a picture and all three notes', () => {
@@ -254,5 +260,87 @@ describe('the picture', () => {
       'local_pharmacy',
     )
     expect(pictureFor('Искам хляб', 'Хочу хлеб')[0]).toBe('bakery_dining')
+  })
+})
+
+describe('notes by spelling (English, Russian)', () => {
+  const pick = (rules: { id: string; find: (text: string) => string | null }[], text: string) =>
+    rules.find((r) => r.find(text) !== null)?.id
+
+  it('take the sounds of Loro’s own phrases, and leave out a word it hasn’t met', () => {
+    for (const lang of SPELLING_NOTE_LANGUAGES) {
+      const own = LORO.find((p) => p.targetLang === lang)
+      if (!own) throw new Error(`no ${lang} phrase`)
+      const said = deviceNotes({
+        target: own.target,
+        native: 'x',
+        targetLang: lang,
+        nativeLang: 'bg-BG',
+      })
+      expect(said.notes.pronunciation.ipa, own.id).toBe(own.notes.pronunciation.ipa)
+      expect(said.notes.pronunciation.respelling).toBe(own.notes.pronunciation.respelling)
+      expect(said.notes.pronunciation.text).not.toMatch(/…/)
+
+      const unknown = deviceNotes({
+        target: 'Zzyzx',
+        native: 'x',
+        targetLang: lang,
+        nativeLang: 'bg-BG',
+      })
+      expect(unknown.notes.pronunciation.ipa).toBe('[…]')
+      expect(unknown.notes.pronunciation.respelling).toBe('—')
+      expect(unknown.notes.pronunciation.text).toMatch(
+        /The … stands for words Loro hasn’t transcribed yet/,
+      )
+      expect(unknown.noteTranslations.pronunciation?.['bg-BG']?.text).toMatch(/Многоточието/)
+
+      const first = own.target.split(/\s+/)[0] ?? ''
+      const alone = learnedSounds(first, lang)
+      if (alone.unknown.length === 0)
+        expect(learnedSounds(`${first} zzyzx`, lang).ipa).toBe(`[${alone.ipa.slice(1, -1)} …]`)
+    }
+  })
+
+  it('never write a note in the phrase’s own language', () => {
+    const made = deviceNotes({
+      target: 'Сколько стоит?',
+      native: 'How much?',
+      targetLang: 'ru-RU',
+      nativeLang: 'en-GB',
+    })
+    expect(Object.keys(made.noteTranslations.grammar ?? {})).toEqual(['bg-BG'])
+    const english = deviceNotes({
+      target: 'How much is it?',
+      native: 'Колко струва?',
+      targetLang: 'en-GB',
+      nativeLang: 'bg-BG',
+    })
+    expect(Object.keys(english.noteTranslations.grammar ?? {}).sort()).toEqual(['bg-BG', 'ru-RU'])
+  })
+
+  it('choose the grammar rule and the sound from the words, or one true of any phrase', () => {
+    expect(pick(ENGLISH_GRAMMAR, 'Could I have the bill, please?')).toBe('request')
+    expect(pick(ENGLISH_GRAMMAR, "I'd like a coffee")).toBe('would-like')
+    expect(pick(ENGLISH_GRAMMAR, 'Thanks')).toBe('word-order')
+    expect(pick(ENGLISH_SOUND_TIPS, 'Thanks')).toBe('th-voiceless')
+    expect(pick(RUSSIAN_GRAMMAR, 'Как вас зовут?')).toBe('zovut')
+    expect(pick(RUSSIAN_GRAMMAR, 'У меня нет сахара')).toBe('net-genitive')
+    expect(pick(RUSSIAN_GRAMMAR, 'Спасибо')).toBe('cases')
+    expect(pick(RUSSIAN_SOUND_TIPS, 'Хорошо')).toBe('kh')
+    expect(pick(RUSSIAN_SOUND_TIPS, 'Спасибо')).toBe('stress')
+  })
+
+  it('keep every rule and tip within a note’s length, with room after a tip for the … sentence', () => {
+    const lists = { ENGLISH_GRAMMAR, RUSSIAN_GRAMMAR, ENGLISH_SOUND_TIPS, RUSSIAN_SOUND_TIPS }
+    for (const [name, rules] of Object.entries(lists)) {
+      for (const rule of rules) {
+        for (const [locale, say] of Object.entries(rule.say)) {
+          const note = say('wwwwwwwwww')
+          const where = `${name} ${rule.id} ${locale}`
+          expect(note.title.length, where).toBeLessThanOrEqual(60)
+          expect(note.text.length, where).toBeLessThanOrEqual(name.endsWith('TIPS') ? 225 : 300)
+        }
+      }
+    }
   })
 })

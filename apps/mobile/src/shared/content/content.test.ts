@@ -66,7 +66,8 @@ describe('content', () => {
   });
 
   it('a course is never in the learner’s own language', () => {
-    assert.deepEqual(coursesFor('bg-BG'), ['es-ES']);
+    assert.deepEqual(coursesFor('bg-BG'), ['en-GB', 'es-ES', 'ru-RU']);
+    assert.deepEqual(coursesFor('en-GB'), ['es-ES', 'bg-BG', 'ru-RU']);
   });
 
   it('catches duplicates, orphans, missing translations and glosses not in the phrase', () => {
@@ -114,7 +115,7 @@ describe('phrase bank', () => {
     for (const p of BANK_PHRASES) {
       assert.ok(p.image.length > 0, p.id);
       assert.deepEqual(Object.keys(p.notes).sort(), ['grammar', 'mnemonic', 'pronunciation'], p.id);
-      const langs = p.targetLang === 'bg-BG' ? ['ru-RU'] : ['bg-BG', 'ru-RU'];
+      const langs = ['bg-BG', 'ru-RU'].filter((l) => l !== p.targetLang);
       for (const kind of ['mnemonic', 'grammar', 'pronunciation'] as const) assert.deepEqual(Object.keys(p.noteTranslations[kind] ?? {}).sort(), langs, `${p.id}.${kind}`);
     }
     const missing = structuredClone(bankNoteTranslationsJson) as Record<string, Record<string, unknown>>;

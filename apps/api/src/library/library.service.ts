@@ -414,6 +414,8 @@ export class LibraryService {
     const albums: { lang: Language; title: string }[] = [
       { lang: 'es-ES', title: 'Canciones de Loro' },
       { lang: 'bg-BG', title: 'Песни на Лоро' },
+      { lang: 'en-GB', title: 'Loro’s Songs' },
+      { lang: 'ru-RU', title: 'Песни Лоро' },
     ]
     await tx.query(
       "DELETE FROM library_songs WHERE album_id IN (SELECT id FROM library_albums WHERE origin = 'loro')",
@@ -442,7 +444,8 @@ export class LibraryService {
         const songPhrases = phrases.map((p) => ({
           id: p.id,
           target: p.target,
-          native: p.translations['en-GB'] ?? '',
+          // An English course's phrase is its own English meaning.
+          native: p.translations['en-GB'] ?? p.target,
         }))
         const style = MUSIC_STYLE_IDS[index % MUSIC_STYLE_IDS.length] ?? 'acoustic_folk'
         const sections = firstLines(assembleLyrics(songPhrases), demoLineLimit(style))

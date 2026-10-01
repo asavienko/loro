@@ -1,6 +1,7 @@
 // A mnemonic for a phrase the learner typed (plan 105), from what is true of it: a word that
 // sounds like one in the learner's own meaning, a word it shares with a phrase of Loro's, or else
-// its shape — the pieces it breaks into, or the beats of its longest word. The first that fits.
+// its shape — the pieces it breaks into, or the beats of its longest word (or, in a course without
+// sound rules, echoing its clip). The first that fits.
 import { KNOWN_PHRASES, type LanguageCode } from './content.js'
 import type { NoteLocale, NoteText } from './locale.js'
 import { type SoundWord, type Transcription, writtenSyllables } from './sounds.js'
@@ -14,12 +15,15 @@ export interface MemoryInput {
   sound: Transcription
 }
 
+/** The phrase and its meaning, without its sounds. */
+type Words = Omit<MemoryInput, 'sound'>
+
 type Say = Record<NoteLocale, NoteText>
 
 const meaningful = (t: Token) => t.word.length >= 4 && !FUNCTION_WORDS.has(t.word)
 
 /** A word of the phrase and a word of its meaning that sound alike: «farmacia», «pharmacy». */
-function cognate(input: MemoryInput): Say | null {
+function cognate(input: Words): Say | null {
   let best: { target: string; native: string; score: number } | null = null
   for (const t of tokenize(input.target).filter(meaningful)) {
     for (const n of tokenize(input.native).filter(meaningful)) {
@@ -50,7 +54,7 @@ function cognate(input: MemoryInput): Say | null {
 }
 
 /** A word the phrase shares with one of Loro's phrases, the course's before the bank's. */
-function link(input: MemoryInput): Say | null {
+function link(input: Words): Say | null {
   const own = tokenize(input.target).filter(meaningful)
   const ownKey = tokenize(input.target)
     .map((t) => t.word)
@@ -99,7 +103,7 @@ export function pieces(text: string): string[] {
   return out
 }
 
-function chunks(input: MemoryInput): Say | null {
+function chunks(input: Words): Say | null {
   const parts = pieces(input.target)
   if (parts.length < 2) return null
   const joined = parts.map((p) => `«${p}»`).join(' · ')
@@ -165,4 +169,28 @@ function beats(input: MemoryInput): Say {
 
 export function memoryNote(input: MemoryInput): Say {
   return cognate(input) ?? link(input) ?? chunks(input) ?? beats(input)
+}
+
+/** A phrase too short for pieces, in a course whose syllables Loro can't split: echo the clip. */
+function echo(input: Words): Say {
+  const t = input.target.trim()
+  return {
+    en: {
+      title: 'Echo the clip',
+      text: `Play the clip and say «${t}» straight after it, in the same rhythm: three times with it, then once without.`,
+    },
+    bg: {
+      title: 'Повтаряйте след записа',
+      text: `Пуснете записа и кажете «${t}» веднага след него, в същия ритъм: три пъти със записа, после веднъж без него.`,
+    },
+    ru: {
+      title: 'Повторяйте за записью',
+      text: `Включите запись и скажите «${t}» сразу после неё, в том же ритме: три раза с записью, затем один раз без неё.`,
+    },
+  }
+}
+
+/** The memory hint for a course without sound rules: as memoryNote, but echoing the clip for beats. */
+export function memoryNoteBySpelling(input: Words): Say {
+  return cognate(input) ?? link(input) ?? chunks(input) ?? echo(input)
 }
