@@ -12,6 +12,7 @@ import { useStore } from '../../src/state/store';
 import { MusicMiniPlayer, SongBarGrades } from '../../src/music/MusicMiniPlayer';
 import { useMusic } from '../../src/music/MusicPlayer';
 import { MiniPlayer, PhraseBarGrades } from '../../src/ui/MiniPlayer';
+import { BarShiftProvider } from '../../src/ui/barShift';
 import { TabBar } from '../../src/ui/TabBar';
 import { useReportChrome } from '../../src/ui/Toast';
 import { colors } from '../../src/ui/theme';
@@ -30,25 +31,27 @@ export default function TabsLayout() {
   }, [chrome, grades, insets.bottom, report]);
   useEffect(() => () => report(null), [report]);
   return (
-    <View style={styles.page}>
-      <Tabs backBehavior="history" screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.surface } }} tabBar={() => <BottomChrome onHeight={setChrome} />}>
-        <Tabs.Screen name="index" />
-        <Tabs.Screen name="explore" />
-        <Tabs.Screen name="music" options={{ href: null }} />
-        <Tabs.Screen name="create" />
-        <Tabs.Screen name="library" />
-        <Tabs.Screen name="set/[id]" options={{ href: null }} />
-        <Tabs.Screen name="album/[id]" options={{ href: null }} />
-      </Tabs>
-      {/* Over the page rather than inside the tab bar: a touch outside a view's bounds doesn't reach it on Android. */}
-      {chrome !== null && (
-        <View style={[styles.over, { bottom: chrome + OVER_BAR }]} pointerEvents="box-none">
-          <View style={styles.grades} pointerEvents="box-none" onLayout={(e) => setGrades(e.nativeEvent.layout.height)}>
-            <FrontGrades />
+    <BarShiftProvider>
+      <View style={styles.page}>
+        <Tabs backBehavior="history" screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.surface } }} tabBar={() => <BottomChrome onHeight={setChrome} />}>
+          <Tabs.Screen name="index" />
+          <Tabs.Screen name="explore" />
+          <Tabs.Screen name="music" options={{ href: null }} />
+          <Tabs.Screen name="create" />
+          <Tabs.Screen name="library" />
+          <Tabs.Screen name="set/[id]" options={{ href: null }} />
+          <Tabs.Screen name="album/[id]" options={{ href: null }} />
+        </Tabs>
+        {/* Over the page rather than inside the tab bar: a touch outside a view's bounds doesn't reach it on Android. */}
+        {chrome !== null && (
+          <View style={[styles.over, { bottom: chrome + OVER_BAR }]} pointerEvents="box-none">
+            <View style={styles.grades} pointerEvents="box-none" onLayout={(e) => setGrades(e.nativeEvent.layout.height)}>
+              <FrontGrades />
+            </View>
           </View>
-        </View>
-      )}
-    </View>
+        )}
+      </View>
+    </BarShiftProvider>
   );
 }
 
