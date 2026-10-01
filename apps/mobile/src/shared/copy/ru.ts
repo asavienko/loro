@@ -280,10 +280,12 @@ export function makeRu(n: Plural): Copy {
       hidden: () => 'Фраза скрыта, пока вы её не услышите',
       steps: 'Шаги',
       yourTurn: 'Ваша очередь',
+      again: 'Ещё раз',
       instruction: {
         native: (language) => `Слушайте: ${language}`,
         pause: (language) => `Ваша очередь — скажите вслух ${adverb(language)}`,
         target: (language) => `Слушайте: ${language}`,
+        echo: (language) => `Повторите ${adverb(language)} так, как услышали`,
         rate: 'Оцените или подождите',
       },
       paused: 'Пауза',

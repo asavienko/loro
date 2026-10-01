@@ -24,7 +24,7 @@ import {
   todayCounts,
 } from './selectors';
 import { courseSets, findSamePhrase, findSetView, keyOf, phraseKey } from './catalog';
-import { fullPlayMs, pauseMs, RATE_HOLD_MS } from './timing';
+import { echoMs, fullPlayMs, pauseMs, RATE_HOLD_MS } from './timing';
 import { cafe, DAY, done, fresh, load, MINUTE, playPhrase, run, T0 } from './testing';
 import { LIKED_ID, likedSetView, memoryOf, points, repeatsFor } from './selectors';
 import type { Grade, LogEntry } from './types';
@@ -151,8 +151,17 @@ describe('timing and formatting', () => {
     assert.equal(pauseMs(1000, 'x', 1, 'longer'), 1000 * 2 + 1000);
     assert.equal(pauseMs(100, 'x', 1, 'longer'), 2500);
     assert.equal(pauseMs(20_000, 'x', 1, 'longer'), 12_000);
-    assert.equal(fullPlayMs(800, 1000, 'x', 1, 'longer'), 800 + 300 + 3000 + 1000 + 300);
-    assert.equal(fullPlayMs(800, 1000, 'x', 1, 'longer', true), 800 + 300 + 3000 + 1000 + 300 + RATE_HOLD_MS);
+    assert.equal(fullPlayMs(800, 1000, 'x', 1, 'longer'), 800 + 300 + 3000 + 1000 + 300 + 2300);
+    assert.equal(fullPlayMs(800, 1000, 'x', 1, 'longer', true), 800 + 300 + 3000 + 1000 + 300 + 2300 + RATE_HOLD_MS);
+  });
+
+  it('the echo after the target is about the phrase’s own length, shorter than the turn, within bounds', () => {
+    assert.equal(echoMs(1000, 'x', 1), 1000 + 400);
+    assert.equal(echoMs(100, 'x', 1), 1200);
+    assert.equal(echoMs(20_000, 'x', 1), 6000);
+    assert.equal(echoMs(1000, 'x', 1, 'longer'), 1000 * 1.5 + 800);
+    assert.equal(echoMs(2000, 'x', 2), 1000 + 400, 'faster speed, shorter echo');
+    assert.ok(echoMs(1000, 'x', 1) < pauseMs(1000, 'x', 1));
   });
 
   it('typical length ignores outliers', () => {

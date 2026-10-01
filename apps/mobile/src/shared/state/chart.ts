@@ -59,15 +59,16 @@ export const STATUS_EDGES: { from: PlayerStatus; event: string; to: PlayerStatus
 ];
 
 /**
- * One phrase: prompt → the learner's turn → target, `repeats` times; then a
- * short hold for a rating if there is none yet; then the next phrase.
+ * One phrase: prompt → the learner's turn → target → the learner's echo, `repeats`
+ * times; then a short hold for a rating if there is none yet; then the next phrase.
  */
 export const PHASE_EDGES: { from: Phase; on: string; to: Phase | 'next phrase' }[] = [
   { from: 'native', on: 'spoken', to: 'pause' },
   { from: 'pause', on: 'silence over', to: 'target' },
-  { from: 'target', on: 'spoken, more repetitions', to: 'native' },
-  { from: 'target', on: 'spoken, last repetition, unrated', to: 'rate' },
-  { from: 'target', on: 'spoken, last repetition, rated', to: 'next phrase' },
+  { from: 'target', on: 'spoken', to: 'echo' },
+  { from: 'echo', on: 'silence over, more repetitions', to: 'native' },
+  { from: 'echo', on: 'silence over, last repetition, unrated', to: 'rate' },
+  { from: 'echo', on: 'silence over, last repetition, rated', to: 'next phrase' },
   { from: 'rate', on: 'rated, or hold over', to: 'next phrase' },
 ];
 

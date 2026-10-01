@@ -4,6 +4,7 @@
 //
 // Player loop for one phrase, repeated `repeats` times:
 //   native (hear it in your language) → pause (say it yourself) → target (hear it)
+//   → echo (say it again, as you heard it)
 // then a short hold for a rating if there is none, then the next phrase. At the
 // end of the queue the play mode decides: play it again, or continue with the
 // next phrases of the course — except a queue with a natural end (a review, the
@@ -386,13 +387,16 @@ function step(state: AppState, event: AppEvent): AppState {
         case 'rate':
           return advance(state, player, event.now, true);
         case 'target': {
-          // One repetition completed — unless the engine never confirmed it played.
+          // Heard — unless the engine never confirmed it played. Then the learner echoes it.
           const next = event.unconfirmed ? state : recordHeard(state, currentId, event.now, event.measuredMs ?? null);
           // recordHeard notes the phrase in the session: carry its player on, not the one before.
-          const heard = next.player;
+          return withPlayer(next, { ...next.player, phase: 'echo', cycle: player.cycle + 1 });
+        }
+        case 'echo': {
+          // One repetition completed.
           if (player.repetition < player.repeats) {
-            return withPlayer(next, {
-              ...heard,
+            return withPlayer(state, {
+              ...player,
               phase: 'native',
               repetition: player.repetition + 1,
               nativeMsThisRep: null,
@@ -400,9 +404,9 @@ function step(state: AppState, event: AppEvent): AppState {
             });
           }
           // An undone rating's tombstone isn't a rating: the phrase waits to be rated again.
-          const rated = next.pending.some((p) => p.key === keyOf(learner, currentId) && !p.undone);
-          if (!rated) return withPlayer(next, { ...heard, phase: 'rate', cycle: player.cycle + 1 });
-          return advance(next, heard, event.now, true);
+          const rated = state.pending.some((p) => p.key === keyOf(learner, currentId) && !p.undone);
+          if (!rated) return withPlayer(state, { ...player, phase: 'rate', cycle: player.cycle + 1 });
+          return advance(state, player, event.now, true);
         }
       }
       return state;

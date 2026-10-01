@@ -8,6 +8,14 @@ const PAUSE: Record<PauseLength, { factor: number; paddingMs: number; minMs: num
   standard: { factor: 1.3, paddingMs: 600, minMs: 1500, maxMs: 8000 },
   longer: { factor: 2, paddingMs: 1000, minMs: 2500, maxMs: 12000 },
 };
+/**
+ * The learner's echo after hearing the target: shorter than their turn, since the phrase is
+ * fresh (about its own length plus a breath), within bounds.
+ */
+const ECHO: Record<PauseLength, { factor: number; paddingMs: number; minMs: number; maxMs: number }> = {
+  standard: { factor: 1, paddingMs: 400, minMs: 1200, maxMs: 6000 },
+  longer: { factor: 1.5, paddingMs: 800, minMs: 2000, maxMs: 9000 },
+};
 /** Rough spoken length, only for the first pause and engine timeouts, never shown. */
 const MS_PER_CHAR_AT_1X = 75;
 
@@ -29,9 +37,16 @@ export function pauseMs(targetMsAt1x: number | null, text: string, speed: number
   return Math.min(maxMs, Math.max(minMs, spoken * factor + paddingMs));
 }
 
+/** Time to say the phrase again right after hearing it: about as long as the target takes to say. */
+export function echoMs(targetMsAt1x: number | null, text: string, speed: number, length: PauseLength = 'standard'): number {
+  const { factor, paddingMs, minMs, maxMs } = ECHO[length];
+  const spoken = (targetMsAt1x ?? estimateSpeechMs(text, 1)) / speed;
+  return Math.min(maxMs, Math.max(minMs, spoken * factor + paddingMs));
+}
+
 /**
  * The full play of one phrase at 1.0×: every repetition's prompt, gap, pause,
- * target and gap, then the rating hold when `holdsForRating` (the phrase has no
+ * target, gap and echo, then the rating hold when `holdsForRating` (the phrase has no
  * rating yet, so the player waits for one). Null until both the prompt and the
  * target have been measured, because an estimate is not a number we show.
  */
@@ -44,6 +59,6 @@ export function fullPlayMs(
   holdsForRating = false,
 ): number | null {
   if (nativeMsAt1x === null || targetMsAt1x === null) return null;
-  const one = nativeMsAt1x + GAP_MS + pauseMs(targetMsAt1x, target, 1, length) + targetMsAt1x + GAP_MS;
+  const one = nativeMsAt1x + GAP_MS + pauseMs(targetMsAt1x, target, 1, length) + targetMsAt1x + GAP_MS + echoMs(targetMsAt1x, target, 1, length);
   return Math.round(one * repeats + (holdsForRating ? RATE_HOLD_MS : 0));
 }
