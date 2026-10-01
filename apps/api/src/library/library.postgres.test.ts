@@ -31,7 +31,7 @@ const code = async (work: Promise<unknown>) => {
 }
 
 /** A Claude client whose every answer is `value`, or that always fails with `status`. */
-function claudeClient(send: () => Promise<Response>): AnthropicMessages {
+function claudeClient(send: typeof fetch): AnthropicMessages {
   return new AnthropicMessages(
     {
       apiKey: 'test',
@@ -328,6 +328,140 @@ describePostgres('the library against real PostgreSQL', () => {
         }),
       ),
     ).toBe('VALIDATION_FAILED')
+  })
+
+  it('copies one of Loro’s sets to wear a new cover, its phrases listed, not copied', async () => {
+    const loro = (await library.set(null, 'set-cafe')).set
+    const cover = await library.generateCover('lia', {
+      kind: 'set',
+      attachTo: 'set-cafe',
+      nativeLang: 'bg-BG',
+    })
+    expect(cover.copy?.kind).toBe('set')
+    const { set: copy, phrases } = await library.set('lia', cover.copy?.id)
+    expect(copy).toMatchObject({
+      owner: 'me',
+      visibility: 'private',
+      title: loro.title,
+      topicId: loro.topicId,
+      coverUrl: cover.url,
+      phraseIds: loro.phraseIds,
+    })
+    expect(copy.description).toBe(loro.subtitle?.bg)
+    // The same phrases, Loro's: one progress wherever they are listed.
+    expect(phrases.every((p) => p.setId === 'set-cafe')).toBe(true)
+    // Loro's set is as it was, for everyone; the copy is in the learner's pack.
+    expect((await library.set('lia', 'set-cafe')).set.coverUrl).toBeNull()
+    expect((await library.pack('lia', 'es-ES')).sets.map((s) => s.id)).toContain(copy.id)
+    // The copy is the learner's: a cover drawn for it again goes on it in place.
+    const again = await library.generateCover('lia', { kind: 'set', attachTo: copy.id })
+    expect(again.copy).toBeUndefined()
+    expect((await library.set('lia', copy.id)).set.coverUrl).toBe(again.url)
+  })
+
+  it('makes no copy that the account can’t keep, and spends nothing on it', async () => {
+    const phrases = (await deck('max')).slice(0, 1)
+    for (let i = 0; i < 3; i++)
+      await library.createSet('max', {
+        title: `S${i}`,
+        targetLang: 'es-ES',
+        nativeLang: 'bg-BG',
+        phrases,
+      })
+    expect(await code(library.generateCover('max', { kind: 'set', attachTo: 'set-cafe' }))).toBe(
+      'LIMIT_REACHED',
+    )
+    expect((await library.usage('max')).daily.cover.used).toBe(0)
+  })
+
+  it('copies one of Loro’s albums with its songs to wear a new cover', async () => {
+    const loro = (await library.album(null, 'album-loro-es')).album
+    const cover = await library.generateCover('ned', { kind: 'album', attachTo: loro.id })
+    expect(cover.copy?.kind).toBe('album')
+    const { album, songs } = await library.album('ned', cover.copy?.id)
+    expect(album).toMatchObject({
+      owner: 'me',
+      visibility: 'private',
+      title: loro.title,
+      coverUrl: cover.url,
+      songCount: loro.songCount,
+    })
+    expect(songs.every((s) => s.status === 'ready' && s.audioUrl !== null)).toBe(true)
+    expect((await library.album(null, loro.id)).album.coverUrl).toBe(loro.coverUrl)
+    // Someone else's album, even a public one, is only its owner's to change.
+    await library.updateAlbum('ned', album.id, { visibility: 'public' })
+    expect(await code(library.generateCover('oda', { kind: 'album', attachTo: album.id }))).toBe(
+      'NOT_FOUND',
+    )
+    // Gone again, so its songs don't count in the later tests' sets.
+    await library.deleteAlbum('ned', album.id)
+  })
+
+  it('keeps a learner’s own covers of phrases and songs to them, across their devices', async () => {
+    const song = (await library.album(null, 'album-loro-es')).songs[0]
+    const phrase = await library.generateCover('pia', { kind: 'phrase', attachTo: 'cafe-01' })
+    const sung = await library.generateCover('pia', { kind: 'song', attachTo: song?.id })
+    expect([phrase.copy, sung.copy]).toEqual([undefined, undefined])
+    expect((await library.pack('pia', 'es-ES')).covers).toEqual({
+      phrases: { 'cafe-01': phrase.url },
+      songs: { [song?.id ?? '']: sung.url },
+    })
+    // Nobody else sees them, and the other course doesn't list them.
+    expect((await library.pack('quin', 'es-ES')).covers).toEqual({ phrases: {}, songs: {} })
+    expect((await library.pack(null, 'es-ES')).covers).toEqual({ phrases: {}, songs: {} })
+    expect((await library.pack('pia', 'bg-BG')).covers).toEqual({ phrases: {}, songs: {} })
+    // A new one replaces the old; a copy of the album keeps the song's.
+    const redrawn = await library.generateCover('pia', { kind: 'phrase', attachTo: 'cafe-01' })
+    expect((await library.pack('pia', 'es-ES')).covers.phrases['cafe-01']).toBe(redrawn.url)
+    const albumCopy = await library.generateCover('pia', {
+      kind: 'album',
+      attachTo: 'album-loro-es',
+    })
+    const copied = (await library.album('pia', albumCopy.copy?.id)).songs[0]
+    expect((await library.pack('pia', 'es-ES')).covers.songs[copied?.id ?? '']).toBe(sung.url)
+    expect(await code(library.generateCover('pia', { kind: 'phrase', attachTo: 'nope-01' }))).toBe(
+      'NOT_FOUND',
+    )
+    // Deleting everything takes them too.
+    await library.deleteEverything('pia')
+    expect((await library.pack('pia', 'es-ES')).covers).toEqual({ phrases: {}, songs: {} })
+  })
+
+  it('has Claude draw a phrase’s cover for what it says', async () => {
+    let asked = ''
+    resetWriter(
+      claudeClient((_url, init) => {
+        asked = typeof init?.body === 'string' ? init.body : ''
+        return Promise.resolve(
+          Response.json({
+            stop_reason: 'end_turn',
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  background: ['#FBE8D3', '#F4CDB0'],
+                  angle: 90,
+                  shapes: [
+                    { kind: 'circle', cx: 256, cy: 256, r: 100, fill: '#C4562F', opacity: 1 },
+                  ],
+                }),
+              },
+            ],
+            usage: { input_tokens: 1, output_tokens: 1 },
+          }),
+        )
+      }),
+    )
+    try {
+      const cover = await library.generateCover('rex', { kind: 'phrase', attachTo: 'cafe-01' })
+      expect(cover.provider).toBe('claude')
+      // Drawn for the phrase's own words, never for text the app sent.
+      const target = (await library.set(null, 'set-cafe')).phrases.find((p) => p.id === 'cafe-01')
+      expect(asked).toContain(JSON.stringify(target?.target).slice(1, -1))
+      expect(asked).toContain('one spoken phrase')
+    } finally {
+      resetWriter()
+    }
   })
 
   it('sings a set into a new album and plays it only for who may see it', async () => {
