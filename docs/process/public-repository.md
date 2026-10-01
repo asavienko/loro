@@ -29,21 +29,12 @@ Done before the switch (on the private repository):
 - Repository description set.
 - A full-history gitleaks scan (no credential, ever) and a read of every tracked image. One
   screenshot in `feedback/` was a phone lock screen with a phone number and other people's messages:
-  it was deleted from the tree, and it is purged from history before the switch.
-
-Still to do before the switch, once the open branches have landed, because it rewrites the hashes of
-every commit since `c00b355b` (2026-10-01) and every clone and worktree must rebase:
-
-```bash
-git clone --mirror git@github.com:asavienko/loro.git loro-purge.git && cd loro-purge.git
-git filter-repo --invert-paths --path 'feedback/photo_2026-10-01 18.34.57.jpeg'
-git push --force --all && git push --force --tags     # main and every claude/* branch
-```
-
-Then, in each local checkout, `git fetch` and `git rebase --onto origin/main <old-base>`; delete the
-old Releases' commit links if GitHub keeps pointing at vanished hashes (the release assets stay).
-Confirm with `git log --all --oneline -- 'feedback/photo_2026-10-01 18.34.57.jpeg'`, which must
-print nothing, and ask GitHub support to drop the cached commit `c00b355b` from their side.
+  it was deleted from the tree, then purged from history on 2026-10-02 with
+  `git filter-repo --invert-paths --path <file>` on a mirror clone, force-pushed to every branch and
+  tag. Because most commits carried GitHub's web signatures, which a rewrite strips, every hash
+  changed while every tree stayed identical; every clone had to be reset to its remote branch
+  (`git reset --keep origin/<branch>`), and GitHub support was asked to drop the old commits from
+  its cache, which keeps them reachable by SHA for a while after a force-push.
 
 To do right after `gh repo edit --visibility public --accept-visibility-change-consequences`, in
 this order, because each is free only for public repositories:
