@@ -154,6 +154,18 @@ export interface LanguagesWire {
   languages: readonly V2LanguageInfo[]
 }
 
+/**
+ * A cover the learner asked for (plan 111): `rendering` while it is drawn in the background, then
+ * `ready` at its address, or `failed` when the work broke. `provider` is who drew it: a model (`ai`),
+ * or the server's labelled pattern.
+ */
+export interface CoverState {
+  id: string
+  status: 'rendering' | 'ready' | 'failed'
+  url: string | null
+  provider: 'ai' | 'pattern'
+}
+
 export type UsageKind = 'phrases' | 'cover' | 'song'
 export type KeptKind = 'sets' | 'albums' | 'songs'
 

@@ -120,11 +120,22 @@ export class LibraryReadController {
 
   @Get('covers/:file')
   async cover(@Param('file') file: string, @Res() response: Response): Promise<void> {
+    if (file.endsWith('.json')) {
+      // Where a cover being drawn stands (plan 111): asked again until it is ready.
+      const state = await this.library.coverState(file)
+      response.setHeader('Cache-Control', 'no-store')
+      response.json(state)
+      return
+    }
     const svg = await this.library.cover(file)
     response.setHeader('Content-Type', 'image/svg+xml')
-    // Covers are immutable: a new cover gets a new id.
+    // Covers are immutable: a new cover gets a new id, and its SVG is written once, when it is ready.
     response.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
-    response.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'")
+    // An illustration travels inside as a data: image; nothing else may load.
+    response.setHeader(
+      'Content-Security-Policy',
+      "default-src 'none'; style-src 'unsafe-inline'; img-src data:",
+    )
     response.end(svg)
   }
 }

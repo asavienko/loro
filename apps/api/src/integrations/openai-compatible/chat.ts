@@ -4,12 +4,8 @@
  */
 import { boundedJson, isRecord } from '../bounded-body.js'
 import { ProviderConcurrency } from '../provider-concurrency.js'
-import {
-  TextModelFailure,
-  type StructuredRequest,
-  type StructuredResult,
-  type StructuredTextModel,
-} from '../text-model.js'
+import { ProviderFailure } from '../provider-failure.js'
+import type { StructuredRequest, StructuredResult, StructuredTextModel } from '../text-model.js'
 
 export const FIREWORKS_CHAT_URL = 'https://api.fireworks.ai/inference/v1/chat/completions'
 export const OPENROUTER_CHAT_URL = 'https://openrouter.ai/api/v1/chat/completions'
@@ -32,12 +28,12 @@ export interface ChatCompletionsOptions {
 
 function tokens(value: unknown): number {
   if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
-    throw new TextModelFailure('invalid_output')
+    throw new ProviderFailure('invalid_output')
   }
   return value
 }
 
-const invalid = () => new TextModelFailure('invalid_output')
+const invalid = () => new ProviderFailure('invalid_output')
 
 /** Exactly one outbound attempt; retry/spend/fallback policy belongs to the guarded service. */
 export class ChatCompletions implements StructuredTextModel {
@@ -62,14 +58,14 @@ export class ChatCompletions implements StructuredTextModel {
       limits.some((value) => !Number.isSafeInteger(value) || value <= 0) ||
       options.timeoutMs > 2_147_483_647
     ) {
-      throw new TextModelFailure('configuration')
+      throw new ProviderFailure('configuration')
     }
     this.options = Object.freeze({ ...options })
     this.concurrency = new ProviderConcurrency(options.maxConcurrentRequests)
   }
 
   async generate<T>(input: StructuredRequest<T>): Promise<StructuredResult<T>> {
-    if (input.signal?.aborted) throw new TextModelFailure('cancelled')
+    if (input.signal?.aborted) throw new ProviderFailure('cancelled')
     if (
       !input.system.trim() ||
       input.messages.length === 0 ||
@@ -81,7 +77,7 @@ export class ChatCompletions implements StructuredTextModel {
           !message.content.trim(),
       )
     ) {
-      throw new TextModelFailure('input')
+      throw new ProviderFailure('input')
     }
     let body: string
     try {
@@ -101,13 +97,13 @@ export class ChatCompletions implements StructuredTextModel {
         stream: false,
       })
     } catch {
-      throw new TextModelFailure('input')
+      throw new ProviderFailure('input')
     }
     if (Buffer.byteLength(body, 'utf8') > this.options.maxRequestBytes) {
-      throw new TextModelFailure('input')
+      throw new ProviderFailure('input')
     }
     const release = this.concurrency.acquire()
-    if (!release) throw new TextModelFailure('capacity')
+    if (!release) throw new ProviderFailure('capacity')
     const deadline = AbortSignal.timeout(this.options.timeoutMs)
     const signal = input.signal ? AbortSignal.any([input.signal, deadline]) : deadline
     try {
@@ -123,7 +119,7 @@ export class ChatCompletions implements StructuredTextModel {
       })
       if (!response.ok) {
         await response.body?.cancel()
-        throw new TextModelFailure(response.status === 429 ? 'rate_limited' : 'unavailable')
+        throw new ProviderFailure(response.status === 429 ? 'rate_limited' : 'unavailable')
       }
       const envelope = await boundedJson(response, this.options.maxResponseBytes, invalid)
       // OpenRouter reports a provider's failure inside a 200 as `error`.
@@ -156,10 +152,10 @@ export class ChatCompletions implements StructuredTextModel {
       signal.throwIfAborted()
       return { value: result, provider: this.options.name, usage: measuredUsage }
     } catch (error) {
-      if (input.signal?.aborted) throw new TextModelFailure('cancelled')
-      if (deadline.aborted) throw new TextModelFailure('timeout')
-      if (error instanceof TextModelFailure) throw error
-      throw new TextModelFailure('unavailable')
+      if (input.signal?.aborted) throw new ProviderFailure('cancelled')
+      if (deadline.aborted) throw new ProviderFailure('timeout')
+      if (error instanceof ProviderFailure) throw error
+      throw new ProviderFailure('unavailable')
     } finally {
       release()
     }

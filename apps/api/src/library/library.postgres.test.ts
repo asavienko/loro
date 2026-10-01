@@ -3,7 +3,7 @@
  * Set LORO_TEST_DATABASE_URL.
  */
 import type { Pool } from 'pg'
-import { afterAll, beforeAll, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { LoroError } from '../common/errors.js'
 import { ChatCompletions, FIREWORKS_CHAT_URL } from '../integrations/openai-compatible/chat.js'
 import { PostgresDatabase } from '../database/database.js'
@@ -19,7 +19,9 @@ import { LibraryService } from './library.service.js'
 import { ProgressService } from './progress.js'
 import { SpeechService, speechFor, utteranceId } from './speech.js'
 import { MAX_DEMO_WAV_BYTES, demoLineLimit } from './synth.js'
-import { resetWriter } from './writers.js'
+import { resetArtist, resetWriter } from './writers.js'
+import type { ImageModel } from '../integrations/openrouter/images.js'
+import { ProviderFailure } from '../integrations/provider-failure.js'
 
 const code = async (work: Promise<unknown>) => {
   try {
@@ -87,6 +89,7 @@ describePostgres('the library against real PostgreSQL', () => {
     vi.stubEnv('LIMIT_SETS_KEPT', '3')
     vi.stubEnv('LIBRARY_VOICE_LORO_SONGS', '0')
     resetWriter()
+    resetArtist()
     database = new PostgresDatabase()
     expect(await database.ready()).toBe(true)
     library = new LibraryService(database, { now: () => now })
@@ -98,6 +101,7 @@ describePostgres('the library against real PostgreSQL', () => {
     await admin.end()
     vi.unstubAllEnvs()
     resetWriter()
+    resetArtist()
   })
 
   const deck = async (userId: string) => {
@@ -318,7 +322,8 @@ describePostgres('the library against real PostgreSQL', () => {
       title: 'Covers',
       attachTo: set.id,
     })
-    expect(cover.provider).toBe('pattern')
+    // With no model the pattern is drawn at once.
+    expect(cover).toMatchObject({ provider: 'pattern', status: 'ready' })
     expect((await library.set('fay', set.id)).set.coverUrl).toBe(cover.url)
     expect(await library.cover(`${cover.id}.svg`)).toMatch(/^<svg /)
     expect(
@@ -332,6 +337,110 @@ describePostgres('the library against real PostgreSQL', () => {
         }),
       ),
     ).toBe('VALIDATION_FAILED')
+  })
+
+  describe('a cover drawn in the background (plan 111)', () => {
+    const PNG = Buffer.concat([
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      Buffer.alloc(16, 3),
+    ])
+    let draw: (prompt: string) => Promise<Buffer>
+    const prompts: string[] = []
+    const images: ImageModel = {
+      generate: async ({ prompt }) => {
+        prompts.push(prompt)
+        return { bytes: await draw(prompt), contentType: 'image/png' }
+      },
+    }
+    const coverSet = async (userId: string) =>
+      (
+        await library.createSet(userId, {
+          title: 'Faros',
+          targetLang: 'es-ES',
+          nativeLang: 'en-GB',
+          phrases: (await deck(userId)).slice(0, 1),
+        })
+      ).set
+    afterEach(() => {
+      resetArtist()
+      resetWriter()
+    })
+
+    it('keeps the old cover until the illustration is ready, then puts it in its place', async () => {
+      let finish!: (bytes: Buffer) => void
+      draw = () => new Promise((resolve) => (finish = resolve))
+      resetArtist(images)
+      const set = await coverSet('ivy')
+      const cover = await library.generateCover('ivy', {
+        kind: 'set',
+        title: 'Faros',
+        description: 'by the sea',
+        attachTo: set.id,
+      })
+      expect(cover).toEqual({ id: cover.id, status: 'rendering', url: null, provider: 'ai' })
+      expect(await library.coverState(`${cover.id}.json`)).toMatchObject({ status: 'rendering' })
+      expect(await code(library.cover(`${cover.id}.svg`))).toBe('NOT_FOUND')
+      expect((await library.set('ivy', set.id)).set.coverUrl).toBeNull()
+      expect((await library.usage('ivy')).daily.cover.used).toBe(1)
+      expect(prompts.at(-1)).toContain('"Faros", about: by the sea')
+      expect(prompts.at(-1)).toContain('no text')
+      finish(PNG)
+      await vi.waitFor(async () => {
+        expect(await library.coverState(`${cover.id}.json`)).toEqual({
+          id: cover.id,
+          status: 'ready',
+          url: `/library/covers/${cover.id}.svg`,
+          provider: 'ai',
+        })
+      })
+      expect((await library.set('ivy', set.id)).set.coverUrl).toBe(
+        `/library/covers/${cover.id}.svg`,
+      )
+      const svg = await library.cover(`${cover.id}.svg`)
+      expect(svg).toContain(`href="data:image/png;base64,${PNG.toString('base64')}"`)
+      // No script and no address but the SVG namespace: nothing loads from anywhere.
+      expect(svg.replace('xmlns="http://www.w3.org/2000/svg"', '')).not.toMatch(
+        /<script|xlink|https?:/,
+      )
+    })
+
+    it('designs shapes when the illustration fails, and draws the pattern when that fails too', async () => {
+      draw = () => Promise.reject(new ProviderFailure('unavailable'))
+      resetArtist(images)
+      resetWriter(modelAnswering({ background: ['#fff', 'nope'], angle: 0, shapes: [] }))
+      const set = await coverSet('jon')
+      const cover = await library.generateCover('jon', {
+        kind: 'set',
+        title: 'Faros',
+        attachTo: set.id,
+      })
+      await vi.waitFor(async () => {
+        expect(await library.coverState(`${cover.id}.json`)).toMatchObject({
+          status: 'ready',
+          provider: 'pattern',
+        })
+      })
+      expect((await library.set('jon', set.id)).set.coverUrl).toBe(
+        `/library/covers/${cover.id}.svg`,
+      )
+      expect(await library.cover(`${cover.id}.svg`)).not.toContain('data:image')
+    })
+
+    it('reads work lost with its process as failed', async () => {
+      draw = () => new Promise(() => undefined)
+      resetArtist(images)
+      const cover = await library.generateCover('kim', { kind: 'album', title: 'Lost' })
+      const start = now
+      now += 11 * 60_000
+      try {
+        expect(await library.coverState(`${cover.id}.json`)).toMatchObject({
+          status: 'failed',
+          url: null,
+        })
+      } finally {
+        now = start
+      }
+    })
   })
 
   it('sings a set into a new album and plays it only for who may see it', async () => {

@@ -199,3 +199,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS library_sets_inbox ON library_sets(owner_id, t
 export const LIBRARY_AI_LABELS_MIGRATION_SQL = `UPDATE library_covers SET provider = 'ai' WHERE provider = 'claude';
 UPDATE library_songs SET lyrics_by = 'ai' WHERE lyrics_by = 'claude';
 `
+
+/**
+ * Plan 111: a cover is drawn in the background. It is `rendering`, without SVG, until the image model
+ * (or a fallback) answers; then it is `ready`, or `failed` if the work itself broke.
+ */
+export const LIBRARY_COVER_JOBS_MIGRATION_SQL = `ALTER TABLE library_covers ALTER COLUMN svg DROP NOT NULL;
+ALTER TABLE library_covers ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'ready';
+`
