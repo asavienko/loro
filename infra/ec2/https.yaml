@@ -80,7 +80,7 @@ Resources:
           const libraryRoutes = [
             [['GET', 'HEAD'], ['(pack|community|languages|usage|profile|progress)',
               `sets/${ID}(/(songs|more))?`, `albums/${ID}(/more)?`, 'shared/[a-z0-9]{10}',
-              `songs/${ID}(/audio)?`, `covers/${ID}\\.svg`, 'speech/[a-f0-9]{32}\\.mp3']],
+              `songs/${ID}(/audio)?`, `covers/${ID}\\.(svg|json)`, 'speech/[a-f0-9]{32}\\.mp3']],
             [['POST'], ['(profile|progress|sets|phrases|albums|saves|reports)',
               'me/(delete|delete-account)', 'generate/(phrases|notes|cover|song)',
               `sets/${ID}`, `sets/${ID}/phrases/${ID}`, `albums/${ID}`, `songs/${ID}/retry`]],
