@@ -6,7 +6,7 @@ import { clock } from '@shared/state/clock';
 import { playsOnce } from '@shared/state/machine';
 import { continuation, currentPhraseId, displayLearner, pendingFor, sessionSummary, windowLeft } from '@shared/state/selectors';
 import { endTitle, isTargetRevealed, PHASE_ICONS, phaseStepLabel } from '@shared/ui/phase';
-import { barRating, recentLoopRating } from '@shared/ui/rating';
+import { barLoopRating, barRating } from '@shared/ui/rating';
 import { useRate } from '../screens/useRate';
 import { useCopy, useNow, useStore } from '../state/store';
 import { BarGrades, useRedrawIn } from './BarGrades';
@@ -148,7 +148,7 @@ export function PhraseBarGrades() {
   const now = clock.now();
   const pending = id === null ? undefined : pendingFor(state, id);
   const windowOpen = pending ? windowLeft(pending, now) : 0;
-  const recent = recentLoopRating(state.pending, now);
+  const recent = barLoopRating(state.pending, id, now);
   const ratable = findPhrase(state.learner, id) !== undefined && player.status !== 'idle' && !(player.ended && playsOnce(player));
   const view = barRating({ ratable, rated: windowOpen > 0 }, recent, now);
   // Drawn again as Undo runs out, and as the window closes and the grades come back.
