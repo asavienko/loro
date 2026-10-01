@@ -319,7 +319,9 @@ function AskStep({
 
   return (
     <View style={styles.step}>
-      <Txt color="secondary">{c.make.intro}</Txt>
+      <Txt variant="heading" face="serif" weight={600} accessibilityRole="header">
+        {c.make.intro}
+      </Txt>
       <View accessibilityRole="radiogroup" accessibilityLabel={c.make.modesLabel} style={styles.modes}>
         {SUGGEST_MODES.map((m) => {
           const on = mode === m;
@@ -335,7 +337,7 @@ function AskStep({
               }}
               style={[styles.mode, on && styles.modeOn]}
             >
-              <Txt weight={on ? 700 : 500} color={on ? 'onSurface' : 'secondary'} align="center">
+              <Txt weight={on ? 700 : 500} color={on ? 'onSurface' : 'secondary'} align="center" numberOfLines={1}>
                 {c.make.modes[m]}
               </Txt>
             </Pressable>
@@ -344,15 +346,11 @@ function AskStep({
       </View>
 
       <View style={styles.label}>
-        <Txt weight={600} nativeID="make-field">
-          {c.make.field[mode]}
-        </Txt>
         <TextInput
           ref={input}
           value={text}
           onChangeText={setText}
           accessibilityLabel={c.make.field[mode]}
-          accessibilityLabelledBy="make-field"
           accessibilityHint={[hint, charsLeft(c, text, INPUT_LIMITS[mode])].filter(Boolean).join('. ')}
           maxLength={INPUT_LIMITS[mode]}
           placeholder={c.make.placeholder[mode]}
@@ -363,7 +361,7 @@ function AskStep({
           numberOfLines={mode === 'text' ? 6 : 1}
           returnKeyType={mode === 'text' ? 'default' : 'go'}
           onSubmitEditing={mode === 'text' ? undefined : submit}
-          style={[field, mode === 'text' && styles.textArea]}
+          style={[field, styles.input, mode === 'text' && styles.textArea]}
         />
         <View style={styles.hintRow}>
           <Txt variant="label" color="secondary" style={styles.flex}>
@@ -373,16 +371,25 @@ function AskStep({
         </View>
       </View>
 
-      {session.nothingFor !== null && (
-        <View accessibilityLiveRegion="polite" style={styles.nothing}>
-          <Txt weight={600}>{c.make.none(session.nothingFor)}</Txt>
-          <Txt color="secondary">{c.make.noneHint}</Txt>
-          <Button variant="tonal" icon="add" label={c.make.writeOwn} onPress={() => nav.addPhrase()} />
-        </View>
-      )}
-
       <Button variant="primary" icon={pending ? 'hourglass_empty' : 'auto_awesome'} label={pending ? c.make.writing : c.make.suggest} disabled={!ready} onPress={submit} />
       {pending && <Button variant="text" label={c.common.cancel} onPress={() => pending.abort()} style={styles.center} />}
+
+      {session.nothingFor !== null && (
+        <View accessibilityLiveRegion="polite" style={styles.nothing}>
+          <View style={styles.nothingText}>
+            <Icon name="search" color="secondary" />
+            <View style={styles.flex}>
+              <Txt variant="row" weight={600}>
+                {c.make.none(session.nothingFor)}
+              </Txt>
+              <Txt variant="body" color="secondary">
+                {c.make.noneHint}
+              </Txt>
+            </View>
+          </View>
+          <Button variant="text" icon="edit_note" label={c.make.writeOwn} onPress={() => nav.addPhrase()} style={styles.writeOwn} />
+        </View>
+      )}
 
       {mode === 'topic' && (
         <View style={styles.topics}>
@@ -408,8 +415,8 @@ function AskStep({
 
       {writer !== null && (
         <View style={styles.byline}>
-          <Icon name={writer === 'claude' ? 'auto_awesome' : 'library_music'} size="sm" color="secondary" />
-          <Txt variant="label" color="secondary" style={styles.flex}>
+          <Icon name={writer === 'claude' ? 'auto_awesome' : 'library_music'} size="xs" color="outline" />
+          <Txt variant="caption" color="secondary" style={styles.flex}>
             {writer === 'claude' ? c.make.byAi : c.make.byBank}
           </Txt>
         </View>
@@ -806,19 +813,22 @@ const styles = StyleSheet.create({
   content: { width: '100%', maxWidth: 512, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 16, overflow: 'hidden' },
   step: { gap: 16 },
   coverRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: TARGET },
-  modes: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: radius.full, backgroundColor: colors.surfaceContainerLow },
-  mode: { flex: 1, minHeight: TARGET, paddingHorizontal: 4, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
+  modes: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: radius.full, backgroundColor: colors.surfaceContainer },
+  mode: { flex: 1, minHeight: 40, paddingHorizontal: 4, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   modeOn: { backgroundColor: colors.surfaceContainerLowest, ...shadow.card },
-  label: { gap: 4 },
+  label: { gap: 6 },
+  input: { minHeight: 52 },
   textArea: { minHeight: 6 * type.field.lineHeight + 24, paddingVertical: 12, textAlignVertical: 'top' },
-  hintRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
-  nothing: { borderRadius: radius['2xl'], backgroundColor: colors.surfaceContainerLow, padding: 16, alignItems: 'flex-start', gap: 8 },
+  hintRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingHorizontal: 4 },
+  nothing: { borderRadius: radius['2xl'], backgroundColor: colors.surfaceContainerLow, paddingTop: 14, paddingHorizontal: 16, paddingBottom: 4, gap: 4 },
+  nothingText: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  writeOwn: { alignSelf: 'flex-start', marginLeft: 24 },
   center: { alignSelf: 'center', marginTop: -8 },
   start: { alignSelf: 'flex-start', marginLeft: -12 },
   topics: { gap: 4 },
   bleed: { marginHorizontal: -16 },
   chipRow: { paddingHorizontal: 16, gap: 8 },
-  byline: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
+  byline: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 4 },
   progress: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   tabular: { fontVariant: ['tabular-nums'] },
   signIn: { borderRadius: radius.xl, backgroundColor: colors.surfaceContainerLow },
