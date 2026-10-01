@@ -2,7 +2,7 @@
 // and the sets it opened from a link or Community. `restoreContent` installs them before the
 // learner's state loads, so the app opens offline with its progress intact; `refreshCourse` asks the
 // API for a course's current pack and installs it.
-import { applySet, ContentPack, ExtraSets, forgetExtras, installedCourses, installedExtras, installedPack, installExtras, installPacks, LanguageCode, removeSet, TARGET_LANGUAGES } from '../content';
+import { applySet, ContentPack, ExtraSets, installedCourses, installedExtras, installedPack, installExtras, installPacks, keepOnlyLoros, LanguageCode, removeSet, TARGET_LANGUAGES } from '../content';
 import { fetchPack, type SetDetail } from './library';
 import { kvGet, kvRemove, kvSet } from './kv';
 
@@ -38,8 +38,24 @@ export async function restoreContent(): Promise<LanguageCode[]> {
   return installedCourses();
 }
 
-/** Downloads a course's pack and installs it; resolves to whether anything changed. */
-export async function refreshCourse(lang: LanguageCode): Promise<boolean> {
+const downloading = new Map<LanguageCode, Promise<boolean>>();
+
+/**
+ * Downloads a course's pack and installs it; resolves to whether anything changed. A download of
+ * the same course already on its way is shared ("Try again" tapped twice starts one), unless `fresh`
+ * asks for a new one (the session changed, so the pack it brings would be another learner's).
+ */
+export function refreshCourse(lang: LanguageCode, fresh = false): Promise<boolean> {
+  const running = downloading.get(lang);
+  if (running && !fresh) return running;
+  const next = download(lang).finally(() => {
+    if (downloading.get(lang) === next) downloading.delete(lang);
+  });
+  downloading.set(lang, next);
+  return next;
+}
+
+async function download(lang: LanguageCode): Promise<boolean> {
   const pack = await fetchPack(lang);
   const same = installedPack(lang)?.version === pack.version;
   if (!same) installPacks([pack]);
@@ -70,11 +86,11 @@ export async function keepOpenedSet(detail: SetDetail): Promise<void> {
 }
 
 /**
- * Forgets the downloaded packs and the sets opened from links (after signing out: they held the
- * learner's own and saved sets). Progress on their phrases stays with the learner's log.
+ * After signing out: the packs keep only Loro's sets and albums, on the device as in memory, and the
+ * sets opened from links are forgotten (they held the learner's own and saved sets). The courses stay
+ * playable offline; progress on the forgotten phrases stays with the learner's log.
  */
-export async function forgetPacks(): Promise<void> {
-  saved.clear();
-  forgetExtras();
-  await Promise.all([...TARGET_LANGUAGES.map((lang) => kvRemove(packKey(lang))), kvRemove(EXTRAS_KEY)]);
+export async function forgetAccountContent(): Promise<void> {
+  const packs = keepOnlyLoros();
+  await Promise.all([...packs.map((pack) => kvSet(packKey(pack.targetLang), JSON.stringify(pack))), kvRemove(EXTRAS_KEY)]);
 }

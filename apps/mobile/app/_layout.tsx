@@ -14,7 +14,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { restoreContent } from '@shared/api/contentCache';
 import { loadSession } from '@shared/api/session';
-import { copyForNative } from '@shared/copy';
+import { copyForNative, languageName } from '@shared/copy';
+import { coursesFor, installedCourses } from '@shared/content';
 import { openStorage, Stored } from '@shared/state/storage';
 import { Analytics } from '../src/analytics/Analytics';
 import { usePlaybackDriver } from '../src/audio/driver';
@@ -90,9 +91,16 @@ function App() {
   );
 }
 
-/** The app once the course is installed; onboarding before the learner has chosen their languages. */
+/**
+ * Onboarding until the learner has chosen their languages (it waits for the course itself at its
+ * last step, so choosing another course doesn't send it back to the start); then the app once the
+ * course is installed.
+ */
 function Gate({ onboarded }: { onboarded: boolean }) {
-  const { status, refresh } = useContent();
+  const { status, retry } = useContent();
+  const { state, actions } = useStore();
+  const { nativeLang, targetLang } = state.learner.profile;
+  const c = copyForNative(nativeLang);
   const pathname = usePathname();
   const router = useRouter();
   // A shared link opened before onboarding (a first visit): opened once the learner is in.
@@ -108,7 +116,6 @@ function Gate({ onboarded }: { onboarded: boolean }) {
     demo.current = false;
     router.push('/player');
   }, [onboarded, router]);
-  if (status !== 'ready') return <ConnectionScreen status={status} onRetry={() => void refresh()} />;
   if (!onboarded)
     return (
       <Onboarding
@@ -117,6 +124,16 @@ function Gate({ onboarded }: { onboarded: boolean }) {
         }}
       />
     );
+  if (status !== 'ready') {
+    const kept = installedCourses().find((lang) => lang !== targetLang && coursesFor(nativeLang).includes(lang));
+    return (
+      <ConnectionScreen
+        status={status}
+        onRetry={() => void retry()}
+        fallback={kept ? { label: c.connection.useCourse(languageName(kept, c.locale)), onPress: () => actions.setProfile({ targetLang: kept }) } : undefined}
+      />
+    );
+  }
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.surface } }}>
       <Stack.Screen name="(tabs)" />

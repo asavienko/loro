@@ -435,6 +435,7 @@ export function makeRu(n: Plural): Copy {
     settings: {
       title: 'Настройки',
       switched: (language, queueCleared) => `Курс: ${language}${queueCleared ? '. Очередь очищена' : ''}`,
+      courseUnavailable: (language) => `Не удалось скачать курс: ${language}. Проверьте подключение и попробуйте снова.`,
       profile: 'Профиль',
       name: 'Имя',
       native: 'Мой язык',
@@ -495,6 +496,7 @@ export function makeRu(n: Plural): Copy {
       offlineTitle: 'Loro не может связаться с сервером',
       offlineBody: 'Курс скачивается один раз, а потом работает без сети. Проверьте подключение и попробуйте снова.',
       retry: 'Попробовать снова',
+      useCourse: (language) => `Продолжить курс: ${language}`,
     },
     account: {
       title: 'Аккаунт',

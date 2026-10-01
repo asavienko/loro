@@ -2,7 +2,7 @@
 // the course, a voice check before anything plays, and the loop explained. The step's action stays
 // at the bottom; the step scrolls above it.
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { speak, voiceName, waitForVoices } from '@shared/audio/speech';
 import { languageLabel, languageName } from '@shared/copy';
@@ -11,6 +11,7 @@ import { useNav } from '@shared/nav/NavContext';
 import { courseSets, findPhrase, promptOf } from '@shared/state/catalog';
 import { LIMITS } from '@shared/state/limits';
 import { useAccount } from '../state/account';
+import { useContent } from '../state/content';
 import { useCopy, useStore } from '../state/store';
 import { SignIn } from './AccountScreen';
 import { Button } from '../ui/Button';
@@ -30,6 +31,7 @@ export function Onboarding({ onDemo }: { onDemo: () => void }) {
   const insets = useSafeAreaInsets();
   const { state, actions } = useStore();
   const account = useAccount();
+  const content = useContent();
   const { profile } = state.learner;
   const [step, setStep] = useState<Step>('native');
   const [name, setName] = useState(profile.name);
@@ -147,12 +149,26 @@ export function Onboarding({ onDemo }: { onDemo: () => void }) {
       </ScrollView>
 
       <View style={[styles.column, styles.actions]}>
-        {step === 'loop' ? (
+        {/* The course downloads while the learner chooses; the loop starts once it is here. */}
+        {step === 'loop' && content.status !== 'ready' ? (
+          content.status === 'loading' ? (
+            <View style={styles.waiting} accessibilityLiveRegion="polite">
+              <ActivityIndicator color={colors.primaryContainer} />
+              <Txt color="secondary">{c.connection.loading}</Txt>
+            </View>
+          ) : (
+            <View style={styles.gap} accessibilityLiveRegion="polite">
+              <Txt weight={600}>{c.connection.offlineTitle}</Txt>
+              <Txt color="secondary">{c.connection.offlineBody}</Txt>
+              <Button variant="primary" icon="refresh" label={c.connection.retry} onPress={() => void content.retry()} />
+            </View>
+          )
+        ) : step === 'loop' ? (
           <Button variant="primary" icon="play_arrow" iconFill label={c.onboarding.start} onPress={() => finish(true)} />
         ) : (
           <Button variant={step === 'account' && account.status !== 'signedIn' ? 'tonal' : 'primary'} label={step === 'account' && account.status !== 'signedIn' ? c.account.notNow : c.onboarding.next} onPress={next} />
         )}
-        {step === 'loop' && <Button variant="text" label={c.onboarding.skip} onPress={() => finish(false)} />}
+        {step === 'loop' && content.status === 'ready' && <Button variant="text" label={c.onboarding.skip} onPress={() => finish(false)} />}
         {at > 0 && <Button variant="text" color="secondary" label={c.common.back} onPress={() => setStep(STEPS[at - 1])} />}
       </View>
     </View>
@@ -173,6 +189,8 @@ function Choice({ legend, options, label, value, onChange }: { legend: string; o
             key={code}
             accessibilityRole="radio"
             accessibilityState={{ checked: chosen }}
+            // react-native-web drops a nested accessibilityState; the flat ARIA form reaches the DOM.
+            aria-checked={chosen}
             accessibilityLabel={label(code)}
             onPress={() => onChange(code)}
             style={({ pressed }) => [styles.option, chosen ? styles.optionOn : styles.optionOff, pressed && { opacity: 0.85 }]}
@@ -280,4 +298,5 @@ const styles = StyleSheet.create({
   voiceText: { flex: 1, minWidth: 160 },
   hint: { marginTop: 12 },
   actions: { paddingTop: 12, gap: 4 },
+  waiting: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
 });

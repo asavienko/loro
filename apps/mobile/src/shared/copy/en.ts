@@ -462,6 +462,7 @@ export function makeEn(n: Plural) {
     settings: {
       title: 'Settings',
       switched: (language: string, queueCleared: boolean) => `Now learning ${language}${queueCleared ? '. The queue was cleared' : ''}`,
+      courseUnavailable: (language: string) => `Couldn’t download ${language}. Check the connection and try again.`,
       profile: 'Profile',
       name: 'Name',
       native: 'I speak',
@@ -522,6 +523,7 @@ export function makeEn(n: Plural) {
       offlineTitle: 'Loro can’t reach its server',
       offlineBody: 'Your course downloads once, then plays offline. Check the connection and try again.',
       retry: 'Try again',
+      useCourse: (language: string) => `Keep learning ${language}`,
     },
     account: {
       title: 'Account',

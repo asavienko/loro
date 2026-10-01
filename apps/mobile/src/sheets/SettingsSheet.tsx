@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from 'react'
 import { StyleSheet, Switch, TextInput, View } from 'react-native'
 import { bestVoice, speak, voicesFor, waitForVoices } from '@shared/audio/speech'
 import { copyForNative, languageLabel, languageName } from '@shared/copy'
-import { coursesFor, getLanguage, LanguageCode, NATIVE_LANGUAGES } from '@shared/content'
+import { refreshCourse } from '@shared/api/contentCache'
+import { coursesFor, getLanguage, installedPack, LanguageCode, NATIVE_LANGUAGES } from '@shared/content'
 import { useLatest } from '@shared/lib/useLatest'
 import { useNav } from '@shared/nav/NavContext'
 import { courseSets, findPhrase, promptOf } from '@shared/state/catalog'
@@ -30,10 +31,26 @@ export function SettingsSheet({ open, atVoices = false, onClose }: { open: boole
   const nav = useNav()
   const account = useAccount()
 
-  // A new course empties the queue (it belongs to the old one); say so, in the new UI language.
-  const switchTo = (nativeLang: LanguageCode, targetLang: LanguageCode) => {
+  const latest = useLatest(state)
+  const [downloading, setDownloading] = useState<LanguageCode | null>(null)
+  // A new course empties the queue (it belongs to the old one); say so, in the new UI language. A
+  // course not on the device yet is downloaded first: one the server can't send now would leave the
+  // learner waiting for it with no way back to the course they have.
+  const switchTo = async (nativeLang: LanguageCode, targetLang: LanguageCode) => {
     if (nativeLang === profile.nativeLang && targetLang === profile.targetLang) return
-    const queueCleared = state.player.order.length > 0
+    if (!installedPack(targetLang)) {
+      if (downloading) return
+      setDownloading(targetLang)
+      try {
+        await refreshCourse(targetLang)
+      } catch {
+        toast(c.settings.courseUnavailable(languageName(targetLang, c.locale)))
+        return
+      } finally {
+        setDownloading(null)
+      }
+    }
+    const queueCleared = latest.current.player.order.length > 0
     actions.setProfile({ nativeLang, targetLang })
     const next = copyForNative(nativeLang)
     toast(next.settings.switched(languageName(targetLang, next.locale), queueCleared))
@@ -57,7 +74,9 @@ export function SettingsSheet({ open, atVoices = false, onClose }: { open: boole
           value={profile.targetLang}
           options={coursesFor(profile.nativeLang)}
           name={(code) => languageLabel(code, c.locale)}
-          onChange={(code) => switchTo(profile.nativeLang, code)}
+          onChange={(code) => void switchTo(profile.nativeLang, code)}
+          downloading={downloading}
+          downloadingText={c.connection.loading}
         />
         {open && <NameField initial={profile.name} label={c.settings.name} onSave={(name) => actions.setProfile({ name })} />}
         <LanguageChoice
@@ -68,7 +87,7 @@ export function SettingsSheet({ open, atVoices = false, onClose }: { open: boole
           name={(code) => languageLabel(code, code)}
           onChange={(code) => {
             const course = coursesFor(code).includes(profile.targetLang) ? profile.targetLang : coursesFor(code)[0]
-            switchTo(code, course)
+            void switchTo(code, course)
           }}
         />
         <Txt variant="label" color="secondary" style={styles.inset}>
@@ -157,12 +176,17 @@ function LanguageChoice({
   options,
   name,
   onChange,
+  downloading = null,
+  downloadingText,
 }: {
   label: string
   value: LanguageCode
   options: LanguageCode[]
   name: (code: LanguageCode) => string
   onChange: (code: LanguageCode) => void
+  /** A course on its way: shown as such, and no other choice is taken meanwhile. */
+  downloading?: LanguageCode | null
+  downloadingText?: string
 }) {
   return (
     <View accessibilityRole="radiogroup" accessibilityLabel={label} style={styles.group}>
@@ -170,7 +194,15 @@ function LanguageChoice({
         {label}
       </Txt>
       {options.map((code) => (
-        <SheetOption key={code} icon="language" label={`${getLanguage(code).flag}  ${name(code)}`} selected={value === code} onPress={() => onChange(code)} />
+        <SheetOption
+          key={code}
+          icon="language"
+          label={`${getLanguage(code).flag}  ${name(code)}`}
+          selected={value === code}
+          onPress={() => onChange(code)}
+          disabled={downloading !== null}
+          detail={downloading === code ? downloadingText : undefined}
+        />
       ))}
     </View>
   )
