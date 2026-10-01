@@ -109,7 +109,7 @@ export function useMySets() {
       run(async () => {
         const home = findSet(findContentPhrase(phraseId)?.setId);
         if (!home) throw new Error('not held');
-        const written = notes ? { notes: notes.notes, image: notes.image, notesBy: notes.provider === 'claude' ? ('ai' as const) : ('rules' as const) } : {};
+        const written = notes ? { notes: notes.notes, image: notes.image, notesBy: notes.provider } : {};
         return kept(await editPhrase(home.id, phraseId, { target: tidy(target), native: tidy(native), ...written }));
       }),
     /** Deletes a phrase of the learner's from every set of theirs. */

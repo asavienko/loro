@@ -2,7 +2,7 @@
 // apps/api/src/library/library.types.ts; the app reads them without zod, as it reads its content.
 import type { Album, ContentPack, LanguageCode, LanguageList, PhraseSet, PhraseWire, Visibility } from '../content';
 import type { OwnNotes } from '../state/types';
-import { api } from './client';
+import { api, ApiError } from './client';
 
 export type SongStyle = 'acoustic_folk' | 'modern_pop' | 'gentle_ballad' | 'upbeat_kids';
 export const SONG_STYLES: SongStyle[] = ['modern_pop', 'acoustic_folk', 'gentle_ballad', 'upbeat_kids'];
@@ -25,8 +25,8 @@ export interface Song {
   styleId: SongStyle;
   status: 'rendering' | 'ready' | 'failed';
   sections: { name: 'verse' | 'chorus' | 'bridge'; lines: SongLine[] }[];
-  /** `claude`, or `phrases`: the set's phrases arranged with nothing added. */
-  lyricsBy: 'claude' | 'phrases';
+  /** `ai`, or `phrases`: the set's phrases arranged with nothing added. */
+  lyricsBy: 'ai' | 'phrases';
   audioUrl: string | null;
   /** `elevenlabs` (sung), or `demo`: the server's instrumental, labelled "Demo sound". */
   audioBy: 'elevenlabs' | 'demo' | null;
@@ -45,7 +45,7 @@ export interface Usage {
   daily: Record<UsageKind, { used: number; limit: number }>;
   kept: Record<'sets' | 'albums' | 'songs', { used: number; limit: number }>;
   /** Who writes each kind on this server: a model, or the labelled fallback. */
-  writers: { phrases: 'claude' | 'bank'; cover: 'claude' | 'pattern'; lyrics: 'claude' | 'phrases'; music: 'elevenlabs' | 'demo' };
+  writers: { phrases: 'ai' | 'bank'; cover: 'ai' | 'pattern'; lyrics: 'ai' | 'phrases'; music: 'elevenlabs' | 'demo' };
 }
 
 export interface NewPhrase {
@@ -56,7 +56,7 @@ export interface NewPhrase {
   /** Without a picture and notes, the server writes both (plan 108). */
   image?: string[];
   notes?: OwnNotes;
-  /** Who wrote the notes sent: Claude, or the server's rules. */
+  /** Who wrote the notes sent: a model, or the server's rules. */
   notesBy?: 'ai' | 'rules';
   source: 'ai' | 'bank' | 'course' | 'written';
   bankId?: string;
@@ -99,8 +99,24 @@ export const fetchSet = (id: string) => api<SetDetail>(`/library/sets/${encodeUR
 export const fetchAlbum = (id: string) => api<AlbumDetail>(`/library/albums/${encodeURIComponent(id)}`);
 export const fetchShared = (code: string) => api<Shared>(`/library/shared/${encodeURIComponent(code)}`);
 export const fetchSetSongs = (setId: string) => api<{ songs: Song[]; albums: Album[] }>(`/library/sets/${encodeURIComponent(setId)}/songs`);
+/**
+ * Plan 111: the server names its writer `ai`; one from before said `claude`. Read here, once, so the
+ * rest of the app knows only `ai` whichever server it talks to. (A song's `lyricsBy` is read where
+ * it is shown.)
+ */
+const ai = <T extends string>(value: T | 'claude'): T | 'ai' => (value === 'claude' ? 'ai' : value);
+
 export const fetchSong = (id: string) => api<Song>(`/library/songs/${encodeURIComponent(id)}`);
-export const fetchUsage = () => api<Usage>('/library/usage', { auth: 'required' });
+export const fetchUsage = () =>
+  api<Usage>('/library/usage', { auth: 'required' }).then((usage) => ({
+    ...usage,
+    writers: {
+      ...usage.writers,
+      phrases: ai(usage.writers.phrases) as Usage['writers']['phrases'],
+      cover: ai(usage.writers.cover) as Usage['writers']['cover'],
+      lyrics: ai(usage.writers.lyrics) as Usage['writers']['lyrics'],
+    },
+  }));
 
 export const createSet = (body: {
   /** A set uploaded from this device keeps the device's id; uploading it again changes nothing. */
@@ -158,8 +174,38 @@ export const unsaveItem = (kind: 'set' | 'album', id: string) =>
 export const setDisplayName = (displayName: string) =>
   api<{ displayName: string | null }>('/library/profile', { method: 'POST', body: { displayName }, auth: 'required' });
 
-export const generateCover = (body: { kind: 'set' | 'album'; title: string; description?: string; attachTo?: string }) =>
-  api<{ id: string; url: string; provider: 'claude' | 'pattern' }>('/library/generate/cover', { method: 'POST', body, auth: 'required', timeoutMs: 120_000 });
+/** A cover being drawn, or drawn (plan 111): `url` once it is ready, and who drew it. */
+export interface CoverState {
+  id: string;
+  status: 'rendering' | 'ready' | 'failed';
+  url: string | null;
+  provider: 'ai' | 'pattern';
+}
+
+const COVER_POLL_MS = 2_500;
+/** About four minutes: longer than the server's image model may take. A later cover still lands. */
+const COVER_POLLS = 96;
+
+const readCover = (cover: CoverState): CoverState => ({ ...cover, provider: ai(cover.provider) as CoverState['provider'] });
+
+/**
+ * Asks for a cover and waits while the server draws it in the background, asking where it stands
+ * every few seconds. Resolves with the ready cover, or still `rendering` if it takes longer than the
+ * app waits (it takes its place on the set or album when it is ready); throws if drawing failed. An
+ * older server draws before it answers and sends no status: that cover is ready.
+ */
+export async function generateCover(
+  body: { kind: 'set' | 'album'; title: string; description?: string; attachTo?: string },
+  pace = { pollMs: COVER_POLL_MS, polls: COVER_POLLS },
+): Promise<CoverState> {
+  let cover = readCover(await api<CoverState>('/library/generate/cover', { method: 'POST', body, auth: 'required' }));
+  for (let polls = 0; cover.status === 'rendering' && polls < pace.polls; polls++) {
+    await new Promise((resolve) => setTimeout(resolve, pace.pollMs));
+    cover = readCover(await api<CoverState>(`/library/covers/${encodeURIComponent(cover.id)}.json`));
+  }
+  if (cover.status === 'failed') throw new ApiError(0, 'PROVIDER_UNAVAILABLE', 'The cover could not be drawn');
+  return cover;
+}
 
 export const generateSong = (body: { setId: string; styleId: SongStyle; nativeLang: LanguageCode; title?: string; albumId?: string }) =>
   api<{ song: Song; album: Album }>('/library/generate/song', { method: 'POST', body, auth: 'required', timeoutMs: 60_000 });

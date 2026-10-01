@@ -1,6 +1,6 @@
-// A drawn cover from the API (plan 106): the SVG a set or album got from Claude or the server's
-// pattern, sized to a square. Covers are shapes and colours only (the server renders them from a
-// checked spec), so there is nothing in one to read aloud.
+// A cover from the API (plans 106, 111): the SVG a set or album got, sized to a square: an AI
+// illustration the server carries inside it, shapes a model designed, or the server's pattern. A
+// cover has no words (the server writes every SVG), so there is nothing in one to read aloud.
 import { useState } from 'react';
 import { View, ViewStyle } from 'react-native';
 import { SvgUri } from 'react-native-svg';

@@ -207,9 +207,10 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
     if (!served) return;
     setDrawing(true);
     try {
-      await generateCover({ kind: 'set', title: served.title, ...(served.description ? { description: served.description } : {}), attachTo: served.id });
+      const cover = await generateCover({ kind: 'set', title: served.title, ...(served.description ? { description: served.description } : {}), attachTo: served.id });
       await content.refresh();
       void account.refreshUsage();
+      if (cover.status === 'rendering') toast(c.share.coverLater);
     } catch (error) {
       toast(problemText(c, error));
     } finally {

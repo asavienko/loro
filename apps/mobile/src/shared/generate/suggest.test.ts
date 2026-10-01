@@ -86,11 +86,17 @@ describe('fromWritten', () => {
 
 describe('suggest', () => {
   it('asks the server, telling it what to avoid', async () => {
-    const sent = server({ provider: 'claude', phrases: [w('Necesito algo para la tos', 'I need something for a cough')] });
+    const sent = server({ provider: 'ai', phrases: [w('Necesito algo para la tos', 'I need something for a cough')] });
     const result = await suggest(fresh().learner, request, { exclude: new Set(), avoid: ['Hola'] });
     assert.deepEqual(sent, [{ ...request, avoid: ['Hola'] }]);
     assert.equal(result.writer, 'ai');
     assert.deepEqual(result.suggestions.map((s) => s.target), ['Necesito algo para la tos']);
+  });
+
+  it('reads an older server’s `claude` as a model’s answer (plan 111)', async () => {
+    server({ provider: 'claude', phrases: [w('Necesito algo para la tos', 'I need something for a cough')] });
+    const result = await suggest(fresh().learner, request, { exclude: new Set(), avoid: [] });
+    assert.equal(result.writer, 'ai');
   });
 
   it('keeps the bank’s answer as the bank’s phrases', async () => {
