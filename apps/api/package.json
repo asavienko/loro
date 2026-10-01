@@ -13,7 +13,8 @@
     "test": "vitest run",
     "lint": "eslint src",
     "clean": "rm -rf dist",
-    "start": "tsx src/main.ts"
+    "start": "tsx src/main.ts",
+    "author:run": "tsx src/authoring/run.ts"
   },
   "dependencies": {
     "@loro/content": "workspace:*",

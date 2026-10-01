@@ -4,6 +4,9 @@ packages/core-rs/browser/
 packages/core-rs/pkg/
 packages/core-rs/target/
 docs/architecture/openapi.*.json
+# Written by the offline writer (plan 112): shards and run summaries, one record per line.
+packages/content/v2/courses/
+packages/content/v2/runs/
 
 .claude/
 

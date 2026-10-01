@@ -122,3 +122,6 @@ secrets/.encrypt.*
 /apps/mobile/.storybook/
 /.tmp-web-check
 /design/design-v2.0/.playwright-mcp
+
+# Offline authoring caches: requests, attempts and logs (plan 112). Never committed.
+.cache/

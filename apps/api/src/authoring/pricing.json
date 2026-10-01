@@ -1,0 +1,8 @@
+{
+  "source": "assumed on 2026-10-02, not verified against the providers' price lists; the run summary's dollar figure is an estimate until this file is checked",
+  "perMillion": {
+    "accounts/fireworks/models/deepseek-v4p1-flash": { "input": 0.2, "output": 0.6 },
+    "deepseek/deepseek-v4.1-flash": { "input": 0.2, "output": 0.6 },
+    "default": { "input": 0.5, "output": 1.5 }
+  }
+}
