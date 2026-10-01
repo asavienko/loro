@@ -514,6 +514,7 @@ export function makeBg(n: Plural): Copy {
       resend: 'Изпрати нов код',
       changeEmail: 'Друг имейл',
       signedInAs: (email) => `Влезли сте като ${email}`,
+      signedInWith: (provider) => `Влезли сте с ${provider}`,
       signOut: 'Изход',
       deleteData: 'Изтрий данните ми в Loro',
       deleteDataConfirm: 'Да изтрием ли наборите, албумите, песните, кориците и напредъка в профила ви? Тези, с които сте споделили, също ги губят. Напредъкът на това устройство остава. Това не може да се отмени.',

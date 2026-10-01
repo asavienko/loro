@@ -18,7 +18,9 @@ import {
   signInWithProvider,
   updateAccount,
   verifyCode,
+  type Account,
 } from '@shared/api/session';
+import type { Copy } from '@shared/copy';
 import { remaining, useAccount } from '../state/account';
 import { forgetAccountHere } from '../state/progressSync';
 import { lastSync } from '../state/syncHooks';
@@ -33,6 +35,17 @@ import { Txt } from '../ui/Txt';
 import { colors, radius } from '../ui/theme';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Who is signed in: their email, or for Google and Apple (whose sign-in doesn't hand the app an
+ * email) their display name, or else the provider they used.
+ */
+export function signedInLabel(c: Copy, account: Account | null): string {
+  const shown = account?.email ?? account?.displayName;
+  if (shown) return c.account.signedInAs(shown);
+  const provider = account?.provider ?? '';
+  return c.account.signedInWith(provider === 'google' || provider === 'apple' ? PROVIDER_NAMES[provider] : provider);
+}
 
 export function AccountScreen() {
   const c = useCopy();
@@ -295,7 +308,7 @@ function SignedIn() {
       <View style={styles.card}>
         <Icon name="account_circle" size="2xl" color="primaryContainer" />
         <Txt variant="row" weight={600} style={{ flex: 1 }}>
-          {c.account.signedInAs(account?.email ?? '')}
+          {signedInLabel(c, account)}
         </Txt>
       </View>
 

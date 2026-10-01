@@ -515,6 +515,7 @@ export function makeRu(n: Plural): Copy {
       resend: 'Прислать новый код',
       changeEmail: 'Другая почта',
       signedInAs: (email) => `Вы вошли как ${email}`,
+      signedInWith: (provider) => `Вы вошли через ${provider}`,
       signOut: 'Выйти',
       deleteData: 'Удалить мои данные в Loro',
       deleteDataConfirm: 'Удалить ваши наборы, альбомы, песни, обложки и прогресс в аккаунте? Те, с кем вы делились, тоже их потеряют. Прогресс на этом устройстве останется. Это нельзя отменить.',

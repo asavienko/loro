@@ -13,7 +13,7 @@ import { LIMITS } from '@shared/state/limits';
 import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
 import { useCopy, useStore } from '../state/store';
-import { SignIn } from './AccountScreen';
+import { SignIn, signedInLabel } from './AccountScreen';
 import { Button } from '../ui/Button';
 import { Icon, IconName } from '../ui/Icon';
 import { Txt } from '../ui/Txt';
@@ -125,7 +125,7 @@ export function Onboarding({ onDemo }: { onDemo: () => void }) {
             <View style={styles.gap}>
               <Icon name="account_circle" size="3xl" color="primaryContainer" />
               <Txt variant="title" face="serif" weight={600}>
-                {c.account.signedInAs(account.account?.email ?? '')}
+                {signedInLabel(c, account.account)}
               </Txt>
             </View>
           ) : (
