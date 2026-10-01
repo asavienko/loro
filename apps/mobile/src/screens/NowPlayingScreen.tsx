@@ -37,6 +37,7 @@ import { Icon, IconName } from '../ui/Icon';
 import { PhraseNotesView } from '../ui/Notes';
 import { PhaseFill } from '../ui/PhaseFill';
 import { PhraseImage } from '../ui/PhraseImage';
+import { PullDownWindow, PullHandle } from '../ui/PullDown';
 import { Sheet } from '../ui/Sheet';
 import { ToastOffsetContext, useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
@@ -61,11 +62,13 @@ export function NowPlayingScreen() {
   // Nothing queued (the course changed, or the page was opened directly): only the way out.
   if (!phrase)
     return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <View style={styles.header}>
-          <HeaderButton label={c.player.close} icon="keyboard_arrow_down" onPress={close} />
-        </View>
-      </View>
+      <PullDownWindow onClose={close} style={[styles.screen, { paddingTop: insets.top }]}>
+        <PullHandle>
+          <View style={styles.header}>
+            <HeaderButton label={c.player.close} icon="keyboard_arrow_down" onPress={close} />
+          </View>
+        </PullHandle>
+      </PullDownWindow>
     );
   const { status, phase, index, order, audioError } = state.player;
   const playing = status === 'playing';
@@ -83,19 +86,21 @@ export function NowPlayingScreen() {
 
   return (
     <ToastOffsetContext.Provider value={16}>
-      <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-        <View style={styles.header}>
-          <HeaderButton label={c.player.close} icon="keyboard_arrow_down" onPress={close} />
-          <View style={styles.headerText}>
-            <Txt variant="row" face="serif" weight={600} numberOfLines={2} align="center" accessibilityRole="header" lang={queueSet?.targetLang}>
-              {queueTitle(c, state.player, queueSet)}
-            </Txt>
-            <Txt variant="label" color="secondary" align="center">
-              {queueSet && order.some((id) => !queueSet.phraseIds.includes(id)) ? c.player.positionInQueue(index + 1, order.length) : c.player.position(index + 1, order.length)}
-            </Txt>
+      <PullDownWindow onClose={close} style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+        <PullHandle>
+          <View style={styles.header}>
+            <HeaderButton label={c.player.close} icon="keyboard_arrow_down" onPress={close} />
+            <View style={styles.headerText}>
+              <Txt variant="row" face="serif" weight={600} numberOfLines={2} align="center" accessibilityRole="header" lang={queueSet?.targetLang}>
+                {queueTitle(c, state.player, queueSet)}
+              </Txt>
+              <Txt variant="label" color="secondary" align="center">
+                {queueSet && order.some((id) => !queueSet.phraseIds.includes(id)) ? c.player.positionInQueue(index + 1, order.length) : c.player.position(index + 1, order.length)}
+              </Txt>
+            </View>
+            <HeaderButton label={c.player.openQueue} icon="queue_music" onPress={() => router.push('/queue')} />
           </View>
-          <HeaderButton label={c.player.openQueue} icon="queue_music" onPress={() => router.push('/queue')} />
-        </View>
+        </PullHandle>
 
         <ScrollView style={styles.stage} contentContainerStyle={[styles.stageContent, gutter]}>
           <View style={styles.cover}>
@@ -133,7 +138,7 @@ export function NowPlayingScreen() {
         <Sheet open={notesOpen} title={c.phrase.notesTitle} onClose={() => setNotesOpen(false)}>
           <PhraseNotesView phrase={phrase} />
         </Sheet>
-      </View>
+      </PullDownWindow>
     </ToastOffsetContext.Provider>
   );
 }

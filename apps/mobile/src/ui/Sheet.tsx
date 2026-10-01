@@ -1,12 +1,16 @@
 // Bottom sheets (the web prototype's src/ui/Sheet.tsx): a title, Close, and a scrolling body. They
-// close on the backdrop, Close, the Android back button, and when the app goes to another page (a
-// sheet belongs to the page it opened on: signing in from one shouldn't leave it over the account).
+// close on the backdrop, Close, the Android back button, pulled down by their top (PullDown), and
+// when the app goes to another page (a sheet belongs to the page it opened on: signing in from one
+// shouldn't leave it over the account).
 import { usePathname } from 'expo-router';
 import { ReactNode, useEffect, useRef } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../state/store';
 import { Icon, IconName } from './Icon';
+import { Grabber, usePullDown } from './PullDown';
 import { useToastLayer } from './Toast';
 import { Txt } from './Txt';
 import { colors, radius, shadow, TARGET } from './theme';
@@ -26,32 +30,50 @@ export function Sheet({ open, title, onClose, children, scroll = true }: { open:
     if (openedOn.current === null) openedOn.current = pathname;
     else if (openedOn.current !== pathname) onClose();
   }, [open, pathname, onClose]);
+  const pull = usePullDown(onClose);
+  const { y, height } = pull;
+  // Each opening starts in place, however the last one closed.
+  useEffect(() => {
+    if (open) y.set(0);
+  }, [open, y]);
+  const panelMoved = useAnimatedStyle(() => ({ transform: [{ translateY: y.get() }] }));
+  const backdropShown = useAnimatedStyle(() => ({ opacity: interpolate(y.get(), [0, Math.max(1, height.get())], [1, 0], Extrapolation.CLAMP) }));
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.fill}>
-        {/* Pointer-only backdrop: Close and the back button close it for everyone else. */}
-        <Pressable accessible={false} importantForAccessibility="no" style={styles.backdrop} onPress={onClose} />
-        <View accessibilityViewIsModal style={[styles.panel, { paddingBottom: insets.bottom }]}>
-          <View style={styles.header}>
-            <Txt variant="title" face="serif" weight={600} numberOfLines={1} accessibilityRole="header" style={styles.title}>
-              {title}
-            </Txt>
-            <Pressable accessibilityRole="button" onPress={onClose} style={({ pressed }) => [styles.close, pressed && styles.pressed]}>
-              <Txt variant="body" weight={600} color="primaryContainer">
-                {c.common.close}
-              </Txt>
-            </Pressable>
-          </View>
-          {scroll ? (
-            <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-              {children}
-            </ScrollView>
-          ) : (
-            <View style={[styles.body, styles.fixedBody]}>{children}</View>
-          )}
-        </View>
-      </KeyboardAvoidingView>
-      {toast}
+      {/* A modal is a window of its own: on Android its gestures need their own root. */}
+      <GestureHandlerRootView style={styles.fill}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.fill}>
+          {/* Pointer-only backdrop: Close and the back button close it for everyone else. */}
+          <Animated.View style={[styles.backdrop, backdropShown]}>
+            <Pressable accessible={false} importantForAccessibility="no" style={styles.fill} onPress={onClose} />
+          </Animated.View>
+          <Animated.View accessibilityViewIsModal onLayout={pull.onLayout} style={[styles.panel, { paddingBottom: insets.bottom }, panelMoved]}>
+            <GestureDetector gesture={pull.gesture}>
+              <View>
+                <Grabber />
+                <View style={styles.header}>
+                  <Txt variant="title" face="serif" weight={600} numberOfLines={1} accessibilityRole="header" style={styles.title}>
+                    {title}
+                  </Txt>
+                  <Pressable accessibilityRole="button" onPress={onClose} style={({ pressed }) => [styles.close, pressed && styles.pressed]}>
+                    <Txt variant="body" weight={600} color="primaryContainer">
+                      {c.common.close}
+                    </Txt>
+                  </Pressable>
+                </View>
+              </View>
+            </GestureDetector>
+            {scroll ? (
+              <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+                {children}
+              </ScrollView>
+            ) : (
+              <View style={[styles.body, styles.fixedBody]}>{children}</View>
+            )}
+          </Animated.View>
+        </KeyboardAvoidingView>
+        {toast}
+      </GestureHandlerRootView>
     </Modal>
   );
 }
@@ -154,7 +176,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingTop: 4,
     paddingBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: colors.surfaceContainerHigh,

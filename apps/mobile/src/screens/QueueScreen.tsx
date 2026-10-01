@@ -20,6 +20,7 @@ import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
+import { PullDownWindow, PullHandle } from '../ui/PullDown';
 import { Sheet, SheetOption } from '../ui/Sheet';
 import { ToastOffsetContext, useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
@@ -88,8 +89,8 @@ export function QueueScreen() {
 
   return (
     <ToastOffsetContext.Provider value={16}>
-      <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-        <View style={styles.headerLine}>
+      <PullDownWindow onClose={onClose} style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+        <PullHandle style={styles.headerLine}>
           <View style={styles.header}>
             <Pressable accessibilityRole="button" accessibilityLabel={c.queue.back} onPress={onClose} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
               <Icon name="keyboard_arrow_down" size="xl" />
@@ -116,7 +117,7 @@ export function QueueScreen() {
               <Icon name="shuffle" size="lg" color={state.player.shuffle ? 'primaryContainer' : 'secondary'} />
             </Pressable>
           </View>
-        </View>
+        </PullHandle>
 
         <ScrollView style={styles.flex} contentContainerStyle={styles.content}>
           {/* This session so far, the way into its summary (the player's header no longer has one). */}
@@ -262,7 +263,7 @@ export function QueueScreen() {
             </>
           )}
         </Sheet>
-      </View>
+      </PullDownWindow>
     </ToastOffsetContext.Provider>
   );
 }
