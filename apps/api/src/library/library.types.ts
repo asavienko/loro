@@ -4,7 +4,7 @@
  */
 import type { V2LanguageInfo, V2Localized, V2Topic } from '@loro/content/v2'
 import type { LibraryNotes, PhraseSource, Visibility } from '@loro/core/api/library'
-import type { SongSection } from './writers.js'
+import type { SongSection, WrittenPhrase } from './writers.js'
 
 /** Whose it is, from the reader's side. */
 export type Owner = 'loro' | 'me' | 'other'
@@ -165,6 +165,20 @@ export interface CoverState {
   url: string | null
   provider: 'ai' | 'pattern'
 }
+
+/** A deck of suggestions: the model's (`ai`), or the phrase bank's, with themes when it had none. */
+export interface DeckWire {
+  provider: 'ai' | 'bank'
+  phrases: WrittenPhrase[]
+  themes: { id: string; title: V2Localized }[]
+}
+
+/**
+ * A deck written in the background (plan 111): `writing`, then `ready` with the deck, or `failed`.
+ * A deck the bank answered at once has no id.
+ */
+export type DeckJobWire =
+  ({ id: string | null; status: 'ready' } & DeckWire) | { id: string; status: 'writing' | 'failed' }
 
 export type UsageKind = 'phrases' | 'cover' | 'song'
 export type KeptKind = 'sets' | 'albums' | 'songs'

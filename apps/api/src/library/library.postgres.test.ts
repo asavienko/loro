@@ -339,6 +339,69 @@ describePostgres('the library against real PostgreSQL', () => {
     ).toBe('VALIDATION_FAILED')
   })
 
+  describe('a deck written in the background (plan 111)', () => {
+    const ask = { mode: 'topic', input: 'hotel', targetLang: 'es-ES', nativeLang: 'en-GB' }
+    afterEach(() => {
+      resetWriter()
+    })
+    const settled = async (userId: string, id: string) => {
+      let state = await library.deck(userId, id)
+      await vi.waitFor(async () => {
+        state = await library.deck(userId, id)
+        expect(state.status).not.toBe('writing')
+      })
+      return state
+    }
+
+    it("spends the allowance at once, then answers with the model's deck to the learner who asked", async () => {
+      resetWriter(modelAnswering({ phrases: [writtenPhrase] }))
+      const started = await library.startDeck('lea', ask)
+      expect(started).toMatchObject({ status: 'writing' })
+      expect((await library.usage('lea')).daily.phrases.used).toBe(1)
+      const id = started.id!
+      expect(await code(library.deck('max', id))).toBe('NOT_FOUND')
+      const ready = await settled('lea', id)
+      expect(ready).toMatchObject({ id, status: 'ready', provider: 'ai', themes: [] })
+      expect(ready.status === 'ready' && ready.phrases.map((p) => p.target)).toEqual([
+        writtenPhrase.target,
+      ])
+    })
+
+    it('answers from the bank, giving the allowance back, when the model fails', async () => {
+      resetWriter(modelFailing())
+      const started = await library.startDeck('ned', ask)
+      const ready = await settled('ned', started.id!)
+      expect(ready).toMatchObject({ status: 'ready', provider: 'bank' })
+      expect((await library.usage('ned')).daily.phrases.used).toBe(0)
+    })
+
+    it('refuses at once when the allowance is spent', async () => {
+      resetWriter(modelAnswering({ phrases: [writtenPhrase] }))
+      await library.startDeck('oli', ask)
+      await library.startDeck('oli', ask)
+      expect(await code(library.startDeck('oli', ask))).toBe('LIMIT_REACHED')
+    })
+
+    it('answers from the bank at once, with no job, without a model', async () => {
+      resetWriter(null)
+      const answered = await library.startDeck('pia', ask)
+      expect(answered).toMatchObject({ id: null, status: 'ready', provider: 'bank' })
+      expect((await library.usage('pia')).daily.phrases.used).toBe(0)
+    })
+
+    it('reads work lost with its process as failed', async () => {
+      resetWriter({ generate: () => new Promise(() => undefined) })
+      const started = await library.startDeck('quy', ask)
+      const start = now
+      now += 11 * 60_000
+      try {
+        expect(await library.deck('quy', started.id!)).toEqual({ id: started.id, status: 'failed' })
+      } finally {
+        now = start
+      }
+    })
+  })
+
   describe('a cover drawn in the background (plan 111)', () => {
     const PNG = Buffer.concat([
       Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),

@@ -37,6 +37,7 @@ import {
   UpdateAlbumSchema,
   UpdateSetSchema,
   type GenerateCoverRequest,
+  type GeneratePhrasesRequest,
   type LibraryNotes,
   type SetItem,
   type Visibility,
@@ -53,6 +54,8 @@ import type {
   BankPhraseWire,
   BankThemeWire,
   CoverState,
+  DeckJobWire,
+  DeckWire,
   KeptKind,
   LanguagesWire,
   Owner,
@@ -66,6 +69,7 @@ import type {
 } from './library.types.js'
 import { composeLive, liveMusicConfigured } from './music-live.js'
 import { imageModelConfigured, textModelConfigured } from '../integrations/models.js'
+import type { StructuredTextModel } from '../integrations/text-model.js'
 import { registerSpeech, registerSpeechMany, SpeechService, speechFor } from './speech.js'
 import { readTtsRuntimeConfig, type TtsRuntimeConfig } from '../tts/transport.js'
 import { demoLineLimit, synthesizeDemo } from './synth.js'
@@ -1577,26 +1581,93 @@ export class LibraryService {
    * A deck of suggestions: the model's where it writes (from the day's allowance, `429` when it is
    * spent), otherwise the phrase bank's, free, as the app's own copy of the bank would answer.
    */
-  async generatePhrases(userId: string, body: unknown) {
+  async generatePhrases(userId: string, body: unknown): Promise<DeckWire> {
     const request = parseContract(GeneratePhrasesSchema, body)
     const ai = writer()
-    if (ai) {
-      await this.spend(userId, 'phrases')
-      try {
-        const phrases = await this.voiced(userId, request, await aiPhrases(ai, request))
-        return { provider: 'ai' as const, phrases, themes: [] }
-      } catch (error) {
-        this.logger.warn(
-          `phrase writer failed: ${error instanceof Error ? error.message : 'unknown'}; answering from the bank`,
-        )
-        // The bank answers instead, free: a writer's failure doesn't cost the learner a deck.
-        await this.refund(userId, 'phrases')
-      }
+    if (!ai) return this.bankDeck(userId, request)
+    await this.spend(userId, 'phrases')
+    return this.writeDeck(userId, request, ai, utcDay(this.clock.now()))
+  }
+
+  /**
+   * The same deck, written in the background (plan 111): a model takes longer than the EC2 gateway
+   * waits. The allowance is spent now, so a `429` still answers at once; the app polls
+   * `GET /library/decks/:id`. Without a model the bank answers at once, as a ready deck.
+   */
+  async startDeck(userId: string, body: unknown): Promise<DeckJobWire> {
+    const request = parseContract(GeneratePhrasesSchema, body)
+    const ai = writer()
+    if (!ai) return { id: null, status: 'ready', ...(await this.bankDeck(userId, request)) }
+    await this.spend(userId, 'phrases')
+    const now = this.clock.now()
+    const id = newId('deck')
+    await this.db.query(
+      `INSERT INTO library_deck_jobs(id, owner_id, status, result, created_at) VALUES ($1,$2,'writing',NULL,$3)`,
+      [id, userId, now],
+    )
+    // Answered decks are read within minutes; a day later nobody is waiting for them.
+    await this.db.query('DELETE FROM library_deck_jobs WHERE created_at < $1', [now - DAY_MS])
+    void this.writeDeck(userId, request, ai, utcDay(now)).then(
+      (deck) =>
+        this.db.query(
+          `UPDATE library_deck_jobs SET status = 'ready', result = $2 WHERE id = $1 AND status = 'writing'`,
+          [id, JSON.stringify(deck)],
+        ),
+      async (error: unknown) => {
+        this.logger.warn(`deck ${id} failed: ${error instanceof Error ? error.message : 'unknown'}`)
+        await this.db
+          .query(
+            `UPDATE library_deck_jobs SET status = 'failed' WHERE id = $1 AND status = 'writing'`,
+            [id],
+          )
+          .catch(() => undefined)
+      },
+    )
+    return { id, status: 'writing' }
+  }
+
+  /** A deck the learner asked for: still `writing`, `ready` with its phrases, or `failed`. */
+  async deck(userId: string, id: unknown): Promise<DeckJobWire> {
+    const deckId = parseContract(LibraryIdSchema, id)
+    const row = (
+      await this.db.query<{ status: string; result: DeckWire | null; created_at: string | number }>(
+        'SELECT status, result, created_at FROM library_deck_jobs WHERE id = $1 AND owner_id = $2',
+        [deckId, userId],
+      )
+    ).rows[0]
+    if (!row) throw new LoroError('NOT_FOUND')
+    if (row.status === 'ready' && row.result) return { id: deckId, status: 'ready', ...row.result }
+    // Work lost with its process reads as failed, as a song's does.
+    const lost =
+      row.status === 'writing' && this.clock.now() - num(row.created_at) > RENDER_TIMEOUT_MS
+    return { id: deckId, status: lost || row.status === 'failed' ? 'failed' : 'writing' }
+  }
+
+  /** The model's deck; when it fails, the bank's, and the allowance spent on `day` is given back. */
+  private async writeDeck(
+    userId: string,
+    request: GeneratePhrasesRequest,
+    ai: StructuredTextModel,
+    day: string,
+  ): Promise<DeckWire> {
+    try {
+      const phrases = await this.voiced(userId, request, await aiPhrases(ai, request))
+      return { provider: 'ai', phrases, themes: [] }
+    } catch (error) {
+      this.logger.warn(
+        `phrase writer failed: ${error instanceof Error ? error.message : 'unknown'}; answering from the bank`,
+      )
+      // The bank answers instead, free: a writer's failure doesn't cost the learner a deck.
+      await this.refund(userId, 'phrases', day)
     }
+    return this.bankDeck(userId, request)
+  }
+
+  private async bankDeck(userId: string, request: GeneratePhrasesRequest): Promise<DeckWire> {
     const phrases = await this.voiced(userId, request, bankPhrases(request))
     const themes =
       phrases.length > 0 ? [] : V2_CONTENT.bank.themes.map((t) => ({ id: t.id, title: t.title }))
-    return { provider: 'bank' as const, phrases, themes }
+    return { provider: 'bank', phrases, themes }
   }
 
   /**
@@ -2121,6 +2192,7 @@ const SYNC_TABLES = [
  * doesn't give the day's generations back.
  */
 async function deleteLibraryOf(tx: SqlConnection, userId: string): Promise<void> {
+  await tx.query('DELETE FROM library_deck_jobs WHERE owner_id = $1', [userId])
   await tx.query(
     `DELETE FROM library_set_refs WHERE set_id IN (SELECT id FROM library_sets WHERE owner_id = $1)
        OR phrase_id IN (SELECT p.id FROM library_phrases p JOIN library_sets s ON s.id = p.set_id WHERE s.owner_id = $1)`,
