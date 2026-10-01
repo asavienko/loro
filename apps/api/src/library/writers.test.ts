@@ -1,5 +1,5 @@
 /** Plan 106: what the writers keep of Claude's answers, and their labelled fallbacks. */
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { GeneratePhrasesRequest } from '@loro/core/api/library'
 import { AnthropicMessages } from '../integrations/anthropic/messages.js'
 import {
@@ -10,6 +10,7 @@ import {
   claudePhrases,
   cleanImage,
   resetWriter,
+  writer,
 } from './writers.js'
 
 const request = (
@@ -231,5 +232,109 @@ describe('Claude’s notes for a phrase the learner wrote', () => {
         nativeLang: 'en-GB',
       }),
     ).rejects.toThrow()
+  })
+})
+
+describe('the live writer, as configured by the environment', () => {
+  /** What Claude answers over HTTP: the JSON after a thinking block, as a model that thinks sends it. */
+  const live = (value: unknown) =>
+    vi.fn<typeof fetch>().mockImplementation(() =>
+      Promise.resolve(
+        Response.json({
+          stop_reason: 'end_turn',
+          content: [
+            { type: 'thinking', thinking: '', signature: 'sig' },
+            { type: 'text', text: JSON.stringify(value) },
+          ],
+          usage: { input_tokens: 900, output_tokens: 400 },
+        }),
+      ),
+    )
+  const sent = (send: ReturnType<typeof live>) => {
+    const [url, init] = send.mock.calls[0]!
+    return {
+      url,
+      headers: init!.headers as Record<string, string>,
+      body: JSON.parse(init!.body as string) as Record<string, unknown>,
+    }
+  }
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
+
+  it('writes nothing without ANTHROPIC_API_KEY', () => {
+    vi.stubEnv('ANTHROPIC_API_KEY', '  ')
+    resetWriter()
+    expect(writer()).toBeNull()
+  })
+
+  it('asks Claude Sonnet 5 at low effort for a structured deck, and reads it past the thinking', async () => {
+    vi.stubEnv('ANTHROPIC_API_KEY', 'sk-ant-test')
+    vi.stubEnv('AI_MODEL_GENERATE', '')
+    vi.stubEnv('AI_EFFORT_GENERATE', undefined)
+    const send = live({
+      phrases: [
+        {
+          target: 'Имате ли свободни стаи?',
+          native: 'Есть свободные номера?',
+          image: ['key'],
+          notes,
+        },
+      ],
+    })
+    vi.stubGlobal('fetch', send)
+    resetWriter()
+    const phrases = await claudePhrases(
+      writer()!,
+      request('гостиница', { targetLang: 'bg-BG', nativeLang: 'ru-RU', count: 6 }),
+    )
+    expect(phrases.map((p) => p.target)).toEqual(['Имате ли свободни стаи?'])
+    const { url, headers, body } = sent(send)
+    expect(url).toBe('https://api.anthropic.com/v1/messages')
+    expect(headers).toMatchObject({ 'x-api-key': 'sk-ant-test', 'anthropic-version': '2023-06-01' })
+    expect(body).toMatchObject({
+      model: 'claude-sonnet-5',
+      max_tokens: 16_000,
+      stream: false,
+      output_config: { effort: 'low', format: { type: 'json_schema' } },
+    })
+    expect(body).not.toHaveProperty('thinking')
+    expect(body['system']).toContain(
+      'Write up to 6 phrases in Bulgarian, each with its meaning in Russian.',
+    )
+    const user = (body['messages'] as { role: string; content: string }[])[0]!
+    expect(JSON.parse(user.content)).toEqual({ mode: 'topic', input: 'гостиница', avoid: [] })
+  })
+
+  it('takes the model and effort from AI_MODEL_GENERATE and AI_EFFORT_GENERATE; an empty effort is left out', async () => {
+    vi.stubEnv('ANTHROPIC_API_KEY', 'sk-ant-test')
+    vi.stubEnv('AI_MODEL_GENERATE', 'claude-haiku-4-5')
+    vi.stubEnv('AI_EFFORT_GENERATE', '')
+    const send = live({ image: ['key'], notes })
+    vi.stubGlobal('fetch', send)
+    resetWriter()
+    await claudeNotes(writer()!, {
+      target: 'La llave, por favor',
+      native: 'The key, please',
+      targetLang: 'es-ES',
+      nativeLang: 'en-GB',
+    })
+    const { body } = sent(send)
+    expect(body['model']).toBe('claude-haiku-4-5')
+    expect(body['output_config']).not.toHaveProperty('effort')
+  })
+
+  it('fails, for the fallback to answer, when the key is refused or the model unknown', async () => {
+    vi.stubEnv('ANTHROPIC_API_KEY', 'sk-ant-wrong')
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>().mockResolvedValue(new Response('{}', { status: 401 })),
+    )
+    resetWriter()
+    await expect(claudePhrases(writer()!, request('hotel'))).rejects.toMatchObject({
+      code: 'configuration',
+    })
   })
 })

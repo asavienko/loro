@@ -144,13 +144,69 @@ describe('Anthropic provider-only messages adapter', () => {
     expect(sent).not.toHaveProperty('tools')
   })
 
-  it.each(['max_tokens', 'refusal', 'tool_use', 'pause_turn'])(
-    'rejects incomplete/unsafe stop reason %s',
-    async (stop) => {
-      const { client } = setup(envelope('{"ok":true}', stop))
-      await expect(client.generate(request)).rejects.toMatchObject({ code: 'invalid_output' })
-    },
-  )
+  it.each([
+    ['max_tokens', 'truncated'],
+    ['refusal', 'refused'],
+    ['tool_use', 'invalid_output'],
+    ['pause_turn', 'invalid_output'],
+  ])('rejects incomplete/unsafe stop reason %s as %s', async (stop, code) => {
+    const { client } = setup(envelope('{"ok":true}', stop))
+    await expect(client.generate(request)).rejects.toMatchObject({ code })
+  })
+
+  it('reads the answer after the thinking blocks a model that thinks sends first', async () => {
+    const { client } = setup({
+      ...envelope(),
+      content: [
+        { type: 'thinking', thinking: '', signature: 'sig' },
+        { type: 'redacted_thinking', data: 'opaque' },
+        { type: 'text', text: '{"ok":true}' },
+      ],
+    })
+    await expect(client.generate(request)).resolves.toHaveProperty('value.ok', true)
+  })
+
+  it.each([
+    ['no text block', [{ type: 'thinking', thinking: '', signature: 'sig' }]],
+    [
+      'two text blocks',
+      [
+        { type: 'text', text: '{"ok":true}' },
+        { type: 'text', text: '{"ok":true}' },
+      ],
+    ],
+    [
+      'a tool call',
+      [
+        { type: 'tool_use', id: 't', name: 'x', input: {} },
+        { type: 'text', text: '{"ok":true}' },
+      ],
+    ],
+  ])('rejects an answer with %s', async (_name, content) => {
+    const { client } = setup({ ...envelope(), content })
+    await expect(client.generate(request)).rejects.toMatchObject({ code: 'invalid_output' })
+  })
+
+  it('asks for the configured effort, and leaves it out when none is set', async () => {
+    const withEffort = setup(envelope(), { effort: 'low' })
+    await withEffort.client.generate(request)
+    expect(JSON.parse(withEffort.send.mock.calls[0]![1]!.body as string)).toMatchObject({
+      output_config: { effort: 'low' },
+    })
+    expect(JSON.parse(withEffort.send.mock.calls[0]![1]!.body as string)).not.toHaveProperty(
+      'thinking',
+    )
+    const without = setup()
+    await without.client.generate(request)
+    expect(
+      (JSON.parse(without.send.mock.calls[0]![1]!.body as string) as Record<string, unknown>)[
+        'output_config'
+      ],
+    ).not.toHaveProperty('effort')
+    expect(
+      () => new AnthropicMessages({ ...options, effort: 'extreme' as never }, without.send),
+    ).toThrow('configuration')
+  })
 
   it.each(['not json', '{"ok":false}'])(
     'rejects syntactic and semantic failures: %s',
@@ -180,20 +236,24 @@ describe('Anthropic provider-only messages adapter', () => {
     expect(send).not.toHaveBeenCalled()
   })
 
-  it.each([429, 401, 503])(
-    'does not retry or expose provider error body for status %i',
-    async (status) => {
-      const send = vi
-        .fn<typeof fetch>()
-        .mockResolvedValue(new Response('private provider data', { status }))
-      const client = new AnthropicMessages(options, send)
-      const error = await client.generate(request).catch((failure: unknown) => failure)
-      expect(error).toBeInstanceOf(AnthropicFailure)
-      expect(error).toMatchObject({ code: status === 429 ? 'rate_limited' : 'unavailable' })
-      expect(String(error)).not.toContain('private')
-      expect(send).toHaveBeenCalledTimes(1)
-    },
-  )
+  it.each([
+    [429, 'rate_limited'],
+    [401, 'configuration'],
+    [404, 'configuration'],
+    [400, 'input'],
+    [503, 'unavailable'],
+    [529, 'unavailable'],
+  ])('does not retry or expose provider error body for status %i (%s)', async (status, code) => {
+    const send = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response('private provider data', { status }))
+    const client = new AnthropicMessages(options, send)
+    const error = await client.generate(request).catch((failure: unknown) => failure)
+    expect(error).toBeInstanceOf(AnthropicFailure)
+    expect(error).toMatchObject({ code })
+    expect(String(error)).not.toContain('private')
+    expect(send).toHaveBeenCalledTimes(1)
+  })
 
   it('redacts network error details and causes', async () => {
     const send = vi

@@ -5,12 +5,16 @@ enabled by setting `AI_PROVIDER`. No application API contracts are defined here.
 
 The adapter sends one text-only Messages API request to the fixed HTTPS provider endpoint. It uses
 explicit model, token, byte and deadline limits supplied by the eventual composition root; there are
-no environment readers or model defaults. It disables redirects and automatic retries, bounds
-streamed response bytes, rejects incomplete/refused/tool output, parses structured JSON, and
-requires a caller-provided parser before returning a result. Exceptions contain only a fixed failure
-code: no provider response, input, API key, or underlying cause is retained. Successful results
-include provider-reported input/output tokens for later budget reconciliation; absent optional cache
-counts remain null. The adapter does not estimate cost or treat missing usage as zero.
+no environment readers or model defaults. It sends no `thinking` field (current models think
+adaptively by default) and an optional `output_config.effort`. It disables redirects and automatic
+retries, bounds streamed response bytes, skips thinking blocks and reads the one text block after
+them, rejects incomplete (`truncated`), refused (`refused`) and tool output, parses structured JSON,
+and requires a caller-provided parser before returning a result. A rejected key or unknown model
+(401/403/404) is `configuration`, a malformed request (400) `input`. Exceptions contain only a fixed
+failure code: no provider response, input, API key, or underlying cause is retained. Successful
+results include provider-reported input/output tokens for later budget reconciliation; absent
+optional cache counts remain null. The adapter does not estimate cost or treat missing usage as
+zero.
 
 `maxConcurrentRequests` is required configuration. A reusable process-local admission control holds
 a permit from HTTP dispatch through response parsing and cleanup. Excess concurrent calls fail
