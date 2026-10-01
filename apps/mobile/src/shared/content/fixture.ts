@@ -6,8 +6,9 @@ import topicsJson from '../../../../../packages/content/v2/topics.json';
 import noteTranslationsJson from '../../../../../packages/content/v2/note-translations.json';
 import bankJson from '../../../../../packages/content/v2/bank.json';
 import bankNoteTranslationsJson from '../../../../../packages/content/v2/bank-note-translations.json';
-import { applySet, ContentPack, installPacks, LanguageCode, Phrase, removeSet, TARGET_LANGUAGES } from './index';
-import type { BankJson, NoteTranslations, PhraseJson, SetJson, Topic } from './schema';
+import languagesJson from '../../../../../packages/content/v2/languages.json';
+import { applySet, ContentPack, installLanguages, installPacks, LanguageCode, Phrase, removeSet, TARGET_LANGUAGES } from './index';
+import type { BankJson, Language, NoteTranslations, PhraseJson, SetJson, Topic } from './schema';
 
 export const FIXTURE = {
   phrases: phrasesJson as unknown as PhraseJson[],
@@ -16,6 +17,7 @@ export const FIXTURE = {
   noteTranslations: noteTranslationsJson as unknown as NoteTranslations,
   bank: bankJson as unknown as BankJson,
   bankNoteTranslations: bankNoteTranslationsJson as unknown as NoteTranslations,
+  languages: languagesJson as unknown as Language[],
 };
 
 const notesOf = (id: string, all: NoteTranslations): Phrase['noteTranslations'] =>
@@ -43,8 +45,9 @@ export function fixturePack(targetLang: LanguageCode): ContentPack {
   };
 }
 
-/** Installs every course's pack. */
+/** Installs the server's languages (GET /library/languages) and every course's pack. */
 export function installFixture(): void {
+  installLanguages({ version: 'fixture', languages: FIXTURE.languages });
   installPacks(TARGET_LANGUAGES.map(fixturePack));
 }
 

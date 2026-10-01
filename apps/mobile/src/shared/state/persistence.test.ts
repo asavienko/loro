@@ -3,7 +3,9 @@ import { describe, it } from 'node:test';
 import { transition } from './machine';
 import { derive, RATING_WINDOW_MS } from './memory';
 import { mergeLearner } from './merge';
-import { loadState, parseState, sanitizeState, serializeState, syncWithServer } from './persistence';
+import { installLanguages } from '../content';
+import { installFixture } from '../content/fixture';
+import { loadState, parseState, sanitizeLearner, sanitizeState, serializeState, syncWithServer } from './persistence';
 import { memoryOf, points } from './selectors';
 import { done, fresh, load, MINUTE, run, T0 } from './testing';
 import type { Device } from './types';
@@ -11,6 +13,22 @@ import type { Device } from './types';
 const device: Device = { id: 'dev', instance: 'next', seq: 0 };
 
 describe('persistence', () => {
+  it('keeps a saved course on a start before the server’s languages are on the device (an update)', () => {
+    const profile = { name: 'Ana', nativeLang: 'bg-BG', targetLang: 'es-ES', onboarded: true, updatedAt: T0 };
+    installLanguages({ version: 'none', languages: [] });
+    try {
+      const learner = sanitizeLearner({ ...fresh().learner, profile });
+      assert.equal(learner.profile.nativeLang, 'bg-BG');
+      assert.equal(learner.profile.targetLang, 'es-ES');
+      // A code the app doesn't handle still falls back, and a course is never the learner's own language.
+      const odd = sanitizeLearner({ ...fresh().learner, profile: { ...profile, nativeLang: 'xx-XX', targetLang: 'en-GB' } });
+      assert.equal(odd.profile.nativeLang, 'en-GB');
+      assert.notEqual(odd.profile.targetLang, 'en-GB');
+    } finally {
+      installFixture();
+    }
+  });
+
   it('rejects malformed input', () => {
     for (const bad of ['', 'nope', '[]', '{}', JSON.stringify({ version: 99 })]) {
       assert.equal(parseState(bad, device), null);

@@ -15,7 +15,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { restoreContent } from '@shared/api/contentCache';
 import { loadSession } from '@shared/api/session';
 import { copyForNative, languageName } from '@shared/copy';
-import { coursesFor, installedCourses } from '@shared/content';
+import { coursesFor, installedCourses, NATIVE_LANGUAGES } from '@shared/content';
 import { openStorage, Stored } from '@shared/state/storage';
 import { Analytics } from '../src/analytics/Analytics';
 import { usePlaybackDriver } from '../src/audio/driver';
@@ -92,9 +92,9 @@ function App() {
 }
 
 /**
- * Onboarding until the learner has chosen their languages (it waits for the course itself at its
- * last step, so choosing another course doesn't send it back to the start); then the app once the
- * course is installed.
+ * Onboarding until the learner has chosen their languages (once the server's list of them is here;
+ * it waits for the course itself at its last step, so choosing another course doesn't send it back
+ * to the start); then the app once the course is installed.
  */
 function Gate({ onboarded }: { onboarded: boolean }) {
   const { status, retry } = useContent();
@@ -116,6 +116,7 @@ function Gate({ onboarded }: { onboarded: boolean }) {
     demo.current = false;
     router.push('/player');
   }, [onboarded, router]);
+  if (!onboarded && NATIVE_LANGUAGES.length === 0) return <ConnectionScreen status={status === 'offline' ? 'offline' : 'loading'} onRetry={() => void retry()} />;
   if (!onboarded)
     return (
       <Onboarding

@@ -2,9 +2,10 @@
 // the app starts (and in content.test.ts), so a typo in content fails loudly
 // instead of rendering `undefined`.
 import { z } from 'zod';
+import { LANGUAGE_CODES, UI_LOCALES } from './codes';
 
-export const LANGUAGE_CODE = z.enum(['en-GB', 'es-ES', 'bg-BG', 'ru-RU']);
-export const UI_LOCALE = z.enum(['en', 'bg', 'ru']);
+export const LANGUAGE_CODE = z.enum(LANGUAGE_CODES);
+export const UI_LOCALE = z.enum(UI_LOCALES);
 
 const localized = z.object({ en: z.string().min(1), bg: z.string().min(1), ru: z.string().min(1) });
 /** Text per native language; the phrase's own target language is never a key. */
