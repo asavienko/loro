@@ -21,12 +21,17 @@ import { Txt } from '../ui/Txt';
 const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL || '').replace(/\/+$/, '');
 
 /**
- * The link that opens a shared item: the web origin in a browser; on a phone the web app's address
+ * A link to one of the app's pages: the web origin in a browser; on a phone the web app's address
  * when the build knows it (it opens anywhere), else the app's own scheme (only where it's installed).
  */
+export function pageUrl(path: string): string {
+  if (Platform.OS !== 'web' && WEB_URL) return `${WEB_URL}${path}`;
+  return Linking.createURL(path);
+}
+
+/** The link that opens a shared item. */
 export function shareUrl(code: string): string {
-  if (Platform.OS !== 'web' && WEB_URL) return `${WEB_URL}/shared/${code}`;
-  return Linking.createURL(`/shared/${code}`);
+  return pageUrl(`/shared/${code}`);
 }
 
 export async function shareItem(c: ReturnType<typeof useCopy>, title: string, code: string, toast: (text: string) => void): Promise<void> {
@@ -54,16 +59,19 @@ export function ShareSheet({ item, onClose, onChanged }: { item: Shareable | nul
   const nav = useNav();
   const account = useAccount();
   const [visibility, setVisibility] = useState<Visibility | null>(null);
+  // The link a change of visibility just made (a private item has none until it is shared).
+  const [code, setCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const current = visibility ?? item?.visibility ?? 'private';
+  const shareCode = code ?? item?.shareCode ?? null;
 
   const choose = async (next: Visibility) => {
     if (!item || next === current) return;
     setBusy(true);
     try {
-      if (item.kind === 'set') await updateSet(item.id, { visibility: next });
-      else await updateAlbum(item.id, { visibility: next });
+      const changed = item.kind === 'set' ? (await updateSet(item.id, { visibility: next })).set : (await updateAlbum(item.id, { visibility: next })).album;
       setVisibility(next);
+      setCode(changed.shareCode);
       await content.refresh();
       onChanged?.();
       toast(c.share.changed);
@@ -76,6 +84,7 @@ export function ShareSheet({ item, onClose, onChanged }: { item: Shareable | nul
 
   const close = () => {
     setVisibility(null);
+    setCode(null);
     onClose();
   };
 
@@ -118,7 +127,7 @@ export function ShareSheet({ item, onClose, onChanged }: { item: Shareable | nul
               {c.share.makeShareable}
             </Txt>
           ) : (
-            item.shareCode && <Button variant="primary" icon="share" label={c.share.share} onPress={() => void shareItem(c, item.title, item.shareCode!, (text) => toast(text))} />
+            shareCode && <Button variant="primary" icon="share" label={c.share.share} onPress={() => void shareItem(c, item.title, shareCode, (text) => toast(text))} />
           )}
         </View>
       )}

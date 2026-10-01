@@ -78,7 +78,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [songRequest, setSongRequest] = useState<MakeSongRequest | null>(null);
-  const [sharing, setSharing] = useState<Shareable | null>(null);
+  const [sharing, setSharing] = useState<{ item: Shareable; onChanged?: () => void } | null>(null);
   const makeSessionRef = useRef<MakeSession | null>(null);
 
   const tab = tabOfPath(pathname, from);
@@ -134,7 +134,7 @@ export function Shell({ children }: { children: ReactNode }) {
         router.push({ pathname: '/album/[id]', params: { id: albumId, from: tabRef.current } });
       },
       makeSong: (options = {}) => setSongRequest(options),
-      share: (item) => setSharing(item),
+      share: (item, onChanged) => setSharing({ item, onChanged }),
       openAccount: () => {
         setSettings(null);
         router.push('/account');
@@ -163,7 +163,7 @@ export function Shell({ children }: { children: ReactNode }) {
         <AddPhraseSheet request={phraseForm} onClose={() => setPhraseForm(null)} />
         <AddSheet open={addOpen} onClose={() => setAddOpen(false)} />
         <MakeSongSheet request={songRequest} onClose={() => setSongRequest(null)} />
-        <ShareSheet item={sharing} onClose={() => setSharing(null)} />
+        <ShareSheet item={sharing?.item ?? null} onChanged={sharing?.onChanged} onClose={() => setSharing(null)} />
       </ShellContext.Provider>
     </NavContext.Provider>
   );
