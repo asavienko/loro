@@ -40,7 +40,7 @@ transport serves both. Images go through OpenRouter's `/api/v1/images`.
 
 - **Text:** `ChatCompletions` (`apps/api/src/integrations/openai-compatible/`) sends one request
   with a JSON-schema answer; `FallbackTextModel` tries Fireworks
-  (`accounts/deepseek-ai/models/deepseek-v4p1-flash`), then OpenRouter
+  (`accounts/fireworks/models/deepseek-v4p1-flash`), then OpenRouter
   (`deepseek/deepseek-v4.1-flash`), within one shared deadline. The caller's parser is the only
   gate; when both fail, the existing labelled fallback answers. Either key alone works.
 - **Covers:** `OpenRouterImages` asks `meta/muse-image` for a square, wordless, flat illustration of

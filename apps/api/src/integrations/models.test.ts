@@ -55,16 +55,19 @@ describe('the configured text models', () => {
     ]
     expect(firstUrl).toBe(FIREWORKS_CHAT_URL)
     expect(JSON.parse(first.body as string)).toMatchObject({
-      model: 'accounts/deepseek-ai/models/deepseek-v4p1-flash',
+      model: 'accounts/fireworks/models/deepseek-v4p1-flash',
     })
     expect((first.headers as Record<string, string>)['authorization']).toBe('Bearer fw-test')
     expect(JSON.parse(first.body as string)).not.toHaveProperty('provider')
+    // Reasoning more than triples a deck's time for no better phrases.
+    expect(JSON.parse(first.body as string)).toMatchObject({ reasoning_effort: 'none' })
     expect(secondUrl).toBe(OPENROUTER_CHAT_URL)
     expect((second.headers as Record<string, string>)['authorization']).toBe('Bearer or-test')
     // Only providers that neither keep nor train on prompts, and that honour the JSON schema.
     expect(JSON.parse(second.body as string)).toMatchObject({
       model: 'deepseek/deepseek-v4.1-flash',
       provider: { data_collection: 'deny', require_parameters: true },
+      reasoning: { effort: 'none' },
     })
   })
 
