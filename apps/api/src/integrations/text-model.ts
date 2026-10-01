@@ -13,6 +13,10 @@ export interface StructuredRequest<T> {
   /** The owning service supplies runtime contract AND semantic/safety validation. */
   parse: (value: unknown) => T
   signal?: AbortSignal
+  /** Sampling, for the offline writer (plan 112): fixed and low, so a rerun reads alike. */
+  temperature?: number
+  /** The provider's seed, where it honours one; reproducibility itself comes from the request cache. */
+  seed?: number
 }
 
 /** Provider-reported usage for later budget reconciliation, never estimated cost. */
