@@ -1,15 +1,18 @@
 // Bottom sheets (the web prototype's src/ui/Sheet.tsx): a title, Close, and a scrolling body. They
 // close on the backdrop, Close, the Android back button, pulled down by their top (PullDown), and
 // when the app goes to another page (a sheet belongs to the page it opened on: signing in from one
-// shouldn't leave it over the account).
+// shouldn't leave it over the account). With the keyboard up, the panel stands on it: its body ends
+// at the keyboard's top and it may grow to the status bar, so the field being typed in stays in
+// sight on Android (a sheet's window is drawn edge to edge, so the system doesn't resize it) and iOS.
 import { usePathname } from 'expo-router';
 import { ReactNode, useEffect, useRef } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../state/store';
 import { Icon, IconName } from './Icon';
+import { useKeyboardLift } from './keyboard';
 import { Grabber, usePullDown } from './PullDown';
 import { useToastLayer } from './Toast';
 import { Txt } from './Txt';
@@ -36,18 +39,29 @@ export function Sheet({ open, title, onClose, children, scroll = true }: { open:
   useEffect(() => {
     if (open) y.set(0);
   }, [open, y]);
-  const panelMoved = useAnimatedStyle(() => ({ transform: [{ translateY: y.get() }] }));
+  const { height: windowHeight } = useWindowDimensions();
+  const keyboard = useKeyboardLift();
+  const panelMoved = useAnimatedStyle(() => {
+    const lift = keyboard.lift.get();
+    return {
+      transform: [{ translateY: y.get() }],
+      // Below the body: the home indicator, or the keyboard while it is up.
+      paddingBottom: Math.max(insets.bottom, lift),
+      // Up to 85% of the screen, and with the keyboard up as far as the status bar.
+      maxHeight: interpolate(keyboard.progress.get(), [0, 1], [windowHeight * 0.85, windowHeight - insets.top - 8], Extrapolation.CLAMP),
+    };
+  });
   const backdropShown = useAnimatedStyle(() => ({ opacity: interpolate(y.get(), [0, Math.max(1, height.get())], [1, 0], Extrapolation.CLAMP) }));
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
       {/* A modal is a window of its own: on Android its gestures need their own root. */}
       <GestureHandlerRootView style={styles.fill}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.fill}>
+        <View style={styles.fill}>
           {/* Pointer-only backdrop: Close and the back button close it for everyone else. */}
           <Animated.View style={[styles.backdrop, backdropShown]}>
             <Pressable accessible={false} importantForAccessibility="no" style={styles.fill} onPress={onClose} />
           </Animated.View>
-          <Animated.View accessibilityViewIsModal onLayout={pull.onLayout} style={[styles.panel, { paddingBottom: insets.bottom }, panelMoved]}>
+          <Animated.View accessibilityViewIsModal onLayout={pull.onLayout} style={[styles.panel, panelMoved]}>
             <GestureDetector gesture={pull.gesture}>
               <View>
                 <Grabber />
@@ -71,7 +85,7 @@ export function Sheet({ open, title, onClose, children, scroll = true }: { open:
               <View style={[styles.body, styles.fixedBody]}>{children}</View>
             )}
           </Animated.View>
-        </KeyboardAvoidingView>
+        </View>
         {toast}
       </GestureHandlerRootView>
     </Modal>
@@ -165,7 +179,6 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 512,
     alignSelf: 'center',
-    maxHeight: '85%',
     backgroundColor: colors.surface,
     borderTopLeftRadius: radius['3xl'],
     borderTopRightRadius: radius['3xl'],

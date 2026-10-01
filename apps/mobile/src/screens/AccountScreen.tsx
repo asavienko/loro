@@ -4,7 +4,8 @@
 // is never touched by any of it.
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { PostHogMaskView } from 'posthog-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '@shared/api/client';
@@ -77,7 +78,8 @@ export function AccountScreen() {
   }, [returned.ticket, returned.error]);
   return (
     <PullDownWindow onClose={close} style={styles.page}>
-      <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      {/* On Android too: drawn edge to edge, the window isn't resized for the keyboard. */}
+      <KeyboardAvoidingView style={styles.keyboard} behavior="padding">
         <PullHandle style={{ paddingTop: insets.top }}>
           <View style={styles.top}>
             <Button variant="icon" icon="close" accessibilityLabel={c.common.close} onPress={close} />

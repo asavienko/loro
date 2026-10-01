@@ -51,5 +51,10 @@ Expo Go can't run it: the Rust core comes from `modules/loro-core`, a local Expo
   content (`content.tsx`) and progress sync (`progressSync.ts`); songs play in `src/music/`.
 - **UI.** `app/` holds the routes (expo-router), `src/screens/` and `src/sheets/` the screens,
   `src/ui/` the primitives and tokens (`theme.ts`), `src/nav/Shell.tsx` navigation.
+- **The keyboard.** The app is drawn edge to edge, so Android resizes no window for the keyboard,
+  and a sheet is a window of its own (a `Modal`), whose keyboard React Native's `Keyboard` events
+  and reanimated don't see. `react-native-keyboard-controller` (its `KeyboardProvider` in
+  `app/_layout.tsx`) does: `src/ui/keyboard.ts` gives a sheet the keyboard's height, and forms on
+  a page use its `KeyboardAvoidingView`. A new native module, so a new development build or APK.
 - `pnpm --filter @loro/mobile icons` rebuilds the Material Symbols subset (TrueType, outlined and
   filled) from `src/shared/ui/icons.ts`.

@@ -11,6 +11,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { restoreContent } from '@shared/api/contentCache';
 import { loadSession } from '@shared/api/session';
@@ -57,15 +58,19 @@ export default function RootLayout() {
   if (!ready) return null;
   return (
     <GestureHandlerRootView style={styles.root}>
-      <SafeAreaProvider>
-        <AccountProvider>
-          <Analytics>
-            <StoreProvider stored={stored}>
-              <App />
-            </StoreProvider>
-          </Analytics>
-        </AccountProvider>
-      </SafeAreaProvider>
+      {/* The keyboard's height, as it moves, for sheets and forms (src/ui/keyboard.ts). The app is
+          edge to edge already, so the provider leaves the bars as they are. */}
+      <KeyboardProvider statusBarTranslucent navigationBarTranslucent preserveEdgeToEdge>
+        <SafeAreaProvider>
+          <AccountProvider>
+            <Analytics>
+              <StoreProvider stored={stored}>
+                <App />
+              </StoreProvider>
+            </Analytics>
+          </AccountProvider>
+        </SafeAreaProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }
