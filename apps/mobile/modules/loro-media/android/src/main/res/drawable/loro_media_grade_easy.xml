@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Easy: the grade icon the app shows (src/ui/grades.ts).
+     Material Symbols Outlined "check" (Apache License 2.0), traced from the app's icon font
+     (assets/fonts/MaterialSymbols.ttf); the system tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+  <path
+      android:fillColor="#FFFFFFFF"
+      android:pathData="M382 720 154 492 211 435 382 606 749 239 806 296Z" />
+</vector>
