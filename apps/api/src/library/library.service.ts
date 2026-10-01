@@ -63,6 +63,7 @@ import type {
   UsageWire,
 } from './library.types.js'
 import { composeLive, liveMusicConfigured } from './music-live.js'
+import { textModelConfigured } from '../integrations/models.js'
 import { registerSpeech, registerSpeechMany, SpeechService, speechFor } from './speech.js'
 import { readTtsRuntimeConfig, type TtsRuntimeConfig } from '../tts/transport.js'
 import { demoLineLimit, synthesizeDemo } from './synth.js'
@@ -70,11 +71,11 @@ import {
   MAX_SONG_LINES,
   assembleLyrics,
   bankPhrases,
-  claudeCover,
-  claudeLyrics,
-  claudeNotes,
+  aiCover,
+  aiLyrics,
+  aiNotes,
   ruleNotes,
-  claudePhrases,
+  aiPhrases,
   writer,
   type SongPhrase,
   type SongSection,
@@ -1538,7 +1539,7 @@ export class LibraryService {
   // ---------- generation ----------
 
   /**
-   * A deck of suggestions: Claude's where it writes (from the day's allowance, `429` when it is
+   * A deck of suggestions: the model's where it writes (from the day's allowance, `429` when it is
    * spent), otherwise the phrase bank's, free, as the app's own copy of the bank would answer.
    */
   async generatePhrases(userId: string, body: unknown) {
@@ -1547,8 +1548,8 @@ export class LibraryService {
     if (ai) {
       await this.spend(userId, 'phrases')
       try {
-        const phrases = await this.voiced(userId, request, await claudePhrases(ai, request))
-        return { provider: 'claude' as const, phrases, themes: [] }
+        const phrases = await this.voiced(userId, request, await aiPhrases(ai, request))
+        return { provider: 'ai' as const, phrases, themes: [] }
       } catch (error) {
         this.logger.warn(
           `phrase writer failed: ${error instanceof Error ? error.message : 'unknown'}; answering from the bank`,
@@ -1586,19 +1587,19 @@ export class LibraryService {
   }
 
   /**
-   * Notes for a phrase the learner wrote: Claude's where it writes (from the allowance), otherwise
+   * Notes for a phrase the learner wrote: the model's where it writes (from the allowance), otherwise
    * Loro's written rules, free, labelled as such (plan 108).
    */
   async generateNotes(
     userId: string,
     body: unknown,
-  ): Promise<{ provider: 'claude' | 'rules'; image: string[]; notes: LibraryNotes }> {
+  ): Promise<{ provider: 'ai' | 'rules'; image: string[]; notes: LibraryNotes }> {
     const request = parseContract(GenerateNotesSchema, body)
     const ai = writer()
     if (ai) {
       await this.spend(userId, 'phrases')
       try {
-        return { provider: 'claude', ...(await claudeNotes(ai, request)) }
+        return { provider: 'ai', ...(await aiNotes(ai, request)) }
       } catch (error) {
         this.logger.warn(
           `notes writer failed: ${error instanceof Error ? error.message : 'unknown'}; answering by the rules`,
@@ -1612,7 +1613,7 @@ export class LibraryService {
   async generateCover(
     userId: string,
     body: unknown,
-  ): Promise<{ id: string; url: string; provider: 'claude' | 'pattern' }> {
+  ): Promise<{ id: string; url: string; provider: 'ai' | 'pattern' }> {
     const request = parseContract(GenerateCoverSchema, body)
     if (request.attachTo) {
       if (request.kind === 'set') await this.ownSet(userId, request.attachTo)
@@ -1620,12 +1621,12 @@ export class LibraryService {
     }
     await this.spend(userId, 'cover')
     let spec: CoverSpec | null = null
-    let provider: 'claude' | 'pattern' = 'pattern'
+    let provider: 'ai' | 'pattern' = 'pattern'
     const ai = writer()
     if (ai) {
       try {
-        spec = await claudeCover(ai, request)
-        provider = 'claude'
+        spec = await aiCover(ai, request)
+        provider = 'ai'
       } catch (error) {
         this.logger.warn(
           `cover writer failed: ${error instanceof Error ? error.message : 'unknown'}; drawing a pattern`,
@@ -1805,8 +1806,8 @@ export class LibraryService {
       const ai = writer()
       if (ai) {
         try {
-          sections = await claudeLyrics(ai, { ...input, style: input.styleId })
-          lyricsBy = 'claude'
+          sections = await aiLyrics(ai, { ...input, style: input.styleId })
+          lyricsBy = 'ai'
         } catch (error) {
           this.logger.warn(
             `lyrics writer failed: ${error instanceof Error ? error.message : 'unknown'}; singing the phrases`,
@@ -2263,11 +2264,11 @@ function utcDay(now: number): string {
 }
 
 export function writersInUse(): UsageWire['writers'] {
-  const ai = Boolean(config.aiApiKey()?.trim())
+  const ai = textModelConfigured()
   return {
-    phrases: ai ? 'claude' : 'bank',
-    cover: ai ? 'claude' : 'pattern',
-    lyrics: ai ? 'claude' : 'phrases',
+    phrases: ai ? 'ai' : 'bank',
+    cover: ai ? 'ai' : 'pattern',
+    lyrics: ai ? 'ai' : 'phrases',
     music: liveMusicConfigured() ? 'elevenlabs' : 'demo',
   }
 }

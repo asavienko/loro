@@ -84,8 +84,8 @@ export interface SongWire {
   styleId: string
   status: 'rendering' | 'ready' | 'failed'
   sections: { name: SongSection['name']; lines: SongLineWire[] }[]
-  /** `claude`, or `phrases`: the set's phrases arranged with nothing added. */
-  lyricsBy: 'claude' | 'phrases'
+  /** `ai` (the text model), or `phrases`: the set's phrases arranged with nothing added. */
+  lyricsBy: 'ai' | 'phrases'
   audioUrl: string | null
   /** `elevenlabs`, or `demo`: the server's instrumental, labelled "Demo sound". */
   audioBy: 'elevenlabs' | 'demo' | null
@@ -165,9 +165,9 @@ export interface UsageWire {
   kept: Record<KeptKind, { used: number; limit: number }>
   /** Who writes each kind here: a model, or the labelled fallback. */
   writers: {
-    phrases: 'claude' | 'bank'
-    cover: 'claude' | 'pattern'
-    lyrics: 'claude' | 'phrases'
+    phrases: 'ai' | 'bank'
+    cover: 'ai' | 'pattern'
+    lyrics: 'ai' | 'phrases'
     music: 'elevenlabs' | 'demo'
   }
 }

@@ -1,6 +1,6 @@
 /**
  * Guarded Discover phrase suggest. Bundled topics are the default.
- * A configured Anthropic key may propose live rows; failures fall back to bundled.
+ * A configured text model (plan 111) may propose live rows; failures fall back to bundled.
  */
 import * as content from '@loro/content'
 import { containsPromptInjection } from '@loro/core'
@@ -11,11 +11,11 @@ import {
   validatePhraseSuggestExchange,
   type PhraseSuggestResponse,
 } from '@loro/core/api/draft'
-import { config } from '../common/config.js'
+import { textModelConfigured } from '../integrations/models.js'
 import { proposeLiveSuggestions } from './phrase-suggest-live.js'
 
 export function livePhraseSuggestEnabled(): boolean {
-  return Boolean(config.aiApiKey()?.trim())
+  return textModelConfigured()
 }
 
 export async function suggestPhrases(body: unknown): Promise<PhraseSuggestResponse> {

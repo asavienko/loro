@@ -1,13 +1,13 @@
-/** Plan 106: what the writers keep of Claude's answers, and their labelled fallbacks. */
+/** Plans 106, 111: what the writers keep of the model's answers, and their labelled fallbacks. */
 import { afterEach, describe, expect, it } from 'vitest'
 import type { GeneratePhrasesRequest } from '@loro/core/api/library'
-import { AnthropicMessages } from '../integrations/anthropic/messages.js'
+import { ChatCompletions, FIREWORKS_CHAT_URL } from '../integrations/openai-compatible/chat.js'
 import {
   assembleLyrics,
   bankPhrases,
-  claudeLyrics,
-  claudeNotes,
-  claudePhrases,
+  aiLyrics,
+  aiNotes,
+  aiPhrases,
   cleanImage,
   resetWriter,
 } from './writers.js'
@@ -31,21 +31,27 @@ const notes = {
   pronunciation: { title: 'A sound', text: 'Watch the r.', ipa: 'ˈo.la', respelling: 'OH-lah' },
 }
 
-/** A Claude client whose one answer is `value`. */
-function answering(value: unknown): AnthropicMessages {
+/** A text model whose one answer is `value`, as a chat-completions provider sends it. */
+function answering(value: unknown): ChatCompletions {
   const send = () =>
     Promise.resolve(
       new Response(
         JSON.stringify({
-          stop_reason: 'end_turn',
-          content: [{ type: 'text', text: JSON.stringify(value) }],
-          usage: { input_tokens: 1, output_tokens: 1 },
+          choices: [
+            {
+              finish_reason: 'stop',
+              message: { role: 'assistant', content: JSON.stringify(value) },
+            },
+          ],
+          usage: { prompt_tokens: 1, completion_tokens: 1 },
         }),
         { status: 200 },
       ),
     )
-  return new AnthropicMessages(
+  return new ChatCompletions(
     {
+      name: 'test',
+      url: FIREWORKS_CHAT_URL,
       apiKey: 'test',
       model: 'test',
       timeoutMs: 1000,
@@ -92,7 +98,7 @@ describe('the phrase bank', () => {
   })
 })
 
-describe('Claude’s phrases', () => {
+describe('The model’s phrases', () => {
   it('keeps whole, new, short phrases with pictures the app can draw', async () => {
     const ai = answering({
       phrases: [
@@ -114,7 +120,7 @@ describe('Claude’s phrases', () => {
         { target: 'La llave, por favor', native: 'The key, please', image: [], notes },
       ],
     })
-    const phrases = await claudePhrases(ai, request('hotel'))
+    const phrases = await aiPhrases(ai, request('hotel'))
     expect(phrases.map((p) => p.target)).toEqual([
       '¿Tienen habitaciones libres?',
       'La llave, por favor',
@@ -147,7 +153,7 @@ describe('lyrics', () => {
     expect(assembleLyrics([])).toEqual([])
   })
 
-  it('keeps Claude’s claim that a line sings a phrase only when it does', async () => {
+  it('keeps the model’s claim that a line sings a phrase only when it does', async () => {
     const ai = answering({
       sections: [
         {
@@ -160,7 +166,7 @@ describe('lyrics', () => {
         { name: 'chorus', lines: [{ text: 'dos', meaning: 'two', phraseId: 'p-01' }] },
       ],
     })
-    const sections = await claudeLyrics(ai, {
+    const sections = await aiLyrics(ai, {
       targetLang: 'es-ES',
       nativeLang: 'en-GB',
       title: 'T',
@@ -171,9 +177,9 @@ describe('lyrics', () => {
   })
 })
 
-describe('Claude’s notes for a phrase the learner wrote', () => {
+describe('The model’s notes for a phrase the learner wrote', () => {
   it('keeps whole notes and a picture the app can draw', async () => {
-    const written = await claudeNotes(answering({ image: ['nope', 'key'], notes }), {
+    const written = await aiNotes(answering({ image: ['nope', 'key'], notes }), {
       target: 'La llave, por favor',
       native: 'The key, please',
       targetLang: 'es-ES',
@@ -185,7 +191,7 @@ describe('Claude’s notes for a phrase the learner wrote', () => {
 
   it('refuses notes that are not whole', async () => {
     await expect(
-      claudeNotes(answering({ image: ['key'], notes: { mnemonic: notes.mnemonic } }), {
+      aiNotes(answering({ image: ['key'], notes: { mnemonic: notes.mnemonic } }), {
         target: 'x',
         native: 'y',
         targetLang: 'es-ES',
