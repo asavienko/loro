@@ -1,6 +1,7 @@
 // The app's one way to the API (plan 106). Every failure is an ApiError whose `code` is the
 // problem-details code the API sends, or OFFLINE / TIMEOUT / BAD_REPLY when there was no answer to
 // read. A signed-in request carries the access token; a 401 refreshes it once and tries again.
+import { describeError, log, metric, routeOf, since } from '../analytics/telemetry';
 
 /** The API's base URL, ending in /v1. Expo inlines EXPO_PUBLIC_* values when it bundles. */
 export const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/v1').replace(/\/+$/, '');
@@ -91,16 +92,42 @@ async function read<T>(response: Response): Promise<T> {
   throw new ApiError(response.status, typeof code === 'string' ? code : 'HTTP_ERROR', typeof detail === 'string' ? detail : typeof title === 'string' ? title : `HTTP ${response.status}`, extra);
 }
 
-/** JSON from the API, or an ApiError. */
+/** JSON from the API, or an ApiError. Each call is measured (`api_request`) and a failure logged. */
 export async function api<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const started = performance.now();
+  const answer = { status: 0 };
+  try {
+    const result = await call<T>(path, options, answer);
+    measure(path, options, started, answer.status, null);
+    return result;
+  } catch (error) {
+    if (error instanceof ApiError) measure(path, options, started, error.status, error);
+    throw error;
+  }
+}
+
+async function call<T>(path: string, options: RequestOptions, answer: { status: number }): Promise<T> {
   const auth = options.auth ?? 'optional';
   const token = auth === 'none' ? null : await tokens.access();
   if (auth === 'required' && !token) throw new ApiError(401, 'UNAUTHENTICATED', 'Sign in first');
-  const response = await send(path, options, token);
+  let response = await send(path, options, token);
   if (response.status === 401 && token) {
     const renewed = await tokens.renew();
-    if (renewed) return read<T>(await send(path, options, renewed));
-    if (auth === 'optional') return read<T>(await send(path, options, null));
+    if (renewed) response = await send(path, options, renewed);
+    else if (auth === 'optional') response = await send(path, options, null);
   }
+  answer.status = response.status;
   return read<T>(response);
+}
+
+/** How long a request took and how it ended; a cancelled one isn't counted. */
+function measure(path: string, options: RequestOptions, started: number, status: number, error: ApiError | null): void {
+  if (error?.code === 'CANCELLED') return;
+  const route = routeOf(path);
+  const method = options.method ?? 'GET';
+  metric('api_request', { route, method, status, ok: error === null, error_code: error?.code ?? null, duration_ms: since(started) });
+  if (!error) return;
+  // Unreachable is the network's state, not a fault; a server error or an unreadable reply is one.
+  const level = unreachable(error) ? 'info' : status >= 500 || error.code === 'BAD_REPLY' ? 'error' : 'warn';
+  log[level](`${method} ${route} failed`, { route, method, ...describeError(error) });
 }

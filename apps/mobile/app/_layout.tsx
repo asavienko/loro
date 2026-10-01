@@ -13,12 +13,14 @@ import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Attributes, metric, reportError, since } from '@shared/analytics/telemetry';
 import { restoreContent } from '@shared/api/contentCache';
 import { loadSession } from '@shared/api/session';
 import { copyForNative, languageName } from '@shared/copy';
 import { coursesFor, installedCourses, NATIVE_LANGUAGES } from '@shared/content';
 import { openStorage, Stored } from '@shared/state/storage';
 import { Analytics } from '../src/analytics/Analytics';
+import { setContext } from '../src/analytics/posthog';
 import { usePlaybackDriver } from '../src/audio/driver';
 import { LockScreen } from '../src/audio/lockScreen';
 import { MusicProvider } from '../src/music/MusicPlayer';
@@ -36,15 +38,32 @@ import { ToastProvider } from '../src/ui/Toast';
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
+/** When the root module ran: the start of what `app_start` measures. */
+const LAUNCHED = performance.now();
+
 /** What the device holds, read once: saved progress (the packs and the session are installed as a side effect). */
 async function boot(): Promise<Stored> {
-  const [stored] = await Promise.all([
-    openStorage().catch(() => ({ saved: null, pending: null })),
-    restoreContent().catch(() => []),
-    loadSession().catch(() => null),
+  const started = performance.now();
+  const [stored, courses, session] = await Promise.all([
+    openStorage().catch((error: unknown) => {
+      reportError('open storage', error);
+      return { saved: null, pending: null };
+    }),
+    restoreContent().catch((error: unknown) => {
+      reportError('restore content', error);
+      return [];
+    }),
+    loadSession().catch((error: unknown) => {
+      reportError('load session', error);
+      return null;
+    }),
   ]);
+  bootMeasure = { boot_ms: since(started), had_progress: stored.saved !== null, courses_installed: courses.length, signed_in: session?.status === 'signedIn' };
   return stored;
 }
+
+/** What `boot` found, sent once with `app_start` when the first screen can show. */
+let bootMeasure: Attributes | null = null;
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(FONTS);
@@ -54,8 +73,13 @@ export default function RootLayout() {
   }, []);
   const ready = (fontsLoaded || fontError !== null) && stored !== null;
   useEffect(() => {
-    if (ready) void SplashScreen.hideAsync().catch(() => {});
-  }, [ready]);
+    if (!ready) return;
+    void SplashScreen.hideAsync().catch(() => {});
+    if (!bootMeasure) return;
+    if (fontError) reportError('load fonts', fontError);
+    metric('app_start', { ...bootMeasure, fonts_failed: fontError !== null, ready_ms: since(LAUNCHED) });
+    bootMeasure = null;
+  }, [ready, fontError]);
   if (!ready) return null;
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -80,7 +104,9 @@ function App() {
   usePlaybackDriver();
   useProgressSync();
   const { state } = useStore();
-  const locale = copyForNative(state.learner.profile.nativeLang).locale;
+  const { nativeLang, targetLang, onboarded } = state.learner.profile;
+  useEffect(() => setContext({ course: targetLang, uiLang: nativeLang, onboarded }), [targetLang, nativeLang, onboarded]);
+  const locale = copyForNative(nativeLang).locale;
   return (
     <UiLocaleContext.Provider value={locale}>
       <ToastProvider>
