@@ -3,7 +3,9 @@
 // bar whenever something is queued; the song mini-player, in Music's night colours, while a song is
 // loaded.
 import { Tabs, useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { currentPhraseId } from '@shared/state/selectors';
 import { hrefOf, useShell } from '../../src/nav/Shell';
 import { useStore } from '../../src/state/store';
@@ -11,6 +13,7 @@ import { MusicMiniPlayer } from '../../src/music/MusicMiniPlayer';
 import { useMusic } from '../../src/music/MusicPlayer';
 import { MiniPlayer } from '../../src/ui/MiniPlayer';
 import { TabBar } from '../../src/ui/TabBar';
+import { useReportChrome } from '../../src/ui/Toast';
 import { colors } from '../../src/ui/theme';
 
 export default function TabsLayout() {
@@ -37,8 +40,12 @@ function BottomChrome() {
   // still loaded shows when no phrase is queued.
   const showSong = music.song !== null && (music.front || !queued);
   const showPhrases = !showSong && queued;
+  // The snackbar sits over the tab bar and the mini-player, however tall its grades make it.
+  const insets = useSafeAreaInsets();
+  const report = useReportChrome();
+  useEffect(() => () => report(null), [report]);
   return (
-    <View style={styles.chrome}>
+    <View style={styles.chrome} onLayout={(e) => report(e.nativeEvent.layout.height - insets.bottom)}>
       {showSong && (
         <View style={styles.mini}>
           <MusicMiniPlayer />

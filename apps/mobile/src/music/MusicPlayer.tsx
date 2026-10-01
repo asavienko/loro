@@ -29,7 +29,10 @@ interface MusicValue {
   playAlbum: (album: Album, songs: Song[], startIndex?: number) => void;
   toggle: () => void;
   next: () => void;
+  /** Back to the start of the song, or to the one before when it has only just begun. */
   previous: () => void;
+  /** To the next (1) or previous (-1) song of the queue: true once it plays, false if it can't. */
+  skip: (by: 1 | -1) => Promise<boolean>;
   seek: (seconds: number) => void;
   stop: () => void;
   /** Keeps an eye on a song being made: when it's ready (or failed) the learner hears of it anywhere. */
@@ -77,17 +80,18 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     void setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true, interruptionMode: 'doNotMix' }).catch(() => {});
   }, []);
 
+  /** Plays `songs[at]`: true once it is the song playing, false if it can't be (or a newer load won). */
   const load = useCallback(
-    async (from: Album | null, songs: Song[], at: number) => {
+    async (from: Album | null, songs: Song[], at: number): Promise<boolean> => {
       const song = songs[at];
-      if (!song) return;
+      if (!song) return false;
       const mine = ++loads.current;
       const uri = await playableUrl(song);
-      if (mine !== loads.current) return;
+      if (mine !== loads.current) return false;
       if (uri === null || uri === 'offline') {
         // Nothing to play: say why. Whatever was playing (or nothing) stays as it was.
         toast(uri === 'offline' ? c.music.needsConnection : c.music.cantPlay);
-        return;
+        return false;
       }
       // The queue changes only once the song can play, so a failed tap leaves the current one alone.
       setAlbum(from);
@@ -107,6 +111,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       } catch {
         // Controls are a nicety; the song plays without them.
       }
+      return true;
     },
     [player, toast, c],
   );
@@ -157,10 +162,10 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   }, [watched, toast, c, playLatest]);
 
   const step = useCallback(
-    (by: number) => {
+    (by: number): Promise<boolean> => {
       const at = index + by;
-      if (at < 0 || at >= queue.length) return;
-      void load(album, queue, at);
+      if (at < 0 || at >= queue.length) return Promise.resolve(false);
+      return load(album, queue, at);
     },
     [album, index, queue, load],
   );
@@ -171,7 +176,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const subscription = player.addListener('playbackStatusUpdate', (update) => {
       if (!update.didJustFinish) return;
-      if (!atEnd.current) stepRef.current(1);
+      if (!atEnd.current) void stepRef.current(1);
       else {
         wantsPlay.current = false;
         void player.seekTo(0);
@@ -250,8 +255,9 @@ export function MusicProvider({ children }: { children: ReactNode }) {
           setSongInFront(true);
         }
       },
-      next: () => step(1),
-      previous: () => (status.currentTime > 3 ? void player.seekTo(0) : step(-1)),
+      next: () => void step(1),
+      previous: () => (status.currentTime > 3 ? void player.seekTo(0) : void step(-1)),
+      skip: step,
       seek: (seconds) => void player.seekTo(Math.max(0, seconds)),
       watch: (song, of) => {
         // A retried song is told of again.
