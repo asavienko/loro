@@ -13,7 +13,7 @@ describe('catalog integrity', () => {
     const bad = errors(runChecks())
     expect(
       bad.map((i) => `${i.check}/${i.id ?? '-'}: ${i.message}`),
-      'content errors block the build — see docs/process/content-authoring.md',
+      'content errors block the build',
     ).toEqual([])
   })
 

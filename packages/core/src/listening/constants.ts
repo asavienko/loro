@@ -48,7 +48,6 @@ export interface CatalogReferenceVoice {
 /**
  * AS-01 catalog/reference pin. One voice per target, forever. Distinct from listening IDs.
  * Runtime catalog render still reads `TTS_VOICE_*`; these IDs are the documented production pin.
- * @see docs/decisions/listening-voice-packet.md
  */
 export const CATALOG_TTS_MODEL_ID = ELEVENLABS_MULTILINGUAL_V2
 export const CATALOG_REFERENCE_VOICES: Record<TargetLocale, CatalogReferenceVoice> = {
@@ -66,7 +65,6 @@ export function isCatalogReferenceVoice(voiceId: string): boolean {
  * generate: `modelId` plus ≥2 `licensed: true` voices per enabled target. IDs must stay distinct
  * from `CATALOG_REFERENCE_VOICES`. `licensed: true` is in-app cache/playback only; Q-22 share
  * stays off. Pronunciation review remains before calling these production-quality.
- * @see docs/decisions/listening-voice-packet.md
  */
 export interface ListeningVoiceDecision {
   readonly modelId: string | null

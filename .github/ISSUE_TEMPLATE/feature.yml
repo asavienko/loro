@@ -5,8 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Before this can be picked up it needs to meet the
-        [definition of ready](../../docs/process/definition-of-done.md#definition-of-ready--before-work-starts).
+        Before this can be picked up it needs requirement IDs, acceptance criteria and edge cases.
 
   - type: input
     id: requirements
@@ -15,13 +14,6 @@ body:
       description: From docs/product/prd.md — e.g. P2-04, LB-25
       placeholder: P2-04
     validations: { required: true }
-
-  - type: input
-    id: blueprint
-    attributes:
-      label: Blueprint reference
-      description: Line range in Loro.dc.html, or "new design"
-      placeholder: Loro.dc.html:1404–1538
 
   - type: textarea
     id: what
@@ -43,8 +35,7 @@ body:
     id: edges
     attributes:
       label: Edge cases
-      description: >
-        docs/product/functional-spec.md usually already lists them for the screen — copy them here.
+      description: What happens offline, signed out, at a limit, or with no content.
     validations: { required: true }
 
   - type: textarea

@@ -6,7 +6,6 @@
 //! *scoring* differences.
 //!
 //! Ported from the blueprint's `matchTranscript` (`Loro.dc.html:2674–2683`).
-//! See docs/architecture/audio-speech.md#matching
 
 use unicode_normalization::UnicodeNormalization;
 

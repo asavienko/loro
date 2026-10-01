@@ -4,8 +4,6 @@
  * Separate from the service because these are pedagogical rules, not proxy plumbing:
  * they hold whoever produced the scene — Claude, the bundled catalog, a future
  * provider — and they are worth unit-testing without a Nest container.
- *
- * See docs/architecture/ai-services.md and ADR-0010.
  */
 
 import type { RoleplayOption, RoleplayScene, RoleplayTurn } from '@loro/content'

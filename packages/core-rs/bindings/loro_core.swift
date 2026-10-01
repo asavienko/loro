@@ -1013,8 +1013,7 @@ public func FfiConverterTypeHlc_lower(_ value: Hlc) -> RustBuffer {
  * A measured production latency.
  *
  * `ms` is `Option` at the type level so every caller must handle "not measured".
- * The UI hides the read-out on `None` rather than substituting an estimate —
- * see docs/architecture/audio-speech.md#recording-and-latency
+ * The UI hides the read-out on `None` rather than substituting an estimate.
  */
 public struct LatencySample: Equatable, Hashable {
     /**

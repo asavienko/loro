@@ -2,8 +2,7 @@
 
 - **Requirement IDs:** `P3-01` (continuous playback), `AI-06` (songs made from sets)
 - **Milestone:** Main app
-- **Status:** 🟡 Scope 1–5 landed 2026-09-30 (web checked); left: the Android emulator run of the
-  one player.
+- **Status:** ✅ Done 2026-09-30, checked on the web and the Android emulator.
 - **Owner request, 2026-09-30:** "Right now, the song functionality lives separately from phrases. I
   want to have it in the same player, with the same functionality and the same sets, but to
   distinguish phrases from songs, you should use a separate icon. Also, the songs have only a dark

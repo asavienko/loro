@@ -13,8 +13,7 @@ local SQLite persistence and their fixtures were removed with it; they remain in
 The `api/` Zod schemas describe current, planned and gated-draft wire surfaces, with inferred types
 and generated OpenAPI. Import them explicitly through `@loro/core/api/current`, `/target`, or
 `/draft`; they are not exported from the domain root. Auth, sync and content-query Nest controllers
-consume the shared schemas; remaining migration limits are in
-[the contract guide](../../docs/architecture/api-contracts.md).
+consume the shared schemas; see [the API contract](../../docs/architecture/api.md).
 
 ```
 src/

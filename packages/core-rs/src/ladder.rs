@@ -4,8 +4,6 @@
 //! Accumulated → Bent → Transferred → Pressure-tested → Deployed is a real competence
 //! hierarchy. It's maintained from v1 by whichever engine is active, so the Phrasebook
 //! has real data on its first day (see ADR-0006).
-//!
-//! See docs/architecture/scheduling.md#4--the-ladder--loop-c
 
 use crate::rng::Lcg;
 use crate::units::MS_PER_DAY;

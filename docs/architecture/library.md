@@ -1,9 +1,10 @@
 # The library: content, accounts, sharing and generation
 
-Plan [106](../../plans/106-connected-app.md). How the app and the API share content, what a learner
-can make with AI, who can see it, and what it costs them. Code: `apps/api/src/library/` (API),
-`apps/mobile/src/shared/api/` and `src/state/{account,content,progressSync}.tsx` (app), contracts in
-`packages/core/src/api/library.ts`.
+Plans [106](../../plans/106-connected-app.md) and
+[107](../../plans/archive/2026-09-30/107-one-player.md). How the app and the API share content, what
+a learner can make with AI, who can see it, and what it costs them. Code: `apps/api/src/library/`
+(API), `apps/mobile/src/shared/api/` and `src/state/{account.tsx,content.tsx,progressSync.ts}`
+(app), contracts in `packages/core/src/api/library.ts`.
 
 ## Where content lives
 
@@ -24,7 +25,7 @@ its phrases stays attached. Learner progress on a phrase that is not installed (
 set not downloaded yet) is kept by `sanitizeLearner`; only the player's queue needs installed
 phrases.
 
-## Phrases and songs: one player (plan 107)
+## Phrases and songs: one player
 
 | Tab     | What it holds                                                                              |
 | ------- | ------------------------------------------------------------------------------------------ |

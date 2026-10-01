@@ -11,8 +11,6 @@
 //!
 //! Everything here runs **on-device**, from a PCM buffer that never leaves native
 //! memory (ADR-0011).
-//!
-//! See docs/architecture/prosody-dsp.md
 
 pub mod align;
 pub mod feedback;

@@ -1,5 +1,5 @@
 /**
- * The AI proxy — docs/architecture/ai-services.md, ADR-0010.
+ * The AI proxy.
  *
  * AI is a garnish, never a dependency. Every learner-facing path has a BUNDLED
  * FALLBACK that is good, not merely non-broken — and the fallback is the local

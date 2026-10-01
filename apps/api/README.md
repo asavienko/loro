@@ -27,11 +27,11 @@ repository is only a test adapter.
 
 Configure permitted browser origins through `CORS_ALLOWED_ORIGINS` (comma-separated exact origins)
 and the HTTPS origins derived from `AUTH_REDIRECT_URIS`. Bearer authorization does not use cookies.
-`AUTH_ENABLED=false` disables all sign-in; `true` enables the configured browser provider flow. See
-[Google/Apple setup](../../docs/architecture/google-apple-auth.md). TLS termination and deployment
-credentials remain operator setup. See [authentication configuration](src/auth/README.md) for real
-provider keys and the HTTPS email delivery protocol; sign-in is unavailable until configured. No
-test sends email or contacts Google/Apple.
+`AUTH_ENABLED=false` disables all sign-in; `true` enables the configured browser provider flow. TLS
+termination and deployment credentials remain operator setup. See
+[authentication configuration](src/auth/README.md) for real provider keys and the HTTPS email
+delivery protocol; sign-in is unavailable until configured. No test sends email or contacts
+Google/Apple.
 
 ## Runtime endpoints
 

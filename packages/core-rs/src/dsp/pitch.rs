@@ -1,7 +1,6 @@
 //! F0 extraction — YIN, with pYIN behind a flag if octave errors prove problematic.
 //!
 //! **Status: skeleton.** Lands in M3; validated by the M1 spike.
-//! See docs/architecture/prosody-dsp.md#f0-pitch
 
 /// Lowest F0 we look for — covers adult male Spanish speech.
 pub const F0_MIN_HZ: f32 = 60.0;

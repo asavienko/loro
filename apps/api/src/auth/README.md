@@ -66,10 +66,7 @@ preserving the account ID and remaining legacy expiry. `/auth/logout` accepts a 
 or verified bearer token and returns 204; `GET /me` returns `{user,device_id}`. `/auth/claim`
 additionally requires matching `X-Loro-Device` and `Idempotency-Key` headers.
 
-See [Google/Apple OAuth setup](../../../../docs/architecture/google-apple-auth.md) for browser
-provider configuration, PKCE handoffs, deployment compatibility and legacy account/session
-migration. The audience is fixed at `loro-mobile`; legacy device-less access tokens do not grant
-sync access.
+The audience is fixed at `loro-mobile`; legacy device-less access tokens do not grant sync access.
 
 Run `bash scripts/ci-auth-postgres.sh` for the real PostgreSQL transaction suite. It creates and
 drops a random temporary schema; the connected database user must have permission to create schemas.

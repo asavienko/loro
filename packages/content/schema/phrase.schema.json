@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://loro.app/schema/phrase.json",
   "title": "Loro catalog phrase",
-  "description": "See docs/product/content-model.md. Ids are IMMUTABLE — fixing a typo mutates the row; changing the meaning creates a new id and deprecates the old one.",
+  "description": "Ids are IMMUTABLE — fixing a typo mutates the row; changing the meaning creates a new id and deprecates the old one.",
 
   "type": "object",
   "required": ["id", "es", "en", "theme", "emoji"],
@@ -133,7 +133,7 @@
 
     "variants": {
       "type": "array",
-      "description": "Regional variants. Keeps es-419 cheap later — see docs/process/localization.md",
+      "description": "Regional variants. Keeps es-419 cheap later.",
       "items": {
         "type": "object",
         "required": ["lang", "es"],

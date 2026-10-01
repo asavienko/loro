@@ -9,8 +9,6 @@
 //!
 //! If validation shows DTW isn't accurate enough, the fallback is a real forced aligner
 //! (a 10–40 MB per-language model), which is why option (a) was tried first.
-//!
-//! See docs/architecture/prosody-dsp.md#3--forced-alignment
 
 /// Sakoe-Chiba band width, as a fraction of the sequence length.
 pub const DTW_BAND: f32 = 0.2;

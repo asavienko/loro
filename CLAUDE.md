@@ -13,20 +13,24 @@ in the target language, rate it; FSRS schedules the next time).
 the v1.1/v1.2/v1.3 design packages, the v2.0 web prototype, `packages/design-tokens` and the browser
 E2E/storybook/workbench suites were removed; they remain in Git history (last present at `52a0e3b`).
 Every screen and sheet of the web prototype is ported. Four tabs: Home, Explore, Create and Library
-(plan [107](plans/107-one-player.md)): songs live in their sets (a music-note icon tells them from
-phrases) and play in the one player, rated like phrases; albums are in Library; one light palette.
+(plan [107](plans/archive/2026-09-30/107-one-player.md)): songs live in their sets (a music-note
+icon tells them from phrases) and play in the one player, rated like phrases; albums are in Library;
+one light palette.
 
 **The app is connected** (plan [106](plans/106-connected-app.md),
 [library.md](docs/architecture/library.md)): it ships no phrase content. It downloads each course's
 pack from `GET /v1/library/pack` (seeded from `packages/content/v2/`), keeps it for offline use and
-installs it before learner state loads. Email-code sign-in, sharing (private/link/public,
-Community), progress sync and AI generation of phrase sets, covers and songs (within per-user daily
-limits) go through the API's `library` module; without `ANTHROPIC_API_KEY` or a music provider the
-server uses labelled fallbacks (phrase bank, drawn patterns, the set's phrases as lyrics, a "Demo
-sound" instrumental). Progress stays on the device first (AsyncStorage native, browser storage web)
-as an append-only learner log with a pure state machine; FSRS runs in `packages/core-rs` through the
-`LoroCore` Expo module (`apps/mobile/modules/loro-core`, UniFFI) on native and the committed WASM
-browser build on the web. The API (NestJS + PostgreSQL) is deployed to a restricted EC2 host.
+installs it before learner state loads. Product analytics and session replay go to PostHog EU
+(`apps/mobile/src/analytics`, on by default with an opt-out in Settings, never audio;
+[ADR-0011](docs/architecture/adr/0011-analytics-and-privacy.md)). Email-code sign-in, sharing
+(private/link/public, Community), progress sync and AI generation of phrase sets, covers and songs
+(within per-user daily limits) go through the API's `library` module; without `ANTHROPIC_API_KEY` or
+a music provider the server uses labelled fallbacks (phrase bank, drawn patterns, the set's phrases
+as lyrics, a "Demo sound" instrumental). Progress stays on the device first (AsyncStorage native,
+browser storage web) as an append-only learner log with a pure state machine; FSRS runs in
+`packages/core-rs` through the `LoroCore` Expo module (`apps/mobile/modules/loro-core`, UniFFI) on
+native and the committed WASM browser build on the web. The API (NestJS + PostgreSQL) is deployed to
+a restricted EC2 host.
 
 ## Keep this file current
 
@@ -80,7 +84,8 @@ A change that violates one of these is reverted, not discussed.
   [`plans/README.md`](plans/README.md) (`🟡` in progress — say what is left and what blocks it, `⛔`
   blocked, `—` ready, `✅` done). **Numbers are never reused**; the README's "next new plan is N"
   line is checked by `pnpm check:plan-index`. Recheck concurrent worktrees before allocating an ID.
-  Unresolved number collisions (96, 100) stay documented; don't reuse or drop either.
+  Older plans, the reviews and stale docs were removed on 2026-09-30 (Git history at `e36cc758`);
+  keep `docs/` and `plans/` to what is true of the current code.
 - **App code** (`apps/mobile`): shared, platform-neutral behaviour lives in `src/shared/` (imported
   as `@shared/*`); native replacements for storage, speech, cues and the Rust core live in
   `src/platform/` and are swapped in by `metro.config.js`. Every learner-facing string is in
@@ -91,11 +96,14 @@ A change that violates one of these is reverted, not discussed.
 - **Generated files are committed and drift-checked** — the UniFFI bindings, the core-rs browser
   build, `apps/mobile/src/ui/iconCodepoints.ts` (`pnpm --filter @loro/mobile icons`) and the OpenAPI
   specs. Never hand-edit them; fix the generator.
-- **`packages/core-rs` owns every number that must be identical across platforms** — FSRS intervals,
-  the sync merge, ranking ([ADR-0002](docs/architecture/adr/0002-shared-rust-core.md)). There is no
-  JavaScript FSRS.
-- **Every syncable server field needs a declared merge class** in
-  `packages/core/src/sync/fieldPolicy.ts` ([sync-protocol.md](docs/architecture/sync-protocol.md)).
+- **`packages/core-rs` owns every number that must be identical across platforms** — FSRS intervals
+  and ranking ([ADR-0002](docs/architecture/adr/0002-shared-rust-core.md)). There is no JavaScript
+  FSRS.
+- **Progress sync** merges the whole learner state in `apps/mobile/src/shared/state/merge.ts` and
+  saves it through `/v1/library/progress`, which rejects stale revisions with a 409. Every merged
+  field needs a declared merge class there ([sync-protocol.md](docs/architecture/sync-protocol.md));
+  the older `/v1/sync` path keeps its classes in `packages/core/src/sync/fieldPolicy.ts` and its
+  merge in core-rs.
 
 ## CI policy
 
@@ -146,7 +154,7 @@ pnpm local:up / pnpm local:down       # SOPS-decrypted API + Expo web containers
 | `apps/mobile/modules/loro-core/`           | Expo module over the Rust core (UniFFI)                          |
 | `apps/api/`                                | NestJS backend                                                   |
 | `packages/core/`                           | Shared TS domain and API contracts — used by the API and content |
-| `packages/core-rs/`                        | Rust: FSRS, sync merge, ranking                                  |
+| `packages/core-rs/`                        | Rust: FSRS, ranking (and the older `/v1/sync` merge)             |
 | `packages/content/`                        | Server catalogs, review gates; `v2/` is the app's seeded content |
 | `apps/api/src/library/`                    | Packs, sharing, limits, AI phrases/covers/songs, progress sync   |
 | `docs/`                                    | All documentation — start at `docs/README.md`                    |
@@ -154,10 +162,11 @@ pnpm local:up / pnpm local:down       # SOPS-decrypted API + Expo web containers
 ## Open questions
 
 [`docs/decisions/open-questions.md`](docs/decisions/open-questions.md) lists unresolved decisions
-with owners and dates, including Q-15 (pronunciation-reviewed audio), Q-21 (Discover suggest), Q-22
-(listening-file redistribution), pricing/billing and bilingual review.
+with owners and dates: Q-08/Q-12 (pricing, store billing), Q-13 (es-419), Q-15 (voices), Q-21 (eval
+and budget for live AI generation), Q-22 (sharing audio files), Q-23 (native-speaker review) and
+Q-24 (review retention target).
 
-## EC2 development deployment (plan 91)
+## EC2 development deployment
 
 `infra/ec2/template.yaml` and `scripts/provision-ec2.sh` provision a restricted development host;
 `scripts/deploy-ec2.sh` builds/transfers the API image and health-gates replacement with rollback.

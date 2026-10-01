@@ -2,30 +2,14 @@
 
 - **Requirement IDs:** `P3-01` (continuous playback), `F-03` (offline-first), `AI-06` (make a set)
 - **Milestone:** The main app since 2026-09-30, when it replaced the first app in `apps/mobile`
-- **Status:** 🟡 Moved to `apps/mobile` on 2026-09-30 at the owner's request ("This should be a main
-  loro ui app and the old app should be removed"): the web prototype's platform-free modules now
-  live in `apps/mobile/src/shared/` (`@shared/*`), and the web prototype, the first app and the
-  design packages were removed (Git history at `52a0e3b`). Paused before that on 2026-09-28, when
-  the owner set the phrase-content goal (plan 105) first. **Done:** scope 1–3 (the Expo app, Metro
-  wiring to the shared modules, the native storage/speech/cues/core modules, Intl polyfills, the
-  native store and playback driver, navigation over the prototype's `Navigation` interface,
-  primitives), and in scope 4 onboarding, Home, the player with its notes sheet, and (2026-09-30)
-  Explore, Library and the Settings sheet, checked on Expo web: search, topic/level/tag filters, the
-  Library lists and charts, and settings that survive a reload. The Android debug build (LoroCore's
-  Rust core via cargo-ndk) runs on the Pixel 8 API 36 emulator: Home and the player render, the
-  device voice speaks, and the rating previews come from FSRS. Then (2026-09-30) the set page, the
-  queue, Make a set with its swipe deck and the remaining sheets, checked on Expo web, which
-  completes scope 4. **Left:** scope 5 (the full verification, including the new gestures on a
-  device; iOS needs Xcode). **Blocked by:** nothing but priority. Owner request 2026-09-28: "make
-  this ui a react native app with …" (the message ends there; Expo, the repository's React Native
-  toolchain, is assumed).
-- **Depends on:** archived plan [103](archive/2026-09-30/103-prototype-phrase-generator.md) (Make a
-  set logic, in `src/shared/generate/`). The screens were ported from the web prototype's
-  `src/screens` and `src/sheets` in Git history
+- **Status:** 🟡 Scope 1–4 done 2026-09-30: every screen and sheet of the web prototype is ported,
+  checked on Expo web and on the Android emulator (Pixel 8, API 36). **Left:** scope 5, the full
+  verification, including the gestures on a physical device; iOS needs Xcode. **Blocked by:**
+  nothing but priority.
+- **Depends on:** the Make a set logic in `src/shared/generate/` (plan 103, in Git history). The
+  screens were ported from the web prototype in Git history
   (`git show 52a0e3b:design/design-v2.0/rapid-ui-prototype/src/...`). Uses
   `apps/mobile/modules/loro-core` for the Rust core on native.
-- **Number allocation:** the highest assigned ID was 103; this plan is **104**. The next new plan
-  is 105.
 
 ## Outcome
 

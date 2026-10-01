@@ -22,8 +22,8 @@ the simulator lies about audio sessions and can't show a dropped frame.
 
 ## The five checks
 
-Every PR asserts these. They're the ten rules' teeth
-([overview.md](../docs/architecture/overview.md#the-ten-rules)).
+Every PR asserts these. They enforce the architecture rules
+([overview.md](../docs/architecture/overview.md#rules)).
 
 - [ ] **No new path moves recorded audio, or a derivative of it, off the device**
 - [ ] **No number shown to a learner is simulated, estimated, or placeholder** (latency is measured
@@ -107,7 +107,6 @@ ANIMATED change → screen recording. A still cannot show whether the warming ca
 
 <details><summary>Analytics event</summary>
 
-- [ ] Documented in `docs/product/metrics.md` **in this PR**
 - [ ] Properties allowlisted
 - [ ] No free text, no audio derivative, no PII
 

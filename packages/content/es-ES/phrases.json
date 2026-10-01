@@ -3,14 +3,11 @@
     "The seed catalog, extracted verbatim from Loro.dc.html:2179-2211 (the library) and",
     "2885-2899 (LORO_RICH — respellings, glosses, examples, hooks).",
     "",
-    "31 phrases across 8 themes. Launch target is ~600 (docs/product/roadmap.md).",
-    "",
-    "Every phrase must meet the ten-point quality bar:",
-    "docs/product/content-model.md#quality-bar-for-a-catalog-phrase",
+    "31 phrases across 8 themes. Launch target is ~600.",
     "",
     "Fields still to be authored for most rows: resp, resp_ipa, words, example, hint,",
     "note, syl, f0_native, audio. Those are produced by the enrich + render pipeline",
-    "(docs/process/content-authoring.md) and human-reviewed before merge."
+    "and human-reviewed before merge."
   ],
   "lang": "es-ES",
   "catalogVersion": 1,

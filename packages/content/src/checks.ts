@@ -3,8 +3,6 @@
  *
  * Exported as pure functions so they're unit-testable and so `validate.ts` is just
  * a CLI over them.
- *
- * See docs/process/content-authoring.md#6--validate
  */
 
 import { readFileSync } from 'node:fs'

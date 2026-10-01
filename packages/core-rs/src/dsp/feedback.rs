@@ -9,8 +9,6 @@
 //!
 //! Templates are curated per phoneme class and authored **with the content**, keyed by
 //! `(target_language, ui_language)` — "say 'ba-nyo'" only helps an English speaker.
-//!
-//! See docs/architecture/prosody-dsp.md#5--feedback-selection
 
 /// What kind of error we detected. Selection is ordered, not scored.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]

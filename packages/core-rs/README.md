@@ -92,8 +92,7 @@ WASM build. Native module build and physical-device acceptance are separate from
 2. **No ambient nondeterminism.** No system clock, no unseeded RNG. Both are parameters.
 3. **Every completed public function is unit-, golden-, parity-, or property-tested.** Public
    placeholders are explicitly documented and must not be bound into production paths.
-4. **A moved golden score is explained in the PR**, never re-baselined silently
-   ([code-review.md](../../docs/process/code-review.md#special-review-paths)).
+4. **A moved golden score is explained in the PR**, never re-baselined silently.
 
 Rule 2 is what makes the crate trivially testable and makes a bug report reproducible from a seed
 and a state.
@@ -114,13 +113,10 @@ Before extending a module, define the canonical input/output and units, add refe
 vectors, implement the pure Rust function, export it through the required generated bindings, and
 wire the adapter without a fabricated fallback. Remove any duplicate TypeScript implementation only
 after boundary parity passes.
-[Plan 60](../../plans/archive/2026-09-09/60-authoritative-core-maths.md) owns this sequence for
-rank, FSRS, cloze/set selection, and token matching; plan 77 owns the evidence-gated DSP work.
 
 ## Performance budgets
 
-Called synchronously from JS, so these are tight
-([performance.md](../../docs/architecture/performance.md#loro-core-rust)):
+Called synchronously from JS, so these are tight:
 
 | Function                                | Budget                            |
 | --------------------------------------- | --------------------------------- |

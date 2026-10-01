@@ -7,8 +7,6 @@
  *   • `streakDay` — midnight PLUS a four-hour grace window, so practising at 01:30
  *                   counts for yesterday. The alternative punishes night owls.
  *
- * See docs/architecture/scheduling.md#day-boundaries for why they differ.
- *
  * ── Why this file exists at all ──
  * `core-rs` owns every number that must be identical across platforms (ADR-0002), and
  * these are such numbers — the widget computes a streak natively, with no JS in reach.
@@ -19,8 +17,7 @@
  * fixtures (`calendar.fixtures.json`) are asserted by both `calendar.test.ts` and
  * `core-rs/tests/parity.rs`, so a divergence fails the build in one language or the
  * other. This module stays the JS owner until plan 70's widgets call UniFFI directly —
- * do not delete it because the native export exists. See
- * plans/archive/2026-07-30/05-fix-shared-maths-duplication.md.
+ * do not delete it because the native export exists.
  *
  * ── The wall-ms convention ──
  * Every `*WallMs` argument is LOCAL wall-clock milliseconds: epoch ms shifted by the

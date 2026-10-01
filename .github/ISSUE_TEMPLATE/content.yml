@@ -5,8 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Process: [content-authoring.md](../../docs/process/content-authoring.md).
-        Content ships independently of the app, so a fix reaches learners within a day.
+        Content ships independently of the app: the server serves each course's pack.
 
   - type: dropdown
     id: kind
@@ -41,8 +40,7 @@ body:
     attributes:
       label: The quality bar
       description: >
-        All ten must hold —
-        [content-model.md](../../docs/product/content-model.md#quality-bar-for-a-catalog-phrase)
+        All ten must hold.
       options:
         - label: A real person would say this, in this situation, in this century
         - label: It's a complete utterance, usable alone

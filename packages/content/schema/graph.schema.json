@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://loro.app/schema/graph.json",
   "title": "Loro catalog phrase graph",
-  "description": "Authored edges between catalog phrases. See plans/101-phrase-sound-graph.md.",
+  "description": "Authored edges between catalog phrases.",
   "type": "object",
   "required": ["lang", "edges"],
   "additionalProperties": false,

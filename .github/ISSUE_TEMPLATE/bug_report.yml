@@ -5,8 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        **Automatically S0 or S1**, regardless of how minor it looks
-        ([triage](../../docs/process/qa-device-matrix.md#bug-triage)):
+        **Automatically S0 or S1**, regardless of how minor it looks:
         recorded audio leaving the device · a displayed number that isn't real ·
         copy that shames a missed day · offline function broken ·
         any sync path that can lose a rating, note, or rep count.

@@ -3,8 +3,6 @@
 //! Everything here uses the device's **local** calendar date, never UTC, so trip
 //! transitions and day rollover work offline. Distinct from HLC, which orders sync
 //! operations and is never shown to a learner.
-//!
-//! See docs/architecture/scheduling.md#day-boundaries
 
 use crate::units::{MS_PER_DAY, MS_PER_HOUR};
 
