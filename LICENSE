@@ -1,0 +1,43 @@
+Loro source-available licence
+
+Copyright (c) 2026 Anton Savienko. All rights reserved.
+
+This repository is published so that its code, content and documentation can be read, studied
+and discussed. It is not open source: no licence to reuse it is granted by its being public.
+
+What you may do
+
+1. Read the repository, fork it on GitHub and clone it, in order to read it, report issues and
+   propose changes to this repository.
+2. Build and run it on your own machines to evaluate it or to test a change you are proposing to
+   this repository.
+
+What you may not do without written permission from the copyright holder
+
+1. Use the code, the course content, the generated audio, the artwork or the documentation, in
+   whole or in part, in any other product, service, course, dataset or app, commercial or not.
+2. Distribute it, or a modified version of it, other than as a fork on GitHub for the purposes
+   above or as a pull request to this repository.
+3. Publish the app, or a build of it, to any app store or to the web.
+4. Use the name "Loro", its icon or its artwork to identify anything other than this project.
+
+Contributions
+
+By proposing a change to this repository (a pull request, a patch, a suggestion in an issue) you
+grant the copyright holder a perpetual, worldwide, irrevocable, royalty-free licence to use,
+modify, distribute, sublicense and relicense that contribution as part of Loro or otherwise, and
+you confirm that you have the right to grant it. You keep the copyright in what you wrote.
+
+Third-party components
+
+Dependencies keep their own licences, as declared in their packages. The FSRS scheduler in
+packages/core-rs is derived from Open Spaced Repetition's fsrs-rs (MIT) under the terms in
+docs/architecture/fsrs-upstream-license.txt. The Material Symbols fonts in apps/mobile/assets/fonts
+are Google's, under the Apache License 2.0.
+
+No warranty
+
+THE REPOSITORY IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NON-INFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY ARISING FROM, OUT OF OR IN CONNECTION WITH THE REPOSITORY OR ITS USE.

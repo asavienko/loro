@@ -76,6 +76,11 @@ A change that violates one of these is reverted, not discussed.
 ## Conventions
 
 - **`master` means `main`.** Interpret it as `main` for branch operations without asking.
+- **The repository is public and source-available**
+  ([ADR-0018](docs/architecture/adr/0018-public-source-available-repository.md),
+  [public-repository.md](docs/process/public-repository.md)): everything committed, and its history,
+  is readable by anyone. No host identifiers, learner data or internal-only notes in the tree;
+  `SECURITY.md` and `CONTRIBUTING.md` are the public-facing contracts.
 - **Never commit or push unencrypted environment files.** Real `.env`, `.env.*`, and `*.env` values
   stay local and gitignored; `.env.example` is the only plaintext exception. Run `pnpm env:encrypt`
   before committing API configuration; commit only SOPS-encrypted `secrets/*.enc.env`. Never stage

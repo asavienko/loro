@@ -70,8 +70,16 @@ Everything under `docs/` is indexed in [`docs/README.md`](docs/README.md).
 | [NestJS + Postgres](docs/architecture/adr/0008-backend-nestjs-postgres.md)                    | We own the sync protocol and the content pipeline                    |
 | [Recorded audio never leaves the device](docs/architecture/adr/0011-analytics-and-privacy.md) | A promise to the learner, so a technical requirement                 |
 
+## Licence
+
+Source-available, all rights reserved ([`LICENSE`](LICENSE),
+[ADR-0018](docs/architecture/adr/0018-public-source-available-repository.md)): read it, run it
+locally, propose changes here; no reuse elsewhere. Security reports go through
+[`SECURITY.md`](SECURITY.md).
+
 ## Contributing
 
+- Start with [`CONTRIBUTING.md`](CONTRIBUTING.md): what is welcome and how a change lands.
 - Run `pnpm ci:local` before merging; checks run on your machine, not in GitHub Actions
   ([CI](docs/process/ci-cd.md)).
 - Branches, commits and requirement IDs: [git workflow](docs/process/git-workflow.md).

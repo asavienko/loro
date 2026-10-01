@@ -62,7 +62,6 @@ Hint should be a mnemonic hint: mnemonic, how to remember this phrase.
 
 ---
 
-![photo_2026-10-01 18.34.57.jpeg](photo_2026-10-01%2018.34.57.jpeg)
-![photo_2026-10-01 18.34.59.jpeg](photo_2026-10-01%2018.34.59.jpeg)![photo_2026-10-01 18.34.59.jpeg](photo_2026-10-01%2018.34.59.jpeg)
+![photo_2026-10-01 18.34.59.jpeg](photo_2026-10-01%2018.34.59.jpeg)
 When the user has locked the screen, you should show the player with the possibility to vote. It
 should be shown on the locked screen and at the top of the notifications.
