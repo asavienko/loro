@@ -4,7 +4,7 @@
  */
 import type { V2LanguageInfo, V2Localized, V2Topic } from '@loro/content/v2'
 import type { LibraryNotes, PhraseSource, Visibility } from '@loro/core/api/library'
-import type { SongSection, WrittenPhrase } from './writers.js'
+import type { SongLine, SongSection, WrittenPhrase } from './writers.js'
 
 /** Whose it is, from the reader's side. */
 export type Owner = 'loro' | 'me' | 'other'
@@ -68,12 +68,21 @@ export interface PhraseWire {
 }
 
 export interface SongLineWire {
+  /** The line as it is heard: as sung, where the song was heard back; as written otherwise. */
   text: string
   meaning: string
   phraseId: string | null
-  /** When the line plays, where the audio's timing is known (the demo sound); null otherwise. */
+  /**
+   * When the line plays: heard in the sung song, or the demo's bars (`SongWire.timingBy`); null
+   * when the timing isn't known, or the singer skipped the line.
+   */
   startMs: number | null
   endMs: number | null
+  /**
+   * The line as written, with its meaning, when the singer sang it differently (plan 113); null
+   * when the same. A song made again sings the written lines.
+   */
+  written?: { text: string; meaning: string } | null
 }
 
 export interface SongWire {
@@ -91,9 +100,32 @@ export interface SongWire {
   audioBy: 'elevenlabs' | 'demo' | null
   /** The lines are spoken over the sound (the server's voice over a demo, or sung). */
   voiced: boolean
+  /**
+   * Where the lines' timings come from (plan 113): `transcript`, the sung song heard back, its lines
+   * as they were sung; `demo`, the synthesizer's bars; null, no timing.
+   */
+  timingBy: 'transcript' | 'demo' | null
   durationMs: number | null
   error: string | null
   createdAt: number
+}
+
+/**
+ * A song's lyrics before the song (plan 113): `writing` while the model works, then `ready` with
+ * the sections for the learner to read, change and approve, or `failed`. `revision` counts the
+ * writings; `instruction` is what the learner last asked to change.
+ */
+export interface LyricsWire {
+  id: string
+  setId: string
+  styleId: string
+  title: string
+  status: 'writing' | 'ready' | 'failed'
+  sections: { name: SongSection['name']; lines: SongLine[] }[]
+  lyricsBy: 'ai' | 'phrases' | null
+  revision: number
+  instruction: string | null
+  updatedAt: number
 }
 
 export interface AlbumWire {
@@ -184,7 +216,7 @@ export interface DeckWire {
 export type DeckJobWire =
   ({ id: string | null; status: 'ready' } & DeckWire) | { id: string; status: 'writing' | 'failed' }
 
-export type UsageKind = 'phrases' | 'cover' | 'song'
+export type UsageKind = 'phrases' | 'cover' | 'song' | 'lyrics'
 export type KeptKind = 'sets' | 'albums' | 'songs'
 
 export interface UsageWire {

@@ -235,3 +235,51 @@ export const LIBRARY_ITEM_COVERS_MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS lib
   PRIMARY KEY (user_id, kind, item_id)
 );
 `
+
+/**
+ * Plan 113: a song's lyrics, written first for the learner to read, change and approve. A draft is
+ * `writing` while the model works, then `ready` with its sections, or `failed`; `revision` counts
+ * how many times it was written, `instruction` what the learner last asked to change. Drafts are
+ * cleared a week after they were last written.
+ */
+export const LIBRARY_LYRIC_DRAFTS_MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS library_lyric_drafts (
+  id text PRIMARY KEY,
+  owner_id text NOT NULL,
+  set_id text NOT NULL,
+  style_id text NOT NULL,
+  target_lang text NOT NULL,
+  native_lang text NOT NULL,
+  title text NOT NULL,
+  status text NOT NULL,
+  sections jsonb,
+  lyrics_by text,
+  instruction text,
+  revision integer NOT NULL DEFAULT 1,
+  created_at bigint NOT NULL,
+  updated_at bigint NOT NULL
+);
+CREATE INDEX IF NOT EXISTS library_lyric_drafts_owner ON library_lyric_drafts(owner_id, updated_at);
+`
+
+/**
+ * Plan 113: where a song's line timings come from (`transcript`: the sung song heard back;
+ * `demo`: the synthesizer's bars; null: none), and the lyrics the song was given, kept from the
+ * start so a failed song is made again from the same lines.
+ */
+export const LIBRARY_SONG_TIMING_MIGRATION_SQL = `ALTER TABLE library_songs ADD COLUMN IF NOT EXISTS timing_by text;
+`
+
+/**
+ * Plan 113: the Expo push tokens of a learner's devices, each with the UI language the device
+ * showed when it registered, so a song's "ready" message is in it. Removed with the account.
+ */
+export const LIBRARY_PUSH_TOKENS_MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS library_push_tokens (
+  token text PRIMARY KEY,
+  user_id text NOT NULL,
+  lang text NOT NULL,
+  platform text,
+  created_at bigint NOT NULL,
+  updated_at bigint NOT NULL
+);
+CREATE INDEX IF NOT EXISTS library_push_tokens_user ON library_push_tokens(user_id);
+`

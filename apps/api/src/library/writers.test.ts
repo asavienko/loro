@@ -180,6 +180,53 @@ describe('lyrics', () => {
     })
     expect(sections.flatMap((s) => s.lines.map((l) => l.phraseId))).toEqual(['p-00', null, 'p-01'])
   })
+
+  it('writes the lyrics again with the learner’s change, the current lines in the message (plan 113)', async () => {
+    const current = assembleLyrics(phrases)
+    let body: Record<string, unknown> | undefined
+    const answer = {
+      sections: [
+        { name: 'verse', lines: [{ text: 'dos', meaning: 'two', phraseId: 'p-01' }] },
+        { name: 'chorus', lines: [{ text: 'uno', meaning: 'one', phraseId: 'p-00' }] },
+      ],
+    }
+    await aiLyrics(
+      answering(answer, (sent) => {
+        body = sent
+      }),
+      {
+        targetLang: 'es-ES',
+        nativeLang: 'en-GB',
+        title: 'T',
+        phrases,
+        style: 'lullaby',
+        current,
+        instruction: 'A shorter chorus',
+      },
+    )
+    const messages = body?.['messages'] as { role: string; content: string }[]
+    const system = messages.find((m) => m.role === 'system')?.content ?? ''
+    expect(system).toContain('what the learner wants changed')
+    const user = JSON.parse(messages.find((m) => m.role === 'user')?.content ?? '{}') as Record<
+      string,
+      unknown
+    >
+    expect(user['current']).toEqual(current)
+    expect(user['instruction']).toBe('A shorter chorus')
+
+    // Without an instruction the model is asked for different lyrics, and sees no instruction.
+    await aiLyrics(
+      answering(answer, (sent) => {
+        body = sent
+      }),
+      { targetLang: 'es-ES', nativeLang: 'en-GB', title: 'T', phrases, style: 'lullaby', current },
+    )
+    const again = body?.['messages'] as { role: string; content: string }[]
+    expect(again.find((m) => m.role === 'system')?.content).toContain('wants different ones')
+    expect(JSON.parse(again.find((m) => m.role === 'user')?.content ?? '{}')).not.toHaveProperty(
+      'instruction',
+    )
+  })
 })
 
 describe('The model’s notes for a phrase the learner wrote', () => {

@@ -42,27 +42,30 @@ What the app calls. Reading routes take an optional bearer: none reads as a stra
 
 **The learner's own**
 
-| Method      | Route                                          | Success     | What it does                                               |
-| ----------- | ---------------------------------------------- | ----------- | ---------------------------------------------------------- |
-| GET         | `/library/usage`                               | 200         | Today's allowances and which writer each kind uses         |
-| GET, POST   | `/library/profile`                             | 200         | Read or set the display name                               |
-| POST        | `/library/sets`, `/library/sets/:id`           | 201, 200    | Create a set; change it (title, visibility, cover, items)  |
-| POST        | `/library/sets/:id/phrases/:phraseId`          | 200         | New words for a phrase in the learner's set                |
-| DELETE      | `/library/sets/:id`                            | 204         | Delete one's own set                                       |
-| POST        | `/library/phrases`                             | 201         | Add a phrase on its own, to a set or "My phrases"          |
-| DELETE      | `/library/phrases/:id`                         | 204         | Remove such a phrase                                       |
-| POST        | `/library/albums`, `/library/albums/:id`       | 201, 200    | Create an album; change it                                 |
-| DELETE      | `/library/albums/:id`                          | 204         | Delete one's own album                                     |
-| POST/DELETE | `/library/saves`, `/library/saves/:kind/:id`   | 200, 204    | Save or unsave someone else's readable set or album        |
-| POST        | `/library/reports`                             | 200         | Report someone else's shared item                          |
-| POST        | `/library/decks`                               | 202         | A deck of suggestions written in the background (plan 111) |
-| GET         | `/library/decks/:id`                           | 200         | Where the learner's deck stands; ready with its phrases    |
-| POST        | `/library/generate/{phrases,notes,cover,song}` | 200/201/202 | Generate within the day's allowance                        |
-| POST        | `/library/songs/:id/retry`                     | 202         | Make a failed song again (another of the day's songs)      |
-| DELETE      | `/library/songs/:id`                           | 204         | Take a song out of the learner's album                     |
-| GET, POST   | `/library/progress`                            | 200         | The learner's progress; a write on a stale revision is 409 |
-| POST        | `/library/me/delete`                           | 200         | Delete everything the learner keeps in the library         |
-| POST        | `/library/me/delete-account`                   | 200         | Delete the account with everything in it                   |
+| Method      | Route                                          | Success     | What it does                                                |
+| ----------- | ---------------------------------------------- | ----------- | ----------------------------------------------------------- |
+| GET         | `/library/usage`                               | 200         | Today's allowances and which writer each kind uses          |
+| GET, POST   | `/library/profile`                             | 200         | Read or set the display name                                |
+| POST        | `/library/sets`, `/library/sets/:id`           | 201, 200    | Create a set; change it (title, visibility, cover, items)   |
+| POST        | `/library/sets/:id/phrases/:phraseId`          | 200         | New words for a phrase in the learner's set                 |
+| DELETE      | `/library/sets/:id`                            | 204         | Delete one's own set                                        |
+| POST        | `/library/phrases`                             | 201         | Add a phrase on its own, to a set or "My phrases"           |
+| DELETE      | `/library/phrases/:id`                         | 204         | Remove such a phrase                                        |
+| POST        | `/library/albums`, `/library/albums/:id`       | 201, 200    | Create an album; change it                                  |
+| DELETE      | `/library/albums/:id`                          | 204         | Delete one's own album                                      |
+| POST/DELETE | `/library/saves`, `/library/saves/:kind/:id`   | 200, 204    | Save or unsave someone else's readable set or album         |
+| POST        | `/library/reports`                             | 200         | Report someone else's shared item                           |
+| POST        | `/library/decks`                               | 202         | A deck of suggestions written in the background (plan 111)  |
+| GET         | `/library/decks/:id`                           | 200         | Where the learner's deck stands; ready with its phrases     |
+| POST        | `/library/generate/{phrases,notes,cover,song}` | 200/201/202 | Generate within the day's allowance                         |
+| POST        | `/library/lyrics`                              | 202         | A song's lyrics written first, in the background (plan 113) |
+| GET         | `/library/lyrics/:id`                          | 200         | Where the learner's draft stands; ready with its lines      |
+| POST        | `/library/lyrics/:id/rewrite`                  | 202         | The draft written again, anew or as the learner asks        |
+| POST        | `/library/songs/:id/retry`                     | 202         | Make a failed song again (another of the day's songs)       |
+| DELETE      | `/library/songs/:id`                           | 204         | Take a song out of the learner's album                      |
+| GET, POST   | `/library/progress`                            | 200         | The learner's progress; a write on a stale revision is 409  |
+| POST        | `/library/me/delete`                           | 200         | Delete everything the learner keeps in the library          |
+| POST        | `/library/me/delete-account`                   | 200         | Delete the account with everything in it                    |
 
 A spent allowance or a full account is `429 LIMIT_REACHED` with `resets_at` (`null` for a full
 account).

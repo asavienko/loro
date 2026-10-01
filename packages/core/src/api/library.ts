@@ -56,6 +56,8 @@ export const LIBRARY_TEXT = {
   description: 120,
   noteTitle: 60,
   noteText: 300,
+  /** What a learner asks to change in a song's lyrics (plan 113). */
+  instruction: 200,
 }
 
 /** Links are how spam travels; nothing a learner names or describes here needs one. */
@@ -294,6 +296,24 @@ export const GenerateSongSchema = z.strictObject({
   title: shownText(LIBRARY_TEXT.title, 1).optional(),
   /** The learner's album to add it to; without one, a new album named after the set. */
   albumId: LibraryIdSchema.optional(),
+  /**
+   * The learner's approved lyrics (plan 113): a ready draft of theirs for the same set, sung as it
+   * stands. Without one the server writes the lyrics itself, as before.
+   */
+  lyricsId: LibraryIdSchema.optional(),
+})
+
+/** Lyrics written first, for the learner to read, change and approve (plan 113). */
+export const StartLyricsSchema = z.strictObject({
+  setId: LibraryIdSchema,
+  styleId: z.enum(MUSIC_STYLE_IDS),
+  nativeLang: LibraryLanguageSchema,
+  title: shownText(LIBRARY_TEXT.title, 1).optional(),
+})
+
+/** The same draft written again: anew, or changed as the learner asks. */
+export const RewriteLyricsSchema = z.strictObject({
+  instruction: shownText(LIBRARY_TEXT.instruction, 1).optional(),
 })
 
 /** Trying a failed song again: the language its lines are glossed in, as when it was made. */
@@ -314,3 +334,5 @@ export type GeneratePhrasesRequest = z.infer<typeof GeneratePhrasesSchema>
 export type GenerateCoverRequest = z.infer<typeof GenerateCoverSchema>
 export type GenerateNotesRequest = z.infer<typeof GenerateNotesSchema>
 export type GenerateSongRequest = z.infer<typeof GenerateSongSchema>
+export type StartLyricsRequest = z.infer<typeof StartLyricsSchema>
+export type RewriteLyricsRequest = z.infer<typeof RewriteLyricsSchema>

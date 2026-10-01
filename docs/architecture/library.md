@@ -150,7 +150,8 @@ next phrase's clips in the two languages the learner hears.
 | `POST /library/decks`          | Phrases with pictures and all three notes, in the background | The phrase bank, best theme first (`bank`)       |
 | `POST /library/generate/notes` | Notes and a picture for a typed phrase                       | Notes and a picture by Loro's rules (`rules`)    |
 | `POST /library/generate/cover` | An illustration (Muse Image), else a shape spec, background  | A pattern drawn from the title (`pattern`)       |
-| `POST /library/generate/song`  | Lyrics that sing every phrase                                | The set's phrases arranged as a song (`phrases`) |
+| `POST /library/lyrics`         | Lyrics that sing every phrase, read and approved first       | The set's phrases arranged as a song (`phrases`) |
+| `POST /library/generate/song`  | The approved lyrics sung; written here without a draft       | The set's phrases arranged as a song (`phrases`) |
 
 Text comes from DeepSeek V4.1 Flash on Fireworks (`FIREWORKS_API_KEY`), and from the same model
 through OpenRouter (`OPENROUTER_API_KEY`) when Fireworks fails, with reasoning off; covers are drawn
@@ -190,10 +191,23 @@ the server's clip allowances), and the song is labelled "Spoken demo". Loro's ow
 voiced the same way once, in the background, after the server starts with a voice
 (`LIBRARY_VOICE_LORO_SONGS=0` turns it off).
 
-A song is saved at once as `rendering` and made in the background; the app polls it. A song that
-fails (or is lost to a restart, after ten minutes) gives the day's song back; its owner can make it
-again (`POST /library/songs/:id/retry`, another of the day's songs) or remove it
-(`DELETE /library/songs/:id`).
+**The lyrics come first** (plan [113](../../plans/113-lyrics-first-songs.md)). The app asks
+`POST /library/lyrics` (a set, a style, the learner's language, a title) for a draft, written by the
+text model in the background and polled at `GET /library/lyrics/:id`; the learner reads each line
+with its meaning, has it written again (`POST /library/lyrics/:id/rewrite`, anew or with an
+`instruction` in their own words, which the model is told is the learner's request and never
+overrides the rules: every phrase stays sung as written), and approves it by starting the song with
+`lyricsId`. Each writing spends one of the day's lyrics (`LIMIT_LYRICS_DAILY`, 20); a writing that
+fails gives it back, and leaves the lines as they were (or, the first time, the set's phrases
+arranged, labelled `phrases`). Without a text model the draft is the phrases at once, free, and
+there is nothing to rewrite (`PROVIDER_UNAVAILABLE`). Drafts are the learner's own and are cleared a
+week after they were last written. A song started without `lyricsId` has its lyrics written as part
+of the song, for older app builds.
+
+A song is saved at once as `rendering` and made in the background; the app polls it. A song sung
+from a draft holds its lines from the start. A song that fails (or is lost to a restart, after ten
+minutes) gives the day's song back; its owner can make it again (`POST /library/songs/:id/retry`,
+another of the day's songs, from the lines it was given) or remove it (`DELETE /library/songs/:id`).
 
 **Covers are never markup from a model.** An illustration is accepted only as PNG, JPEG or WebP by
 its bytes' signature (at most 2.5 MB) and carried inside the SVG as a base64 `data:` image. A shape
@@ -224,12 +238,13 @@ back. Once ready, a cover goes on a set or album only while the learner still ow
 
 **Allowances** are counted per learner per UTC day in `library_usage` with one atomic upsert, before
 any provider is asked: a model's phrase decks and notes (`LIMIT_PHRASES_DAILY`, default 30), covers
-(`LIMIT_COVER_DAILY`, 10, drawn patterns too) and songs (`LIMIT_SONG_DAILY`, 5, demos too); zero
-turns a kind off. One account keeps at most `LIMIT_SETS_KEPT` (100) sets, `LIMIT_ALBUMS_KEPT` (30)
-albums and `LIMIT_SONGS_KEPT` (120) songs; the course's "My phrases" set is one of the sets, so at
-the cap a phrase added on its own is refused until it goes into a set the learner has. A spent
-allowance is `429 LIMIT_REACHED` with `resets_at` (`null` for a kept cap); the app shows what is
-left before the learner asks. Making anything needs an account; reading does not.
+(`LIMIT_COVER_DAILY`, 10, drawn patterns too), songs (`LIMIT_SONG_DAILY`, 5, demos too) and a
+model's lyrics drafts (`LIMIT_LYRICS_DAILY`, 20, each writing); zero turns a kind off. One account
+keeps at most `LIMIT_SETS_KEPT` (100) sets, `LIMIT_ALBUMS_KEPT` (30) albums and `LIMIT_SONGS_KEPT`
+(120) songs; the course's "My phrases" set is one of the sets, so at the cap a phrase added on its
+own is refused until it goes into a set the learner has. A spent allowance is `429 LIMIT_REACHED`
+with `resets_at` (`null` for a kept cap); the app shows what is left before the learner asks. Making
+anything needs an account; reading does not.
 
 ## Running it locally
 
