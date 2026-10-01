@@ -312,7 +312,7 @@ function SignedIn() {
         </Txt>
       </View>
 
-      {(lastSync.done || lastSync.failed) && (
+      {lastSync.userId === account?.userId && (lastSync.done || lastSync.failed) && (
         <Txt variant="body" color="secondary">
           {lastSync.failed ? c.account.syncFailed : c.account.synced}
         </Txt>

@@ -88,11 +88,11 @@ export function useProgressSync(): void {
           if (merged !== before) actions.mergeRemote(merged);
         }
         await kvSet(OWNER_KEY, userId);
-        lastSync.done = true;
-        lastSync.failed = false;
+        Object.assign(lastSync, { userId, done: true, failed: false });
       } catch {
         // Offline or refused: the next change, foreground or sign-in tries again.
-        lastSync.failed = true;
+        // A failure for another account than the last says nothing about whether that one synced.
+        Object.assign(lastSync, lastSync.userId === userId ? { failed: true } : { userId, done: false, failed: true });
       } finally {
         running.current = null;
       }
