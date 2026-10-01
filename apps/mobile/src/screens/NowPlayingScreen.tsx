@@ -1,10 +1,10 @@
-// The player (the web prototype's src/screens/NowPlayingScreen.tsx): the phrase's picture, the
-// prompt (the target stays hidden until it is heard), the loop's three steps, the grades, and the
-// transport. Every figure comes from the state machine; when a rated phrase comes back is the core's
-// to decide, and the grades don't show it.
+// The player (the web prototype's src/screens/NowPlayingScreen.tsx): the phrase's picture as large as
+// the page allows, the prompt (the target stays hidden until it is heard), the loop's three steps,
+// the grades, and the transport. Every figure comes from the state machine; when a rated phrase comes
+// back is the core's to decide, and the grades don't show it.
 import { useRouter } from 'expo-router';
 import { ReactNode, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { languageName } from '@shared/copy';
 import { getTopic, Phrase } from '@shared/content';
@@ -28,10 +28,10 @@ import {
   upNextIds,
   windowLeft,
 } from '@shared/state/selectors';
-import type { Phase } from '@shared/state/types';
+import type { LearnerState, Phase } from '@shared/state/types';
 import { endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel, queueTitle } from '@shared/ui/phase';
 import { recentLoopRating } from '@shared/ui/rating';
-import { playerCoverSize } from '@shared/ui/room';
+import { playerArtSize } from '@shared/ui/room';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon, IconName } from '../ui/Icon';
@@ -48,6 +48,15 @@ import { useRoom } from '../ui/useRoom';
 import { useRate } from './useRate';
 
 const STEPS: Exclude<Phase, 'rate'>[] = ['native', 'pause', 'target'];
+/** The page: at most this wide, with these sides (a little less on a compact screen). */
+const MAX_WIDTH = 512;
+const GUTTER = 20;
+const COMPACT_GUTTER = 12;
+/** The header, and the dock under the page (the line over the grades, the grades, the transport), before the page is measured. */
+const HEADER = 52;
+const DOCK = 200;
+/** The coach's line for a learner's first phrases, at 100% text: room kept for it, so the picture keeps its size. */
+const COACH = 64;
 
 export function NowPlayingScreen() {
   const c = useCopy();
@@ -55,8 +64,11 @@ export function NowPlayingScreen() {
   const insets = useSafeAreaInsets();
   const room = useRoom();
   const { state } = useStore();
+  const now = useNow(60_000);
   const [notesOpen, setNotesOpen] = useState(false);
   const [shownAnyway, setShownAnyway] = useState<string | null>(null);
+  // The page's height between the header and the dock.
+  const [stage, setStage] = useState<number | null>(null);
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
   const phrase = findPhrase(state.learner, currentPhraseId(state.player));
@@ -81,8 +93,13 @@ export function NowPlayingScreen() {
   const coverSet = findSetView(state.learner, phrase.setId) ?? queueSet;
   const tone = (coverSet?.topicId && getTopic(coverSet.topicId)?.tone) || 'secondary';
   const endedOnce = state.player.ended && playsOnce(state.player);
-  // The picture gives way first when the screen is narrow or short, or the text is large.
-  const cover = playerCoverSize(room.width, room.height, room.fontScale);
+  // The picture fills the page's width where there is room, and gives way first on a short screen or
+  // with large text.
+  const side = room.compact ? COMPACT_GUTTER : GUTTER;
+  const width = Math.min(room.width, MAX_WIDTH) - 2 * side;
+  const height = stage ?? room.height - insets.top - insets.bottom - HEADER - DOCK;
+  const coaching = coaches(state.learner, now);
+  const cover = playerArtSize(width, height, room.fontScale, coaching ? COACH : 0);
   const gutter = room.compact ? styles.compactGutter : null;
 
   return (
@@ -103,16 +120,22 @@ export function NowPlayingScreen() {
           </View>
         </PullHandle>
 
-        <ScrollView style={styles.stage} contentContainerStyle={[styles.stageContent, gutter]}>
-          <View style={styles.cover}>
+        <ScrollView
+          style={styles.stage}
+          contentContainerStyle={[styles.stageContent, gutter]}
+          onLayout={(e: LayoutChangeEvent) => setStage(Math.round(e.nativeEvent.layout.height))}
+        >
+          <View style={[styles.cover, cover === 0 && styles.gone]}>
             <PhraseImage icons={phrase.image} tone={tone} width={cover} height={cover} rounded={24} style={shadow.cover} phrase={phrase} redraw />
           </View>
-          <PhraseBlock phrase={phrase} revealed={revealed} />
-          <ActionRow phrase={phrase} onNotes={() => setNotesOpen(true)} />
+          <View style={[styles.about, cover > 0 && styles.underCover]}>
+            <PhraseBlock phrase={phrase} revealed={revealed} />
+            <ActionRow phrase={phrase} onNotes={() => setNotesOpen(true)} />
+          </View>
+          {/* What room is left goes here: the loop sits over the controls, as a music player's progress does. */}
+          <View style={styles.spring} />
           {!endedOnce && (
             <View style={styles.loop}>
-              <PlayTime phrase={phrase} />
-              <Steps phrase={phrase} promptLang={prompt.lang} />
               {audioError ? (
                 <View style={styles.error} accessibilityRole="alert">
                   <View style={styles.row}>
@@ -122,11 +145,13 @@ export function NowPlayingScreen() {
                   {cannotSay && !revealed && <Button variant="text" label={c.player.showText(targetName)} onPress={() => setShownAnyway(phrase.id)} />}
                 </View>
               ) : (
-                <Txt variant="heading" weight={600} accessibilityLiveRegion="polite">
+                <Txt variant="title" weight={600} accessibilityLiveRegion="polite">
                   {playing ? phaseInstruction(c, phase, prompt.lang, phrase.targetLang) : c.player.paused}
                 </Txt>
               )}
               <Coach />
+              <Steps phrase={phrase} promptLang={prompt.lang} />
+              <PlayTime phrase={phrase} />
             </View>
           )}
         </ScrollView>
@@ -204,8 +229,9 @@ function ActionRow({ phrase, onNotes }: { phrase: Phrase; onNotes: () => void })
 }
 
 /**
- * The three steps: the current one filled while it plays, and named; the learner's turn fills over its
- * real length. The others are their icons, so the names never squeeze on a narrow screen.
+ * The three steps as a track under the instruction, which names the one playing: each its icon, the
+ * current one filled while it plays; the learner's turn fills over its real length. No names in the
+ * steps, so none is ever cut short.
  */
 function Steps({ phrase, promptLang }: { phrase: Phrase; promptLang: Phrase['targetLang'] }) {
   const c = useCopy();
@@ -221,19 +247,19 @@ function Steps({ phrase, promptLang }: { phrase: Phrase; promptLang: Phrase['tar
         const ink: ColorName = current && playing ? 'onPrimary' : current || done ? 'onPrimaryFixed' : 'secondary';
         const label = phaseStepLabel(c, p, promptLang, phrase.targetLang);
         return (
-          <View key={p} accessible accessibilityLabel={label} accessibilityState={{ selected: current }} style={[styles.step, current ? styles.stepNamed : null, look]}>
+          <View key={p} accessible accessibilityLabel={label} accessibilityState={{ selected: current }} style={[styles.step, look]}>
             {current && p === 'pause' && <PhaseFill style={{ backgroundColor: colors.primary, height: '100%' }} />}
             <Icon name={current && !playing ? 'pause' : PHASE_ICONS[p]} size="sm" color={ink} />
-            {current && (
-              <Txt variant="label" weight={600} color={ink} numberOfLines={1} style={styles.stepLabel}>
-                {label}
-              </Txt>
-            )}
           </View>
         );
       })}
     </View>
   );
+}
+
+/** Whether the learner is new enough for the coach: their first three phrases. */
+function coaches(learner: LearnerState, now: number): boolean {
+  return learnerStats(learner, now).started < 3;
 }
 
 /** For a learner's first phrases: the method in one line, while it's their turn. */
@@ -242,11 +268,11 @@ function Coach() {
   const { state } = useStore();
   const now = useNow(60_000);
   const { phase, status } = state.player;
-  if (status !== 'playing' || phase !== 'pause' || learnerStats(state.learner, now).started >= 3) return null;
+  if (status !== 'playing' || phase !== 'pause' || !coaches(state.learner, now)) return null;
   return <Txt color="secondary">{c.player.coach}</Txt>;
 }
 
-/** Repetition, elapsed listening time, and the full play at 1× once measured. */
+/** Under the steps, as a music player's times: the repetition; the time listened, of the full play at 1× once measured. */
 function PlayTime({ phrase }: { phrase: Phrase }) {
   const c = useCopy();
   const { state } = useStore();
@@ -255,10 +281,15 @@ function PlayTime({ phrase }: { phrase: Phrase }) {
   const full = state.prefs.speed === 1 ? phraseFullPlayMs(state, phrase, state.player.repeats) : null;
   const total = full !== null && elapsed <= full ? full : null;
   return (
-    <Txt variant="label" color="secondary" align="right">
-      {c.player.repetition(state.player.repetition, state.player.repeats)} · {formatElapsed(elapsed)}
-      {total !== null ? ` / ${c.common.fullPlay(formatElapsed(total))}` : ''}
-    </Txt>
+    <View style={styles.times}>
+      <Txt variant="label" color="secondary" numberOfLines={1} style={styles.shrink}>
+        {c.player.repetition(state.player.repetition, state.player.repeats)}
+      </Txt>
+      <Txt variant="label" color="secondary" numberOfLines={1} style={styles.clock}>
+        {formatElapsed(elapsed)}
+        {total !== null ? ` / ${c.common.fullPlay(formatElapsed(total))}` : ''}
+      </Txt>
+    </View>
   );
 }
 
@@ -402,7 +433,7 @@ function Transport() {
         }}
       >
         <View style={styles.repeats}>
-          <Txt variant="label" weight={700} color="primaryContainer">
+          <Txt variant="label" weight={700} color="primaryContainer" numberOfLines={1}>
             {setting === 'auto' ? c.player.captions.auto : String(setting)}
           </Txt>
         </View>
@@ -415,7 +446,7 @@ function SettingButton({ label, caption, onPress, children }: { label: string; c
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => [styles.setting, pressed && { backgroundColor: colors.surfaceContainer }]}>
       {children}
-      <Txt variant="caption" weight={600} color="primaryContainer" numberOfLines={1}>
+      <Txt variant="caption" weight={600} color="primaryContainer" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
         {caption}
       </Txt>
     </Pressable>
@@ -444,31 +475,35 @@ function SpeedButton() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, minHeight: 52, width: '100%', maxWidth: 512, alignSelf: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, minHeight: HEADER, width: '100%', maxWidth: MAX_WIDTH, alignSelf: 'center' },
   headerText: { flex: 1, minWidth: 0 },
   headerButton: { width: TARGET, height: TARGET, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   stage: { flex: 1 },
-  stageContent: { paddingHorizontal: 20, paddingBottom: 16, gap: 12, width: '100%', maxWidth: 512, alignSelf: 'center' },
-  cover: { alignItems: 'center', paddingVertical: 4 },
+  stageContent: { flexGrow: 1, paddingHorizontal: GUTTER, paddingTop: 4, paddingBottom: 12, width: '100%', maxWidth: MAX_WIDTH, alignSelf: 'center' },
+  spring: { flexGrow: 1, minHeight: 12 },
+  compactGutter: { paddingHorizontal: COMPACT_GUTTER },
+  cover: { alignItems: 'center' },
+  gone: { display: 'none' },
+  about: { gap: 4 },
+  underCover: { marginTop: 20 },
   hidden: { borderBottomWidth: 2, borderStyle: 'dashed', borderColor: colors.outlineVariant, alignSelf: 'flex-start' },
   promptText: { marginTop: 4 },
-  actions: { flexDirection: 'row', alignItems: 'center', minHeight: TARGET },
+  actions: { flexDirection: 'row', alignItems: 'center', minHeight: TARGET, marginRight: -10 },
   iconButton: { width: TARGET, height: TARGET, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
-  loop: { gap: 6 },
+  loop: { gap: 8 },
   steps: { flexDirection: 'row', gap: 6 },
-  step: { flex: 1, minHeight: TARGET, paddingHorizontal: 8, borderRadius: radius.xl, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, overflow: 'hidden' },
-  stepNamed: { flex: 3 },
-  stepLabel: { flexShrink: 1 },
+  step: { flex: 1, height: 32, borderRadius: radius.full, borderWidth: 1, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   stepPlaying: { backgroundColor: colors.primaryContainer, borderColor: colors.primaryContainer },
   stepCurrent: { backgroundColor: colors.primaryFixed, borderColor: colors.primaryContainer, borderStyle: 'dashed' },
   stepDone: { backgroundColor: 'rgba(255,219,207,0.5)', borderColor: 'transparent' },
   stepIdle: { backgroundColor: colors.surfaceContainerLow, borderColor: colors.hairline },
+  times: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: -2 },
+  clock: { flexShrink: 0, fontVariant: ['tabular-nums'] },
   error: { borderRadius: radius.xl, backgroundColor: 'rgba(255,218,214,0.6)', padding: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   shrink: { flexShrink: 1 },
   flex: { flex: 1, minWidth: 0 },
-  dock: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8, gap: 8, width: '100%', maxWidth: 512, alignSelf: 'center' },
-  compactGutter: { paddingHorizontal: 12 },
+  dock: { paddingHorizontal: GUTTER, paddingTop: 4, paddingBottom: 8, gap: 6, width: '100%', maxWidth: MAX_WIDTH, alignSelf: 'center' },
   dockLine: { borderTopWidth: 1, borderTopColor: colors.hairline },
   rating: { borderRadius: radius['3xl'], paddingHorizontal: 6, paddingBottom: 10, borderWidth: 2, borderColor: 'transparent', marginHorizontal: -8 },
   ratingHold: { backgroundColor: 'rgba(255,219,207,0.4)', borderColor: colors.primaryContainer },
@@ -478,7 +513,7 @@ const styles = StyleSheet.create({
   transport: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   skip: { width: 48, height: 48, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   play: { width: 64, height: 64, borderRadius: radius.full, backgroundColor: colors.primaryContainer, alignItems: 'center', justifyContent: 'center', ...shadow.float },
-  setting: { width: 56, height: 56, borderRadius: radius['2xl'], alignItems: 'center', justifyContent: 'center', gap: 2 },
+  setting: { minWidth: 56, height: 56, paddingHorizontal: 4, borderRadius: radius['2xl'], alignItems: 'center', justifyContent: 'center', gap: 2 },
   repeats: { minWidth: 40, height: 26, paddingHorizontal: 6, borderRadius: radius.lg, borderWidth: 2, borderColor: colors.primaryContainer, alignItems: 'center', justifyContent: 'center' },
   speedTarget: { minWidth: TARGET, minHeight: TARGET, justifyContent: 'center' },
   speed: { minHeight: 32, paddingHorizontal: 12, borderRadius: radius.full, borderWidth: 1, borderColor: colors.hairline, backgroundColor: colors.surfaceContainerLow, alignItems: 'center', justifyContent: 'center' },
