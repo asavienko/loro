@@ -1,0 +1,116 @@
+[
+  {
+    "id": "set-es-a1-cafe-counter",
+    "title": "En la cafetería",
+    "subtitle": {
+      "en": "Ordering breakfast drinks and toast at a Madrid café counter."
+    },
+    "topicId": "eating-out",
+    "situation": "cafe-counter",
+    "level": "A1",
+    "coverIcon": "local_drink",
+    "targetLang": "es-ES",
+    "phraseIds": [
+      "es-7j7qahq",
+      "es-jrpw2vw",
+      "es-td3y33c",
+      "es-kcwjb6g",
+      "es-3t3nu4a",
+      "es-y7dvynj",
+      "es-hsdzpxu",
+      "es-wxjusx5",
+      "es-j25n6h4",
+      "es-56szgjm",
+      "es-p75xvbp",
+      "es-iauq3dj"
+    ],
+    "grammarFocus": [
+      "es-present-regular",
+      "es-poner-request"
+    ],
+    "provenance": {
+      "writer": "deepseek",
+      "provider": "fireworks",
+      "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+      "run": "spike-es-a1-cafe-counter",
+      "promptVersion": "phrases.v1",
+      "briefHash": "fef4b27bd177caefc0ce19732c8358e9c20a42660a7b4e11b57c5b0cb7c81f07"
+    }
+  },
+  {
+    "id": "set-es-a1-cafe-counter-2",
+    "title": "En la cafetería",
+    "subtitle": {
+      "en": "Order a cold drink or a snack at a café and ask where things are."
+    },
+    "topicId": "eating-out",
+    "situation": "cafe-counter",
+    "level": "A1",
+    "coverIcon": "local_drink",
+    "targetLang": "es-ES",
+    "phraseIds": [
+      "es-cqjyc6y",
+      "es-cxu36gk",
+      "es-gmxiswh",
+      "es-rr52gmb",
+      "es-n7kdwor",
+      "es-uhajdf5",
+      "es-lv7hi4p",
+      "es-muwamzx",
+      "es-6fvb6so",
+      "es-fn2df75",
+      "es-ve7jwlx",
+      "es-kuxoeld"
+    ],
+    "grammarFocus": [
+      "es-hay-existence",
+      "es-poner-request"
+    ],
+    "provenance": {
+      "writer": "deepseek",
+      "provider": "fireworks",
+      "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+      "run": "spike-es-a1-cafe-counter-2",
+      "promptVersion": "phrases.v1",
+      "briefHash": "4761e0fd064dae3a0d1a20cd139f401812e877521d5bd040a3596c5821ce5bb8"
+    }
+  },
+  {
+    "id": "set-es-a1-paying",
+    "title": "Pagar con prisa",
+    "subtitle": {
+      "en": "Paying at the end of a meal or coffee when you are in a hurry."
+    },
+    "topicId": "eating-out",
+    "situation": "paying",
+    "level": "A1",
+    "coverIcon": "credit_card",
+    "targetLang": "es-ES",
+    "phraseIds": [
+      "es-jzbynd7",
+      "es-q5vrej5",
+      "es-3leenxo",
+      "es-bmucxkz",
+      "es-l5vgoel",
+      "es-y65fyh7",
+      "es-srfsrjd",
+      "es-4spcsev",
+      "es-unhmaql",
+      "es-4anz7u2",
+      "es-ubsh643",
+      "es-jcr6gba"
+    ],
+    "grammarFocus": [
+      "es-cobrar-request",
+      "es-present-regular"
+    ],
+    "provenance": {
+      "writer": "deepseek",
+      "provider": "fireworks",
+      "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+      "run": "spike-es-a1-paying",
+      "promptVersion": "phrases.v1",
+      "briefHash": "8b9b72010bac052a1e1a1b5ec04aa9933e7e73a750dec413c075d92b5dbf822d"
+    }
+  }
+]

@@ -1,0 +1,13 @@
+{"kind":"set","id":"set-es-a1-cafe-counter","subtitle":"Поръчване на напитки за закуска и препечени филийки на щанда в мадридско кафене."}
+{"kind":"phrase","id":"es-7j7qahq","translation":"Ще ни дадете ли два сока, моля?","words":{"nos":"за нас","pone":"давате (Вие)","dos":"два","zumos":"сокове","por favor":"моля"}}
+{"kind":"phrase","id":"es-jrpw2vw","translation":"Да седнем ли на маса?","words":{"nos":"се","sentamos":"сядаме (ние)","en":"на","una":"една","mesa":"маса"}}
+{"kind":"phrase","id":"es-td3y33c","translation":"Имате ли кафе с мляко?","words":{"tienen":"имате (Вие)","café con leche":"кафе с мляко"}}
+{"kind":"phrase","id":"es-kcwjb6g","translation":"Ще ми дадете ли едно кафе соло, моля?","words":{"me":"за мен","pone":"давате (Вие)","un":"едно","café":"кафе","solo":"соло","por favor":"моля"}}
+{"kind":"phrase","id":"es-3t3nu4a","translation":"Ще ни дадете ли две препечени филийки?","words":{"nos":"за нас","pone":"давате (Вие)","dos":"две","tostadas":"препечени филийки"}}
+{"kind":"phrase","id":"es-y7dvynj","translation":"Искате ли захар?","words":{"quiere":"искате (Вие)","azúcar":"захар"}}
+{"kind":"phrase","id":"es-hsdzpxu","translation":"За вкъщи ли е?","words":{"es":"е (то)","para llevar":"за вкъщи"}}
+{"kind":"phrase","id":"es-wxjusx5","translation":"Колко е?","words":{"cuánto":"колко","es":"е (то)"}}
+{"kind":"phrase","id":"es-j25n6h4","translation":"За мен, едно безкофеиново от машината.","words":{"para mí":"за мен","un":"едно","descafeinado":"безкофеиново","de":"от","máquina":"машина"}}
+{"kind":"phrase","id":"es-56szgjm","translation":"Един кроасан за мен, благодаря.","words":{"un":"един","croissant":"кроасан","para mí":"за мен","gracias":"благодаря"}}
+{"kind":"phrase","id":"es-p75xvbp","translation":"Не, благодаря, пия го соло.","words":{"no":"не","gracias":"благодаря","lo":"го","tomo":"пия (аз)","solo":"соло"}}
+{"kind":"phrase","id":"es-iauq3dj","translation":"Плащам в брой, благодаря.","words":{"pago":"плащам (аз)","en":"в","efectivo":"брой","gracias":"благодаря"}}

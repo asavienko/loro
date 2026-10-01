@@ -1,0 +1,39 @@
+{"kind":"set","id":"set-es-a1-cafe-counter","subtitle":"Заказ утренних напитков и тостов в мадридском кафе"}
+{"kind":"phrase","id":"es-7j7qahq","translation":"Вы нам два сока, пожалуйста?","words":{"nos":"нам","pone":"подаёте","dos":"два","zumos":"соки","por favor":"пожалуйста"}}
+{"kind":"phrase","id":"es-jrpw2vw","translation":"Мы сядем за столик?","words":{"nos":"себя","sentamos":"садимся","en":"за","una":"один","mesa":"столик"}}
+{"kind":"phrase","id":"es-td3y33c","translation":"У вас есть кофе с молоком?","words":{"tienen":"у вас есть","café con leche":"кофе с молоком"}}
+{"kind":"phrase","id":"es-kcwjb6g","translation":"Мне кофе без молока, пожалуйста?","words":{"me":"мне","pone":"подаёте","un":"один","café":"кофе","solo":"без молока","por favor":"пожалуйста"}}
+{"kind":"phrase","id":"es-3t3nu4a","translation":"Вы нам два тоста?","words":{"nos":"нам","pone":"подаёте","dos":"два","tostadas":"тоста"}}
+{"kind":"phrase","id":"es-y7dvynj","translation":"Сахар хотите?","words":{"quiere":"хотите","azúcar":"сахар"}}
+{"kind":"phrase","id":"es-hsdzpxu","translation":"Это с собой?","words":{"es":"это","para llevar":"с собой"}}
+{"kind":"phrase","id":"es-wxjusx5","translation":"Сколько с меня?","words":{"cuánto":"сколько","es":"это"}}
+{"kind":"phrase","id":"es-j25n6h4","translation":"Мне декаф из автомата.","words":{"para mí":"мне","un":"один","descafeinado":"декаф","de":"из","máquina":"автомата"}}
+{"kind":"phrase","id":"es-56szgjm","translation":"Круассан мне, спасибо.","words":{"un":"один","croissant":"круассан","para mí":"мне","gracias":"спасибо"}}
+{"kind":"phrase","id":"es-p75xvbp","translation":"Нет, спасибо, я пью без молока.","words":{"no":"нет","gracias":"спасибо","lo":"его","tomo":"пью","solo":"без молока"}}
+{"kind":"phrase","id":"es-iauq3dj","translation":"Я плачу наличными, спасибо.","words":{"pago":"плачу","en":"наличными","efectivo":"наличные","gracias":"спасибо"}}
+{"kind":"set","id":"set-es-a1-cafe-counter-2","subtitle":"Закажите холодный напиток или перекус в кафе и спросите, где что находится."}
+{"kind":"phrase","id":"es-cqjyc6y","translation":"Есть что-нибудь холодное со льдом?","words":{"hay":"есть","algo":"что-нибудь","frío":"холодное","con hielo":"со льдом"}}
+{"kind":"phrase","id":"es-cxu36gk","translation":"Есть место на террасе?","words":{"hay":"есть","sitio":"место","en":"на","la":"the","terraza":"терраса"}}
+{"kind":"phrase","id":"es-gmxiswh","translation":"Есть какой-нибудь горячий бутерброд?","words":{"hay":"есть","algún":"какой-нибудь","bocadillo":"бутерброд","caliente":"горячий"}}
+{"kind":"phrase","id":"es-rr52gmb","translation":"Принесёте нам два чая со льдом?","words":{"nos":"нам","pone":"принесёте (Вы)","dos":"два","té":"чай","con hielo":"со льдом"}}
+{"kind":"phrase","id":"es-n7kdwor","translation":"Принесёте мне холодный бутерброд, пожалуйста?","words":{"me":"мне","pone":"принесёте (Вы)","un":"один","bocadillo":"бутерброд","frío":"холодный","por favor":"пожалуйста"}}
+{"kind":"phrase","id":"es-uhajdf5","translation":"Мне бутерброд, и всё.","words":{"para mí":"мне","un":"один","bocadillo":"бутерброд","nada más":"и всё"}}
+{"kind":"phrase","id":"es-lv7hi4p","translation":"Есть место внутри?","words":{"hay":"есть","sitio":"место","dentro":"внутри"}}
+{"kind":"phrase","id":"es-muwamzx","translation":"Извините, где туалет?","words":{"perdone":"извините (Вы)","dónde":"где","está":"находится","el":"the","baño":"туалет"}}
+{"kind":"phrase","id":"es-6fvb6so","translation":"Принесёте мне салфетку, пожалуйста?","words":{"me":"мне","trae":"принесёте (Вы)","una":"одну","servilleta":"салфетка","por favor":"пожалуйста"}}
+{"kind":"phrase","id":"es-fn2df75","translation":"У вас есть вайфай?","words":{"tienen":"у вас есть","wifi":"вайфай"}}
+{"kind":"phrase","id":"es-ve7jwlx","translation":"Извините, принесёте мне салфетку?","words":{"perdone":"извините (Вы)","me":"мне","trae":"принесёте (Вы)","una":"одну","servilleta":"салфетка"}}
+{"kind":"phrase","id":"es-kuxoeld","translation":"У вас есть что-нибудь горячее?","words":{"tienen":"у вас есть","algo":"что-нибудь","caliente":"горячее"}}
+{"kind":"set","id":"set-es-a1-paying","subtitle":"Оплата в конце еды или кофе, когда вы спешите."}
+{"kind":"phrase","id":"es-jzbynd7","translation":"Можно оплатить картой, пожалуйста?","words":{"me":"мне","cobra":"оплачиваете","con":"картой","tarjeta":"карта","por favor":"пожалуйста"}}
+{"kind":"phrase","id":"es-q5vrej5","translation":"Плачу наличными, дадите сдачу?","words":{"pago":"плачу","en":"наличными","efectivo":"наличные","me":"мне","da":"дадите","el":"сдачу","cambio":"сдача"}}
+{"kind":"phrase","id":"es-3leenxo","translation":"Можно нам оплатить отдельно, пожалуйста?","words":{"nos":"нам","cobra":"оплачиваете","por separado":"отдельно","por favor":"пожалуйста"}}
+{"kind":"phrase","id":"es-bmucxkz","translation":"Платим вместе, можно оплатить?","words":{"pagamos":"платим","juntos":"вместе","me":"мне","cobra":"оплачиваете"}}
+{"kind":"phrase","id":"es-l5vgoel","translation":"Сегодня угощаю я, можно оплатить?","words":{"hoy":"сегодня","invito":"угощаю","yo":"я","me":"мне","cobra":"оплачиваете"}}
+{"kind":"phrase","id":"es-y65fyh7","translation":"Можно оплатить счёт, пожалуйста?","words":{"me":"мне","cobra":"оплачиваете","la":"счёт","cuenta":"счёт","por favor":"пожалуйста"}}
+{"kind":"phrase","id":"es-srfsrjd","translation":"Вы принимаете карту или я плачу наличными?","words":{"acepta":"принимаете","tarjeta":"карта","o":"или","pago":"плачу","en":"наличными","efectivo":"наличные"}}
+{"kind":"phrase","id":"es-4spcsev","translation":"Можно оплатить? И дайте мне чек.","words":{"me":"мне","cobra":"оплачиваете","y":"и","deme":"дайте мне","el":"чек","ticket":"чек"}}
+{"kind":"phrase","id":"es-unhmaql","translation":"Извините, можно оплатить? Я спешу.","words":{"perdone":"извините","me":"мне","cobra":"оплачиваете","tengo":"я имею","prisa":"спешка"}}
+{"kind":"phrase","id":"es-4anz7u2","translation":"Вы принимаете бесконтактную оплату?","words":{"acepta":"принимаете","contactless":"бесконтактная оплата"}}
+{"kind":"phrase","id":"es-ubsh643","translation":"Сколько с меня? И оставьте сдачу себе.","words":{"cuánto":"сколько","es":"это","y":"и","quédese":"оставьте","con":"с","el":"сдачу","cambio":"сдача"}}
+{"kind":"phrase","id":"es-jcr6gba","translation":"Вы меня угощаете? Тогда платим вместе.","words":{"me":"меня","invita":"угощаете","usted":"вы","entonces":"тогда","pagamos":"платим","juntos":"вместе"}}
