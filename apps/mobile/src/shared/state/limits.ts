@@ -1,5 +1,5 @@
 /** Text limits, shared by the forms (maxLength), the reducer and data loaded or synced. */
-export const LIMITS = { phrase: 120, title: 60, name: 40, description: 120 } as const;
+export const LIMITS = { phrase: 120, title: 60, name: 40, description: 120, coverPrompt: 200 } as const;
 
 /** Notes written for one of the learner's own phrases (AI's), as stored and synced. */
 export const NOTE_LIMITS = { title: 60, text: 300 } as const;

@@ -11,25 +11,25 @@ import { findPhrase, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { requeuesOn } from './machine';
 import { isLiked, measuredTargetMs, pendingFor, phaseDurationMs } from './selectors';
 import { sanitizeLearner, sanitizeState } from './persistence';
-import { pauseMs, RATE_HOLD_MS } from './timing';
+import { echoMs, pauseMs, RATE_HOLD_MS } from './timing';
 import { cafe, DAY, done, fresh, load, MINUTE, playPhrase, run, T0 } from './testing';
 import { isTargetRevealed } from '../ui/phase';
 import { installOwnSet, removeOwnSet } from '../content/fixture';
 import type { AppState } from './types';
 
 describe('player loop', () => {
-  it('walks native → pause → target three times for a new phrase, then holds for a rating', () => {
+  it('walks native → pause → target → echo three times for a new phrase, then holds for a rating', () => {
     let s = load(fresh());
     assert.equal(s.player.repeats, 3);
     const phases: string[] = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 13; i++) {
       phases.push(`${s.player.repetition}:${s.player.phase}`);
       s = done(s, T0 + i * 1000);
     }
     assert.deepEqual(phases, [
-      '1:native', '1:pause', '1:target',
-      '2:native', '2:pause', '2:target',
-      '3:native', '3:pause', '3:target',
+      '1:native', '1:pause', '1:target', '1:echo',
+      '2:native', '2:pause', '2:target', '2:echo',
+      '3:native', '3:pause', '3:target', '3:echo',
       '3:rate',
     ]);
     assert.equal(s.player.index, 1, 'the hold ends and the next phrase starts');
@@ -49,6 +49,8 @@ describe('player loop', () => {
     let s = load(fresh());
     s = done(done(s, T0 + 1), T0 + 2);
     s = transition(s, { type: 'PHASE_DONE', cycle: s.player.cycle, now: T0 + 3, unconfirmed: true });
+    assert.equal(s.player.phase, 'echo');
+    s = done(s, T0 + 4);
     assert.equal(s.player.repetition, 2);
     assert.equal(s.learner.log.length, 0);
     assert.equal(points(s.learner), 0);
@@ -185,9 +187,9 @@ describe('rating window', () => {
 
   it('rating during the hold moves on at once; a rated phrase skips the hold', () => {
     let s = transition(load(fresh()), { type: 'RATE', grade: 'easy', now: T0 });
-    for (let i = 0; i < 9; i++) s = done(s, T0 + i);
+    for (let i = 0; i < 12; i++) s = done(s, T0 + i);
     assert.equal(s.player.index, 1, 'already rated: no hold');
-    for (let i = 0; i < 9; i++) s = done(s, T0 + 100 + i);
+    for (let i = 0; i < 12; i++) s = done(s, T0 + 100 + i);
     assert.equal(s.player.phase, 'rate');
     s = transition(s, { type: 'RATE', grade: 'hard', now: T0 + 200 });
     assert.equal(s.player.index, 2);
@@ -215,7 +217,7 @@ describe('memory through the Rust core', () => {
     // Local times, so the calendar days are the same in any time zone.
     const morning = startOfLocalDay(T0) + 10 * HOUR;
     let today = load(fresh(), morning);
-    for (let i = 0; i < 9; i++) today = done(today, morning + i * 1000); // all three repetitions
+    for (let i = 0; i < 12; i++) today = done(today, morning + i * 1000); // all three repetitions
     today = rateAt(today, 'easy', morning + 10_000);
     assert.equal(phraseProgress(today.learner, 'cafe-01', morning).dueAt! - (morning + 10_000), DAY, 'three repetitions today are still one day');
 
@@ -288,6 +290,19 @@ describe('queue edits', () => {
     const restored = transition(removed, { type: 'INSERT_IN_QUEUE', position: 2, phraseId: 'cafe-03' });
     assert.deepEqual(restored.player.order, s.player.order);
     assert.deepEqual(transition(s, { type: 'CLEAR_QUEUE' }).player.order, ['cafe-01']);
+  });
+
+  it('closes only while paused, emptying the queue and keeping ratings', () => {
+    let s = load(fresh());
+    s = transition(s, { type: 'RATE', grade: 'easy', now: T0 + 1 });
+    assert.equal(transition(s, { type: 'CLOSE' }), s);
+    s = transition(s, { type: 'PAUSE', now: T0 + 2 });
+    const closed = transition(s, { type: 'CLOSE' });
+    assert.equal(closed.player.status, 'idle');
+    assert.equal(currentPhraseId(closed.player), null);
+    assert.ok(closed.player.cycle > s.player.cycle);
+    assert.deepEqual(closed.pending, s.pending);
+    assert.deepEqual(closed.learner, s.learner);
   });
 });
 
@@ -458,7 +473,7 @@ describe('continue mode (regression)', () => {
 describe('undo inside the window (regression)', () => {
   it('a phrase whose rating was undone waits to be rated again', () => {
     let s = run(load(fresh()), { type: 'RATE', grade: 'easy', now: T0 }, { type: 'UNRATE', now: T0 + 1 });
-    for (let i = 0; i < 9 && s.player.phase !== 'rate'; i++) s = done(s, T0 + 10 + i);
+    for (let i = 0; i < 12 && s.player.phase !== 'rate'; i++) s = done(s, T0 + 10 + i);
     assert.equal(s.player.phase, 'rate');
     assert.equal(s.player.index, 0);
   });
@@ -500,15 +515,23 @@ describe('phase timing (what the screen counts down)', () => {
     // Exactly the call the audio driver made before it read `phaseMs`.
     assert.equal(s.player.phaseMs, pauseMs(measuredTargetMs(s.learner, id), phrase.target, 1.25));
     assert.equal(s.player.phaseMs, phaseDurationMs(s));
-    for (let i = 0; i < 8 && s.player.phase !== 'rate'; i++) s = done(s, T0 + 1000 * (i + 2), 1500);
+    s = done(s, T0 + 2000);
+    s = done(s, T0 + 3000, 1500);
+    assert.equal(s.player.phase, 'echo');
+    assert.equal(s.player.phaseMs, echoMs(measuredTargetMs(s.learner, id), phrase.target, 1.25));
+    assert.equal(s.player.phaseMs, phaseDurationMs(s));
+    for (let i = 0; i < 9 && s.player.phase !== 'rate'; i++) s = done(s, T0 + 1000 * (i + 4), 1500);
     assert.equal(s.player.phase, 'rate');
     assert.equal(s.player.phaseMs, RATE_HOLD_MS);
   });
 
   it('a measured target sizes the next turn, and the longer setting lengthens it', () => {
     let s = load(fresh({ pauseLength: 'longer' }));
-    s = done(done(done(s, T0 + 1, 900), T0 + 2), T0 + 3, 1600); // one repetition, target measured
-    s = done(s, T0 + 4, 900); // the next prompt
+    s = done(done(done(s, T0 + 1, 900), T0 + 2), T0 + 3, 1600); // target measured
+    assert.equal(s.player.phaseMs, echoMs(1600, 'x', 1, 'longer'));
+    assert.equal(s.player.phaseMs, 1600 * 1.5 + 800);
+    s = done(s, T0 + 4); // the echo
+    s = done(s, T0 + 5, 900); // the next prompt
     assert.equal(s.player.phase, 'pause');
     assert.equal(s.player.phaseMs, pauseMs(1600, 'x', 1, 'longer'));
     assert.equal(s.player.phaseMs, 1600 * 2 + 1000);
@@ -591,9 +614,9 @@ describe('queues with a natural end', () => {
 describe('undo after moving on', () => {
   it('a rating given in the hold can be undone by phrase once the next phrase plays', () => {
     let s = load(fresh());
-    for (let i = 0; i < 9; i++) s = done(s, T0 + i * 1000);
+    for (let i = 0; i < 12; i++) s = done(s, T0 + i * 1000);
     assert.equal(s.player.phase, 'rate');
-    s = run(s, { type: 'RATE', grade: 'easy', now: T0 + 10_000 });
+    s = run(s, { type: 'RATE', grade: 'easy', now: T0 + 13_000 });
     assert.equal(s.player.index, 1, 'the rating ends the hold');
     s = run(s, { type: 'UNRATE', phraseId: 'cafe-01', now: T0 + 12_000 });
     assert.equal(pendingFor(s, 'cafe-01'), undefined);

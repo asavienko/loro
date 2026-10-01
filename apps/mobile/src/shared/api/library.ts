@@ -230,7 +230,7 @@ const readCover = (cover: CoverState): CoverState => ({ ...cover, provider: ai(c
  * it answers and sends no status: that cover is ready.
  */
 export async function generateCover(
-  body: { kind: CoverKind; title?: string; description?: string; attachTo?: string; nativeLang?: LanguageCode },
+  body: { kind: CoverKind; title?: string; description?: string; prompt?: string; attachTo?: string; nativeLang?: LanguageCode },
   pace = { pollMs: COVER_POLL_MS, polls: COVER_POLLS },
 ): Promise<CoverState> {
   const asked = readCover(await api<CoverState>('/library/generate/cover', { method: 'POST', body, auth: 'required' }));
@@ -242,6 +242,32 @@ export async function generateCover(
   if (cover.status === 'failed') throw new ApiError(0, 'PROVIDER_UNAVAILABLE', 'The cover could not be drawn');
   return asked.copy ? { ...cover, copy: asked.copy } : cover;
 }
+
+/** A cover the learner drew for an item before, with the words they asked it to picture (null: the item's own). */
+export interface CoverChoice {
+  id: string;
+  url: string;
+  provider: 'ai' | 'pattern';
+  prompt: string | null;
+  createdAt: number;
+}
+
+/** The covers drawn for an item, newest first, and the one it wears now (`current`). */
+export interface CoverHistory {
+  covers: CoverChoice[];
+  current: string | null;
+}
+
+/** The learner's covers for an item they may change, to choose one again without drawing. */
+export const fetchCoverHistory = (kind: CoverKind, id: string) =>
+  api<CoverHistory>(`/library/covers/${kind}/${encodeURIComponent(id)}`, { auth: 'required' }).then((history) => ({
+    ...history,
+    covers: history.covers.map((cover) => ({ ...cover, provider: ai(cover.provider) as CoverChoice['provider'] })),
+  }));
+
+/** Puts an earlier cover back on the item it was drawn for: nothing is drawn, and no cover is spent. */
+export const wearCover = (coverId: string, body: { kind: CoverKind; attachTo: string }) =>
+  api<CoverState>(`/library/covers/${encodeURIComponent(coverId)}/wear`, { method: 'POST', body, auth: 'required' }).then(readCover);
 
 /** The lyrics as the server last sent them; a `claude` writer from an older server reads as `ai`. */
 const readLyrics = (lyrics: Lyrics): Lyrics => ({ ...lyrics, lyricsBy: lyrics.lyricsBy === null ? null : (ai(lyrics.lyricsBy) as 'ai' | 'phrases') });

@@ -363,6 +363,59 @@ describePostgres('the library against real PostgreSQL', () => {
     ).toBe('VALIDATION_FAILED')
   })
 
+  it('keeps the covers drawn for an item, to put one back without drawing', async () => {
+    const { set } = await library.createSet('hal', {
+      title: 'Again',
+      targetLang: 'es-ES',
+      nativeLang: 'bg-BG',
+      phrases: (await deck('hal')).slice(0, 1),
+    })
+    const first = await library.generateCover('hal', {
+      kind: 'set',
+      attachTo: set.id,
+      prompt: 'A lighthouse',
+    })
+    now += 1_000
+    const second = await library.generateCover('hal', { kind: 'set', attachTo: set.id })
+    const history = await library.coverHistory('hal', 'set', set.id)
+    expect(history.current).toBe(second.id)
+    expect(history.covers.map((c) => [c.id, c.prompt, c.url])).toEqual([
+      [second.id, null, second.url],
+      [first.id, 'A lighthouse', first.url],
+    ])
+    // Put back: nothing drawn, nothing spent.
+    const used = (await library.usage('hal')).daily.cover.used
+    expect(
+      await library.wearCover('hal', first.id, { kind: 'set', attachTo: set.id }),
+    ).toMatchObject({ id: first.id, status: 'ready', url: first.url })
+    expect((await library.set('hal', set.id)).set.coverUrl).toBe(first.url)
+    expect((await library.usage('hal')).daily.cover.used).toBe(used)
+    expect((await library.coverHistory('hal', 'set', set.id)).current).toBe(first.id)
+    // Only the learner's own covers, of the item they were drawn for, on what is theirs.
+    expect(await library.coverHistory('ida', 'set', set.id)).toEqual({ covers: [], current: null })
+    expect(await code(library.wearCover('ida', first.id, { kind: 'set', attachTo: set.id }))).toBe(
+      'NOT_FOUND',
+    )
+    expect(
+      await code(library.wearCover('hal', first.id, { kind: 'phrase', attachTo: 'cafe-01' })),
+    ).toBe('NOT_FOUND')
+    expect(await code(library.coverHistory('hal', 'word', set.id))).toBe('VALIDATION_FAILED')
+  })
+
+  it('keeps a phrase’s covers to the learner who drew them', async () => {
+    const drawn = await library.generateCover('jay', { kind: 'phrase', attachTo: 'cafe-02' })
+    const again = await library.generateCover('jay', {
+      kind: 'phrase',
+      attachTo: 'cafe-02',
+      prompt: 'Two cups',
+    })
+    expect((await library.coverHistory('jay', 'phrase', 'cafe-02')).covers).toHaveLength(2)
+    await library.wearCover('jay', drawn.id, { kind: 'phrase', attachTo: 'cafe-02' })
+    expect((await library.pack('jay', 'es-ES')).covers.phrases['cafe-02']).toBe(drawn.url)
+    expect((await library.coverHistory('jay', 'phrase', 'cafe-02')).current).toBe(drawn.id)
+    expect(again.id).not.toBe(drawn.id)
+  })
+
   it('copies one of Loro’s sets to wear a new cover, its phrases listed, not copied', async () => {
     const loro = (await library.set(null, 'set-cafe')).set
     const cover = await library.generateCover('lia', {
@@ -631,6 +684,24 @@ describePostgres('the library against real PostgreSQL', () => {
       expect(svg.replace('xmlns="http://www.w3.org/2000/svg"', '')).not.toMatch(
         /<script|xlink|https?:/,
       )
+    })
+
+    it('pictures what the learner asked for, the set’s words kept as context', async () => {
+      draw = () => Promise.resolve(PNG)
+      resetArtist(images)
+      const set = await coverSet('kit')
+      const cover = await library.generateCover('kit', {
+        kind: 'set',
+        attachTo: set.id,
+        prompt: 'A red bicycle by the sea',
+      })
+      expect(prompts.at(-1)).toContain('"Faros", about: by the sea')
+      expect(prompts.at(-1)).toContain('Picture: A red bicycle by the sea.')
+      await vi.waitFor(async () => {
+        expect((await library.coverHistory('kit', 'set', set.id)).covers).toEqual([
+          expect.objectContaining({ id: cover.id, prompt: 'A red bicycle by the sea' }),
+        ])
+      })
     })
 
     it('copies one of Loro’s sets at once, and the copy takes the illustration when it is ready', async () => {

@@ -311,10 +311,35 @@ export class LibraryWriteController {
     return this.library.generateNotes(request.principal.userId, body)
   }
 
+  /** Another mnemonic or grammar note for a phrase, unlike the ones the learner already read. */
+  @Post('generate/note')
+  @HttpCode(200)
+  rewriteNote(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    return this.library.rewriteNote(request.principal.userId, body)
+  }
+
   @Post('generate/cover')
   @HttpCode(201)
   generateCover(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
     return this.library.generateCover(request.principal.userId, body)
+  }
+
+  /** The covers the learner drew for an item, and the one it wears, to choose from again. */
+  @Get('covers/:kind/:id')
+  @Header('Cache-Control', 'no-store')
+  coverHistory(
+    @Req() request: AuthenticatedRequest,
+    @Param('kind') kind: string,
+    @Param('id') id: string,
+  ) {
+    return this.library.coverHistory(request.principal.userId, kind, id)
+  }
+
+  /** An earlier cover put back on the item it was drawn for, without drawing. */
+  @Post('covers/:id/wear')
+  @HttpCode(200)
+  wearCover(@Req() request: AuthenticatedRequest, @Param('id') id: string, @Body() body: unknown) {
+    return this.library.wearCover(request.principal.userId, id, body)
   }
 
   /** Lyrics written first (plan 113), in the background; the app polls `GET lyrics/:id`. */

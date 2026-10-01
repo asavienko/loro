@@ -1,0 +1,376 @@
+{
+  "version": 1,
+  "slots": [
+    {
+      "setId": "set-es-a1-cafe-counter",
+      "course": "es-ES",
+      "level": "A1",
+      "topic": "eating-out",
+      "situation": "cafe-counter",
+      "count": 12,
+      "song": false,
+      "brief": {
+        "edited": true,
+        "scene": "A customer orders at the counter of a Madrid café in the morning; the barista answers. Short exchanges: what to drink, with what, to take away or not, paying.",
+        "speakers": ["customer", "barista"],
+        "register": "neutral; the customer uses usted forms, never tú; the barista may use tú",
+        "grammarFocus": [
+          {
+            "id": "es-present-regular",
+            "kind": "tense",
+            "rule": "The present tense of regular -ar/-er/-ir verbs: quiero, tomo, pago; with usted the verb takes the third person: ¿quiere…?, ¿tiene…?",
+            "example": "¿Quiere azúcar? — No, gracias, lo tomo solo.",
+            "minPhrases": 4
+          },
+          {
+            "id": "es-poner-request",
+            "kind": "construction",
+            "rule": "Ordering with poner + indirect pronoun: «me pone…» (will you serve me…), «¿nos pone…?» for a group; «para mí» to pick one's own order.",
+            "example": "¿Me pone un café con leche, por favor?",
+            "minPhrases": 3
+          }
+        ],
+        "functions": ["request", "ask-price", "offer", "thank", "ask-availability"],
+        "mustUse": [
+          {
+            "lemma": "café con leche",
+            "gloss": "coffee with milk",
+            "pos": "noun"
+          },
+          {
+            "lemma": "solo",
+            "gloss": "black (coffee), on its own",
+            "pos": "adj"
+          },
+          {
+            "lemma": "para llevar",
+            "gloss": "to take away",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "azúcar",
+            "gloss": "sugar",
+            "pos": "noun"
+          },
+          {
+            "lemma": "tostada",
+            "gloss": "slice of toast",
+            "pos": "noun"
+          },
+          {
+            "lemma": "zumo",
+            "gloss": "juice",
+            "pos": "noun"
+          },
+          {
+            "lemma": "cuánto",
+            "gloss": "how much",
+            "pos": "pron"
+          },
+          {
+            "lemma": "tarjeta",
+            "gloss": "card (to pay)",
+            "pos": "noun"
+          },
+          {
+            "lemma": "efectivo",
+            "gloss": "cash",
+            "pos": "noun"
+          },
+          {
+            "lemma": "mesa",
+            "gloss": "table",
+            "pos": "noun"
+          },
+          {
+            "lemma": "descafeinado",
+            "gloss": "decaf",
+            "pos": "adj"
+          },
+          {
+            "lemma": "croissant",
+            "gloss": "croissant",
+            "pos": "noun"
+          }
+        ],
+        "shouldUse": [
+          {
+            "lemma": "por favor",
+            "gloss": "please",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "gracias",
+            "gloss": "thanks",
+            "pos": "interj"
+          },
+          {
+            "lemma": "algo más",
+            "gloss": "anything else",
+            "pos": "phrase"
+          }
+        ],
+        "avoid": {
+          "lemmas": ["desayunar", "camarero", "cortado", "avena", "cuenta"],
+          "themes": ["alcohol", "tipping", "prices in numbers"],
+          "textKeys": "siblings"
+        },
+        "mention": [
+          "In Spain you ask for the bill; it is not brought unasked.",
+          "A café con leche is the ordinary morning coffee; «solo» is an espresso."
+        ],
+        "doNotMention": [
+          "prices in pesetas or exact amounts",
+          "vosotros forms",
+          "regional words (bocata, pincho)",
+          "brand names"
+        ],
+        "variety": null,
+        "notesHints": ["mnemonic for «tostada»: toast-ada, the toast has arrived"]
+      }
+    },
+    {
+      "setId": "set-es-a1-cafe-counter-2",
+      "course": "es-ES",
+      "level": "A1",
+      "topic": "eating-out",
+      "situation": "cafe-counter",
+      "count": 12,
+      "song": false,
+      "brief": {
+        "edited": true,
+        "scene": "Mid-afternoon at the same kind of café: a regular wants something cold or a snack, asks where things are, and the barista offers.",
+        "speakers": ["customer", "barista"],
+        "register": "neutral; the customer uses usted forms, never tú",
+        "grammarFocus": [
+          {
+            "id": "es-hay-existence",
+            "kind": "construction",
+            "rule": "«hay» says that something exists or is available: ¿hay…? / no hay…; it never changes form.",
+            "example": "¿Hay sitio en la terraza?",
+            "minPhrases": 3
+          },
+          {
+            "id": "es-poner-request",
+            "kind": "construction",
+            "rule": "Ordering with poner + indirect pronoun: «me pone…» (will you serve me…), «¿nos pone…?» for a group; «para mí» to pick one's own order.",
+            "example": "¿Me pone un café con leche, por favor?",
+            "minPhrases": 3
+          }
+        ],
+        "functions": ["request", "ask-availability", "ask-location", "offer", "decline"],
+        "mustUse": [
+          {
+            "lemma": "agua",
+            "gloss": "water",
+            "pos": "noun"
+          },
+          {
+            "lemma": "con hielo",
+            "gloss": "with ice",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "té",
+            "gloss": "tea",
+            "pos": "noun"
+          },
+          {
+            "lemma": "bocadillo",
+            "gloss": "filled roll, sandwich",
+            "pos": "noun"
+          },
+          {
+            "lemma": "terraza",
+            "gloss": "outdoor seating",
+            "pos": "noun"
+          },
+          {
+            "lemma": "baño",
+            "gloss": "toilet, restroom",
+            "pos": "noun"
+          },
+          {
+            "lemma": "servilleta",
+            "gloss": "napkin",
+            "pos": "noun"
+          },
+          {
+            "lemma": "frío",
+            "gloss": "cold",
+            "pos": "adj"
+          },
+          {
+            "lemma": "caliente",
+            "gloss": "hot",
+            "pos": "adj"
+          },
+          {
+            "lemma": "sitio",
+            "gloss": "room, a free seat",
+            "pos": "noun"
+          },
+          {
+            "lemma": "wifi",
+            "gloss": "wifi",
+            "pos": "noun"
+          },
+          {
+            "lemma": "nada más",
+            "gloss": "nothing else",
+            "pos": "phrase"
+          }
+        ],
+        "shouldUse": [
+          {
+            "lemma": "por favor",
+            "gloss": "please",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "perdone",
+            "gloss": "excuse me (usted)",
+            "pos": "interj"
+          }
+        ],
+        "avoid": {
+          "lemmas": ["cerveza", "vino", "cortado", "avena", "cuenta", "tostada", "azúcar"],
+          "themes": ["alcohol", "tipping", "prices in numbers"],
+          "textKeys": "siblings"
+        },
+        "mention": ["Tap water is free on request in most of Spain: «un vaso de agua»."],
+        "doNotMention": ["vosotros forms", "regional words", "brand names", "exact prices"],
+        "variety": null,
+        "notesHints": []
+      }
+    },
+    {
+      "setId": "set-es-a1-paying",
+      "course": "es-ES",
+      "level": "A1",
+      "topic": "eating-out",
+      "situation": "paying",
+      "count": 12,
+      "song": false,
+      "brief": {
+        "edited": true,
+        "scene": "Paying at the end of a meal or a coffee in a Spanish bar: catching the waiter's eye, asking for the bill, choosing how to pay, splitting it between friends, getting the receipt and the change.",
+        "speakers": ["customer", "waiter"],
+        "register": "neutral; the customer uses usted forms; short and polite",
+        "grammarFocus": [
+          {
+            "id": "es-cobrar-request",
+            "kind": "construction",
+            "rule": "Asking to pay with cobrar: «¿Me cobra?» / «¿Nos cobra, por favor?» (will you charge me/us), the usual way to ask for the bill at a bar; «la cuenta, por favor» at a table.",
+            "example": "¿Nos cobra, por favor?",
+            "minPhrases": 3
+          },
+          {
+            "id": "es-present-regular",
+            "kind": "tense",
+            "rule": "The present tense of regular -ar/-er/-ir verbs: pago, pagamos, dejo; with usted the verb takes the third person: ¿acepta…?, ¿tiene…?",
+            "example": "Pagamos juntos.",
+            "minPhrases": 4
+          }
+        ],
+        "functions": ["request", "ask-price", "offer", "thank", "ask-availability"],
+        "mustUse": [
+          {
+            "lemma": "cuenta",
+            "gloss": "the bill",
+            "pos": "noun"
+          },
+          {
+            "lemma": "cobrar",
+            "gloss": "to charge, to take payment",
+            "pos": "verb"
+          },
+          {
+            "lemma": "tarjeta",
+            "gloss": "card (to pay)",
+            "pos": "noun"
+          },
+          {
+            "lemma": "efectivo",
+            "gloss": "cash",
+            "pos": "noun"
+          },
+          {
+            "lemma": "cambio",
+            "gloss": "change (money back)",
+            "pos": "noun"
+          },
+          {
+            "lemma": "juntos",
+            "gloss": "together (one bill)",
+            "pos": "adv"
+          },
+          {
+            "lemma": "por separado",
+            "gloss": "separately (split bills)",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "ticket",
+            "gloss": "receipt (Spain: el ticket)",
+            "pos": "noun"
+          },
+          {
+            "lemma": "invitar",
+            "gloss": "to treat someone, to pay for them",
+            "pos": "verb"
+          },
+          {
+            "lemma": "cuánto",
+            "gloss": "how much",
+            "pos": "pron"
+          },
+          {
+            "lemma": "contactless",
+            "gloss": "contactless (card tap)",
+            "pos": "adj"
+          },
+          {
+            "lemma": "quedarse",
+            "gloss": "to keep (the change)",
+            "pos": "verb"
+          }
+        ],
+        "shouldUse": [
+          {
+            "lemma": "por favor",
+            "gloss": "please",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "gracias",
+            "gloss": "thanks",
+            "pos": "interj"
+          },
+          {
+            "lemma": "perdone",
+            "gloss": "excuse me (usted)",
+            "pos": "interj"
+          }
+        ],
+        "avoid": {
+          "lemmas": ["propina", "camarero", "factura", "dinero"],
+          "themes": ["alcohol", "how much to tip", "prices in numbers"],
+          "textKeys": "siblings"
+        },
+        "mention": [
+          "«¿Me cobra?» is how you ask to pay at the bar; «la cuenta» at a table.",
+          "Spaniards often pay together and one person «invita»; splitting is «por separado»."
+        ],
+        "doNotMention": [
+          "exact amounts or currency figures",
+          "vosotros forms",
+          "regional words",
+          "brand names or bank names"
+        ],
+        "variety": null,
+        "notesHints": ["«cobrar» is the waiter's side of paying: they charge, you pay"]
+      }
+    }
+  ]
+}

@@ -8,7 +8,7 @@ Guidance for Claude Code working in this repository.
 American English, Russian, Polish and Czech by the phrase, in an English, Bulgarian, Russian, Polish
 or Czech interface (never a course in the learner's own language; en-GB and en-US count as one): a
 listening-first player (hear a phrase in your language, say it in the pause, hear it in the target
-language, rate it; FSRS schedules the next time).
+language, say it again, rate it; FSRS schedules the next time).
 
 **The app is `apps/mobile`: the v2.0 design as an Expo app** (plan
 [104](plans/104-prototype-react-native.md)). It replaced the v1.1-based app on 2026-09-30. That app,
@@ -35,7 +35,7 @@ Muse Image draws covers, decks and covers in the background
 (phrase bank, drawn patterns, the set's phrases as lyrics, a "Demo sound" instrumental). A song's
 lyrics are written first, in one of twelve styles, for the learner to read, rewrite and approve; the
 sung song is heard back by ElevenLabs Scribe so its lines show as sung, timed and translated
-([ADR-0017](docs/architecture/adr/0017-transcribing-generated-songs.md): only audio the server made
+([ADR-0019](docs/architecture/adr/0019-transcribing-generated-songs.md): only audio the server made
 is ever transcribed); the phone gets a push when it is ready (plan
 [113](plans/113-lyrics-first-songs.md)). Every sound is the server's: phrases play the clips of its
 ElevenLabs voices (`TTS_*`, one per language), and the app has no device voice; the list of
@@ -81,6 +81,11 @@ A change that violates one of these is reverted, not discussed.
 ## Conventions
 
 - **`master` means `main`.** Interpret it as `main` for branch operations without asking.
+- **The repository is public and source-available**
+  ([ADR-0018](docs/architecture/adr/0018-public-source-available-repository.md),
+  [public-repository.md](docs/process/public-repository.md)): everything committed, and its history,
+  is readable by anyone. No host identifiers, learner data or internal-only notes in the tree;
+  `SECURITY.md` and `CONTRIBUTING.md` are the public-facing contracts.
 - **Never commit or push unencrypted environment files.** Real `.env`, `.env.*`, and `*.env` values
   stay local and gitignored; `.env.example` is the only plaintext exception. Run `pnpm env:encrypt`
   before committing API configuration; commit only SOPS-encrypted `secrets/*.enc.env`. Never stage
@@ -182,22 +187,23 @@ cd packages/core-rs && cargo test <name>
 
 ## Where things live
 
-| Path                                       | What                                                             |
-| ------------------------------------------ | ---------------------------------------------------------------- |
-| `apps/mobile/app/`                         | expo-router routes                                               |
-| `apps/mobile/src/shared/`                  | Content, state machine, persistence, copy, notes, generator      |
-| `apps/mobile/src/state/`                   | Store, account, course content, progress sync (React)            |
-| `apps/mobile/src/music/`                   | Song rows, albums, the music players                             |
-| `apps/mobile/src/platform/`                | Native storage, speech, cues, Rust core, Intl polyfills          |
-| `apps/mobile/src/{screens,sheets,ui,nav}/` | The UI                                                           |
-| `apps/mobile/modules/loro-core/`           | Expo module over the Rust core (UniFFI)                          |
-| `apps/mobile/modules/loro-media/`          | Expo module: the player on the lock screen and shade (P3-11)     |
-| `apps/api/`                                | NestJS backend                                                   |
-| `packages/core/`                           | Shared TS domain and API contracts — used by the API and content |
-| `packages/core-rs/`                        | Rust: FSRS (and the older `/v1/sync` merge and clocks)           |
-| `packages/content/`                        | Server catalogs, review gates; `v2/` is the app's seeded content |
-| `apps/api/src/library/`                    | Packs, sharing, limits, AI phrases/covers/songs, progress sync   |
-| `docs/`                                    | All documentation — start at `docs/README.md`                    |
+| Path                                       | What                                                                           |
+| ------------------------------------------ | ------------------------------------------------------------------------------ |
+| `apps/mobile/app/`                         | expo-router routes                                                             |
+| `apps/mobile/src/shared/`                  | Content, state machine, persistence, copy, notes, generator                    |
+| `apps/mobile/src/state/`                   | Store, account, course content, progress sync (React)                          |
+| `apps/mobile/src/music/`                   | Song rows, albums, the music players                                           |
+| `apps/mobile/src/platform/`                | Native storage, speech, cues, Rust core, Intl polyfills                        |
+| `apps/mobile/src/{screens,sheets,ui,nav}/` | The UI                                                                         |
+| `apps/mobile/modules/loro-core/`           | Expo module over the Rust core (UniFFI)                                        |
+| `apps/mobile/modules/loro-media/`          | Expo module: the player on the lock screen and shade (P3-11)                   |
+| `apps/api/`                                | NestJS backend                                                                 |
+| `packages/core/`                           | Shared TS domain and API contracts — used by the API and content               |
+| `packages/core-rs/`                        | Rust: FSRS (and the older `/v1/sync` merge and clocks)                         |
+| `packages/content/`                        | Server catalogs, review gates; `v2/` is the app's seeded content               |
+| `apps/api/src/library/`                    | Packs, sharing, limits, AI phrases/covers/songs, progress sync                 |
+| `apps/api/src/authoring/`                  | The offline course writer (`author:run`, plan 112); never in the server bundle |
+| `docs/`                                    | All documentation — start at `docs/README.md`                                  |
 
 ## Open questions
 

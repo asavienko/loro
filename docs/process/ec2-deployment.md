@@ -8,8 +8,8 @@ recovery are in [the runbook](../runbooks/backend-testing.md).
 
 ## Current instance
 
-- AWS profile `loro` (SSO), region `eu-central-1`, stack `loro-api-dev`, instance
-  `i-0ce58e049c8fe0f7b`, key pair `loro-ec2-dev` (private key at `~/.ssh/loro-ec2-dev`).
+- AWS profile `loro` (SSO), region `eu-central-1`, stack `loro-api-dev`, key pair `loro-ec2-dev`
+  (private key at `~/.ssh/loro-ec2-dev`). The instance is the stack's `InstanceId` output.
 - The public DNS name can change after a stop and start; read the stack's `Host` output before
   connecting. When your IP changes, re-run [provisioning](#provision) with the new `ADMIN_CIDR` (add
   `NO_EXECUTE=1` to see the change set first). The script keeps the image the instance runs: a

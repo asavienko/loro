@@ -156,13 +156,14 @@ next phrase's clips in the two languages the learner hears.
 
 ## Generation and limits
 
-| Route                          | A model (`ai`, [ADR-0015](adr/0015-open-model-providers.md)) | Without one (labelled)                           |
-| ------------------------------ | ------------------------------------------------------------ | ------------------------------------------------ |
-| `POST /library/decks`          | Phrases with pictures and all three notes, in the background | The phrase bank, best theme first (`bank`)       |
-| `POST /library/generate/notes` | Notes and a picture for a typed phrase                       | Notes and a picture by Loro's rules (`rules`)    |
-| `POST /library/generate/cover` | An illustration (Muse Image), else a shape spec, background  | A pattern drawn from the title (`pattern`)       |
-| `POST /library/lyrics`         | Lyrics that sing every phrase, read and approved first       | The set's phrases arranged as a song (`phrases`) |
-| `POST /library/generate/song`  | The approved lyrics sung; written here without a draft       | The set's phrases arranged as a song (`phrases`) |
+| Route                          | A model (`ai`, [ADR-0015](adr/0015-open-model-providers.md)) | Without one (labelled)                            |
+| ------------------------------ | ------------------------------------------------------------ | ------------------------------------------------- |
+| `POST /library/decks`          | Phrases with pictures and all three notes, in the background | The phrase bank, best theme first (`bank`)        |
+| `POST /library/generate/notes` | Notes and a picture for a typed phrase                       | Notes and a picture by Loro's rules (`rules`)     |
+| `POST /library/generate/note`  | Another mnemonic or grammar note, unlike the ones sent       | None: `PROVIDER_UNAVAILABLE` (the rules have one) |
+| `POST /library/generate/cover` | An illustration (Muse Image), else a shape spec, background  | A pattern drawn from the title (`pattern`)        |
+| `POST /library/lyrics`         | Lyrics that sing every phrase, read and approved first       | The set's phrases arranged as a song (`phrases`)  |
+| `POST /library/generate/song`  | The approved lyrics sung; written here without a draft       | The set's phrases arranged as a song (`phrases`)  |
 
 Text comes from DeepSeek V4.1 Flash on Fireworks (`FIREWORKS_API_KEY`), and from the same model
 through OpenRouter (`OPENROUTER_API_KEY`) when Fireworks fails, with reasoning off; covers are drawn
@@ -202,7 +203,7 @@ the server's clip allowances), and the song is labelled "Spoken demo". Loro's ow
 voiced the same way once, in the background, after the server starts with a voice
 (`LIBRARY_VOICE_LORO_SONGS=0` turns it off).
 
-**A sung song is heard back** (plan 113, [ADR-0017](adr/0017-transcribing-generated-songs.md)).
+**A sung song is heard back** (plan 113, [ADR-0019](adr/0019-transcribing-generated-songs.md)).
 Right after ElevenLabs Music answers, the server sends the song it just received to ElevenLabs
 Scribe (`transcribe.ts`, the same key, `MUSIC_TRANSCRIBE=0` turns it off) for a transcript with a
 timestamp per word, and `align.ts` matches the words to the approved lines: a global alignment of
@@ -246,7 +247,13 @@ page and in the player has a button in its corner (`src/ui/CoverRedraw.tsx`, ins
 `AlbumCover` and `PhraseImage`). It first says what will happen and how many covers are left today,
 and who draws them here; signed out it offers sign-in. `POST /library/generate/cover` with
 `attachTo` draws for the item's own words (a set's or album's title and description, a song's title
-and album, a phrase and its meaning), never for text the app sends:
+and album, a phrase and its meaning), never for a title or description the app sends. The learner
+may also say what to picture (`prompt`, at most 200 characters, no links): the sheet's field starts
+with the words they last asked for this item, else the item's own (a phrase's meaning in their
+language), and sends them only when they differ from the item's own. The prompt is added to the
+image model's request as `Picture: …` (and to the shape writer's data as `picture`), while the style
+and the rule against any text in the picture stay the server's; the provider moderates it, as it
+does titles.
 
 | The artwork of                   | The new cover                                                                                                                                                                                                                                       |
 | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -260,6 +267,19 @@ asked for. A copy of one of Loro's is made at once, wearing Loro's cover until t
 and the first answer names it (`copy: {kind, id}`) so the app opens it while the cover is drawn. A
 copy must fit the kept caps before the day's cover is spent, and a cover nothing could wear is given
 back. Once ready, a cover goes on a set or album only while the learner still owns it.
+
+**Every cover drawn is kept to choose again.** `library_covers` records what each learner's cover
+was drawn for (`item_kind`, `item_id`: what wears it, so a first cover of Loro's set is filed under
+the learner's copy) and their `prompt`. `GET /library/covers/{kind}/{id}` lists the learner's ready
+covers for an item they may change, newest first (at most 24), with `current`, the one it wears; the
+sheet shows them as thumbnails above the prompt field, the worn one marked. Tapping one calls
+`POST /library/covers/{coverId}/wear` with `{kind, attachTo}`, which puts it back at once: nothing
+is drawn and no cover is spent. Only the learner's own cover, of the item it was drawn for, goes
+back on an item still theirs to change; anything else is not found. A cover still being drawn takes
+its item's place when it is ready, even if an earlier one was put back meanwhile. Rejected: keeping
+earlier covers on the device only (they would not follow the learner to another device, and the
+server already keeps every cover it drew), and drawing several covers per tap to choose from (it
+would spend several of the day's covers for one).
 
 **Allowances** are counted per learner per UTC day in `library_usage` with one atomic upsert, before
 any provider is asked: a model's phrase decks and notes (`LIMIT_PHRASES_DAILY`, default 30), covers

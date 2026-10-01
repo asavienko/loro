@@ -34,6 +34,8 @@ export function makeActions(dispatch: (event: AppEvent) => void, latest: RefObje
     enqueue: (phraseIds: string[], setId: string | null, at: 'next' | 'end') =>
       dispatch({ type: 'ENQUEUE', phraseIds, setId, at, now: now() }),
     clearQueue: () => dispatch({ type: 'CLEAR_QUEUE' }),
+    /** Closes the paused player: the queue goes, ratings and progress stay. */
+    close: () => dispatch({ type: 'CLOSE' }),
     toggleLike: (kind: LikeKind, id: string) => dispatch({ type: 'TOGGLE_LIKE', kind, id, now: now() }),
     /** Rate every phrase a song sings (plan 107); `unratePhrases` undoes it inside the window. */
     ratePhrases: (songId: string, phraseIds: string[], setId: string | null, grade: Grade) =>

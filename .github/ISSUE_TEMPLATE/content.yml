@@ -1,5 +1,5 @@
 name: Content change
-description: Add, fix, or retire a Spanish phrase, pack, or scenario
+description: Add, fix, or retire a phrase, set or translation in any course
 labels: [content, needs-triage]
 body:
   - type: markdown

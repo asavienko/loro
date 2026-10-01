@@ -47,7 +47,7 @@ timing has none.
   ([ADR-0011](../docs/architecture/adr/0011-analytics-and-privacy.md)) forbids cloud ASR of
   _recorded learner audio_; a song the server itself generated holds no learner's voice and no
   learner's text beyond the lyrics already sent to the music provider.
-  [ADR-0017](../docs/architecture/adr/0017-transcribing-generated-songs.md) draws the line.
+  [ADR-0019](../docs/architecture/adr/0019-transcribing-generated-songs.md) draws the line.
 - **What was sung is the truth on screen.** A line the transcript does not match keeps the written
   line as `written` and shows the sung words as `text`; its meaning is translated again by the text
   model (the written meaning stands if the model fails). A line the singer skipped keeps its words
@@ -63,15 +63,15 @@ timing has none.
 
 ## Scope
 
-1. This plan, ADR-0017, and the docs (`library.md`, `api.md`, `environments.md`,
+1. This plan, ADR-0019, and the docs (`library.md`, `api.md`, `environments.md`,
    `v2-prototype-decisions.md`, `security-privacy.md`).
 2. Core, content, API and app: twelve styles (ids, packs, demo settings, labels in five languages).
-3. API: lyric drafts (`library_lyric_drafts`, migration `018`), the routes, the `lyrics` allowance,
+3. API: lyric drafts (`library_lyric_drafts`, migration `019`), the routes, the `lyrics` allowance,
    `lyricsId` on a song, retry singing the same lines; the rewrite prompt in `writers.ts`.
 4. API: `transcribe.ts` (ElevenLabs Scribe, word timestamps, bounded, no retries), `align.ts`,
    `translateLines`, the render pipeline storing sung lines with timings; `timingBy` and `written`
    on the wire.
-5. API: `push.ts` (Expo push), `library_push_tokens` (migration `019`), the token routes, a message
+5. API: `push.ts` (Expo push), `library_push_tokens` (migration `021`), the token routes, a message
    when a song is ready or failed, tokens removed with the account.
 6. App: the two-step sheet (set-up, then the lyrics with rewrite and approve), the lyrics poller and
    routes in `shared/api/library.ts`, the `lyrics` allowance in Account, copy in en, bg, ru, pl, cs.

@@ -1,6 +1,8 @@
 # 0016 · Plan, write and ship course content at 10,000 phrases per course
 
-- **Status:** Accepted
+- **Status:** Accepted; the writer, shard and delivery decisions are amended by
+  [ADR-0017](0017-content-per-language-pair.md) (per language pair, additive, never rewritten
+  unasked)
 - **Date:** 2026-10-01
 - **Deciders:** the owner (request and decisions of 2026-10-01, plan
   [112](../../../plans/112-course-content-at-scale.md))

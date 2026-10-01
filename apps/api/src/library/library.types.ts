@@ -202,6 +202,22 @@ export interface CoverState {
   copy?: { kind: 'set' | 'album'; id: string }
 }
 
+/**
+ * The covers a learner drew for one item, newest first, each with the words they asked it to picture
+ * (`prompt`, null for the item's own), and the one it wears now (`current`), so an earlier one can
+ * be put back without drawing.
+ */
+export interface CoverHistory {
+  covers: {
+    id: string
+    url: string
+    provider: 'ai' | 'pattern'
+    prompt: string | null
+    createdAt: number
+  }[]
+  current: string | null
+}
+
 /** A deck of suggestions: the model's (`ai`), or the phrase bank's, with themes when it had none. */
 export interface DeckWire {
   provider: 'ai' | 'bank'

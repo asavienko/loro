@@ -2,7 +2,7 @@
  * A sung song heard back (plan 113): ElevenLabs Scribe transcribes the server's own song with a
  * timestamp per word, so the lyrics can be shown as they were sung and lit as they play. Only the
  * song the server made is ever sent: no learner audio exists in this process
- * ([ADR-0017](../../../../docs/architecture/adr/0017-transcribing-generated-songs.md)). One
+ * ([ADR-0019](../../../../docs/architecture/adr/0019-transcribing-generated-songs.md)). One
  * attempt, a deadline, a bounded reply; the key and the provider's body are never logged.
  */
 import { boundedJson, isRecord } from '../integrations/bounded-body.js'

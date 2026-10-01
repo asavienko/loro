@@ -8,6 +8,7 @@ export type PlayerEventType =
   | 'LOAD'
   | 'PLAY'
   | 'PAUSE'
+  | 'CLOSE'
   | 'PHASE_DONE'
   | 'NEXT'
   | 'PREV'
@@ -43,7 +44,7 @@ const QUEUE_EDITS: PlayerEventType[] = ['TOGGLE_SHUFFLE', 'REORDER_UP_NEXT', 'RE
 export const PLAYER_CHART: Record<PlayerStatus, readonly PlayerEventType[]> = {
   idle: ['LOAD', 'ENQUEUE'],
   playing: ['LOAD', 'PAUSE', 'PHASE_DONE', 'NEXT', 'PREV', 'JUMP', 'RATE', 'UNRATE', ...QUEUE_EDITS],
-  paused: ['LOAD', 'PLAY', 'NEXT', 'PREV', 'JUMP', 'RATE', 'UNRATE', ...QUEUE_EDITS],
+  paused: ['LOAD', 'PLAY', 'CLOSE', 'NEXT', 'PREV', 'JUMP', 'RATE', 'UNRATE', ...QUEUE_EDITS],
 };
 
 /** Where each status goes on the events that change it. */
@@ -54,20 +55,22 @@ export const STATUS_EDGES: { from: PlayerStatus; event: string; to: PlayerStatus
   { from: 'playing', event: 'PHASE_DONE (end of queue, or audio failed)', to: 'paused' },
   { from: 'playing', event: 'NEXT (past the end of a one-pass queue)', to: 'paused' },
   { from: 'paused', event: 'PLAY', to: 'playing' },
+  { from: 'paused', event: 'CLOSE', to: 'idle' },
   { from: 'paused', event: 'LOAD', to: 'playing' },
   { from: 'paused', event: 'JUMP (play now)', to: 'playing' },
 ];
 
 /**
- * One phrase: prompt → the learner's turn → target, `repeats` times; then a
- * short hold for a rating if there is none yet; then the next phrase.
+ * One phrase: prompt → the learner's turn → target → the learner's echo, `repeats`
+ * times; then a short hold for a rating if there is none yet; then the next phrase.
  */
 export const PHASE_EDGES: { from: Phase; on: string; to: Phase | 'next phrase' }[] = [
   { from: 'native', on: 'spoken', to: 'pause' },
   { from: 'pause', on: 'silence over', to: 'target' },
-  { from: 'target', on: 'spoken, more repetitions', to: 'native' },
-  { from: 'target', on: 'spoken, last repetition, unrated', to: 'rate' },
-  { from: 'target', on: 'spoken, last repetition, rated', to: 'next phrase' },
+  { from: 'target', on: 'spoken', to: 'echo' },
+  { from: 'echo', on: 'silence over, more repetitions', to: 'native' },
+  { from: 'echo', on: 'silence over, last repetition, unrated', to: 'rate' },
+  { from: 'echo', on: 'silence over, last repetition, rated', to: 'next phrase' },
   { from: 'rate', on: 'rated, or hold over', to: 'next phrase' },
 ];
 

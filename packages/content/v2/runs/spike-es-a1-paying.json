@@ -1,0 +1,52 @@
+{
+  "runId": "spike-es-a1-paying",
+  "at": "2026-10-01T22:13:03.164Z",
+  "stages": [
+    "phrases",
+    "judge"
+  ],
+  "course": "es-ES",
+  "levels": [
+    "A1"
+  ],
+  "topics": [
+    "eating-out"
+  ],
+  "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+  "pricing": "assumed on 2026-10-02, not verified against the providers' price lists; the run summary's dollar figure is an estimate until this file is checked",
+  "spend": {
+    "calls": 4,
+    "cached": 0,
+    "usd": 0.005256,
+    "inputTokens": 8817,
+    "outputTokens": 5821
+  },
+  "outcomes": [
+    {
+      "setId": "set-es-a1-paying",
+      "status": "written",
+      "phrases": 12,
+      "coverage": 1,
+      "calls": 4,
+      "judge": "10 ok, 2 review, 0 reject",
+      "rejected": [
+        {
+          "target": "¿Nos cobra por separado? Gracias.",
+          "reason": "judge: duplicate of 3"
+        },
+        {
+          "target": "¿Se queda con el cambio? Gracias.",
+          "reason": "judge: natural: wrong, english: wrong, glosses: wrong"
+        },
+        {
+          "target": "¿Tiene contactless? Es que voy con el tiempo justo.",
+          "reason": "9 words, the limit at A1 is 7"
+        },
+        {
+          "target": "¿Acepta tarjeta o pago en efectivo?",
+          "reason": "too close to «¿Acepta tarjeta o pago en efectivo?»"
+        }
+      ]
+    }
+  ]
+}

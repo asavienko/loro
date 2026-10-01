@@ -16,12 +16,12 @@ import { PhaseFill } from './PhaseFill';
 import { SetCover } from './SetCover';
 import { Txt } from './Txt';
 
-const STEPS_PER_REPETITION = 3;
+const STEPS_PER_REPETITION = 4;
 
 /**
  * The docked player for the phrase loop (the web's src/ui/MiniPlayer.tsx), on the shared bar
  * (MiniBar): tap to open, swipe for the next or previous phrase; its grades float above it
- * (PhraseBarGrades). The target stays hidden here, as everywhere, until it has been heard.
+ * (PhraseBarGrades); paused, it closes (its button, or dragged down). The target stays hidden here, as everywhere, until it has been heard.
  */
 export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
   const c = useCopy();
@@ -63,16 +63,17 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
         playing={playing}
         onToggle={playing ? actions.pause : actions.play}
         next={{ label: c.player.next, onPress: actions.next }}
+        onClose={actions.close}
         progress={look.progress}
       />
     );
   };
 
-  const stepIndex = phase === 'rate' ? STEPS_PER_REPETITION : ['native', 'pause', 'target'].indexOf(phase);
+  const stepIndex = phase === 'rate' ? STEPS_PER_REPETITION : ['native', 'pause', 'target', 'echo'].indexOf(phase);
   const step = (repetition - 1) * STEPS_PER_REPETITION + stepIndex;
   const progress = playing || step > 0 ? Math.min(1, step / (repeats * STEPS_PER_REPETITION)) : 0;
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
-  const timed = playing && (phase === 'pause' || phase === 'rate') && player.phaseMs !== null;
+  const timed = playing && (phase === 'pause' || phase === 'echo' || phase === 'rate') && player.phaseMs !== null;
   const summary = ended ? sessionSummary(state, now) : null;
   const status = audioError
     ? audioError.reason === 'no-clip'
@@ -131,6 +132,8 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
         else actions.jump(index - 1);
         return true;
       }}
+      // Paused, the bar closes: the queue goes, its ratings stay.
+      onClose={playing ? undefined : actions.close}
     />
   );
 }

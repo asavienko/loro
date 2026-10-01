@@ -10,7 +10,7 @@ sampling". The current app records nothing at all: it asks for no microphone per
 memory, no JavaScript API returns audio bytes, and no API route accepts it. Licensed model audio
 (server phrase clips, songs) is a different thing and may be cached. The one transcription the
 server does is of the songs it generated itself, in the API process, to show their lyrics as sung
-([ADR-0017](adr/0017-transcribing-generated-songs.md)); no device audio is involved.
+([ADR-0019](adr/0019-transcribing-generated-songs.md)); no device audio is involved.
 
 ## What the server holds
 

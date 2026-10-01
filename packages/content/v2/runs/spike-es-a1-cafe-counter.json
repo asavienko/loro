@@ -1,0 +1,40 @@
+{
+  "runId": "spike-es-a1-cafe-counter",
+  "at": "2026-10-01T21:57:57.680Z",
+  "stage": "phrases",
+  "course": "es-ES",
+  "levels": [
+    "A1"
+  ],
+  "topics": [
+    "eating-out"
+  ],
+  "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+  "pricing": "assumed on 2026-10-02, not verified against the providers' price lists; the run summary's dollar figure is an estimate until this file is checked",
+  "spend": {
+    "calls": 1,
+    "cached": 0,
+    "usd": 0.0017978,
+    "inputTokens": 1936,
+    "outputTokens": 2351
+  },
+  "outcomes": [
+    {
+      "setId": "set-es-a1-cafe-counter",
+      "status": "written",
+      "phrases": 12,
+      "coverage": 0.9166666666666666,
+      "calls": 1,
+      "rejected": [
+        {
+          "target": "¿Qué café tienen?",
+          "reason": "claims to use café con leche but does not"
+        },
+        {
+          "target": "¿Puedo pagar con tarjeta?",
+          "reason": "already in the course as bank-clothes-es-05"
+        }
+      ]
+    }
+  ]
+}

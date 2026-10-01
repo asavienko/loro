@@ -283,3 +283,21 @@ export const LIBRARY_PUSH_TOKENS_MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS lib
 );
 CREATE INDEX IF NOT EXISTS library_push_tokens_user ON library_push_tokens(user_id);
 `
+
+/**
+ * Every cover a learner draws keeps what it was drawn for (`item_kind`, `item_id`: the set, album,
+ * song or phrase that wears it) and the words they asked it to picture (`prompt`, null for the item's
+ * own words), so the covers drawn for an item can be shown again and one put back on it without
+ * drawing. Covers already worn are filed under what wears them.
+ */
+export const LIBRARY_COVER_HISTORY_MIGRATION_SQL = `ALTER TABLE library_covers ADD COLUMN IF NOT EXISTS prompt text;
+ALTER TABLE library_covers ADD COLUMN IF NOT EXISTS item_kind text;
+ALTER TABLE library_covers ADD COLUMN IF NOT EXISTS item_id text;
+CREATE INDEX IF NOT EXISTS library_covers_item ON library_covers(owner_id, item_kind, item_id, created_at);
+UPDATE library_covers c SET item_kind = 'set', item_id = s.id
+  FROM library_sets s WHERE s.cover_id = c.id AND s.owner_id = c.owner_id AND c.item_id IS NULL;
+UPDATE library_covers c SET item_kind = 'album', item_id = a.id
+  FROM library_albums a WHERE a.cover_id = c.id AND a.owner_id = c.owner_id AND c.item_id IS NULL;
+UPDATE library_covers c SET item_kind = i.kind, item_id = i.item_id
+  FROM library_item_covers i WHERE i.cover_id = c.id AND i.user_id = c.owner_id AND c.item_id IS NULL;
+`
