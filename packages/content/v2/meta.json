@@ -1,5 +1,5 @@
 {
-  "version": "2026-09-30.4",
+  "version": "2026-10-01.5",
   "review": {
     "es-ES": "Phrases and notes revised in round 3; awaiting native Spanish review.",
     "bg-BG": "New in round 3; awaiting native Bulgarian review.",
@@ -7,7 +7,8 @@
     "translations": "bg-BG and ru-RU prompts and word glosses await native review.",
     "notes": "bg-BG and ru-RU versions of the notes (note-translations.json) await native review.",
     "bank": "The phrase bank (bank.json) is new for Make a set; its Spanish, Bulgarian and every translation await native review.",
-    "notes-complete": "Every phrase now has all three notes (memory hint, grammar, sounds with IPA and respelling) and an image: the 60 notes added for the course, their bg-BG and ru-RU versions and the IPA await native review."
+    "notes-complete": "Every phrase now has all three notes (mnemonic, grammar, sounds with IPA and respelling) and an image: the 60 notes added for the course, their bg-BG and ru-RU versions and the IPA await native review.",
+    "mnemonics-round-5": "The first note is a mnemonic, a hook for remembering the phrase. Round 5 rewrote the 37 that were definitions, usage tips or grammar, or trivial for a Russian speaker (21 course and 16 bank phrases, 86 notes in en-GB, bg-BG and ru-RU), as sound-alikes, pictures and known words; they await native review."
   },
   "renamedPhraseIds": {
     "phrase-1": "cafe-01",
