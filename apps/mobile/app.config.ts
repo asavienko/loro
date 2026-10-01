@@ -26,9 +26,17 @@ export default (): ExpoConfig => ({
   android: {
     package: localApk ? 'app.loro.android.preview' : developmentClient ? 'app.loro.android.dev' : 'app.loro.android',
     adaptiveIcon: { foregroundImage: './assets/icons/icon-maskable-512.png', backgroundColor: '#fcf9f4' },
+    // The app records nothing (ADR-0011): no microphone, and none of the template's storage or
+    // overlay permissions. expo-audio's own manifest asks for the microphone, so it is blocked here.
+    blockedPermissions: [
+      'android.permission.RECORD_AUDIO',
+      'android.permission.SYSTEM_ALERT_WINDOW',
+      'android.permission.READ_EXTERNAL_STORAGE',
+      'android.permission.WRITE_EXTERNAL_STORAGE',
+    ],
   },
   web: { bundler: 'metro', output: 'single', favicon: './assets/icons/icon-192.png' },
-  plugins: ['expo-router', 'expo-font', 'expo-splash-screen', 'expo-audio', 'expo-secure-store', 'expo-web-browser', 'expo-localization'],
+  plugins: ['expo-router', 'expo-font', 'expo-splash-screen', ['expo-audio', { microphonePermission: false, recordAudioAndroid: false }], 'expo-secure-store', 'expo-web-browser', 'expo-localization'],
   // Metro resolves @shared itself (metro.config.js); tsconfig's paths are for the type checker only.
   experiments: { typedRoutes: false, tsconfigPaths: false },
 });
