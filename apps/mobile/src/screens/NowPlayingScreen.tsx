@@ -1,5 +1,5 @@
 // The player (the web prototype's src/screens/NowPlayingScreen.tsx): the phrase's picture as large as
-// the page allows, the prompt (the target stays hidden until it is heard), the loop's three steps,
+// the page allows, the prompt (the target stays hidden until it is heard), the loop's four steps,
 // the grades, and the transport. Every figure comes from the state machine; when a rated phrase comes
 // back is the core's to decide, and the grades don't show it.
 import { useRouter } from 'expo-router';
@@ -49,7 +49,7 @@ import { colors, ColorName, radius, shadow, TARGET } from '../ui/theme';
 import { useRoom } from '../ui/useRoom';
 import { useRate } from './useRate';
 
-const STEPS: Exclude<Phase, 'rate'>[] = ['native', 'pause', 'target'];
+const STEPS: Exclude<Phase, 'rate'>[] = ['native', 'pause', 'target', 'echo'];
 /** The page: at most this wide, with these sides (a little less on a compact screen). */
 const MAX_WIDTH = 512;
 const GUTTER = 20;
@@ -237,8 +237,8 @@ function ActionRow({ phrase, onNotes }: { phrase: Phrase; onNotes: () => void })
 }
 
 /**
- * The three steps as a track under the instruction, which names the one playing: each its icon, the
- * current one filled while it plays; the learner's turn fills over its real length. No names in the
+ * The four steps as a track under the instruction, which names the one playing: each its icon, the
+ * current one filled while it plays; the learner's turn and echo fill over their real length. No names in the
  * steps, so none is ever cut short.
  */
 function Steps({ phrase, promptLang }: { phrase: Phrase; promptLang: Phrase['targetLang'] }) {
@@ -256,7 +256,7 @@ function Steps({ phrase, promptLang }: { phrase: Phrase; promptLang: Phrase['tar
         const label = phaseStepLabel(c, p, promptLang, phrase.targetLang);
         return (
           <View key={p} accessible accessibilityLabel={label} accessibilityState={{ selected: current }} style={[styles.step, look]}>
-            {current && p === 'pause' && <PhaseFill style={{ backgroundColor: colors.primary, height: '100%' }} />}
+            {current && (p === 'pause' || p === 'echo') && <PhaseFill style={{ backgroundColor: colors.primary, height: '100%' }} />}
             <Icon name={current && !playing ? 'pause' : PHASE_ICONS[p]} size="sm" color={ink} />
           </View>
         );

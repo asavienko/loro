@@ -67,6 +67,9 @@ export function usePlaybackDriver(): void {
       case 'target':
         playback = speakThenGap(speak(phrase.audio?.[phrase.targetLang], speed));
         break;
+      case 'echo':
+        playback = silence(s.player.phaseMs ?? phaseDurationMs(s) ?? 0);
+        break;
       case 'rate':
         holdCue();
         playback = silence(s.player.phaseMs ?? RATE_HOLD_MS);

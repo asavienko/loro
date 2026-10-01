@@ -293,10 +293,12 @@ export function makeCs(n: Plural): Copy {
       hidden: () => 'Fráze je skrytá, dokud ji neuslyšíte',
       steps: 'Kroky',
       yourTurn: 'Jste na řadě',
+      again: 'Ještě jednou',
       instruction: {
         native: (language) => `Poslouchejte: ${language}`,
         pause: (language) => `Jste na řadě — řekněte to nahlas ${adverb(language)}`,
         target: (language) => `Poslouchejte: ${language}`,
+        echo: (language) => `Zopakujte to ${adverb(language)} tak, jak jste to slyšeli`,
         rate: 'Ohodnoťte, nebo chvíli počkejte',
       },
       paused: 'Pauza',

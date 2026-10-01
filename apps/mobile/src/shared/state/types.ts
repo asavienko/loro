@@ -198,7 +198,8 @@ export interface AudioFailure {
   reason: 'no-clip' | 'silent';
 }
 
-export type Phase = 'native' | 'pause' | 'target' | 'rate';
+/** The steps of one repetition: prompt, the learner's turn, target, the learner's echo; then a rating hold. */
+export type Phase = 'native' | 'pause' | 'target' | 'echo' | 'rate';
 export type PlayerStatus = 'idle' | 'playing' | 'paused';
 
 /** Library lists a queue can come from (the phrase views of the Library tab). */

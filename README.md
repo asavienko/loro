@@ -1,10 +1,10 @@
 # Loro
 
 **Learn languages by the phrase.** A listening-first phrase player for iOS, Android and the web:
-hear a phrase in your language, say it in the pause, hear it in the language you're learning, then
-rate how it went. The rating schedules the phrase with FSRS. Courses teach Spanish, Bulgarian,
-British and American English, Russian, Polish and Czech; the app speaks English (British or
-American), Bulgarian, Russian, Polish and Czech.
+hear a phrase in your language, say it in the pause, hear it in the language you're learning, say it
+again, then rate how it went. The rating schedules the phrase with FSRS. Courses teach Spanish,
+Bulgarian, British and American English, Russian, Polish and Czech; the app speaks English (British
+or American), Bulgarian, Russian, Polish and Czech.
 
 This repository holds the app, the API, the shared packages and their documentation.
 

@@ -16,7 +16,7 @@ import { PhaseFill } from './PhaseFill';
 import { SetCover } from './SetCover';
 import { Txt } from './Txt';
 
-const STEPS_PER_REPETITION = 3;
+const STEPS_PER_REPETITION = 4;
 
 /**
  * The docked player for the phrase loop (the web's src/ui/MiniPlayer.tsx), on the shared bar
@@ -68,11 +68,11 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
     );
   };
 
-  const stepIndex = phase === 'rate' ? STEPS_PER_REPETITION : ['native', 'pause', 'target'].indexOf(phase);
+  const stepIndex = phase === 'rate' ? STEPS_PER_REPETITION : ['native', 'pause', 'target', 'echo'].indexOf(phase);
   const step = (repetition - 1) * STEPS_PER_REPETITION + stepIndex;
   const progress = playing || step > 0 ? Math.min(1, step / (repeats * STEPS_PER_REPETITION)) : 0;
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
-  const timed = playing && (phase === 'pause' || phase === 'rate') && player.phaseMs !== null;
+  const timed = playing && (phase === 'pause' || phase === 'echo' || phase === 'rate') && player.phaseMs !== null;
   const summary = ended ? sessionSummary(state, now) : null;
   const status = audioError
     ? audioError.reason === 'no-clip'

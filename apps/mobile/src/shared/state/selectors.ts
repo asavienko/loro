@@ -18,7 +18,7 @@ import {
   typicalMs,
 } from './memory';
 import { committedIn, ratingEntry } from './merge';
-import { fullPlayMs, pauseMs, RATE_HOLD_MS, REVIEW_SESSION_SIZE } from './timing';
+import { echoMs, fullPlayMs, pauseMs, RATE_HOLD_MS, REVIEW_SESSION_SIZE } from './timing';
 import type {
   AppState,
   Grade,
@@ -374,6 +374,7 @@ export function phaseDurationMs(state: AppState): number | null {
   const phrase = findPhrase(state.learner, id);
   if (!id || !phrase) return null;
   if (state.player.phase === 'pause') return pauseMs(measuredTargetMs(state.learner, id), phrase.target, state.prefs.speed, state.prefs.pauseLength);
+  if (state.player.phase === 'echo') return echoMs(measuredTargetMs(state.learner, id), phrase.target, state.prefs.speed, state.prefs.pauseLength);
   if (state.player.phase === 'rate') return RATE_HOLD_MS;
   return null;
 }
