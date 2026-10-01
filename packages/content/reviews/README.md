@@ -1,43 +1,52 @@
-# Bilingual review records (F-08, plan 87)
+# Bilingual review records (F-08)
 
-Export the exact bundled UI and runtime catalog material before independent review:
+This directory holds review records: the exact material a bilingual reviewer saw, with their
+findings and sign-off. None exists yet, so the release gate fails.
+
+## What the export contains
 
 ```bash
 pnpm --silent --filter @loro/content review:export > /tmp/loro-review.json
 ```
 
-The packet includes all three UI resources and all seven supported course pairs, including the
-legacy English/Spanish pair. Catalogs come from `loadLearningCatalog`, so reviewers see runtime
-adaptations, localized labels, translations and teaching fields, including absent teaching fields. A
-raw starter translation review alone misses these differences.
+The packet (`src/reviewPacket.ts`) holds:
 
-Each entry identifies its material with SHA-256 over the UTF-8 JSON serialization; the packet also
-has a combined material digest. These digests identify content, not reviewer identity or approval.
-Export twice without source changes to obtain the same identifiers. No date is generated and no
-reviewer or linguistic findings are invented. The exporter writes only to stdout.
+- `ui`: the app's interface strings, `apps/mobile/src/shared/copy/{en,bg,ru}.ts`, as written;
+- `courses`: the seven pairs from `loadLearningCatalog`, the first app's Spanish catalog and its
+  starter translations (not the `v2/` seed the app is served);
+- `topics`: the bundled topic suggestions.
 
-1. Copy the exported packet here as `<materialSha256>.json` before assigning it to reviewers.
-   Preserve its resources, catalogs and digest fields. Keep the record in git alongside the eventual
-   fixes.
-2. Assign each locale/pair to an independent bilingual reviewer. In its `review`, record the real
-   `reviewer`, `reviewerLanguages`, `reviewedAt` (ISO date), `findings` and `signOffEvidence` (a
-   durable review reference). Use status `pending`, `changes-requested`, or `approved` only as
-   justified by that review. `reviewerLanguages` uses `en`, `bg`, `ru` and `es`: an English source
-   and translated UI record must cover both languages, while a course record must cover its native
-   language and the language part of its target locale. Findings should identify a resource key or
-   phrase/pack/scenario id, the issue, proposed correction and resolution. Missing teaching fields
-   must be explicitly considered; approval of translations does not supply missing pronunciation
-   teaching.
-3. Review ICU placeholders/plurals, naturalness, tone, Cyrillic, target text, native meanings,
-   teaching guidance and cultural adaptations. Check rendered context and 200%/310% text separately;
-   this JSON export cannot establish layout, speech or device behavior.
-4. After fixes, export new material. Retain the old record; a changed digest requires review of the
-   changed material. Never copy old approval onto a new digest without actual reviewer confirmation.
-5. Hand attributable approvals and exact artifacts to plans 61/72. Run
-   `pnpm --filter @loro/content check:release`; it loads only the record named after the current
-   material digest and rejects stale digests, missing entry approvals and incomplete
-   reviewer/sign-off fields. It remains blocked until real bilingual review records exist.
+Each entry is identified by a SHA-256 of its JSON, and the packet by a combined `materialSha256`.
+The digests identify content, not a reviewer or an approval. Exporting twice from the same source
+gives the same digests; the exporter writes only to stdout and invents no dates, reviewers or
+findings. It cannot show layout, speech or device behaviour.
 
-The exporter does not consume sign-offs or relax the release gate. The release check verifies the
-supplied evidence against the exact shipped material before changing release status. Actual reviewer
-coordination and all-pair physical-device acceptance remain outstanding.
+## Recording a review
+
+1. Save the packet here as `<materialSha256>.json` before assigning it, keeping its resources,
+   catalogs and digests. Commit it alongside the fixes it leads to.
+2. Give each locale or pair to an independent bilingual reviewer. In its `review`, record the real
+   `reviewer`, `reviewerLanguages`, `reviewedAt` (an ISO date), `findings` and `signOffEvidence` (a
+   durable reference to the review). `status` is `pending`, `changes-requested` or `approved`, as
+   the review justifies.
+3. `reviewerLanguages` uses `en`, `bg`, `ru` and `es`. An interface record must cover English and
+   its own language, a course record its native and target languages, and a topic record all four.
+4. A finding names a resource key or a phrase, pack or scenario id, the issue, the proposed
+   correction and its resolution. Missing teaching fields must be considered explicitly: approving a
+   translation does not supply missing pronunciation teaching.
+5. Review ICU placeholders and plurals, naturalness, tone, Cyrillic, target text, native meanings,
+   teaching guidance and cultural adaptations. Check the rendered screens, including at 200% and
+   310% text, separately.
+6. After fixes, export again. A changed digest needs review of the changed material; keep the old
+   record and never copy an approval onto a new digest without the reviewer's confirmation.
+
+## The release gate
+
+```bash
+pnpm --filter @loro/content check:release
+```
+
+It exports the current material, loads only the record named after its digest, and fails on a
+missing record, a stale digest, an entry that is not approved, or an incomplete reviewer or sign-off
+field. Nothing runs it automatically. Who reviews, and when, is open question
+[Q-23](../../../docs/decisions/open-questions.md#q-23).

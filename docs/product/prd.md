@@ -1,8 +1,8 @@
 # Product requirements
 
 What Loro must do. Cite the ID in branches, commits and PRs (`P3-01`). IDs are stable and never
-reused; requirements of the removed first app (Refrain, Run, trips, chat, labs, widgets) were
-dropped on 2026-09-30 and remain in Git history at `52a0e3b`. Delivery status lives in
+reused. The first app's requirements (Refrain, Run, trips, chat, labs, widgets) were dropped; they
+remain in Git history at `e36cc758`. Delivery status lives in
 [`plans/README.md`](../../plans/README.md); how screens behave is the running app and
 [v2-prototype-decisions.md](../design/v2-prototype-decisions.md).
 
@@ -38,12 +38,12 @@ dropped on 2026-09-30 and remain in Git history at `52a0e3b`. Delivery status li
 
 ## Library and sharing
 
-| ID     | Requirement                                                                                                            |
-| ------ | ---------------------------------------------------------------------------------------------------------------------- |
-| LIB-01 | Everything a learner makes is private, shared by link, or public in Community; Loro's content is public and read-only. |
-| LIB-02 | Generation (phrase decks, covers, songs) has per-user daily limits, shown before the learner asks.                     |
-| LIB-03 | Songs sung from a set's phrases live in that set and play in the one player; albums are in Library.                    |
-| LIB-04 | Covers are drawn: topic colour and icons, sanitized SVG shapes, or an AI illustration asked to carry no text.          |
+| ID     | Requirement                                                                                                                                        |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LIB-01 | Everything a learner makes is private, shared by link, or public in Community; Loro's content is public and read-only.                             |
+| LIB-02 | Generation (phrase suggestions, covers, songs) has per-user daily limits, shown before the learner asks.                                           |
+| LIB-03 | Songs sung from a set's phrases live in that set and play in the one player; albums are in Library.                                                |
+| LIB-04 | Covers are drawn (topic colour and icons, shapes the server renders, or an AI illustration asked to carry no text), never photos or invented text. |
 
 ## Principles
 

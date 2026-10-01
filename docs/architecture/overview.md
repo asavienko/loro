@@ -1,7 +1,7 @@
 # Architecture overview
 
-The system end to end. Read this first; [library.md](library.md) has the detail of what the app and
-the API exchange.
+The system end to end, and where each part is described. [library.md](library.md) owns what the app
+and the API exchange; [sync-protocol.md](sync-protocol.md) owns how progress merges.
 
 ## Shape
 
@@ -9,10 +9,10 @@ the API exchange.
 graph TB
   subgraph device["Device (iOS, Android, web)"]
     UI["apps/mobile<br/>Expo Router · React Native"]
+    CONN["src/state<br/>store · account · content · progress sync"]
     STATE["src/shared/state<br/>learner log · transition()"]
-    STORE[("AsyncStorage (native)<br/>IndexedDB/localStorage (web)")]
-    CORE["LoroCore<br/>Rust core via UniFFI · WASM on web"]
-    PACKS[("Downloaded packs")]
+    STORE[("AsyncStorage (native)<br/>IndexedDB / localStorage (web)")]
+    CORE["Rust core<br/>LoroCore (UniFFI) · WASM on web"]
   end
 
   subgraph cloud["EC2 development host"]
@@ -23,11 +23,11 @@ graph TB
   AI["Fireworks / OpenRouter (optional)"]
   VOICE["ElevenLabs TTS / Music (optional)"]
 
-  UI --> STATE --> STORE
+  UI --> CONN --> STATE --> STORE
   STATE --> CORE
-  UI --> PACKS
-  PACKS <-->|"GET /v1/library/pack"| API
-  STATE <-->|"/v1/library/progress"| API
+  CONN <-->|"/v1/library/pack, /languages, sets, generation"| API
+  CONN <-->|"/v1/library/progress"| API
+  UI -->|"phrase clips, song audio"| API
   API --> PG
   API --> AI
   API --> VOICE
@@ -35,37 +35,43 @@ graph TB
 
 ## The app (`apps/mobile`)
 
-- **Routes** are in `app/` (expo-router): four tabs — Home, Explore, Create, Library — plus the
-  player, song, queue, make and account screens.
-- **Shared, platform-neutral code** is in `src/shared/` (`@shared/*`): content types, the state
-  machine, persistence, copy (en, bg, ru), notes and the phrase generator.
-- **Native replacements** live in `src/platform/` and are swapped in by `metro.config.js`: storage
-  (AsyncStorage instead of browser storage), phrase clips (`expo-audio` instead of an `<audio>`
-  element), cues, secrets, OAuth and the Rust core.
-- **Sound** comes only from the server (plan 108): every phrase plays the clip its voice recorded
-  (`/library/speech`), at the learner's speed. There is no device voice; a phrase without a clip
-  says so instead of playing.
+- **Routes** are in `app/` (expo-router): four tabs — Home, Explore, Create, Library — and the
+  player, song, queue, make, account and shared-link (`/shared/<code>`) screens.
+- **Shared, platform-neutral code** is in `src/shared/` (`@shared/*`): the API client and content
+  cache, the content registry, the state machine and its persistence, copy (en, bg, ru) and the Make
+  a set generator.
+- **The connected layer** is `src/state/`: the React store, the account, the course's content, the
+  one-time upload of sets made before sign-in, and progress sync. Songs play in `src/music/`.
+- **Native replacements** live in `src/platform/`. On iOS and Android `metro.config.js` swaps them
+  in for their shared originals by resolved path: progress storage and the key-value store
+  (AsyncStorage), the refresh token (Keychain/Keystore), phrase clips (`expo-audio`), cues
+  (haptics), provider sign-in (an auth session) and the Rust core (the `LoroCore` module). On the
+  web the originals run.
 - **State.** Learner progress is an append-only log plus a few last-writer-wins fields. Every change
   goes through `transition(state, event)`; the allowed events are in `state/chart.ts`. Numbers on
   screen come from `state/selectors.ts`. Only `state/clock.ts` reads the time (lint-enforced).
-- **The Rust core.** FSRS runs in `packages/core-rs`, reached through one JSON `core_call` boundary:
-  the `LoroCore` Expo module (`modules/loro-core`, UniFFI) on iOS/Android, the committed WASM build
-  on the web. There is no JavaScript FSRS; without the core (Expo Go) nothing schedules.
-- **Content.** The app ships no phrases. It downloads each course's pack from the API, keeps it for
-  offline use and installs it before learner state loads.
-- **Audio.** The app plays phrases (the server's clips) and songs, and records nothing. On iOS and
-  Android the one player plays on with the screen locked and shows on the lock screen and at the top
-  of the notification shade (P3-11), with its grades: the `LoroMedia` Expo module
-  (`modules/loro-media`; a media3 session and foreground service on Android, Now Playing on iOS),
-  driven by `src/audio/lockScreen.ts`. A grade pressed there is the same `RATE` event as in the app.
+- **The Rust core.** FSRS runs in `packages/core-rs`, reached through one JSON `core_call` boundary
+  ([ADR-0002](adr/0002-shared-rust-core.md), [fsrs-model.md](fsrs-model.md)). Scheduling has no
+  JavaScript copy (`src/shared/core/fsrs.ts` only evaluates the recall curve for display); without
+  the core (Expo Go) nothing schedules.
+- **Content.** The app ships no phrases and no list of languages. It downloads both from the API,
+  keeps them for offline use and installs them before learner state loads.
+- **Sound** comes only from the server: a phrase plays the clip the server's voice rendered for it,
+  at the learner's speed; a phrase without a clip says so instead of playing. Songs stream from the
+  API. The app records nothing. On iOS and Android the one player plays on with the screen locked
+  and shows on the lock screen and at the top of the notification shade (P3-11), with its grades:
+  the `LoroMedia` Expo module (`modules/loro-media`; a media3 session and foreground service on
+  Android, Now Playing on iOS), driven by `src/audio/lockScreen.ts`. A grade pressed there is the
+  same `RATE` event as in the app.
 
 ## The API (`apps/api`)
 
-NestJS on Node 22 with PostgreSQL through `pg` and handwritten SQL; see [backend.md](backend.md).
-The `library` module is what the current app uses: packs, sets and albums, sharing, reports,
-generation within daily limits, phrase clips, songs and progress. Auth (email code, Google, Apple)
-issues the sessions it relies on. Without a model key (`FIREWORKS_API_KEY`, `OPENROUTER_API_KEY`;
-[ADR-0015](adr/0015-open-model-providers.md)) or a music provider, generation uses labelled
+NestJS on Node 22 with PostgreSQL through `pg` and handwritten SQL; see [backend.md](backend.md) for
+its modules and [api.md](api.md) for its routes. The current app uses two modules: `auth` (email
+code, Google, Apple) for sessions, and `library` for everything else — packs, languages, sets and
+albums, sharing, reports, generation within daily limits, phrase clips, songs and progress. Without
+a model key (`FIREWORKS_API_KEY`, `OPENROUTER_API_KEY`;
+[ADR-0015](adr/0015-open-model-providers.md)) or a music provider, generation answers with labelled
 fallbacks.
 
 The API is deployed to a restricted EC2 development host
@@ -73,9 +79,11 @@ The API is deployed to a restricted EC2 development host
 
 ## Rules
 
-1. **The device is the source of truth for learner data.** Every write succeeds locally first; the
-   server keeps a copy for the account and merges.
-2. **Practice works offline** once a course's pack is on the device.
+1. **The device holds the learner's progress first.** Every rating is saved on the device before
+   anything is sent; a signed-in device merges the account's copy into its own
+   ([sync-protocol.md](sync-protocol.md)).
+2. **A course opens offline** once its pack is on the device. Phrase clips and song audio come from
+   the API; the app keeps no clip store of its own.
 3. **Recorded audio never leaves the device** ([ADR-0011](adr/0011-analytics-and-privacy.md)).
 4. **Every number shown to a learner is real** — measured or computed by the real model, never
    simulated.

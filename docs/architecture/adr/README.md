@@ -5,9 +5,6 @@ actually considered, what we chose, and the consequences we accepted.
 
 ## Index
 
-Only the records that still govern the code are kept; the others (0001, 0003, 0005–0007, 0009, 0010,
-0012–0014) remain in Git history at `e36cc758`.
-
 | #                                       | Decision                              | Status   | Date       |
 | --------------------------------------- | ------------------------------------- | -------- | ---------- |
 | [0002](0002-shared-rust-core.md)        | A shared Rust core via UniFFI         | Accepted | 2026-07-28 |
@@ -17,6 +14,24 @@ Only the records that still govern the code are kept; the others (0001, 0003, 00
 | [0015](0015-open-model-providers.md)    | DeepSeek writes, Muse Image draws     | Accepted | 2026-10-01 |
 
 The next new record is 0016; numbers are never reused.
+
+### Removed records
+
+The other records were removed from the tree on 2026-09-30 and remain in Git history at `e36cc758`
+(`git show e36cc758:docs/architecture/adr/<file>`). Code comments still cite some of them by number.
+
+| #    | Decision                               | Status when removed       |
+| ---- | -------------------------------------- | ------------------------- |
+| 0001 | React Native + Expo for the app        | Accepted                  |
+| 0003 | Offline-first SQLite with delta sync   | Accepted; client removed  |
+| 0005 | On-device ASR, reveal-mode fallback    | Accepted                  |
+| 0006 | Pluggable practice engines             | Accepted; engines removed |
+| 0007 | A native audio module, not a JS player | Accepted                  |
+| 0009 | Content ships independently of the app | Accepted                  |
+| 0010 | LLM roleplay with hard guardrails      | Accepted                  |
+| 0012 | Zustand write-through projection       | Superseded                |
+| 0013 | Design tokens as generated code        | Superseded                |
+| 0014 | pnpm workspaces + Turborepo            | Accepted                  |
 
 ## Statuses
 
@@ -49,7 +64,7 @@ comment covers.
 
 ## Context
 
-What forces are in play? Cite the blueprint or a requirement where relevant.
+What forces are in play? Cite a requirement ID or an open question where relevant.
 
 ## Options considered
 

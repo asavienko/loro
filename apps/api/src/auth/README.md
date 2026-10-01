@@ -1,79 +1,88 @@
-# Authentication runtime
+# Authentication
 
-F-01/F-02/F-07: optional sign-in, real identity proof and durable session revocation. `AuthModule`
-owns controllers, `AuthService`, `AUTH_STORE`, and `ACCESS_TOKENS`. Sign-in and claim SQL live in
-`auth.session.ts` / `auth.claim.ts` behind `PostgresAuthStore`. Browser OAuth lives in
-`oauth-flow.service.ts` / `oauth.controller.ts`; grant consumption is on `repository.ts`. The AI
-account boundary is `auth-boundary.guard.ts` on the composition root. Native ID-token and
-code-exchange JWKS share `jwks.ts`. `GET /me` and `GET /auth/me` keep distinct response shapes.
-`AUTH_MIGRATION_SQL` is version `001_auth` in the shared migration runner.
+F-01 (email code, Google, Apple) and F-07 (account deletion): sign-in, sessions and their
+revocation. Routes: [api.md](../../../../docs/architecture/api.md#auth-and-health); the policy in
+brief: [security-privacy.md](../../../../docs/architecture/security-privacy.md#authentication).
 
-- Apple/Google use fixed HTTPS JWKS endpoints, RS256 signatures, required subject/expiry/issued-at,
-  issuer/audience checks and a 30-second clock tolerance. An `azp` claim must name a configured
-  client. Provider subjects remain separate: matching email strings never automatically link
-  accounts.
-- Access tokens prefer ES256, with a strict >=32-byte HS256 compatibility fallback, a 900-second
-  lifetime, issuer/audience/version checks and a durable session/account/device check on every
-  authenticated request. Sign-out or refresh replay revokes existing access tokens immediately.
-  Refresh families have a fixed 90-day expiry.
-- Refresh tokens contain 256 random bits and are stored only as SHA-256 digests. This deliberately
-  differs from the earlier password-style Argon2id plan: these are unguessable generated secrets,
-  never learner passwords. SHA-256 preserves replay lookup without retaining a bearer credential.
-- Six-digit email codes live for ten minutes and permit five verification attempts. HMAC-SHA256
-  binds each code to a fresh random nonce, email hash and server secret. Guesses are counted in a
-  committed transaction; concurrent verification cannot consume a code twice. Delivery permits five
-  requests per email and thirty authentication requests per actual transport-peer address per
-  fifteen-minute window. Limits persist across application restarts; forwarded IP headers are
-  ignored, except that with `TRUST_PROXY=1` (the EC2 host, behind the gateway's nginx) the
-  `X-Real-IP` nginx sets is the address, when the peer is loopback or a private network.
-- Only the configured delivery service receives the email/code. Delivery uses HTTPS, a bearer
-  credential, a five-second timeout and rejects redirects; response text is neither read nor logged.
-  Valid requests return the same accepted response for new and existing accounts. Email addresses
-  are stored as keyed hashes, not plaintext. The email hash key is an identity key and must be
-  backed up; replacing it without migrating identities would create new email accounts.
-- An anonymous ID only correlates the device's pending local upload. Claim requests are idempotent,
-  scoped to the verified account/device and report `upload_required: true`; they never transfer
-  server rows from another account or claim that local progress has already uploaded.
+## Where things are
 
-Session/token settings are `config.sessionAuthSettings()`. Browser OAuth deployment (public URL,
-redirects, provider secrets) is `oauthDeploymentSettings()` in `settings.ts`. Do not treat those two
-objects as interchangeable.
+- `auth.module.ts`: `AuthModule`, which owns the controllers, `AuthService`, the `AUTH_STORE`, the
+  access-token signer (`ACCESS_TOKENS`) and, when provider pages are configured, the OAuth flow that
+  `module.ts` builds (with a cleanup of expired attempts every minute).
+- `auth.controller.ts`: capabilities, email codes, native ID tokens, refresh, logout, claim, `/me`.
+  `oauth.controller.ts` with `oauth-flow.service.ts`: the provider sign-in pages.
+- `auth.session.ts` and `auth.claim.ts`: the sign-in and claim SQL behind `PostgresAuthStore`;
+  `repository.ts`: OAuth attempts and grants.
+- `auth.tokens.ts`: access tokens, hashing and the lifetimes. `jwks.ts`: Google's and Apple's
+  signing keys, shared by ID-token and code-exchange verification.
+- `auth.guard.ts`: the bearer guard every signed-in route uses. `auth-boundary.guard.ts`: the global
+  guard that closes the AI routes while sign-in is configured
+  ([backend.md](../../../../docs/architecture/backend.md#modules)).
+- `auth.schema.ts`: migration `001_auth`.
 
-Configuration is read only by `common/config.ts`:
+## Identity
 
-| Variable               | Meaning                                                                 |
-| ---------------------- | ----------------------------------------------------------------------- |
-| `AUTH_PRIVATE_KEY_PEM` | Preferred PKCS8 PEM P-256 private key for ES256                         |
-| `AUTH_SIGNING_KEY`     | Random >=32-byte HS256 fallback when PEM is absent                      |
-| `AUTH_ENABLED`         | Explicit false disables all auth; true enables configured browser OAuth |
-| `AUTH_ISSUER`          | Default `AUTH_PUBLIC_URL`, otherwise `https://api.loro.app`             |
+- Google and Apple ID tokens are verified against fixed HTTPS JWKS endpoints: RS256, issuer and
+  audience checks, required subject, expiry and issued-at, 30 seconds of clock tolerance. An `azp`
+  claim must name a configured client. Each provider subject is its own identity: accounts are never
+  linked by matching email addresses.
+- Provider sign-in pages (web, and iOS/Android auth sessions) use PKCE. `POST /auth/:provider/start`
+  records an attempt for five minutes; the provider's callback redirects to the app with a one-use
+  ticket valid for one minute, which `POST /auth/exchange` trades, with the verifier, for a session.
+- Email codes are six digits, live ten minutes and allow five tries. Each is an HMAC of the email
+  hash, a fresh nonce and the code under `AUTH_EMAIL_HASH_KEY`; guesses are counted in a committed
+  transaction, so concurrent verifications can't spend one code twice. The email itself is stored
+  only as a keyed hash: the key is an identity key — back it up, since replacing it without
+  migrating identities turns every email account into a new one. A request returns the same
+  `202 accepted` for new and existing addresses.
 
-| `AUTH_KEY_ID` | JWT key ID, default `primary` | | `GOOGLE_CLIENT_IDS` | Comma-separated allowed
-Google client IDs; defaults to `GOOGLE_CLIENT_ID` | | `APPLE_CLIENT_IDS` | Comma-separated allowed
-Apple client IDs; defaults to `APPLE_CLIENT_ID` | | `AUTH_EMAIL_HASH_KEY` | Stable secret, at least
-32 characters, for email identity/code HMAC | | `AUTH_MAGIC_DELIVERY_URL` | HTTPS delivery webhook,
-loopback HTTP in development, or `inbox:local` | | `AUTH_MAGIC_DELIVERY_TOKEN` | Bearer credential
-for the delivery webhook |
+## Sessions
 
-The delivery webhook accepts JSON `{ "email": "...", "code": "123456", "expires_in": 600 }` and must
-return a successful HTTP status after accepting delivery. Configure an actual email sender; the API
-never emits a development code to logs or responses. Disabled providers are reported by
-`GET /auth/capabilities`; the mobile app can present only configured choices.
+- Access tokens: ES256 from `AUTH_PRIVATE_KEY_PEM`, or HS256 from an `AUTH_SIGNING_KEY` of at least
+  32 bytes when no PEM is set; 900 seconds; issuer, audience (`loro-mobile`) and version checks. One
+  key signs and verifies, so changing it ends every session. Every request also loads the session,
+  so sign-out and refresh reuse revoke access tokens at once.
+- Refresh tokens: 256 random bits, stored only as SHA-256 digests (unguessable generated secrets,
+  not passwords, so a fast hash is enough to look them up). Each use rotates the token; reusing a
+  consumed one revokes the family. A family expires 90 days after sign-in.
+- `POST /auth/logout` takes a refresh token or a verified bearer and returns 204. `GET /me` returns
+  `{user, device_id}`; `GET /auth/me` the user alone.
+- Credentials from before device registration upgrade once, on refresh with the device and anonymous
+  ID, keeping the account ID and the remaining expiry.
+- `POST /auth/claim` correlates an anonymous device's pending upload with the account. It needs a
+  matching `X-Loro-Device` and `Idempotency-Key`, is idempotent, and only ever reports
+  `upload_required: true`: it never moves another account's rows.
 
-`POST /auth/magic-link/verify`, `/auth/google` and `/auth/apple` return the shared sign-in contract.
-`POST /auth/refresh` returns the shared token contract. Legacy OAuth credentials require paired
-device/anonymous registration for a one-time upgrade and return the shared sign-in contract while
-preserving the account ID and remaining legacy expiry. `/auth/logout` accepts a refresh token body
-or verified bearer token and returns 204; `GET /me` returns `{user,device_id}`. `/auth/claim`
-additionally requires matching `X-Loro-Device` and `Idempotency-Key` headers.
+## Limits
 
-The audience is fixed at `loro-mobile`; legacy device-less access tokens do not grant sync access.
+Every auth route counts 30 requests per 15 minutes per address; email-code requests also count 5 per
+15 minutes per email. The counters are in PostgreSQL and survive restarts. The address is the
+transport peer; with `TRUST_PROXY=1` (the EC2 host, behind the gateway's nginx) it is the
+`X-Real-IP` nginx sets, taken only from a loopback or private-network peer.
 
-Run `bash scripts/ci-auth-postgres.sh` for the real PostgreSQL transaction suite. It creates and
-drops a random temporary schema; the connected database user must have permission to create schemas.
-Unit signature tests run without a database or network.
+## Email delivery
 
-Production release still needs actual provider registration/delivery credentials, TLS termination
-and transport controls, signing-key rotation overlap, account linking, deletion/export jobs,
-provider revocation notifications, auth audit retention and support procedures. None is inferred
-from successful local sign-in tests.
+The API posts `{ "email": "...", "code": "123456", "expires_in": 600 }` to `AUTH_MAGIC_DELIVERY_URL`
+with `Authorization: Bearer <AUTH_MAGIC_DELIVERY_TOKEN>`, a five-second timeout and redirects
+refused; any 2xx is accepted, and the response body is never read or logged. The URL must be HTTPS,
+loopback HTTP outside production, or `inbox:local`, which writes the latest code to
+`/tmp/loro-magic-delivery.json` on the API's host (the EC2 development host uses it). Locally,
+`node scripts/local-magic-delivery.mjs` is a loopback receiver. The API never puts a code in a log
+or a response. Only the delivery service receives the email and code.
+
+## Configuration
+
+Read through `config.sessionAuthSettings()` (sessions, tokens, email, ID-token clients) and
+`oauthDeploymentSettings()` in `settings.ts` (provider sign-in pages); the two are not
+interchangeable. `GET /auth/capabilities` reports email, Google and Apple only when their settings
+are complete, and the app offers only those. Every variable, with its default:
+[environments.md](../../../../docs/process/environments.md#api-sign-in).
+
+Redirects must be exact HTTPS URLs, loopback HTTP, `loro://account` or `loro-dev://account`, with no
+query or fragment. `.env.example` shows a local setup, including how to make an ES256 key.
+
+## Tests
+
+`pnpm --filter @loro/api test` runs the signature, flow and HTTP tests without a database or
+network. `bash scripts/ci-auth-postgres.sh` runs the PostgreSQL suites (sessions, refresh reuse,
+one-use codes, guess limits, concurrent refresh, restarts) against a disposable database.

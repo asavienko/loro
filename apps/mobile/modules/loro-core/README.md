@@ -1,44 +1,47 @@
-# Canonical Rust native bridge
+# LoroCore — the Rust core as an Expo module
 
-This local Expo module exposes `LoroCore.call(method, inputJson): string` synchronously. Both native
-implementations call the committed UniFFI `coreCall` binding; scheduling and merge policy stay in
-`packages/core-rs`. The bridge accepts JSON domain data, never recordings.
+This local Expo module gives iOS and Android the Rust core, which Hermes cannot run as WebAssembly.
+It exposes one synchronous function, `LoroCore.call(method, inputJson): string`, which calls the
+committed UniFFI `coreCall` binding of [`packages/core-rs`](../../../../packages/core-rs/README.md).
+`src/platform/loroCore.ts` wraps it as `core_call`, and `metro.config.js` puts that wrapper in place
+of the browser build on native. The app calls it for FSRS; it carries JSON, never recordings.
 
-Expo autolinking discovers this directory through its default `./modules` search. A development
-build is required: Expo Go does not contain this module. No config plugin or manual changes to
-generated iOS/Android projects are needed.
+Expo autolinking finds the module through its default `./modules` search; no config plugin or
+hand-edit of the generated native projects is needed. Expo Go doesn't contain it, so the app needs a
+development build.
 
-## Build prerequisites
+## Prerequisites
 
-- Rust 1.88 or later, with the platform targets installed using `rustup target add`.
-- iOS: full Xcode and CocoaPods; `aarch64-apple-ios`, `aarch64-apple-ios-sim`, and
-  `x86_64-apple-ios` when building an Intel simulator.
-- Android: the app's configured Android SDK/NDK, `cargo install cargo-ndk --locked`, and the
-  corresponding Rust targets (`aarch64-linux-android`, `armv7-linux-androideabi`,
-  `i686-linux-android`, `x86_64-linux-android`).
+- Rust 1.88 or later.
+- iOS: full Xcode, CocoaPods and the targets `aarch64-apple-ios`, `aarch64-apple-ios-sim`, and
+  `x86_64-apple-ios` for an Intel simulator.
+- Android: the app's Android SDK and NDK, `cargo install cargo-ndk --locked`, and the targets
+  `aarch64-linux-android`, `armv7-linux-androideabi`, `i686-linux-android` and
+  `x86_64-linux-android`.
 
-The pod build compiles the requested iOS architecture(s), then links the static Rust library. Gradle
-compiles its `reactNativeArchitectures` into its generated `jniLibs` directory before packaging.
-Both use `cargo --locked --lib`; outputs and intermediate Cargo artifacts live in ignored `build/`
-directories. Android includes the JNA AAR required by UniFFI and preserves its reflected bindings in
-release builds.
+## How it builds
 
-The iOS `generated/` files are tracked symlinks to the canonical binding files because CocoaPods
-does not discover source globs outside a pod root. Preserve those symlinks when copying the
-repository or preparing build archives.
+- **iOS.** A pod script phase runs `scripts/build-ios.sh` for the architectures Xcode requests and
+  links the static Rust library. `ios/generated/` holds tracked symlinks to
+  `packages/core-rs/bindings/`, because CocoaPods doesn't find sources outside the pod root; keep
+  the symlinks when copying the repository or preparing an archive.
+- **Android.** Gradle's `preBuild` runs `scripts/build-android.sh` for `reactNativeArchitectures`
+  (default `arm64-v8a,armeabi-v7a,x86,x86_64`) into `android/build/rust-jniLibs`, aligned for 16
+  KiB-page devices. The module adds the JNA AAR UniFFI needs, and `consumer-rules.pro` keeps its
+  reflected classes in release builds.
 
-Regenerate bindings through the repository's `packages/core-rs/build.sh` workflow whenever Rust
-exports change. Native builds compile the committed Swift/Kotlin bindings in place; they never
-silently regenerate source files. UniFFI validates the interface checksums when loading a library,
-so a stale library or binding fails explicitly.
+Both build with `cargo --locked --lib` into ignored `build/` directories and compile the committed
+bindings in place; they never regenerate them. When the Rust exports change, regenerate the bindings
+with `pnpm core-rs:build` and commit them. UniFFI checks interface checksums when it loads the
+library, so a stale library or binding fails loudly.
 
-To exercise the Android build hook independently (with `ANDROID_NDK_HOME` set):
+To run the Android build on its own (with `ANDROID_NDK_HOME` set):
 
 ```bash
 bash apps/mobile/modules/loro-core/scripts/build-android.sh \
   "$PWD/apps/mobile/modules/loro-core/android/build/rust-jniLibs" arm64-v8a
 ```
 
-A successful Rust compilation alone does not prove Expo registration or device execution. Before
-native release, build both apps and verify a call through `requireNativeModule('LoroCore')` on a
-device/emulator, including process restart and a real sync merge.
+A Rust build that compiles proves neither Expo registration nor device execution. Before a native
+release, build both apps and check a call through `LoroCore` on a device or emulator, including
+after the process restarts.

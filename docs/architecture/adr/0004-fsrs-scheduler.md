@@ -23,7 +23,7 @@ recall — not just an interval table.
 ## Decision
 
 **FSRS-6 with published default parameters**, ported into `packages/core-rs` and parity-tested
-against the reference ([ADR-0002](0002-shared-rust-core.md)). Loro schedules to 50% desired
+against the reference ([ADR-0002](0002-shared-rust-core.md)). The core schedules to 50% desired
 retention, uses one ten-minute learning step and maps the app's three ratings onto FSRS grades. The
 details are in [fsrs-model.md](../fsrs-model.md).
 
@@ -33,3 +33,6 @@ details are in [fsrs-model.md](../fsrs-model.md).
 - About twenty parameters and a port that must stay in parity; golden fixtures guard it.
 - Re-fitting parameters is future work and needs the review log kept.
 - A changed parameter vector or policy needs a new algorithm id and a migration.
+- The 50% retention puts reviews years apart after a few good ones, so the app shortens the core's
+  date to its 90%-recall point; which retention should decide reviews is open
+  ([Q-24](../../decisions/open-questions.md#q-24)).

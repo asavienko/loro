@@ -4,9 +4,10 @@ Guidance for Claude Code working in this repository.
 
 ## What this is
 
-**Loro** — a mobile app (iOS + Android, plus the web) that teaches Spanish, Bulgarian and Russian by
-the phrase: a listening-first player (hear a phrase in your language, say it in the pause, hear it
-in the target language, rate it; FSRS schedules the next time).
+**Loro** — a mobile app (iOS + Android, plus the web) that teaches Spanish, Bulgarian, British
+English and Russian by the phrase, in an English, Bulgarian or Russian interface (never a course in
+the learner's own language): a listening-first player (hear a phrase in your language, say it in the
+pause, hear it in the target language, rate it; FSRS schedules the next time).
 
 **The app is `apps/mobile`: the v2.0 design as an Expo app** (plan
 [104](plans/104-prototype-react-native.md)). It replaced the v1.1-based app on 2026-09-30. That app,
@@ -22,11 +23,12 @@ one light palette.
 pack from `GET /v1/library/pack` (seeded from `packages/content/v2/`), keeps it for offline use and
 installs it before learner state loads. Product analytics and session replay go to PostHog EU
 (`apps/mobile/src/analytics`, on by default with an opt-out in Settings, never audio;
-[ADR-0011](docs/architecture/adr/0011-analytics-and-privacy.md)). Email-code sign-in, sharing
-(private/link/public, Community), progress sync and AI generation of phrase sets, covers and songs
-(within per-user daily limits) go through the API's `library` module: DeepSeek on Fireworks writes
-(the same model through OpenRouter when it fails) and Muse Image draws covers, decks and covers in
-the background ([ADR-0015](docs/architecture/adr/0015-open-model-providers.md)); without
+[ADR-0011](docs/architecture/adr/0011-analytics-and-privacy.md)). Sign-in (email code, Google,
+Apple) goes through the API's `auth` module; sharing (private/link/public, Community), progress sync
+and AI generation of phrase sets, covers and songs (within per-user daily limits) go through its
+`library` module: DeepSeek on Fireworks writes (the same model through OpenRouter when it fails) and
+Muse Image draws covers, decks and covers in the background
+([ADR-0015](docs/architecture/adr/0015-open-model-providers.md)); without
 `FIREWORKS_API_KEY`/`OPENROUTER_API_KEY` or a music provider the server uses labelled fallbacks
 (phrase bank, drawn patterns, the set's phrases as lyrics, a "Demo sound" instrumental). Every sound
 is the server's: phrases play the clips of its ElevenLabs voices (`TTS_*`, one per language), and
@@ -91,9 +93,20 @@ A change that violates one of these is reverted, not discussed.
   line is checked by `pnpm check:plan-index`. Recheck concurrent worktrees before allocating an ID.
   Older plans, the reviews and stale docs were removed on 2026-09-30 (Git history at `e36cc758`);
   keep `docs/` and `plans/` to what is true of the current code.
+- **Record every key decision in `docs/`, in the same change that makes it** — whether the user made
+  it in conversation or it was settled during the work. Write what was chosen, why, and what was
+  rejected. A hard-to-reverse, cross-cutting or contested technical choice gets an ADR in
+  [`docs/architecture/adr/`](docs/architecture/adr/README.md) (superseded, never rewritten); how the
+  app behaves goes in [`v2-prototype-decisions.md`](docs/design/v2-prototype-decisions.md); a
+  decision still open goes in [`open-questions.md`](docs/decisions/open-questions.md), and its
+  answer moves to one of the others. A decision that lives only in a chat, a commit or a plan (plans
+  get archived) is lost.
 - **App code** (`apps/mobile`): shared, platform-neutral behaviour lives in `src/shared/` (imported
-  as `@shared/*`); native replacements for storage, speech, cues and the Rust core live in
-  `src/platform/` and are swapped in by `metro.config.js`. Every learner-facing string is in
+  as `@shared/*`); native replacements for storage, the key-value store, the refresh token, phrase
+  clips, cues, provider sign-in and the Rust core live in `src/platform/` and are swapped in on iOS
+  and Android by resolved path through the `NATIVE` map in `metro.config.js` (a new stand-in needs
+  an entry there). `src/shared/state/` is the pure machine; `src/state/` is the connected React
+  layer around it (store, account, course content, progress sync). Every learner-facing string is in
   `src/shared/copy/` (en, bg, ru). **One clock:** only `src/shared/state/clock.ts` builds a `Date`
   or reads `Date.now()` (lint-enforced). State changes go through `transition(state, event)`; the
   allowed events are in `state/chart.ts`. The app has its own `eslint.config.mjs` and is excluded
@@ -101,9 +114,11 @@ A change that violates one of these is reverted, not discussed.
 - **Generated files are committed and drift-checked** — the UniFFI bindings, the core-rs browser
   build, `apps/mobile/src/ui/iconCodepoints.ts` (`pnpm --filter @loro/mobile icons`) and the OpenAPI
   specs. Never hand-edit them; fix the generator.
-- **`packages/core-rs` owns every number that must be identical across platforms** — FSRS intervals
-  and ranking ([ADR-0002](docs/architecture/adr/0002-shared-rust-core.md)). There is no JavaScript
-  FSRS.
+- **`packages/core-rs` owns FSRS scheduling** — the app calls only `fsrs_initialize` and
+  `fsrs_review` ([ADR-0002](docs/architecture/adr/0002-shared-rust-core.md)). There is no JavaScript
+  scheduler: `src/shared/core/fsrs.ts` only evaluates the recall curve for display,
+  `src/shared/state/memory.ts` brings due dates forward (Q-24), and the queue is ordered in
+  TypeScript ([fsrs-model.md](docs/architecture/fsrs-model.md)).
 - **Progress sync** merges the whole learner state in `apps/mobile/src/shared/state/merge.ts` and
   saves it through `/v1/library/progress`, which rejects stale revisions with a 409. Every merged
   field needs a declared merge class there ([sync-protocol.md](docs/architecture/sync-protocol.md));
@@ -115,7 +130,7 @@ A change that violates one of these is reverted, not discussed.
 Run CI checks locally. Do not enable, dispatch, or rerun GitHub Actions unless the user explicitly
 changes this policy; former workflows are inactive references in `.github/workflows-disabled/`.
 `pnpm ci:local` is the full local gate (install, core-rs build, `pnpm check`, auth/PostgreSQL,
-format, golden, drift, app bundle, API image, benchmarks); `pnpm check` is the fast gate. See
+format, drift, app bundle, API image, benchmarks); `pnpm check` is the fast gate. See
 `docs/process/ci-cd.md`.
 
 ## Local Android APK distribution
@@ -141,7 +156,15 @@ pnpm --filter @loro/mobile test       # the app's unit tests (node:test via tsx)
 pnpm --filter @loro/mobile bundle     # proves the iOS bundle compiles
 pnpm --filter @loro/api dev           # :3000; requires PostgreSQL/auth configuration
 pnpm local:up / pnpm local:down       # SOPS-decrypted API + Expo web containers
+
+# One test file (app tests need the content fixture installed first)
+cd apps/mobile && pnpm exec tsx --import ./src/shared/content/fixture.install.ts --test src/shared/state/machine.test.ts
+pnpm --filter @loro/api exec vitest run src/library/covers.test.ts
+cd packages/core-rs && cargo test <name>
 ```
+
+- API `*.postgres.test.ts` files skip unless `LORO_TEST_DATABASE_URL` is set; `pnpm ci:local` runs
+  them against a disposable PostgreSQL container.
 
 - Expo Go can't run the app: it needs the `LoroCore` native module (a development build).
 - The API uses PostgreSQL for accounts and sync; `/v1/health/ready` checks database/WASM
@@ -154,13 +177,15 @@ pnpm local:up / pnpm local:down       # SOPS-decrypted API + Expo web containers
 | ------------------------------------------ | ---------------------------------------------------------------- |
 | `apps/mobile/app/`                         | expo-router routes                                               |
 | `apps/mobile/src/shared/`                  | Content, state machine, persistence, copy, notes, generator      |
+| `apps/mobile/src/state/`                   | Store, account, course content, progress sync (React)            |
+| `apps/mobile/src/music/`                   | Song rows, albums, the music players                             |
 | `apps/mobile/src/platform/`                | Native storage, speech, cues, Rust core, Intl polyfills          |
 | `apps/mobile/src/{screens,sheets,ui,nav}/` | The UI                                                           |
 | `apps/mobile/modules/loro-core/`           | Expo module over the Rust core (UniFFI)                          |
 | `apps/mobile/modules/loro-media/`          | Expo module: the player on the lock screen and shade (P3-11)     |
 | `apps/api/`                                | NestJS backend                                                   |
 | `packages/core/`                           | Shared TS domain and API contracts — used by the API and content |
-| `packages/core-rs/`                        | Rust: FSRS, ranking (and the older `/v1/sync` merge)             |
+| `packages/core-rs/`                        | Rust: FSRS (and the older `/v1/sync` merge and clocks)           |
 | `packages/content/`                        | Server catalogs, review gates; `v2/` is the app's seeded content |
 | `apps/api/src/library/`                    | Packs, sharing, limits, AI phrases/covers/songs, progress sync   |
 | `docs/`                                    | All documentation — start at `docs/README.md`                    |
