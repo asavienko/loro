@@ -350,9 +350,12 @@ function SignedIn() {
           <Txt variant="title" face="serif" weight={600} accessibilityRole="header">
             {c.account.today}
           </Txt>
-          {(['phrases', 'cover', 'song'] as const).map((kind) => (
-            <Allowance key={kind} label={c.account.usage[kind](remaining(usage, kind) ?? 0, usage.daily[kind].limit)} used={usage.daily[kind].used} limit={usage.daily[kind].limit} />
-          ))}
+          {/* An older server counts no lyrics (plan 113): that row is left out rather than shown empty. */}
+          {(['phrases', 'cover', 'song', 'lyrics'] as const)
+            .filter((kind) => usage.daily[kind] !== undefined)
+            .map((kind) => (
+              <Allowance key={kind} label={c.account.usage[kind](remaining(usage, kind) ?? 0, usage.daily[kind].limit)} used={usage.daily[kind].used} limit={usage.daily[kind].limit} />
+            ))}
           <Txt variant="label" color="secondary">
             {c.account.resets(resetTime(c.locale, usage.resetsAt))}
           </Txt>
