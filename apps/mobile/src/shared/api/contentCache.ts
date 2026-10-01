@@ -3,6 +3,7 @@
 // installs them before the learner's state loads, so the app opens offline with its progress intact;
 // `refreshCourse` asks the API for the languages and a course's current pack and installs them.
 import {
+  applyItemCover,
   applySet,
   ContentPack,
   ExtraSets,
@@ -131,6 +132,12 @@ async function download(lang: LanguageCode): Promise<boolean> {
 /** A change to one of the learner's sets, shown at once and kept with the course's saved pack. */
 export async function keepSetChange(detail: SetDetail): Promise<void> {
   const pack = applySet(detail);
+  if (pack) await kvSet(packKey(pack.targetLang), JSON.stringify(pack));
+}
+
+/** A cover the learner drew for a phrase or song, shown at once and kept with the course's saved pack. */
+export async function keepItemCover(targetLang: LanguageCode, kind: 'phrase' | 'song', id: string, url: string): Promise<void> {
+  const pack = applyItemCover(targetLang, kind, id, url);
   if (pack) await kvSet(packKey(pack.targetLang), JSON.stringify(pack));
 }
 

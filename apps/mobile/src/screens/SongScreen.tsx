@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Song } from '@shared/api/library';
-import { findSet } from '@shared/content';
+import { findSet, songCoverUrl } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
 import { formatElapsed } from '@shared/state/clock';
 import { RATING_WINDOW_MS } from '@shared/state/memory';
@@ -81,7 +81,7 @@ export function SongScreen() {
       </PullHandle>
       <ScrollView contentContainerStyle={[styles.content, compact && styles.compactContent, { paddingBottom: insets.bottom + 32 }]}>
         <View style={styles.cover}>
-          <AlbumCover url={music.album?.coverUrl ?? null} px={220} rounded={20} />
+          <AlbumCover url={songCoverUrl(song.id) ?? music.album?.coverUrl ?? null} px={220} rounded={20} redraw={{ kind: 'song', song }} />
         </View>
         <View style={styles.titleRow}>
           <Txt variant="displaySm" face="serif" weight={600} accessibilityRole="header" style={{ flex: 1 }}>

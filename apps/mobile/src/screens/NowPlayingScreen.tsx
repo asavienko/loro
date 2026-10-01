@@ -104,7 +104,7 @@ export function NowPlayingScreen() {
 
         <ScrollView style={styles.stage} contentContainerStyle={[styles.stageContent, gutter]}>
           <View style={styles.cover}>
-            <PhraseImage icons={phrase.image} tone={tone} width={cover} height={cover} rounded={24} style={shadow.cover} />
+            <PhraseImage icons={phrase.image} tone={tone} width={cover} height={cover} rounded={24} style={shadow.cover} phrase={phrase} redraw />
           </View>
           <PhraseBlock phrase={phrase} revealed={revealed} />
           <ActionRow phrase={phrase} onNotes={() => setNotesOpen(true)} />
