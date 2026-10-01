@@ -182,8 +182,6 @@ export interface Prefs {
   sortBySet: Record<string, SortKey>;
   /** Onboarding's "Start without the demo": Home stops offering it. */
   skippedDemo: boolean;
-  /** The learner's own choice of device voice per language, by name; otherwise the best is picked. */
-  voiceByLang: Partial<Record<LanguageCode, string>>;
   /** How long "your turn" lasts (Settings → Listening). */
   pauseLength: PauseLength;
   /** The queue's swipe-and-drag hint has done its job (a swipe or drag worked): it folds away. */
@@ -196,8 +194,8 @@ export interface Prefs {
 
 export interface AudioFailure {
   lang: LanguageCode;
-  /** No voice for the language, or the speech engine stayed silent. */
-  reason: 'no-voice' | 'silent';
+  /** No clip from the server for it, or its clip didn't load or play. */
+  reason: 'no-clip' | 'silent';
 }
 
 export type Phase = 'native' | 'pause' | 'target' | 'rate';

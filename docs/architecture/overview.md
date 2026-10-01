@@ -40,8 +40,11 @@ graph TB
 - **Shared, platform-neutral code** is in `src/shared/` (`@shared/*`): content types, the state
   machine, persistence, copy (en, bg, ru), notes and the phrase generator.
 - **Native replacements** live in `src/platform/` and are swapped in by `metro.config.js`: storage
-  (AsyncStorage instead of browser storage), the device voice (`expo-speech`/`expo-audio` instead of
-  Web Speech), cues, secrets, OAuth and the Rust core.
+  (AsyncStorage instead of browser storage), phrase clips (`expo-audio` instead of an `<audio>`
+  element), cues, secrets, OAuth and the Rust core.
+- **Sound** comes only from the server (plan 108): every phrase plays the clip its voice recorded
+  (`/library/speech`), at the learner's speed. There is no device voice; a phrase without a clip
+  says so instead of playing.
 - **State.** Learner progress is an append-only log plus a few last-writer-wins fields. Every change
   goes through `transition(state, event)`; the allowed events are in `state/chart.ts`. Numbers on
   screen come from `state/selectors.ts`. Only `state/clock.ts` reads the time (lint-enforced).

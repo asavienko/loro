@@ -24,9 +24,9 @@ Library, sets of your own, and Make a set with its swipe deck.
   suggestion generator and the deck — live in `src/shared/` with their unit tests, and run on every
   platform.
 - **Only the platform edge differs.** Metro swaps four leaf modules on iOS and Android: saved
-  progress (`state/storage.ts` → AsyncStorage), speech (`audio/speech.ts` → `expo-speech`), cues
-  (`audio/cues.ts` → haptics) and the Rust core (`packages/core-rs/browser` → the `LoroCore` native
-  module in `apps/mobile/modules/loro-core`). On the web the originals run.
+  progress (`state/storage.ts` → AsyncStorage), phrase clips (`audio/speech.ts` → `expo-audio`),
+  cues (`audio/cues.ts` → haptics) and the Rust core (`packages/core-rs/browser` → the `LoroCore`
+  native module in `apps/mobile/modules/loro-core`). On the web the originals run.
 - **Every number stays the core's.** FSRS runs in Rust on every platform (native module or WASM);
   there is no JavaScript fallback. The native module needs a development build; Expo Go cannot run
   it.

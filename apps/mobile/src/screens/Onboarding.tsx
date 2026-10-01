@@ -1,14 +1,14 @@
 // First run (the web prototype's src/screens/Onboarding.tsx): the learner's language, their name,
-// the course, a voice check before anything plays, and the loop explained. The step's action stays
+// the course, signing in, and the loop explained. Phrases are spoken by the server's voices (plan
+// 108), so there is no device voice to check. The step's action stays
 // at the bottom; the step scrolls above it.
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { speak, voiceName, waitForVoices } from '@shared/audio/speech';
 import { languageLabel, languageName } from '@shared/copy';
 import { coursesFor, getLanguage, LanguageCode, NATIVE_LANGUAGES } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
-import { courseSets, findPhrase, promptOf } from '@shared/state/catalog';
+import { courseSets } from '@shared/state/catalog';
 import { LIMITS } from '@shared/state/limits';
 import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
@@ -19,9 +19,9 @@ import { Icon, IconName } from '../ui/Icon';
 import { Txt } from '../ui/Txt';
 import { colors, radius, type } from '../ui/theme';
 
-type Step = 'native' | 'name' | 'course' | 'voices' | 'account' | 'loop';
+type Step = 'native' | 'name' | 'course' | 'account' | 'loop';
 /** Signing in comes before the loop is explained (plan 106): optional, and "Continue" skips it. */
-const STEPS: Step[] = ['native', 'name', 'course', 'voices', 'account', 'loop'];
+const STEPS: Step[] = ['native', 'name', 'course', 'account', 'loop'];
 const LOOP_ICONS: IconName[] = ['hearing', 'record_voice_over', 'volume_up', 'task_alt'];
 
 /** `onDemo` opens the player on the demo phrase once the app's screens exist (the root's Gate). */
@@ -119,7 +119,6 @@ export function Onboarding({ onDemo }: { onDemo: () => void }) {
             onChange={(code) => actions.setProfile({ targetLang: code })}
           />
         )}
-        {step === 'voices' && <VoiceCheck />}
         {step === 'account' &&
           (account.status === 'signedIn' ? (
             <View style={styles.gap}>
@@ -207,61 +206,6 @@ function Choice({ legend, options, label, value, onChange }: { legend: string; o
   );
 }
 
-/** The device's voices for both languages, checked before the first play, each with a test. */
-function VoiceCheck() {
-  const c = useCopy();
-  const { state } = useStore();
-  const { profile } = state.learner;
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    let on = true;
-    void waitForVoices(3000).then(() => on && setReady(true));
-    return () => {
-      on = false;
-    };
-  }, []);
-  const sample = findPhrase(state.learner, courseSets(state.learner)[0]?.phraseIds[0]);
-  const langs: LanguageCode[] = [profile.nativeLang, profile.targetLang];
-  const missing = ready && langs.some((l) => !voiceName(l));
-  return (
-    <View accessibilityLiveRegion="polite">
-      <Txt variant="title" face="serif" weight={600} accessibilityRole="header" style={styles.sectionTitle}>
-        {c.onboarding.voices}
-      </Txt>
-      {!ready ? (
-        <Txt color="secondary">{c.onboarding.voicesChecking}</Txt>
-      ) : (
-        langs.map((lang) => {
-          const voice = voiceName(lang);
-          const text = sample ? (lang === profile.targetLang ? sample.target : promptOf(sample, lang).text) : '';
-          return (
-            <View key={lang} style={styles.voiceRow}>
-              <Icon name={voice ? 'check_circle' : 'error'} color={voice ? 'tertiary' : 'error'} />
-              <Txt style={styles.voiceText}>
-                {voice ? c.onboarding.voiceOk(languageLabel(lang, c.locale), voice) : c.onboarding.voiceMissing(languageLabel(lang, c.locale))}
-              </Txt>
-              {voice && text ? (
-                <Button
-                  variant="tonal"
-                  icon="volume_up"
-                  label={c.onboarding.testShort}
-                  accessibilityLabel={c.onboarding.test(languageName(lang, c.locale))}
-                  onPress={() => void speak(text, lang, 1).done}
-                />
-              ) : null}
-            </View>
-          );
-        })
-      )}
-      {missing && (
-        <Txt color="secondary" style={styles.hint}>
-          {c.onboarding.voiceHint}
-        </Txt>
-      )}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
   column: { width: '100%', maxWidth: 448, alignSelf: 'center', paddingHorizontal: 24 },
@@ -294,9 +238,6 @@ const styles = StyleSheet.create({
   loopRow: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', marginBottom: 12 },
   loopIcon: { width: 36, height: 36, borderRadius: radius.full, backgroundColor: colors.primaryFixed, alignItems: 'center', justifyContent: 'center' },
   loopText: { flex: 1, paddingTop: 7 },
-  voiceRow: { minHeight: 48, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
-  voiceText: { flex: 1, minWidth: 160 },
-  hint: { marginTop: 12 },
   actions: { paddingTop: 12, gap: 4 },
   waiting: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
 });

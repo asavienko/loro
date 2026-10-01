@@ -598,7 +598,8 @@ function CardFace({ card, position, total, onEdit }: { card: Suggestion; positio
     // One voice at a time: the loop pauses while a suggestion is heard.
     if (state.player.status === 'playing') actions.pause();
     playback.current?.cancel();
-    playback.current = speak(card.target, targetLang, 1, clipUrl);
+    // At the learner's speed, as the player would say it.
+    playback.current = speak(clipUrl, state.prefs.speed);
   };
 
   return (

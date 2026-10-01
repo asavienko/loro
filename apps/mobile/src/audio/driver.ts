@@ -5,7 +5,7 @@
 import { useEffect } from 'react';
 import { AppState as AppLifecycle } from 'react-native';
 import { holdCue, turnCue } from '@shared/audio/cues';
-import { canSpeak, Playback, PlaybackResult, preloadClip, silence, speak } from '@shared/audio/speech';
+import { Playback, PlaybackResult, preloadClip, silence, speak } from '@shared/audio/speech';
 import { useLatest } from '@shared/lib/useLatest';
 import { findPhrase, promptOf } from '@shared/state/catalog';
 import { currentPhraseId, phaseDurationMs } from '@shared/state/selectors';
@@ -50,20 +50,20 @@ export function usePlaybackDriver(): void {
     let lang = phrase.targetLang;
     switch (phase) {
       case 'native':
-        // A target this device can't say stops the phrase before its prompt.
-        if (!phrase.audio?.[phrase.targetLang] && !canSpeak(phrase.targetLang)) {
-          playback = { done: Promise.resolve({ status: 'failed', reason: 'no-voice' }), cancel: () => {} };
+        // A target with no clip stops the phrase before its prompt: it could never be heard.
+        if (!phrase.audio?.[phrase.targetLang]) {
+          playback = speak(null, speed);
           break;
         }
         lang = prompt.lang;
-        playback = speakThenGap(speak(prompt.text, prompt.lang, speed, phrase.audio?.[prompt.lang]));
+        playback = speakThenGap(speak(phrase.audio?.[prompt.lang], speed));
         break;
       case 'pause':
         turnCue();
         playback = silence(s.player.phaseMs ?? phaseDurationMs(s) ?? 0);
         break;
       case 'target':
-        playback = speakThenGap(speak(phrase.target, phrase.targetLang, speed, phrase.audio?.[phrase.targetLang]));
+        playback = speakThenGap(speak(phrase.audio?.[phrase.targetLang], speed));
         break;
       case 'rate':
         holdCue();
@@ -78,10 +78,8 @@ export function usePlaybackDriver(): void {
       } else if (result.status === 'timeout') {
         actions.phaseDone(cycle, { unconfirmed: true });
       } else {
-        const spoken = phase === 'native' || phase === 'target';
-        // A length is kept only when measured at 1× (device speech doesn't scale linearly with rate).
-        const clip = Boolean(phrase.audio?.[lang]);
-        const measured = spoken && result.ms !== null && (clip || speed === 1);
+        // A clip's length scales with the speed, so any speed measures it.
+        const measured = (phase === 'native' || phase === 'target') && result.ms !== null;
         actions.phaseDone(cycle, measured ? { measuredMs: Math.round(result.ms! * speed) } : {});
       }
     });

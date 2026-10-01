@@ -28,8 +28,8 @@ describe('analytics events', () => {
     const playing = load(fresh());
     assert.equal(analyticsEvent({ type: 'COMMIT', now: T0 }, playing), null);
     assert.equal(analyticsEvent({ type: 'PHASE_DONE', cycle: playing.player.cycle, now: T0 }, playing), null);
-    const failed = analyticsEvent({ type: 'PHASE_DONE', cycle: playing.player.cycle, now: T0, failure: { lang: 'es-ES', reason: 'no-voice' } }, playing);
+    const failed = analyticsEvent({ type: 'PHASE_DONE', cycle: playing.player.cycle, now: T0, failure: { lang: 'es-ES', reason: 'no-clip' } }, playing);
     assert.equal(failed?.name, 'audio_failed');
-    assert.equal(failed?.properties.reason, 'no-voice');
+    assert.equal(failed?.properties.reason, 'no-clip');
   });
 });

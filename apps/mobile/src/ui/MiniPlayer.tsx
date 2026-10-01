@@ -51,8 +51,8 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
   const ended = state.player.ended && playsOnce(state.player);
   const summary = ended ? sessionSummary(state, now) : null;
   const status = audioError
-    ? audioError.reason === 'no-voice'
-      ? c.player.noVoice
+    ? audioError.reason === 'no-clip'
+      ? c.player.noClip
       : c.player.silent
     : ended
       ? endTitle(c, state.player.source, summary ? summary.ratings.missed + summary.ratings.hard + summary.ratings.easy : 0)

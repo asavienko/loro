@@ -4,11 +4,11 @@
   playback)
 - **Milestone:** Main app
 - **Status:** 🟡 Started 2026-09-30 at the owner's request. Scope 1–4 landed the same day (7f22e979,
-  7a5d2eea, bbf36b8f, 9b36525b, c84ebae4, 9314c379). **Left:** scope 5 (clips only in the app) and 6
-  (languages from the API). **Blocked by:** scope 5 edits `SettingsSheet.tsx` and
-  `apps/mobile/package.json`, which another session's uncommitted analytics work also changes; and
-  hearing anything needs `TTS_PROVIDER=elevenlabs` with `TTS_API_KEY` and a voice per language,
-  including the new `TTS_VOICE_EN_GB` (not yet in `secrets/api.enc.env`).
+  7a5d2eea, bbf36b8f, 9b36525b, c84ebae4, 9314c379); scope 5 (clips only) on 2026-10-01, with
+  `TTS_VOICE_EN_GB` set to ElevenLabs' premade "Alice" (`Xb7hH8MSUJpSbSDYk0k2`, British) for English
+  prompts until the owner picks one (Q-15). **Left:** scope 6 (languages from the API). Hearing
+  anything needs `TTS_PROVIDER=elevenlabs` with `TTS_API_KEY` and a voice per language on the
+  server.
 - **Owner request, 2026-09-30:** "I want to make all the functionality work with the existing
   backend, so all the sound phrase generation should work with the backend. All the data should come
   from the backend."
