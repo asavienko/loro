@@ -1,5 +1,7 @@
 // Confirmations and undo (the web prototype's src/ui/Toast.tsx): one snackbar at a time above the
-// tab bar and mini-player, and announcements for screen readers without showing anything.
+// tab bar and mini-player, and announcements for screen readers without showing anything. A sheet is
+// a window of its own over the app, so while one is open the snackbar shows inside the topmost sheet
+// (useToastLayer) instead of underneath it.
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
@@ -38,8 +40,23 @@ const TOAST_WITH_ACTION_MS = 6000;
 /** How far above the bottom toasts sit: over the tab bar and the mini-player. Screens without them set it lower. */
 export const ToastOffsetContext = createContext(132);
 
+/** The snackbar showing now and the open sheets, topmost last, that can show it. */
+interface Layers {
+  item: ToastItem | null;
+  top: number | null;
+  dismiss: (id: number) => void;
+  add: (layer: number) => void;
+  remove: (layer: number) => void;
+}
+
+const LayersContext = createContext<Layers | null>(null);
+let nextLayer = 1;
+/** How far above the bottom of a sheet its snackbar sits. */
+const SHEET_OFFSET = 16;
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [item, setItem] = useState<ToastItem | null>(null);
+  const [layers, setLayers] = useState<number[]>([]);
   const nextId = useRef(1);
   const announce = useCallback((text: string) => AccessibilityInfo.announceForAccessibility(text), []);
   const toast = useCallback(
@@ -49,23 +66,51 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     },
     [announce],
   );
+  // Stable, so a snackbar's timer isn't restarted by every render of the app around it.
+  const dismiss = useCallback((id: number) => setItem((current) => (current?.id === id ? null : current)), []);
+  const add = useCallback((layer: number) => setLayers((open) => [...open.filter((l) => l !== layer), layer]), []);
+  const remove = useCallback((layer: number) => setLayers((open) => open.filter((l) => l !== layer)), []);
   const api = useMemo(() => ({ toast, announce }), [toast, announce]);
+  const top = layers.length > 0 ? layers[layers.length - 1] : null;
+  const value = useMemo(() => ({ item, top, dismiss, add, remove }), [item, top, dismiss, add, remove]);
   return (
     <ToastContext.Provider value={api}>
-      {children}
-      {item && <ToastView key={item.id} item={item} onDone={() => setItem((current) => (current?.id === item.id ? null : current))} />}
+      <LayersContext.Provider value={value}>
+        {children}
+        {item && top === null && <ToastView key={item.id} item={item} dismiss={dismiss} />}
+      </LayersContext.Provider>
     </ToastContext.Provider>
   );
 }
 
-function ToastView({ item, onDone }: { item: ToastItem; onDone: () => void }) {
+/** The snackbar for an open sheet to draw in its own window, while it is the topmost one open. */
+export function useToastLayer(open: boolean): ReactNode {
+  const layers = useContext(LayersContext);
+  const [layer] = useState(() => nextLayer++);
+  const add = layers?.add;
+  const remove = layers?.remove;
+  useEffect(() => {
+    if (!open || !add || !remove) return;
+    add(layer);
+    return () => remove(layer);
+  }, [open, layer, add, remove]);
+  if (!open || !layers?.item || layers.top !== layer) return null;
+  return (
+    <ToastOffsetContext.Provider value={SHEET_OFFSET}>
+      <ToastView key={layers.item.id} item={layers.item} dismiss={layers.dismiss} />
+    </ToastOffsetContext.Provider>
+  );
+}
+
+function ToastView({ item, dismiss }: { item: ToastItem; dismiss: (id: number) => void }) {
   const c = useCopy();
   const insets = useSafeAreaInsets();
   const offset = useContext(ToastOffsetContext);
+  const onDone = () => dismiss(item.id);
   useEffect(() => {
-    const id = setTimeout(onDone, item.action ? TOAST_WITH_ACTION_MS : TOAST_MS);
+    const id = setTimeout(() => dismiss(item.id), item.action ? TOAST_WITH_ACTION_MS : TOAST_MS);
     return () => clearTimeout(id);
-  }, [item, onDone]);
+  }, [item, dismiss]);
   const run = (action: ToastAction) => {
     action.run();
     onDone();

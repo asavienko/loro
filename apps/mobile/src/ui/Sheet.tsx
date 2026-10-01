@@ -1,16 +1,30 @@
 // Bottom sheets (the web prototype's src/ui/Sheet.tsx): a title, Close, and a scrolling body. They
-// close on the backdrop, Close, and the Android back button.
-import { ReactNode } from 'react';
+// close on the backdrop, Close, the Android back button, and when the app goes to another page (a
+// sheet belongs to the page it opened on: signing in from one shouldn't leave it over the account).
+import { usePathname } from 'expo-router';
+import { ReactNode, useEffect, useRef } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../state/store';
 import { Icon, IconName } from './Icon';
+import { useToastLayer } from './Toast';
 import { Txt } from './Txt';
 import { colors, radius, shadow, TARGET } from './theme';
 
 export function Sheet({ open, title, onClose, children, scroll = true }: { open: boolean; title: string; onClose: () => void; children: ReactNode; scroll?: boolean }) {
   const c = useCopy();
   const insets = useSafeAreaInsets();
+  const toast = useToastLayer(open);
+  const pathname = usePathname();
+  const openedOn = useRef<string | null>(null);
+  useEffect(() => {
+    if (!open) {
+      openedOn.current = null;
+      return;
+    }
+    if (openedOn.current === null) openedOn.current = pathname;
+    else if (openedOn.current !== pathname) onClose();
+  }, [open, pathname, onClose]);
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.fill}>
@@ -36,6 +50,7 @@ export function Sheet({ open, title, onClose, children, scroll = true }: { open:
           )}
         </View>
       </KeyboardAvoidingView>
+      {toast}
     </Modal>
   );
 }
