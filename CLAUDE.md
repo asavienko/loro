@@ -32,9 +32,14 @@ and AI generation of phrase sets, covers and songs (within per-user daily limits
 Muse Image draws covers, decks and covers in the background
 ([ADR-0015](docs/architecture/adr/0015-open-model-providers.md)); without
 `FIREWORKS_API_KEY`/`OPENROUTER_API_KEY` or a music provider the server uses labelled fallbacks
-(phrase bank, drawn patterns, the set's phrases as lyrics, a "Demo sound" instrumental). Every sound
-is the server's: phrases play the clips of its ElevenLabs voices (`TTS_*`, one per language), and
-the app has no device voice; the list of languages comes from `GET /v1/library/languages` (plan
+(phrase bank, drawn patterns, the set's phrases as lyrics, a "Demo sound" instrumental). A song's
+lyrics are written first, in one of twelve styles, for the learner to read, rewrite and approve; the
+sung song is heard back by ElevenLabs Scribe so its lines show as sung, timed and translated
+([ADR-0017](docs/architecture/adr/0017-transcribing-generated-songs.md): only audio the server made
+is ever transcribed); the phone gets a push when it is ready (plan
+[113](plans/113-lyrics-first-songs.md)). Every sound is the server's: phrases play the clips of its
+ElevenLabs voices (`TTS_*`, one per language), and the app has no device voice; the list of
+languages comes from `GET /v1/library/languages` (plan
 [108](plans/archive/2026-10-01/108-backend-only.md)). Progress stays on the device first
 (AsyncStorage native, browser storage web) as an append-only learner log with a pure state machine;
 FSRS runs in `packages/core-rs` through the `LoroCore` Expo module (`apps/mobile/modules/loro-core`,
