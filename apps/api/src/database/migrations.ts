@@ -14,6 +14,7 @@ import {
   LIBRARY_COVER_JOBS_MIGRATION_SQL,
   LIBRARY_DECK_JOBS_MIGRATION_SQL,
   LIBRARY_ITEM_COVERS_MIGRATION_SQL,
+  LIBRARY_COVER_HISTORY_MIGRATION_SQL,
 } from '../library/library.schema.js'
 import { MUSIC_MIGRATION_SQL } from '../music/music.schema.js'
 import { SYNC_MIGRATION_SQL } from '../sync/sync.schema.js'
@@ -43,6 +44,7 @@ export const NAMED_MIGRATIONS: readonly NamedMigration[] = [
   { id: '015_cover_jobs', sql: LIBRARY_COVER_JOBS_MIGRATION_SQL },
   { id: '016_deck_jobs', sql: LIBRARY_DECK_JOBS_MIGRATION_SQL },
   { id: '017_item_covers', sql: LIBRARY_ITEM_COVERS_MIGRATION_SQL },
+  { id: '018_cover_history', sql: LIBRARY_COVER_HISTORY_MIGRATION_SQL },
 ]
 
 const LEDGER = `CREATE TABLE IF NOT EXISTS schema_migrations (

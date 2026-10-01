@@ -674,6 +674,7 @@ export async function aiCover(
     kind: 'set' | 'album' | 'song' | 'phrase'
     title: string
     description?: string | undefined
+    prompt?: string | undefined
   },
 ): Promise<CoverSpec> {
   const result = await ai.generate({
@@ -685,6 +686,7 @@ export async function aiCover(
           for: COVER_SUBJECT[input.kind],
           title: input.title,
           about: input.description ?? '',
+          ...(input.prompt ? { picture: input.prompt } : {}),
         }),
       },
     ],

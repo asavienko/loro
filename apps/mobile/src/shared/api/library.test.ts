@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { afterEach, before, describe, it } from 'node:test';
 import { API_URL, ApiError, setTokenSource } from './client';
-import { fetchUsage, generateCover } from './library';
+import { fetchCoverHistory, fetchUsage, generateCover, wearCover } from './library';
 
 const original = globalThis.fetch;
 before(() => setTokenSource({ access: async () => 'token', renew: async () => null }));
@@ -53,5 +53,15 @@ describe('fetchUsage', () => {
   it('reads an older server’s `claude` writers as `ai`', async () => {
     server({ writers: { phrases: 'claude', cover: 'claude', lyrics: 'claude', music: 'demo' } });
     assert.deepEqual((await fetchUsage()).writers, { phrases: 'ai', cover: 'ai', lyrics: 'ai', music: 'demo' });
+  });
+});
+
+describe('earlier covers', () => {
+  it('lists the covers drawn for an item, and puts one back without drawing', async () => {
+    const drawn = { id: 'cover-2', url: '/library/covers/cover-2.svg', provider: 'claude', prompt: 'A lighthouse', createdAt: 1 };
+    const asked = server({ covers: [drawn], current: 'cover-1' }, { id: 'cover-2', status: 'ready', url: drawn.url, provider: 'ai' });
+    assert.deepEqual(await fetchCoverHistory('phrase', 'cafe-01'), { covers: [{ ...drawn, provider: 'ai' }], current: 'cover-1' });
+    assert.equal((await wearCover('cover-2', { kind: 'phrase', attachTo: 'cafe-01' })).url, drawn.url);
+    assert.deepEqual(asked, ['GET /library/covers/phrase/cafe-01', 'POST /library/covers/cover-2/wear']);
   });
 });

@@ -56,6 +56,8 @@ export const LIBRARY_TEXT = {
   description: 120,
   noteTitle: 60,
   noteText: 300,
+  /** What the learner asks a cover to picture, in their own words. */
+  coverPrompt: 200,
 }
 
 /** Links are how spam travels; nothing a learner names or describes here needs one. */
@@ -292,6 +294,11 @@ export const GenerateCoverSchema = z
     title: shownText(LIBRARY_TEXT.title, 1).optional(),
     description: shownText(200).optional(),
     /**
+     * What to picture, in the learner's own words; the item's title stays with it as context.
+     * Without it the cover pictures the item's own words.
+     */
+    prompt: shownText(LIBRARY_TEXT.coverPrompt, 1).optional(),
+    /**
      * The item to put the cover on once drawn: the learner's own set or album (changed in place), one
      * of Loro's (the learner gets a copy wearing it, LIB-01), or any phrase or song they can read (a
      * cover of their own, shown only to them).
@@ -308,6 +315,15 @@ export const GenerateCoverSchema = z
     message: 'A phrase’s or song’s cover goes on it',
     path: ['attachTo'],
   })
+
+/**
+ * One of the learner's earlier covers put back on the item it was drawn for: no drawing, and no
+ * cover spent from the day's allowance.
+ */
+export const WearCoverSchema = z.strictObject({
+  kind: z.enum(COVER_KINDS),
+  attachTo: LibraryIdSchema,
+})
 
 export const GenerateSongSchema = z.strictObject({
   /** Any set the learner can read: Loro's, theirs, or a shared one. */
@@ -335,6 +351,7 @@ export type CreateAlbumRequest = z.infer<typeof CreateAlbumSchema>
 export type UpdateAlbumRequest = z.infer<typeof UpdateAlbumSchema>
 export type GeneratePhrasesRequest = z.infer<typeof GeneratePhrasesSchema>
 export type GenerateCoverRequest = z.infer<typeof GenerateCoverSchema>
+export type WearCoverRequest = z.infer<typeof WearCoverSchema>
 export type GenerateNotesRequest = z.infer<typeof GenerateNotesSchema>
 export type RewriteNoteRequest = z.infer<typeof RewriteNoteSchema>
 export type GenerateSongRequest = z.infer<typeof GenerateSongSchema>
