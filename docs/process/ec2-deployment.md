@@ -9,7 +9,9 @@ to host loopback; admin access is an SSH tunnel. This is a development host, not
 - AWS profile `loro` (SSO), region `eu-central-1`, stack `loro-api-dev`, instance
   `i-0ce58e049c8fe0f7b`, key pair `loro-ec2-dev` (private key at `~/.ssh/loro-ec2-dev`).
 - The public DNS can change after stop/start; read the stack outputs before connecting. If your IP
-  changes, re-run `scripts/provision-ec2.sh` with the new `ADMIN_CIDR`.
+  changes, re-run `scripts/provision-ec2.sh` with the new `ADMIN_CIDR` (add `NO_EXECUTE=1` to see
+  the change set first). The script keeps the image the instance runs: a different one would replace
+  the instance, its disk and the database on it.
 - Merging to `main` does not redeploy; the running image is whatever was last deployed.
 
 ## Provision
@@ -31,7 +33,12 @@ checking) and set `IdentityFile` in `~/.ssh/config`.
 Docker network (no host port) with a non-superuser `loro` owner; it never resets an existing
 database. Runtime config comes from `secrets/ec2-api.enc.env` and `secrets/ec2-postgres.enc.env`,
 decrypted locally, copied over SSH to root-owned mode-600 files (`/opt/loro/runtime/api.env`,
-`/opt/loro/database/postgres.env`), then removed locally.
+`/opt/loro/database/postgres.env`), then removed locally. Streaming it leaves no local copy:
+
+```bash
+sops decrypt --input-type dotenv --output-type dotenv secrets/ec2-api.enc.env |
+  ssh ec2-user@HOST 'sudo install -D -m 600 -o root -g root /dev/stdin /opt/loro/runtime/api.env'
+```
 
 ## Deploy
 
