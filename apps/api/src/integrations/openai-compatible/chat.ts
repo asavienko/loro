@@ -86,6 +86,8 @@ export class ChatCompletions implements StructuredTextModel {
         ...this.options.extraBody,
         model: this.options.model,
         max_tokens: this.options.maxTokens,
+        ...(input.temperature === undefined ? {} : { temperature: input.temperature }),
+        ...(input.seed === undefined ? {} : { seed: input.seed }),
         messages: [
           { role: 'system', content: input.system },
           ...input.messages.map(({ role, content }) => ({ role, content })),
