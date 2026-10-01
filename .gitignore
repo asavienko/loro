@@ -121,3 +121,4 @@ secrets/.encrypt.*
 
 /apps/mobile/.storybook/
 /.tmp-web-check
+/design/design-v2.0/.playwright-mcp

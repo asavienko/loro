@@ -103,4 +103,36 @@ export default tseslint.config(
     files: ['**/*.config.{ts,mjs,js}'],
     ...tseslint.configs.disableTypeChecked,
   },
+
+  // ── Browser tools ──
+  // Plain scripts injected into a page (tools/ui-annotator.js, by Playwright MCP): outside every
+  // tsconfig, so syntax rules only, with the page's globals. A storage or selector that fails is
+  // skipped on purpose, so an empty catch is allowed.
+  {
+    files: ['tools/**/*.js'],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: {
+      ...tseslint.configs.disableTypeChecked.languageOptions,
+      sourceType: 'script',
+      globals: Object.fromEntries(
+        [
+          'window',
+          'document',
+          'location',
+          'sessionStorage',
+          'CSS',
+          'getComputedStyle',
+          'requestAnimationFrame',
+          'setInterval',
+          'addEventListener',
+          'innerWidth',
+          'innerHeight',
+        ].map((name) => [name, 'readonly']),
+      ),
+    },
+    rules: {
+      ...tseslint.configs.disableTypeChecked.rules,
+      'no-empty': ['error', { allowEmptyCatch: true }],
+    },
+  },
 )
