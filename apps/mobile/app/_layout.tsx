@@ -138,15 +138,19 @@ function Gate({ onboarded }: { onboarded: boolean }) {
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.surface } }}>
       <Stack.Screen name="(tabs)" />
-      {/* Full-screen overlays slide up over the tabs, as the web's player and queue do. */}
-      <Stack.Screen name="player" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="queue" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="make" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="song" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: colors.surface } }} />
-      <Stack.Screen name="account" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+      {/* Full-screen overlays slide up over the tabs, as the web's player and queue do, and are pulled
+          back down by their top (src/ui/PullDown.tsx): the app stays underneath to be seen as they go. */}
+      <Stack.Screen name="player" options={OVERLAY} />
+      <Stack.Screen name="queue" options={OVERLAY} />
+      <Stack.Screen name="make" options={OVERLAY} />
+      <Stack.Screen name="song" options={OVERLAY} />
+      <Stack.Screen name="account" options={OVERLAY} />
       <Stack.Screen name="shared/[code]" />
     </Stack>
   );
 }
+
+/** A window over the tabs: it paints its own page, so the app shows only where it is pulled away. */
+const OVERLAY = { presentation: 'transparentModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: 'transparent' } } as const;
 
 const styles = StyleSheet.create({ root: { flex: 1, backgroundColor: colors.surface } });

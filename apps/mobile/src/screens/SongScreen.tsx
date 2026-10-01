@@ -20,6 +20,7 @@ import { songRating, useRateSong } from '../music/songRating';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
+import { PullDownWindow, PullHandle } from '../ui/PullDown';
 import { Txt } from '../ui/Txt';
 import { colors, radius, shadow, TARGET } from '../ui/theme';
 import { GRADES } from '../ui/grades';
@@ -40,12 +41,15 @@ export function SongScreen() {
 
   if (!song) {
     return (
-      <View style={[styles.page, styles.center, { paddingTop: insets.top }]}>
-        <Txt variant="row" color="secondary">
-          {c.music.noSongs}
-        </Txt>
-        <Button variant="text" label={c.common.close} onPress={close} />
-      </View>
+      <PullDownWindow onClose={close} style={[styles.page, { paddingTop: insets.top }]}>
+        <PullHandle />
+        <View style={[styles.flex, styles.center]}>
+          <Txt variant="row" color="secondary">
+            {c.music.noSongs}
+          </Txt>
+          <Button variant="text" label={c.common.close} onPress={close} />
+        </View>
+      </PullDownWindow>
     );
   }
 
@@ -57,22 +61,24 @@ export function SongScreen() {
   const liked = isLiked(state.learner, 'song', song.id);
 
   return (
-    <View style={[styles.page, { paddingTop: insets.top }]}>
-      <View style={styles.top}>
-        <Button variant="icon" icon="keyboard_arrow_down" accessibilityLabel={c.common.close} onPress={close} />
-        <View style={styles.topText}>
-          <View style={styles.kind}>
-            <Icon name="music_note" size="xs" color="primaryContainer" />
-            <Txt variant="label" weight={700} color="primaryContainer">
-              {c.music.songKind}
+    <PullDownWindow onClose={close} style={[styles.page, { paddingTop: insets.top }]}>
+      <PullHandle>
+        <View style={styles.top}>
+          <Button variant="icon" icon="keyboard_arrow_down" accessibilityLabel={c.common.close} onPress={close} />
+          <View style={styles.topText}>
+            <View style={styles.kind}>
+              <Icon name="music_note" size="xs" color="primaryContainer" />
+              <Txt variant="label" weight={700} color="primaryContainer">
+                {c.music.songKind}
+              </Txt>
+            </View>
+            <Txt variant="label" color="secondary" numberOfLines={1} align="center">
+              {music.album?.title ?? c.music.nowPlaying}
             </Txt>
           </View>
-          <Txt variant="label" color="secondary" numberOfLines={1} align="center">
-            {music.album?.title ?? c.music.nowPlaying}
-          </Txt>
+          <View style={{ width: TARGET }} />
         </View>
-        <View style={{ width: TARGET }} />
-      </View>
+      </PullHandle>
       <ScrollView contentContainerStyle={[styles.content, compact && styles.compactContent, { paddingBottom: insets.bottom + 32 }]}>
         <View style={styles.cover}>
           <AlbumCover url={music.album?.coverUrl ?? null} px={220} rounded={20} />
@@ -188,7 +194,7 @@ export function SongScreen() {
         })}
         {set && <Button variant="tonal" icon="menu_book" label={c.music.fromSet(set.title)} onPress={() => nav.openSet(set.id)} style={styles.setLink} />}
       </ScrollView>
-    </View>
+    </PullDownWindow>
   );
 }
 
@@ -261,6 +267,7 @@ function Badge({ icon, label }: { icon: 'graphic_eq' | 'mic' | 'lyrics' | 'equal
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.surface },
   center: { alignItems: 'center', justifyContent: 'center', gap: 12 },
+  flex: { flex: 1 },
   top: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, minHeight: 52, width: '100%', maxWidth: 560, alignSelf: 'center' },
   topText: { flex: 1, alignItems: 'center' },
   kind: { flexDirection: 'row', alignItems: 'center', gap: 4 },

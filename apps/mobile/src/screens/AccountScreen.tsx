@@ -30,6 +30,7 @@ import { field, placeholderColor } from '../ui/field';
 import { Icon } from '../ui/Icon';
 import { confirm } from '../ui/confirm';
 import { problemText, resetTime } from '../ui/problems';
+import { PullDownWindow, PullHandle } from '../ui/PullDown';
 import { useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
 import { colors, radius } from '../ui/theme';
@@ -75,17 +76,21 @@ export function AccountScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [returned.ticket, returned.error]);
   return (
-    <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={[styles.top, { paddingTop: insets.top + 4 }]}>
-        <Button variant="icon" icon="close" accessibilityLabel={c.common.close} onPress={close} />
-        <Txt variant="title" face="serif" weight={600} accessibilityRole="header">
-          {account.status === 'signedIn' ? c.account.title : c.account.signIn}
-        </Txt>
-      </View>
-      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
-        {returning ? <ActivityIndicator color={colors.primaryContainer} /> : account.status === 'signedIn' ? <SignedIn /> : <SignIn onDone={close} />}
-      </ScrollView>
-    </KeyboardAvoidingView>
+    <PullDownWindow onClose={close} style={styles.page}>
+      <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <PullHandle style={{ paddingTop: insets.top }}>
+          <View style={styles.top}>
+            <Button variant="icon" icon="close" accessibilityLabel={c.common.close} onPress={close} />
+            <Txt variant="title" face="serif" weight={600} accessibilityRole="header">
+              {account.status === 'signedIn' ? c.account.title : c.account.signIn}
+            </Txt>
+          </View>
+        </PullHandle>
+        <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
+          {returning ? <ActivityIndicator color={colors.primaryContainer} /> : account.status === 'signedIn' ? <SignedIn /> : <SignIn onDone={close} />}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </PullDownWindow>
   );
 }
 
@@ -438,6 +443,7 @@ function Allowance({ label, used, limit }: { label: string; used: number; limit:
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.surface },
+  keyboard: { flex: 1 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 8, paddingBottom: 4 },
   body: { paddingHorizontal: 24, paddingTop: 12, width: '100%', maxWidth: 520, alignSelf: 'center' },
   stack: { gap: 14 },

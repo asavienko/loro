@@ -32,6 +32,7 @@ import { fontFamily } from '../ui/fonts';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseImage } from '../ui/PhraseImage';
 import { problemText } from '../ui/problems';
+import { PullDownWindow, PullHandle } from '../ui/PullDown';
 import { SwipeDeck, SwipeDeckHandle, SwipeTravel } from '../ui/SwipeDeck';
 import { ToastOffsetContext, useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
@@ -215,8 +216,8 @@ function MakeSet({ request }: { request: MakeRequest }) {
 
   return (
     <ToastOffsetContext.Provider value={16}>
-      <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-        <View style={styles.headerLine}>
+      <PullDownWindow onClose={close} style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+        <PullHandle style={styles.headerLine}>
           <View style={styles.header}>
             <Pressable accessibilityRole="button" accessibilityLabel={c.common.close} onPress={close} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
               <Icon name="close" size="lg" />
@@ -226,7 +227,7 @@ function MakeSet({ request }: { request: MakeRequest }) {
             </Txt>
             {session.step === 'deck' && keptCount > 0 ? <Button variant="text" label={c.make.done} onPress={() => update({ step: 'save' })} /> : <View style={styles.spacer} />}
           </View>
-        </View>
+        </PullHandle>
 
         <ScrollView style={styles.flex} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {!signedIn && (
@@ -281,7 +282,7 @@ function MakeSet({ request }: { request: MakeRequest }) {
             />
           )}
         </ScrollView>
-      </View>
+      </PullDownWindow>
     </ToastOffsetContext.Provider>
   );
 }
