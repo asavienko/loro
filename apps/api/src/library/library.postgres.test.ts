@@ -5,6 +5,7 @@
 import type { Pool } from 'pg'
 import { afterAll, beforeAll, expect, it, vi } from 'vitest'
 import { LoroError } from '../common/errors.js'
+import { AnthropicMessages } from '../integrations/anthropic/messages.js'
 import { PostgresDatabase } from '../database/database.js'
 import {
   LORO_TEST_DATABASE_URL,
@@ -27,6 +28,43 @@ const code = async (work: Promise<unknown>) => {
   } catch (error) {
     return error instanceof LoroError ? error.code : String(error)
   }
+}
+
+/** A Claude client whose every answer is `value`, or that always fails with `status`. */
+function claudeClient(send: () => Promise<Response>): AnthropicMessages {
+  return new AnthropicMessages(
+    {
+      apiKey: 'test',
+      model: 'test',
+      timeoutMs: 1000,
+      maxTokens: 100,
+      maxRequestBytes: 100_000,
+      maxResponseBytes: 100_000,
+      maxConcurrentRequests: 1,
+    },
+    send,
+  )
+}
+const claudeAnswering = (value: unknown) =>
+  claudeClient(() =>
+    Promise.resolve(
+      Response.json({
+        stop_reason: 'end_turn',
+        content: [{ type: 'text', text: JSON.stringify(value) }],
+        usage: { input_tokens: 1, output_tokens: 1 },
+      }),
+    ),
+  )
+const claudeFailing = () => claudeClient(() => Promise.resolve(new Response('{}', { status: 500 })))
+const writtenPhrase = {
+  target: '¿Tienen habitaciones libres?',
+  native: 'Do you have rooms free?',
+  image: ['key'],
+  notes: {
+    mnemonic: { title: 'A hook', text: 'Something true.' },
+    grammar: { title: 'A rule', text: 'Something accurate.' },
+    pronunciation: { title: 'A sound', text: 'Watch the r.', ipa: 'ˈo.la', respelling: 'OH-lah' },
+  },
 }
 
 describePostgres('the library against real PostgreSQL', () => {
@@ -175,22 +213,58 @@ describePostgres('the library against real PostgreSQL', () => {
       lyrics: 'phrases',
       music: 'demo',
     })
-    await deck('dee')
-    await deck('dee')
-    const refused = await library
-      .generatePhrases('dee', {
+    // The phrase bank answers free, as the app's own copy of it would: no allowance is spent.
+    for (let i = 0; i < 3; i++) expect((await deck('dee')).length).toBeGreaterThan(0)
+    expect((await library.usage('dee')).daily.phrases.used).toBe(0)
+
+    // Claude's decks count, and the third of a day is refused until the day resets.
+    resetWriter(claudeAnswering({ phrases: [writtenPhrase] }))
+    try {
+      for (let i = 0; i < 2; i++) {
+        const written = await library.generatePhrases('dee', {
+          mode: 'topic',
+          input: 'hotel',
+          targetLang: 'es-ES',
+          nativeLang: 'en-GB',
+        })
+        expect(written.provider).toBe('claude')
+      }
+      expect((await library.usage('dee')).daily.phrases.used).toBe(2)
+      const refused = await library
+        .generatePhrases('dee', {
+          mode: 'topic',
+          input: 'hotel',
+          targetLang: 'es-ES',
+          nativeLang: 'en-GB',
+        })
+        .catch((e: unknown) => e)
+      expect(refused).toBeInstanceOf(LoroError)
+      expect((refused as LoroError).code).toBe('LIMIT_REACHED')
+      expect((refused as LoroError).extra['resets_at']).toBe(Date.parse('2026-10-01T00:00:00Z'))
+      now += 86_400_000
+      expect((await library.usage('dee')).daily.phrases.used).toBe(0)
+      await deck('dee')
+      expect((await library.usage('dee')).daily.phrases.used).toBe(1)
+    } finally {
+      resetWriter()
+    }
+  })
+
+  it('gives the allowance back when Claude fails and the bank answers instead', async () => {
+    resetWriter(claudeFailing())
+    try {
+      const answered = await library.generatePhrases('dot', {
         mode: 'topic',
         input: 'hotel',
         targetLang: 'es-ES',
         nativeLang: 'en-GB',
       })
-      .catch((e: unknown) => e)
-    expect(refused).toBeInstanceOf(LoroError)
-    expect((refused as LoroError).code).toBe('LIMIT_REACHED')
-    expect((refused as LoroError).extra['resets_at']).toBe(Date.parse('2026-10-01T00:00:00Z'))
-    now += 86_400_000
-    expect((await library.usage('dee')).daily.phrases.used).toBe(0)
-    await deck('dee')
+      expect(answered.provider).toBe('bank')
+      expect(answered.phrases.length).toBeGreaterThan(0)
+      expect((await library.usage('dot')).daily.phrases.used).toBe(0)
+    } finally {
+      resetWriter()
+    }
   })
 
   it('caps how many sets one account keeps', async () => {

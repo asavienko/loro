@@ -1515,11 +1515,15 @@ export class LibraryService {
 
   // ---------- generation ----------
 
+  /**
+   * A deck of suggestions: Claude's where it writes (from the day's allowance, `429` when it is
+   * spent), otherwise the phrase bank's, free, as the app's own copy of the bank would answer.
+   */
   async generatePhrases(userId: string, body: unknown) {
     const request = parseContract(GeneratePhrasesSchema, body)
-    await this.spend(userId, 'phrases')
     const ai = writer()
     if (ai) {
+      await this.spend(userId, 'phrases')
       try {
         const phrases = await this.voiced(userId, request, await claudePhrases(ai, request))
         return { provider: 'claude' as const, phrases, themes: [] }
