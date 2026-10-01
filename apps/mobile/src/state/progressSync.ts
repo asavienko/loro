@@ -1,5 +1,6 @@
 // Keeps a signed-in learner's progress in their account (plan 106): on signing in, when the app
-// comes back to the foreground, and a little after each change. What the account had from another
+// comes back to the foreground or goes to the background, and a little after each change (at most a
+// couple of minutes after the first, so a long session of practice is saved while it goes on). What the account had from another
 // device merges into this one. Offline, it waits: the device's own copy is always the one that plays.
 //
 // The device remembers whose progress it holds. Signing out first saves it to that account; signing
@@ -20,8 +21,10 @@ import { useAccount } from './account';
 import { useStore } from './store';
 import { beforeSignOut, lastSync } from './syncHooks';
 
-/** Changes are sent this long after the last one, so a session of ratings is one write. */
+/** Changes are sent this long after the last one, so a session of ratings is one write... */
 const AFTER_CHANGE_MS = 20_000;
+/** ...but no later than this after the first unsent one: every phrase heard is a change. */
+const MAX_WAIT_MS = 2 * 60_000;
 const OWNER_KEY = 'loro.progress.owner';
 
 const stashKey = (userId: string) => `loro.progress.stash.${userId}`;
@@ -111,15 +114,25 @@ export function useProgressSync(): void {
   }, [status, userId, run]);
 
   // A while after the learner's progress changes.
+  const unsentSince = useRef<number | null>(null);
   useEffect(() => {
     if (status !== 'signedIn') return;
-    const timer = setTimeout(() => void run.current(), AFTER_CHANGE_MS);
+    const now = performance.now();
+    unsentSince.current ??= now;
+    const timer = setTimeout(
+      () => {
+        unsentSince.current = null;
+        void run.current();
+      },
+      Math.max(0, Math.min(AFTER_CHANGE_MS, unsentSince.current + MAX_WAIT_MS - now)),
+    );
     return () => clearTimeout(timer);
   }, [state.learner, status, run]);
 
+  // Back in the foreground (another device may have practised), and on the way out.
   useEffect(() => {
     const subscription = AppLifecycle.addEventListener('change', (next) => {
-      if (next === 'active') void run.current();
+      if (next === 'active' || next === 'background') void run.current();
     });
     return () => subscription.remove();
   }, [run]);
