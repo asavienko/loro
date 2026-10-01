@@ -737,6 +737,7 @@ export function makeEn(n: Plural) {
       makeSong: 'Make the song',
       songStarted: 'The song is being made',
       saveToAccount: 'Save to your account',
+      saving: 'Saving…',
       savedToAccount: 'Saved to your account',
       setTitle: 'Title',
       setDescription: 'What it’s for (optional)',
