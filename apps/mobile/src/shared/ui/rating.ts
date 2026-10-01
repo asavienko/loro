@@ -1,6 +1,8 @@
-// Around a rating, outside the rated item's own player: Undo for a few seconds after it is given,
-// wherever the item has gone since, and on the bar above the tabs nothing more until the item showing
-// can be rated again. Scheduling is FSRS's alone: no surface shows the interval a grade gives.
+// Around a rating, outside the rated item's own player: Undo for a few seconds after it is given. In
+// the player that follows the rating wherever the loop has gone; on the bar above the tabs it lasts
+// only while the rated item shows (moved on, the bar offers the next one's grades), then nothing
+// until the item showing can be rated again. Scheduling is FSRS's alone: no surface shows the
+// interval a grade gives.
 import type { Grade, PendingRating } from '../state/types';
 
 /** How long Undo is offered once a rating has left its item: on the bar, or in the player once the loop moved on. */
@@ -17,6 +19,15 @@ export function recentLoopRating(pending: readonly PendingRating[], now: number)
     if (!latest || p.changedAt > latest.changedAt) latest = p;
   }
   return latest;
+}
+
+/**
+ * The bar's Undo for the phrase showing: the loop's latest rating while its Undo is offered, and only
+ * if it rated that phrase. Swiped or moved on, the bar shows the next phrase's grades instead.
+ */
+export function barLoopRating(pending: readonly PendingRating[], phraseId: string | null, now: number): PendingRating | null {
+  const recent = recentLoopRating(pending, now);
+  return recent && recent.phraseId === phraseId ? recent : null;
 }
 
 /** Whether a rating changed at `changedAt` still has its Undo offered at `now` (a moment early counts as now). */
