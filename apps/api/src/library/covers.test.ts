@@ -1,6 +1,13 @@
-/** Plan 106: a cover is shapes and colours only, whoever wrote its spec. */
+/** Plans 106, 111: a cover is shapes and colours, or a checked picture, and never markup from a model. */
 import { describe, expect, it } from 'vitest'
-import { CoverSpecSchema, patternCover, readCoverSpec, renderCover } from './covers.js'
+import {
+  CoverSpecSchema,
+  coverImagePrompt,
+  patternCover,
+  readCoverSpec,
+  renderCover,
+  renderImageCover,
+} from './covers.js'
 
 describe('covers', () => {
   it('draws the same pattern for the same seed, and a different one for another', () => {
@@ -73,5 +80,27 @@ describe('covers', () => {
     expect(() =>
       readCoverSpec({ background: ['#000000', '#ffffff'], angle: 0, shapes: [{ kind: 'text' }] }),
     ).toThrow()
+  })
+
+  it('carries a picture as base64 bytes of a known type, the size of the canvas', () => {
+    const bytes = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x22, 0x3c, 0x3e])
+    const svg = renderImageCover({ bytes, contentType: 'image/jpeg' })
+    expect(svg).toBe(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">' +
+        `<image width="512" height="512" preserveAspectRatio="xMidYMid slice" href="data:image/jpeg;base64,${bytes.toString('base64')}"/>` +
+        '</svg>',
+    )
+    expect(() =>
+      renderImageCover({ bytes, contentType: 'image/svg+xml' as unknown as 'image/png' }),
+    ).toThrow()
+  })
+
+  it('asks for a wordless drawing of what the learner named', () => {
+    const prompt = coverImagePrompt({ kind: 'album', title: 'Noches', description: 'flamenco' })
+    expect(prompt).toContain('an album of songs titled "Noches", about: flamenco.')
+    expect(prompt).toContain('Absolutely no text')
+    expect(coverImagePrompt({ kind: 'set', title: 'Tapas' })).toContain(
+      'a set of everyday phrases titled "Tapas".',
+    )
   })
 })

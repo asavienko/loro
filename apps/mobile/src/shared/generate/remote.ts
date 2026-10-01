@@ -1,26 +1,19 @@
 // The API's phrase and notes writers (plan 106: POST /library/generate/phrases and /notes), the only
-// place suggestions and notes come from (plan 108). The server answers with Claude where it writes,
-// otherwise with its phrase bank (phrases) or its written rules (notes), and says which; a deck
-// Claude is still writing is answered `202 {status: 'writing'}` and asked for again. A failure is
-// the caller's to show. The app ships without zod, so the reply is checked by hand.
+// place suggestions and notes come from (plan 108). The server answers with a model where it writes,
+// otherwise with its phrase bank (phrases) or its written rules (notes), and says which. A failure
+// is the caller's to show. The app ships without zod, so the reply is checked by hand.
 import { api, ApiError, apiUrl } from '../api/client';
 import type { LanguageCode } from '../content';
 import { ICON_NAMES } from '../ui/icons';
 import type { OwnNotes } from '../state/types';
 import type { SuggestRequest } from './types';
 
-export const SUGGEST_URL = apiUrl('/library/generate/phrases');
+/** Where a deck is asked for (plan 111): written in the background, then read from `/library/decks/:id`. */
+export const SUGGEST_URL = apiUrl('/library/decks');
 export const NOTES_URL = apiUrl('/library/generate/notes');
 
-/** Writing a dozen phrases takes a while; a writer that hangs longer than this has failed. */
+/** Notes for one phrase take seconds; a writer that hangs longer than this has failed. */
 const SUGGEST_TIMEOUT_MS = 90_000;
-/**
- * A deck AI is still writing is answered "writing" within about 20 s (the server's gateway gives up
- * at 30 s); the app asks again, the same way, this many times before giving up.
- */
-const WRITING_ROUNDS = 8;
-/** One of those asks: the server answers well inside it. */
-const ROUND_TIMEOUT_MS = 35_000;
 /** What the server accepts as phrases not to write again. */
 const MAX_AVOID = 100;
 const MAX_TEXT = 120;
@@ -30,7 +23,7 @@ export interface WrittenPhrase {
   native: string;
   image: string[];
   notes: OwnNotes;
-  /** Written by Claude just now, or a phrase of Loro's bank (by its id). */
+  /** Written by a model just now, or a phrase of Loro's bank (by its id). */
   source: 'ai' | 'bank';
   bankId?: string;
   /** Its clips by language, where the server has a voice. */
@@ -38,14 +31,14 @@ export interface WrittenPhrase {
 }
 
 export interface WrittenPhrases {
-  /** Who answered: Claude, or the server's phrase bank. */
-  provider: 'claude' | 'bank';
+  /** Who answered: a model, or the server's phrase bank. */
+  provider: 'ai' | 'bank';
   phrases: WrittenPhrase[];
 }
 
 export interface WrittenNotes {
-  /** Who wrote them: Claude, or the server's written rules. */
-  provider: 'claude' | 'rules';
+  /** Who wrote them: a model, or the server's written rules. */
+  provider: 'ai' | 'rules';
   image: string[];
   notes: OwnNotes;
 }
@@ -83,7 +76,8 @@ export function readAudio(v: unknown): Partial<Record<LanguageCode, string>> | u
 /** The reply's phrases, each with its picture and notes, or null if it isn't a list of them. */
 export function readPhrases(body: unknown): WrittenPhrases | null {
   if (!isObject(body) || !Array.isArray(body.phrases)) return null;
-  const provider = body.provider === 'bank' ? 'bank' : 'claude';
+  // Anything but the bank is a model's (`ai`; an older server said `claude`).
+  const provider = body.provider === 'bank' ? 'bank' : 'ai';
   const phrases: WrittenPhrase[] = [];
   for (const item of body.phrases) {
     if (!isObject(item) || typeof item.target !== 'string' || typeof item.native !== 'string') return null;
@@ -110,43 +104,46 @@ export async function writeNotes(
   const notes = isObject(body) ? readNotes(body.notes) : null;
   const image = isObject(body) ? readImage(body.image) : null;
   if (!notes || !image) throw new Error('unreadable reply');
-  return { provider: isObject(body) && body.provider === 'rules' ? 'rules' : 'claude', notes, image };
+  return { provider: isObject(body) && body.provider === 'rules' ? 'rules' : 'ai', notes, image };
 }
 
-/** The server's answer while AI is still writing the deck: ask again, the same way, for it. */
-export const stillWriting = (body: unknown): boolean => isObject(body) && body.status === 'writing';
+const DECK_POLL_MS = 1_500;
+/** About two and a half minutes: longer than the server's writer and its fallback allow themselves. */
+const DECK_POLLS = 100;
 
-/**
- * Phrases written for the request, none of `avoid`; throws when the server can't be asked or answers
- * nonsense. While AI writes, the server answers "writing" and the same request is asked again.
- */
-export async function writePhrases(request: SuggestRequest, avoid: string[], signal?: AbortSignal): Promise<WrittenPhrases> {
-  const asked = { ...request, avoid: avoid.slice(-MAX_AVOID).map((a) => a.slice(0, MAX_TEXT)) };
-  for (let round = 1; ; round++) {
-    const body = await api<unknown>('/library/generate/phrases', { method: 'POST', body: asked, auth: 'required', timeoutMs: ROUND_TIMEOUT_MS, signal });
-    if (!stillWriting(body)) {
-      const written = readPhrases(body);
-      if (!written) throw new Error('unreadable reply');
-      return written;
-    }
-    if (round >= WRITING_ROUNDS) throw new ApiError(0, 'TIMEOUT', 'The server took too long');
-    await pause(1_000, signal);
-  }
-}
-
-/** Waits `ms`, or stops at once when `signal` aborts. */
+/** A pause between asks that the learner leaving the screen cuts short. */
 function pause(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) return reject(new ApiError(0, 'CANCELLED', 'Cancelled'));
-    const timer = setTimeout(done, ms);
-    function done() {
-      signal?.removeEventListener('abort', cancel);
-      resolve();
-    }
-    function cancel() {
-      clearTimeout(timer);
-      reject(new ApiError(0, 'CANCELLED', 'Cancelled'));
-    }
-    signal?.addEventListener('abort', cancel, { once: true });
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener('abort', () => (clearTimeout(timer), reject(new ApiError(0, 'CANCELLED', 'Cancelled'))), { once: true });
   });
+}
+
+/**
+ * Phrases written for the request, none of `avoid`; throws when the server can't be asked, fails or
+ * answers nonsense. The server writes in the background (plan 111) and is asked where the deck
+ * stands until it is ready; without a model it answers from its bank at once.
+ */
+export async function writePhrases(
+  request: SuggestRequest,
+  avoid: string[],
+  signal?: AbortSignal,
+  pace = { pollMs: DECK_POLL_MS, polls: DECK_POLLS },
+): Promise<WrittenPhrases> {
+  let body = await api<unknown>('/library/decks', {
+    method: 'POST',
+    body: { ...request, avoid: avoid.slice(-MAX_AVOID).map((a) => a.slice(0, MAX_TEXT)) },
+    auth: 'required',
+    signal,
+  });
+  for (let polls = 0; isObject(body) && body.status === 'writing' && typeof body.id === 'string'; polls++) {
+    if (polls >= pace.polls) throw new ApiError(0, 'PROVIDER_UNAVAILABLE', 'The phrases are still being written');
+    await pause(pace.pollMs, signal);
+    body = await api<unknown>(`/library/decks/${encodeURIComponent(body.id)}`, { auth: 'required', signal });
+  }
+  if (isObject(body) && body.status === 'failed') throw new ApiError(0, 'PROVIDER_UNAVAILABLE', 'The phrases could not be written');
+  const written = readPhrases(body);
+  if (!written) throw new Error('unreadable reply');
+  return written;
 }

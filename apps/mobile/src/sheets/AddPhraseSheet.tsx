@@ -85,7 +85,7 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
         const id = await my.addPhrase(target, native);
         if (!id) return;
         // The server wrote its notes by its rules; where AI writes, its notes are asked for quietly now.
-        if (!bankMatch(targetLang, target) && account.usage?.writers.phrases === 'claude') {
+        if (!bankMatch(targetLang, target) && account.usage?.writers.phrases === 'ai') {
           const asked = { target: tidy(target), native: tidy(native), targetLang, nativeLang };
           writeNotes(asked).then(
             (written) => void my.editPhrase(id, asked.target, asked.native, written),

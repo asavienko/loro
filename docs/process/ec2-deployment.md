@@ -73,9 +73,9 @@ Migrations must stay backward compatible: rollback never restores an older datab
 
 `/opt/loro/runtime/api.env` (from `secrets/ec2-api.enc.env`; change it there, install it as above,
 then redeploy, since containers read it when they start) holds the API's configuration. The release
-adds `NODE_ENV=production`, `AI_PROVIDER=stub` (the older `/v1/ai` routes only; the library's writer
-follows `ANTHROPIC_API_KEY` alone) and `TRUST_PROXY=1`. What the library uses
-([environments.md](environments.md), `apps/api/.env.example` for every default):
+adds `NODE_ENV=production`, `AI_PROVIDER=stub` (the older `/v1/ai` routes only; the library's
+writers follow `FIREWORKS_API_KEY` and `OPENROUTER_API_KEY`) and `TRUST_PROXY=1`. What the library
+uses ([environments.md](environments.md), `apps/api/.env.example` for every default):
 
 - `DATABASE_URL`, `AUTH_*`: already set by the durable account release; email codes use
   `AUTH_MAGIC_DELIVERY_URL=inbox:local` (below).
@@ -90,12 +90,13 @@ follows `ANTHROPIC_API_KEY` alone) and `TRUST_PROXY=1`. What the library uses
 - `LIMIT_SPEECH_RENDERS_DAILY` (500 server-wide), `LIMIT_SPEECH_OWNER_DAILY` (100 per learner): new
   clip renders per UTC day; each clip renders once.
 - `TRUST_PROXY`: set to `1` by `scripts/ec2-release.sh`; leave it out of the file.
-- Optional `ANTHROPIC_API_KEY` (`AI_MODEL_GENERATE`, `AI_EFFORT_GENERATE`): Claude writes decks,
-  notes, covers and lyrics. Without it the labelled fallbacks answer. Not yet in
-  `secrets/ec2-api.enc.env`; see
-  [Turning on Claude and ElevenLabs Music](#turning-on-claude-and-elevenlabs-music).
+- Optional `FIREWORKS_API_KEY` and `OPENROUTER_API_KEY`
+  ([ADR-0015](../architecture/adr/0015-open-model-providers.md)): DeepSeek writes decks, notes,
+  lyrics and cover shapes (Fireworks first, OpenRouter when it fails), and Muse Image draws covers
+  through OpenRouter's key. Without them the labelled fallbacks answer. See
+  [Turning on the AI writers and ElevenLabs Music](#turning-on-the-ai-writers-and-elevenlabs-music).
 - Optional `MUSIC_PROVIDER=elevenlabs` with `MUSIC_API_KEY`: ElevenLabs Music sings songs (MP3, at
-  most two minutes); otherwise the demo. Not yet in the file either.
+  most two minutes); otherwise the demo.
 - `LIMIT_*_DAILY`, `LIMIT_*_KEPT`: learners' allowances and caps
   ([library.md](../architecture/library.md)).
 
@@ -105,15 +106,16 @@ renders nothing again; they are also in each pre-release dump. A new voice or mo
 URL and renders afresh. `TTS_CACHE_DIR` is only the older `/v1/tts` routes' file cache (by default
 the container's `/tmp`, emptied on restart), which the app does not use.
 
-### Turning on Claude and ElevenLabs Music
+### Turning on the AI writers and ElevenLabs Music
 
-The app's Create tab says who writes on this server (`GET /v1/library/usage`): "Loro's phrase bank
-(no AI writer set up)" and "Demo sound" mean the keys below are missing from the running container.
-`AI_PROVIDER` plays no part (the release sets it to `stub` for the older `/v1/ai` routes); the
-library follows `ANTHROPIC_API_KEY` alone. Needs the age identity (`~/.config/sops/age/loro.txt`).
+The app's Create tab says who writes on this server (`GET /v1/library/usage`): "Phrase bank (no AI)"
+and "Demo sound" mean the keys below are missing from the running container. `AI_PROVIDER` plays no
+part (the release sets it to `stub` for the older `/v1/ai` routes); the library follows
+`FIREWORKS_API_KEY` and `OPENROUTER_API_KEY` alone. Since plan 111 both, and the music keys, are in
+`secrets/ec2-api.enc.env`; these steps change them. Needs the age identity
+(`~/.config/sops/age/loro.txt`).
 
-1. Add the keys to the host's encrypted file (`pnpm env:edit` edits the local `api.enc.env`, not
-   this one):
+1. Edit the host's encrypted file (`pnpm env:edit` edits the local `api.enc.env`, not this one):
 
    ```bash
    export SOPS_AGE_KEY_FILE=~/.config/sops/age/loro.txt
@@ -121,17 +123,19 @@ library follows `ANTHROPIC_API_KEY` alone. Needs the age identity (`~/.config/so
    ```
 
    ```dotenv
-   # Claude writes decks, notes, covers and lyrics.
-   ANTHROPIC_API_KEY=sk-ant-…
+   # DeepSeek on Fireworks writes decks, notes, lyrics and cover shapes.
+   FIREWORKS_API_KEY=fw_…
+   # The same model when Fireworks fails, and Muse Image for covers.
+   OPENROUTER_API_KEY=sk-or-…
    # ElevenLabs Music sings songs (a plan with Music); the key may be TTS_API_KEY's.
    MUSIC_PROVIDER=elevenlabs
    MUSIC_API_KEY=…
    ```
 
    Comments go on lines of their own: Docker's `--env-file` keeps a `#` after a value as part of it.
-   `AI_MODEL_GENERATE` (`claude-sonnet-5`) and `AI_EFFORT_GENERATE` (`low`) are optional.
-   `TTS_PROVIDER=elevenlabs`, `TTS_API_KEY` and the voices are already there. Commit only the
-   encrypted file.
+   `FIREWORKS_MODEL`, `OPENROUTER_TEXT_MODEL` and `OPENROUTER_IMAGE_MODEL` are optional
+   (`.env.example`). `TTS_PROVIDER=elevenlabs`, `TTS_API_KEY` and the voices are already there.
+   Commit only the encrypted file.
 
 2. Install it on the host and redeploy; a container reads the file only when it starts, and the
    deploy ships the current code with it:
@@ -145,12 +149,12 @@ library follows `ANTHROPIC_API_KEY` alone. Needs the age identity (`~/.config/so
    bash scripts/deploy-ec2.sh $HOST /opt/loro/runtime/api.env loro-backend
    ```
 
-3. Check: the Create tab now names Claude and ElevenLabs Music, and a deck's cards say "Written by
-   AI". A key that is wrong shows in the log as `Anthropic request failed: configuration` (a refused
-   key or an unknown model), `rate_limited` or `unavailable`, after which the fallback answered:
+3. Check: the Create tab now names AI and ElevenLabs Music, and a deck's cards say "Written by AI".
+   A key that is wrong shows in the log as `Provider request failed: configuration` (a refused key
+   or an unknown model), `rate_limited` or `unavailable`, after which the fallback answered:
 
    ```bash
-   ssh ec2-user@$HOST 'sudo docker logs --since 10m loro-api 2>&1 | grep -E "writer failed|song .* failed"'
+   ssh ec2-user@$HOST 'sudo docker logs --since 10m loro-api 2>&1 | grep -E "writer failed|cover .*failed|song .* failed"'
    ```
 
 **Reading an email sign-in code.** With `inbox:local` the API writes the latest code request to
@@ -196,13 +200,10 @@ What passes through, on library routes:
   player checks a clip per phrase). nginx allows the library 50 r/s (burst 100) and account routes
   20 r/s (burst 40) per gateway address.
 - **Time**: an HTTP API integration has at most **30 s**. The Lambda gives up on the API at 28 s
-  (its own timeout is 29 s) and nginx at 28 s. Without `ANTHROPIC_API_KEY` every library route
-  answers in well under a second. With live Claude, a phrase deck is a job: a request waits up to 20
-  s and otherwise answers `202 {status: 'writing'}`, and the app asks again with the same body until
-  the deck is written (the writer allows itself 90 s). Notes for one phrase wait at most 22 s, past
-  which Loro's rules answer. Songs are made in the background and polled. A cover is still written
-  while its request waits; its spec is short, but one that took past 28 s would reach the app as a
-  gateway `503`.
+  (its own timeout is 29 s) and nginx at 28 s. So everything slow is a job the app polls: a deck
+  (`POST /library/decks`, 30–40 s measured on Fireworks), a cover (15 s or so) and a song. Notes for
+  one phrase answer in the request (2–6 s). The older `POST /library/generate/phrases` waits for the
+  deck and reaches the app as a gateway `503` past 30 s; only older app builds call it.
 
 Roll out a change to the gateway or nginx in this order: the API (above), then nginx, then the
 stack. `aws cloudformation deploy` keeps every parameter it isn't given at the stack's current value

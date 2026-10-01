@@ -44,8 +44,10 @@ A learner can delete their library (`POST /library/me/delete`) or their whole ac
 - Auth attempts are rate-limited per IP (behind the EC2 gateway, the learner's address that its
   nginx sets in `X-Real-IP`, trusted only with `TRUST_PROXY=1` from a private peer); generation is
   capped per learner per day.
-- Covers are SVG written only by `covers.ts` from a validated shape spec, never model markup, and
-  are served with `Content-Security-Policy: default-src 'none'`. Titles and names refuse links.
+- Covers are SVG written only by `covers.ts`: a validated shape spec, or an illustration carried as
+  base64 bytes whose signature says PNG, JPEG or WebP; never model markup. They are served with
+  `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:`. Titles
+  and names refuse links.
 - Song audio URLs are signed (`LIBRARY_URL_SECRET`) and expire after about 12 hours.
 - The container runs on a distroless Node 22 image.
 - The EC2 host exposes no public HTTP port by default; administration goes through an SSH tunnel
@@ -53,6 +55,12 @@ A learner can delete their library (`POST /library/me/delete`) or their whole ac
 
 ## Secrets
 
-- The app bundle holds no provider keys; every Anthropic and ElevenLabs call goes through the API.
+- The app bundle holds no provider keys; every Fireworks, OpenRouter and ElevenLabs call goes
+  through the API.
+- What the learner types to have phrases, notes, lyrics or a cover written (a topic, keywords, a
+  pasted text, a phrase, a title) is sent to Fireworks, which keeps no prompts for open models, or
+  to OpenRouter with `provider.data_collection: "deny"`, which routes only to providers that neither
+  keep nor train on prompts ([ADR-0015](adr/0015-open-model-providers.md)). Nothing else of the
+  learner's, and never audio.
 - Real `.env` files stay local and gitignored. Only SOPS-encrypted `secrets/*.enc.env` are committed
   (`pnpm env:encrypt`).

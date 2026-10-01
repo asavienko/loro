@@ -109,7 +109,8 @@ export function SongScreen() {
         </View>
         <View style={styles.badges}>
           <Badge icon={song.audioBy === 'demo' && !song.voiced ? 'graphic_eq' : 'mic'} label={song.audioBy === 'demo' ? (song.voiced ? c.music.spokenDemo : c.music.demoSound) : c.music.sung} />
-          <Badge icon="lyrics" label={c.music.lyricsBy[song.lyricsBy]} />
+          {/* An older server says `claude`: anything but the set's own phrases was written by a model. */}
+          <Badge icon="lyrics" label={c.music.lyricsBy[song.lyricsBy === 'phrases' ? 'phrases' : 'ai']} />
           <Badge icon="equalizer" label={c.music.style[song.styleId]} />
         </View>
         {song.audioBy === 'demo' && (

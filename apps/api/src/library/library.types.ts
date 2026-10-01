@@ -4,7 +4,7 @@
  */
 import type { V2LanguageInfo, V2Localized, V2Topic } from '@loro/content/v2'
 import type { LibraryNotes, PhraseSource, Visibility } from '@loro/core/api/library'
-import type { SongSection } from './writers.js'
+import type { SongSection, WrittenPhrase } from './writers.js'
 
 /** Whose it is, from the reader's side. */
 export type Owner = 'loro' | 'me' | 'other'
@@ -84,8 +84,8 @@ export interface SongWire {
   styleId: string
   status: 'rendering' | 'ready' | 'failed'
   sections: { name: SongSection['name']; lines: SongLineWire[] }[]
-  /** `claude`, or `phrases`: the set's phrases arranged with nothing added. */
-  lyricsBy: 'claude' | 'phrases'
+  /** `ai` (the text model), or `phrases`: the set's phrases arranged with nothing added. */
+  lyricsBy: 'ai' | 'phrases'
   audioUrl: string | null
   /** `elevenlabs`, or `demo`: the server's instrumental, labelled "Demo sound". */
   audioBy: 'elevenlabs' | 'demo' | null
@@ -150,20 +150,39 @@ export interface PackWire {
   covers: { phrases: Record<string, string>; songs: Record<string, string> }
 }
 
-/** A cover just drawn, and what wears it when that is a new copy of one of Loro's sets or albums. */
-export interface DrawnCoverWire {
-  id: string
-  /** Path under the API's `/v1`, e.g. `/library/covers/cover-x.svg`. */
-  url: string
-  provider: 'claude' | 'pattern'
-  copy?: { kind: 'set' | 'album'; id: string }
-}
-
 /** The languages the app offers (plan 108), and a version that changes whenever they do. */
 export interface LanguagesWire {
   version: string
   languages: readonly V2LanguageInfo[]
 }
+
+/**
+ * A cover the learner asked for (plan 111): `rendering` while it is drawn in the background, then
+ * `ready` at its address, or `failed` when the work broke. `provider` is who drew it: a model (`ai`),
+ * or the server's labelled pattern.
+ */
+export interface CoverState {
+  id: string
+  status: 'rendering' | 'ready' | 'failed'
+  url: string | null
+  provider: 'ai' | 'pattern'
+  /** The learner's new copy of one of Loro's sets or albums, which takes the cover once it is ready. */
+  copy?: { kind: 'set' | 'album'; id: string }
+}
+
+/** A deck of suggestions: the model's (`ai`), or the phrase bank's, with themes when it had none. */
+export interface DeckWire {
+  provider: 'ai' | 'bank'
+  phrases: WrittenPhrase[]
+  themes: { id: string; title: V2Localized }[]
+}
+
+/**
+ * A deck written in the background (plan 111): `writing`, then `ready` with the deck, or `failed`.
+ * A deck the bank answered at once has no id.
+ */
+export type DeckJobWire =
+  ({ id: string | null; status: 'ready' } & DeckWire) | { id: string; status: 'writing' | 'failed' }
 
 export type UsageKind = 'phrases' | 'cover' | 'song'
 export type KeptKind = 'sets' | 'albums' | 'songs'
@@ -176,9 +195,9 @@ export interface UsageWire {
   kept: Record<KeptKind, { used: number; limit: number }>
   /** Who writes each kind here: a model, or the labelled fallback. */
   writers: {
-    phrases: 'claude' | 'bank'
-    cover: 'claude' | 'pattern'
-    lyrics: 'claude' | 'phrases'
+    phrases: 'ai' | 'bank'
+    cover: 'ai' | 'pattern'
+    lyrics: 'ai' | 'phrases'
     music: 'elevenlabs' | 'demo'
   }
 }

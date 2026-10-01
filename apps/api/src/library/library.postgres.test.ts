@@ -3,9 +3,9 @@
  * Set LORO_TEST_DATABASE_URL.
  */
 import type { Pool } from 'pg'
-import { afterAll, beforeAll, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { LoroError } from '../common/errors.js'
-import { AnthropicMessages } from '../integrations/anthropic/messages.js'
+import { ChatCompletions, FIREWORKS_CHAT_URL } from '../integrations/openai-compatible/chat.js'
 import { PostgresDatabase } from '../database/database.js'
 import {
   LORO_TEST_DATABASE_URL,
@@ -15,11 +15,13 @@ import {
   dropIsolatedSchema,
   isolatedSchemaName,
 } from '../testing/postgres-schema.js'
-import { LibraryService } from './library.service.js'
+import { AI_DECK_SIZE, LibraryService } from './library.service.js'
 import { ProgressService } from './progress.js'
 import { SpeechService, speechFor, utteranceId } from './speech.js'
 import { MAX_DEMO_WAV_BYTES, demoLineLimit } from './synth.js'
-import { resetWriter } from './writers.js'
+import { resetArtist, resetWriter } from './writers.js'
+import type { ImageModel } from '../integrations/openrouter/images.js'
+import { ProviderFailure } from '../integrations/provider-failure.js'
 
 const code = async (work: Promise<unknown>) => {
   try {
@@ -30,10 +32,12 @@ const code = async (work: Promise<unknown>) => {
   }
 }
 
-/** A Claude client whose every answer is `value`, or that always fails with `status`. */
-function claudeClient(send: typeof fetch): AnthropicMessages {
-  return new AnthropicMessages(
+/** A text model whose every answer is `value`, or that always fails. */
+function modelClient(send: typeof fetch): ChatCompletions {
+  return new ChatCompletions(
     {
+      name: 'test',
+      url: FIREWORKS_CHAT_URL,
       apiKey: 'test',
       model: 'test',
       timeoutMs: 1000,
@@ -45,17 +49,18 @@ function claudeClient(send: typeof fetch): AnthropicMessages {
     send,
   )
 }
-const claudeAnswering = (value: unknown) =>
-  claudeClient(() =>
+const modelAnswering = (value: unknown) =>
+  modelClient(() =>
     Promise.resolve(
       Response.json({
-        stop_reason: 'end_turn',
-        content: [{ type: 'text', text: JSON.stringify(value) }],
-        usage: { input_tokens: 1, output_tokens: 1 },
+        choices: [
+          { finish_reason: 'stop', message: { role: 'assistant', content: JSON.stringify(value) } },
+        ],
+        usage: { prompt_tokens: 1, completion_tokens: 1 },
       }),
     ),
   )
-const claudeFailing = () => claudeClient(() => Promise.resolve(new Response('{}', { status: 500 })))
+const modelFailing = () => modelClient(() => Promise.resolve(new Response('{}', { status: 500 })))
 const writtenPhrase = {
   target: '¿Tienen habitaciones libres?',
   native: 'Do you have rooms free?',
@@ -77,12 +82,14 @@ describePostgres('the library against real PostgreSQL', () => {
   beforeAll(async () => {
     admin = connectAdmin(LORO_TEST_DATABASE_URL)
     vi.stubEnv('DATABASE_URL', await createSearchPathSchema(admin, schema, LORO_TEST_DATABASE_URL))
-    vi.stubEnv('ANTHROPIC_API_KEY', '')
+    vi.stubEnv('FIREWORKS_API_KEY', '')
+    vi.stubEnv('OPENROUTER_API_KEY', '')
     vi.stubEnv('MUSIC_PROVIDER', 'stub')
     vi.stubEnv('LIMIT_PHRASES_DAILY', '2')
     vi.stubEnv('LIMIT_SETS_KEPT', '3')
     vi.stubEnv('LIBRARY_VOICE_LORO_SONGS', '0')
     resetWriter()
+    resetArtist()
     database = new PostgresDatabase()
     expect(await database.ready()).toBe(true)
     library = new LibraryService(database, { now: () => now })
@@ -94,6 +101,7 @@ describePostgres('the library against real PostgreSQL', () => {
     await admin.end()
     vi.unstubAllEnvs()
     resetWriter()
+    resetArtist()
   })
 
   const deck = async (userId: string) => {
@@ -228,8 +236,8 @@ describePostgres('the library against real PostgreSQL', () => {
     for (let i = 0; i < 3; i++) expect((await deck('dee')).length).toBeGreaterThan(0)
     expect((await library.usage('dee')).daily.phrases.used).toBe(0)
 
-    // Claude's decks count, and the third of a day is refused until the day resets.
-    resetWriter(claudeAnswering({ phrases: [writtenPhrase] }))
+    // The model's decks count, and the third of a day is refused until the day resets.
+    resetWriter(modelAnswering({ phrases: [writtenPhrase] }))
     try {
       for (let i = 0; i < 2; i++) {
         const written = await library.generatePhrases('dee', {
@@ -238,7 +246,7 @@ describePostgres('the library against real PostgreSQL', () => {
           targetLang: 'es-ES',
           nativeLang: 'en-GB',
         })
-        expect(written.provider).toBe('claude')
+        expect(written.provider).toBe('ai')
       }
       expect((await library.usage('dee')).daily.phrases.used).toBe(2)
       const refused = await library
@@ -261,8 +269,8 @@ describePostgres('the library against real PostgreSQL', () => {
     }
   })
 
-  it('gives the allowance back when Claude fails and the bank answers instead', async () => {
-    resetWriter(claudeFailing())
+  it('gives the allowance back when the model fails and the bank answers instead', async () => {
+    resetWriter(modelFailing())
     try {
       const answered = await library.generatePhrases('dot', {
         mode: 'topic',
@@ -278,57 +286,24 @@ describePostgres('the library against real PostgreSQL', () => {
     }
   })
 
-  it('answers "still writing" while Claude writes, and gives the deck to the same request asked again', async () => {
-    let finish!: () => void
-    let asked = 0
+  it('has the model write a short deck: More asks for the rest', async () => {
     resetWriter(
-      claudeClient(() => {
-        asked += 1
-        return new Promise<Response>((resolve) => {
-          finish = () => {
-            resolve(
-              Response.json({
-                stop_reason: 'end_turn',
-                content: [
-                  { type: 'thinking', thinking: '', signature: 'sig' },
-                  {
-                    type: 'text',
-                    text: JSON.stringify({
-                      phrases: Array.from({ length: 9 }, (_, i) => ({
-                        ...writtenPhrase,
-                        target: `Frase número ${i + 1}`,
-                      })),
-                    }),
-                  },
-                ],
-                usage: { input_tokens: 1, output_tokens: 1 },
-              }),
-            )
-          }
-        })
+      modelAnswering({
+        phrases: Array.from({ length: 9 }, (_, i) => ({
+          ...writtenPhrase,
+          target: `Frase número ${i + 1}`,
+        })),
       }),
     )
-    const body = { mode: 'topic', input: 'hotel', targetLang: 'es-ES', nativeLang: 'en-GB' }
     try {
-      expect(await library.generatePhrases('wren', body, 5)).toEqual({ status: 'writing' })
-      // Asked again while it is still being written: the same deck, not a second one.
-      expect(await library.generatePhrases('wren', body, 5)).toEqual({ status: 'writing' })
-      expect(asked).toBe(1)
-      expect((await library.usage('wren')).daily.phrases.used).toBe(1)
-      finish()
-      const deck = await library.generatePhrases('wren', body, 1_000)
-      expect('status' in deck).toBe(false)
-      if ('status' in deck) return
-      expect(deck.provider).toBe('claude')
-      // Claude writes a short deck; More asks for the rest.
-      expect(deck.phrases).toHaveLength(6)
-      expect(asked).toBe(1)
-      expect((await library.usage('wren')).daily.phrases.used).toBe(1)
-      // Once collected it is gone: asking again is a new deck.
-      expect(await library.generatePhrases('wren', body, 5)).toEqual({ status: 'writing' })
-      expect(asked).toBe(2)
-      finish()
-      await library.generatePhrases('wren', body)
+      const deck = await library.generatePhrases('wren', {
+        mode: 'topic',
+        input: 'hotel',
+        targetLang: 'es-ES',
+        nativeLang: 'en-GB',
+      })
+      expect(deck.provider).toBe('ai')
+      expect(deck.phrases).toHaveLength(AI_DECK_SIZE)
     } finally {
       resetWriter()
     }
@@ -370,7 +345,8 @@ describePostgres('the library against real PostgreSQL', () => {
       title: 'Covers',
       attachTo: set.id,
     })
-    expect(cover.provider).toBe('pattern')
+    // With no model the pattern is drawn at once.
+    expect(cover).toMatchObject({ provider: 'pattern', status: 'ready' })
     expect((await library.set('fay', set.id)).set.coverUrl).toBe(cover.url)
     expect(await library.cover(`${cover.id}.svg`)).toMatch(/^<svg /)
     expect(
@@ -483,34 +459,45 @@ describePostgres('the library against real PostgreSQL', () => {
     expect((await library.pack('pia', 'es-ES')).covers).toEqual({ phrases: {}, songs: {} })
   })
 
-  it('has Claude draw a phrase’s cover for what it says', async () => {
+  it('has the model draw a phrase’s cover for what it says', async () => {
     let asked = ''
     resetWriter(
-      claudeClient((_url, init) => {
+      modelClient((_url, init) => {
         asked = typeof init?.body === 'string' ? init.body : ''
         return Promise.resolve(
           Response.json({
-            stop_reason: 'end_turn',
-            content: [
+            choices: [
               {
-                type: 'text',
-                text: JSON.stringify({
-                  background: ['#FBE8D3', '#F4CDB0'],
-                  angle: 90,
-                  shapes: [
-                    { kind: 'circle', cx: 256, cy: 256, r: 100, fill: '#C4562F', opacity: 1 },
-                  ],
-                }),
+                finish_reason: 'stop',
+                message: {
+                  role: 'assistant',
+                  content: JSON.stringify({
+                    background: ['#FBE8D3', '#F4CDB0'],
+                    angle: 90,
+                    shapes: [
+                      { kind: 'circle', cx: 256, cy: 256, r: 100, fill: '#C4562F', opacity: 1 },
+                    ],
+                  }),
+                },
               },
             ],
-            usage: { input_tokens: 1, output_tokens: 1 },
+            usage: { prompt_tokens: 1, completion_tokens: 1 },
           }),
         )
       }),
     )
     try {
       const cover = await library.generateCover('rex', { kind: 'phrase', attachTo: 'cafe-01' })
-      expect(cover.provider).toBe('claude')
+      expect(cover).toMatchObject({ status: 'rendering', provider: 'ai' })
+      await vi.waitFor(async () => {
+        expect(await library.coverState(`${cover.id}.json`)).toMatchObject({
+          status: 'ready',
+          provider: 'ai',
+        })
+      })
+      expect((await library.pack('rex', 'es-ES')).covers.phrases['cafe-01']).toBe(
+        `/library/covers/${cover.id}.svg`,
+      )
       // Drawn for the phrase's own words, never for text the app sent.
       const target = (await library.set(null, 'set-cafe')).phrases.find((p) => p.id === 'cafe-01')
       expect(asked).toContain(JSON.stringify(target?.target).slice(1, -1))
@@ -518,6 +505,188 @@ describePostgres('the library against real PostgreSQL', () => {
     } finally {
       resetWriter()
     }
+  })
+
+  describe('a deck written in the background (plan 111)', () => {
+    const ask = { mode: 'topic', input: 'hotel', targetLang: 'es-ES', nativeLang: 'en-GB' }
+    afterEach(() => {
+      resetWriter()
+    })
+    const settled = async (userId: string, id: string) => {
+      let state = await library.deck(userId, id)
+      await vi.waitFor(async () => {
+        state = await library.deck(userId, id)
+        expect(state.status).not.toBe('writing')
+      })
+      return state
+    }
+
+    it("spends the allowance at once, then answers with the model's deck to the learner who asked", async () => {
+      resetWriter(modelAnswering({ phrases: [writtenPhrase] }))
+      const started = await library.startDeck('lea', ask)
+      expect(started).toMatchObject({ status: 'writing' })
+      expect((await library.usage('lea')).daily.phrases.used).toBe(1)
+      const id = started.id!
+      expect(await code(library.deck('max', id))).toBe('NOT_FOUND')
+      const ready = await settled('lea', id)
+      expect(ready).toMatchObject({ id, status: 'ready', provider: 'ai', themes: [] })
+      expect(ready.status === 'ready' && ready.phrases.map((p) => p.target)).toEqual([
+        writtenPhrase.target,
+      ])
+    })
+
+    it('answers from the bank, giving the allowance back, when the model fails', async () => {
+      resetWriter(modelFailing())
+      const started = await library.startDeck('ned', ask)
+      const ready = await settled('ned', started.id!)
+      expect(ready).toMatchObject({ status: 'ready', provider: 'bank' })
+      expect((await library.usage('ned')).daily.phrases.used).toBe(0)
+    })
+
+    it('refuses at once when the allowance is spent', async () => {
+      resetWriter(modelAnswering({ phrases: [writtenPhrase] }))
+      await library.startDeck('oli', ask)
+      await library.startDeck('oli', ask)
+      expect(await code(library.startDeck('oli', ask))).toBe('LIMIT_REACHED')
+    })
+
+    it('answers from the bank at once, with no job, without a model', async () => {
+      resetWriter(null)
+      const answered = await library.startDeck('pia', ask)
+      expect(answered).toMatchObject({ id: null, status: 'ready', provider: 'bank' })
+      expect((await library.usage('pia')).daily.phrases.used).toBe(0)
+    })
+
+    it('reads work lost with its process as failed', async () => {
+      resetWriter({ generate: () => new Promise(() => undefined) })
+      const started = await library.startDeck('quy', ask)
+      const start = now
+      now += 11 * 60_000
+      try {
+        expect(await library.deck('quy', started.id!)).toEqual({ id: started.id, status: 'failed' })
+      } finally {
+        now = start
+      }
+    })
+  })
+
+  describe('a cover drawn in the background (plan 111)', () => {
+    const PNG = Buffer.concat([
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      Buffer.alloc(16, 3),
+    ])
+    let draw: (prompt: string) => Promise<Buffer>
+    const prompts: string[] = []
+    const images: ImageModel = {
+      generate: async ({ prompt }) => {
+        prompts.push(prompt)
+        return { bytes: await draw(prompt), contentType: 'image/png' }
+      },
+    }
+    const coverSet = async (userId: string) =>
+      (
+        await library.createSet(userId, {
+          title: 'Faros',
+          description: 'by the sea',
+          targetLang: 'es-ES',
+          nativeLang: 'en-GB',
+          phrases: (await deck(userId)).slice(0, 1),
+        })
+      ).set
+    afterEach(() => {
+      resetArtist()
+      resetWriter()
+    })
+
+    it('keeps the old cover until the illustration is ready, then puts it in its place', async () => {
+      let finish!: (bytes: Buffer) => void
+      draw = () => new Promise((resolve) => (finish = resolve))
+      resetArtist(images)
+      const set = await coverSet('ivy')
+      // With `attachTo` the set's own words are drawn, never text the app sent.
+      const cover = await library.generateCover('ivy', { kind: 'set', attachTo: set.id })
+      expect(cover).toEqual({ id: cover.id, status: 'rendering', url: null, provider: 'ai' })
+      expect(await library.coverState(`${cover.id}.json`)).toMatchObject({ status: 'rendering' })
+      expect(await code(library.cover(`${cover.id}.svg`))).toBe('NOT_FOUND')
+      expect((await library.set('ivy', set.id)).set.coverUrl).toBeNull()
+      expect((await library.usage('ivy')).daily.cover.used).toBe(1)
+      expect(prompts.at(-1)).toContain('"Faros", about: by the sea')
+      expect(prompts.at(-1)).toContain('no text')
+      finish(PNG)
+      await vi.waitFor(async () => {
+        expect(await library.coverState(`${cover.id}.json`)).toEqual({
+          id: cover.id,
+          status: 'ready',
+          url: `/library/covers/${cover.id}.svg`,
+          provider: 'ai',
+        })
+      })
+      expect((await library.set('ivy', set.id)).set.coverUrl).toBe(
+        `/library/covers/${cover.id}.svg`,
+      )
+      const svg = await library.cover(`${cover.id}.svg`)
+      expect(svg).toContain(`href="data:image/png;base64,${PNG.toString('base64')}"`)
+      // No script and no address but the SVG namespace: nothing loads from anywhere.
+      expect(svg.replace('xmlns="http://www.w3.org/2000/svg"', '')).not.toMatch(
+        /<script|xlink|https?:/,
+      )
+    })
+
+    it('copies one of Loro’s sets at once, and the copy takes the illustration when it is ready', async () => {
+      let finish!: (bytes: Buffer) => void
+      draw = () => new Promise((resolve) => (finish = resolve))
+      resetArtist(images)
+      const cover = await library.generateCover('una', { kind: 'set', attachTo: 'set-cafe' })
+      expect(cover).toMatchObject({ status: 'rendering', copy: { kind: 'set' } })
+      const copyId = cover.copy?.id ?? ''
+      expect((await library.set('una', copyId)).set.coverUrl).toBeNull()
+      finish(PNG)
+      await vi.waitFor(async () => {
+        expect((await library.set('una', copyId)).set.coverUrl).toBe(
+          `/library/covers/${cover.id}.svg`,
+        )
+      })
+      // Loro's set is as it was, for everyone.
+      expect((await library.set('una', 'set-cafe')).set.coverUrl).toBeNull()
+    })
+
+    it('designs shapes when the illustration fails, and draws the pattern when that fails too', async () => {
+      draw = () => Promise.reject(new ProviderFailure('unavailable'))
+      resetArtist(images)
+      resetWriter(modelAnswering({ background: ['#fff', 'nope'], angle: 0, shapes: [] }))
+      const set = await coverSet('jon')
+      const cover = await library.generateCover('jon', {
+        kind: 'set',
+        title: 'Faros',
+        attachTo: set.id,
+      })
+      await vi.waitFor(async () => {
+        expect(await library.coverState(`${cover.id}.json`)).toMatchObject({
+          status: 'ready',
+          provider: 'pattern',
+        })
+      })
+      expect((await library.set('jon', set.id)).set.coverUrl).toBe(
+        `/library/covers/${cover.id}.svg`,
+      )
+      expect(await library.cover(`${cover.id}.svg`)).not.toContain('data:image')
+    })
+
+    it('reads work lost with its process as failed', async () => {
+      draw = () => new Promise(() => undefined)
+      resetArtist(images)
+      const cover = await library.generateCover('kim', { kind: 'album', title: 'Lost' })
+      const start = now
+      now += 11 * 60_000
+      try {
+        expect(await library.coverState(`${cover.id}.json`)).toMatchObject({
+          status: 'failed',
+          url: null,
+        })
+      } finally {
+        now = start
+      }
+    })
   })
 
   it('sings a set into a new album and plays it only for who may see it', async () => {
@@ -834,7 +1003,7 @@ describePostgres('the library against real PostgreSQL', () => {
     vi.stubEnv('LIMIT_SPEECH_RENDERS_DAILY', '500')
   })
 
-  it('writes notes by the rules without Claude, for free, and for a typed phrase stored without them', async () => {
+  it('writes notes by the rules without a model, for free, and for a typed phrase stored without them', async () => {
     const before = await library.usage('rufus')
     const written = await library.generateNotes('rufus', {
       target: '¿Dónde está la estación?',

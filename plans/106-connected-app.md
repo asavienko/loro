@@ -8,9 +8,9 @@
   and one light palette.
 - **Status:** 🟡 Started 2026-09-30 at the owner's request; scope 1–14 landed the same day.
   **Left:** item 15 (iOS, live provider runs, a live Apple sign-in). **Blocked by:** nothing. Live
-  Claude writing needs `ANTHROPIC_API_KEY` and live songs need `MUSIC_PROVIDER=elevenlabs` with
-  `MUSIC_API_KEY`; without them the server says it used its fallback and the app labels it (see
-  _Honest fallbacks_).
+  writing needs `FIREWORKS_API_KEY` or `OPENROUTER_API_KEY` (plan 111, which replaced Claude with
+  DeepSeek and Muse Image) and live songs need `MUSIC_PROVIDER=elevenlabs` with `MUSIC_API_KEY`;
+  without them the server says it used its fallback and the app labels it (see _Honest fallbacks_).
 - **Owner request, 2026-09-30:** "Make the app fully usable. Make the backend fully usable. The app
   should have a sign-in flow, user limits, an AI generation process for phrases, songs, and images
   for covers. The UI should also be fully functional. The UI should be clearly and distinctly
@@ -75,12 +75,12 @@ keeps each private, shares it by link, or publishes it for everyone.
 13. [x] Reports of public items; three take an item out of Community.
 14. [x] Android emulator: onboarding, the pack, covers, songs, email sign-in (Keystore), Create,
         phrase clips.
-15. [ ] Left: iOS device run; live Claude (phrases, notes, covers, lyrics) with `ANTHROPIC_API_KEY`;
-        live ElevenLabs Music songs; a live Apple sign-in (the button shows once the server has
-        Apple credentials; none are configured locally); moderation beyond reports. Also open: demo
-        songs are stored as WAV (about 2 MB for 45 s); an MP3 encoder would cut that about sixfold,
-        but the pure-JS one (lamejs) is LGPL, a dependency decision for the owner. Bulgarian has
-        five Loro sets (three added 2026-09-30, awaiting native review); more need authored,
+15. [ ] Left: iOS device run; live writing (phrases, notes, covers, lyrics; plan 111); live
+        ElevenLabs Music songs; a live Apple sign-in (the button shows once the server has Apple
+        credentials; none are configured locally); moderation beyond reports. Also open: demo songs
+        are stored as WAV (about 2 MB for 45 s); an MP3 encoder would cut that about sixfold, but
+        the pure-JS one (lamejs) is LGPL, a dependency decision for the owner. Bulgarian has five
+        Loro sets (three added 2026-09-30, awaiting native review); more need authored,
         native-reviewed content.
 16. [x] Google sign-in on the web (the tab leaves and returns to `/account`) and on iOS/Android (an
         auth session returning to `loro://account` / `loro-dev://account`, PKCE through

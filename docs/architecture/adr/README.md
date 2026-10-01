@@ -14,8 +14,9 @@ Only the records that still govern the code are kept; the others (0001, 0003, 00
 | [0004](0004-fsrs-scheduler.md)          | FSRS as the scheduling algorithm      | Accepted | 2026-07-28 |
 | [0008](0008-backend-nestjs-postgres.md) | NestJS + Postgres over a BaaS         | Accepted | 2026-07-28 |
 | [0011](0011-analytics-and-privacy.md)   | Privacy posture and the audio promise | Accepted | 2026-07-28 |
+| [0015](0015-open-model-providers.md)    | DeepSeek writes, Muse Image draws     | Accepted | 2026-10-01 |
 
-The next new record is 0015; numbers are never reused.
+The next new record is 0016; numbers are never reused.
 
 ## Statuses
 

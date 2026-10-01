@@ -81,18 +81,21 @@ export function CoverRedraw({ item, width, height, rounded }: { item: CoverItem;
       const drawn = await generateCover({ kind: item.kind, attachTo: id, nativeLang: state.learner.profile.nativeLang });
       void account.refreshUsage();
       if (item.kind === 'phrase' || item.kind === 'song') {
-        // Shown at once, and kept with the course for offline.
+        // Shown at once, and kept with the course for offline. One still being drawn takes its place
+        // on the server when it is ready, and comes with the course's next pack.
         const course = item.kind === 'phrase' ? item.phrase.targetLang : (findAlbum(item.song.albumId)?.targetLang ?? state.learner.profile.targetLang);
-        await keepItemCover(course, item.kind, id, drawn.url);
+        if (drawn.url) await keepItemCover(course, item.kind, id, drawn.url);
       } else await content.refresh();
-      const by = c.share.coverBy[drawn.provider];
+      const ready = drawn.status !== 'rendering';
+      const said = ready ? c.share.coverBy[drawn.provider] : c.share.coverLater;
       if (drawn.copy) {
-        toast(`${by} · ${c.share.coverCopied}`, { tone: 'success' });
+        toast(`${said} · ${c.share.coverCopied}`, { tone: 'success' });
         if (drawn.copy.kind === 'set') nav.openSet(drawn.copy.id);
         else nav.openAlbum(drawn.copy.id);
       } else {
         if (item.kind === 'album') item.onDrawn?.();
-        toast(by, { tone: 'success' });
+        if (ready) toast(said, { tone: 'success' });
+        else toast(said);
       }
     } catch (error) {
       toast(problemText(c, error));
