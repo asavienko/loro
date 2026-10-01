@@ -8,6 +8,7 @@ import {
   aiLyrics,
   aiNotes,
   aiPhrases,
+  aiRewrittenNote,
   cleanImage,
   resetWriter,
 } from './writers.js'
@@ -215,6 +216,48 @@ describe('The model’s notes for a phrase the learner wrote', () => {
     expect(JSON.stringify(body?.['response_format'])).toContain(
       'A mnemonic for remembering this phrase',
     )
+  })
+
+  it('asks for another mnemonic, sending the language, the phrase and what the learner read', async () => {
+    let body: Record<string, unknown> | undefined
+    const previous = [{ title: 'Билет — билет', text: 'Same word in Russian.' }]
+    const note = await aiRewrittenNote(
+      answering({ title: ' Моля — молю ', text: 'Picture  begging for a ticket.' }, (sent) => {
+        body = sent
+      }),
+      {
+        kind: 'mnemonic',
+        target: 'Един билет, моля',
+        native: 'Один билет, пожалуйста',
+        targetLang: 'bg-BG',
+        nativeLang: 'ru-RU',
+        previous,
+      },
+    )
+    expect(note).toEqual({ title: 'Моля — молю', text: 'Picture begging for a ticket.' })
+    const [system, user] = body?.['messages'] as { role: string; content: string }[]
+    expect(system!.content).toContain('asked for another one')
+    expect(system!.content).toContain('Write it in Russian')
+    expect(JSON.parse(user!.content)).toEqual({
+      target: 'Един билет, моля',
+      native: 'Один билет, пожалуйста',
+      language: 'Russian',
+      previous,
+    })
+  })
+
+  it('refuses the same note again', async () => {
+    const previous = [{ title: 'A hook', text: 'Something true.' }]
+    await expect(
+      aiRewrittenNote(answering(previous[0]), {
+        kind: 'grammar',
+        target: 'Hola',
+        native: 'Hello',
+        targetLang: 'es-ES',
+        nativeLang: 'en-GB',
+        previous,
+      }),
+    ).rejects.toThrow('the same note again')
   })
 
   it('refuses notes that are not whole', async () => {

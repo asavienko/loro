@@ -107,6 +107,40 @@ export async function writeNotes(
   return { provider: isObject(body) && body.provider === 'rules' ? 'rules' : 'ai', notes, image };
 }
 
+/** The notes a learner can ask to have written again. */
+export type RewritableNote = 'mnemonic' | 'grammar';
+/** How many notes the learner already read are sent with the ask, as the server accepts. */
+export const MAX_PREVIOUS_NOTES = 10;
+
+/**
+ * Another mnemonic or grammar note for a phrase: sends the phrase, the language to write in and the
+ * notes the learner already read (oldest first), which the server tells the model to differ from.
+ * Throws when the server can't be asked, has no writer, or answers nonsense.
+ */
+export async function rewriteNote(
+  request: {
+    kind: RewritableNote;
+    target: string;
+    native: string;
+    targetLang: LanguageCode;
+    nativeLang: LanguageCode;
+    previous: { title: string; text: string }[];
+  },
+  signal?: AbortSignal,
+): Promise<{ title: string; text: string }> {
+  const previous = request.previous.slice(-MAX_PREVIOUS_NOTES).map((n) => ({ title: n.title.slice(0, 60), text: n.text.slice(0, 300) }));
+  const body = await api<unknown>('/library/generate/note', {
+    method: 'POST',
+    body: { ...request, target: request.target.slice(0, MAX_TEXT), native: request.native.slice(0, MAX_TEXT), previous },
+    auth: 'required',
+    timeoutMs: SUGGEST_TIMEOUT_MS,
+    signal,
+  });
+  const written = isObject(body) ? note(body.note) : null;
+  if (!written) throw new Error('unreadable reply');
+  return written;
+}
+
 const DECK_POLL_MS = 1_500;
 /** About two and a half minutes: longer than the server's writer and its fallback allow themselves. */
 const DECK_POLLS = 100;
