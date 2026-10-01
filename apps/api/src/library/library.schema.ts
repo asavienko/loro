@@ -194,3 +194,8 @@ CREATE INDEX IF NOT EXISTS library_set_refs_phrase ON library_set_refs(phrase_id
 ALTER TABLE library_sets ADD COLUMN IF NOT EXISTS inbox boolean NOT NULL DEFAULT false;
 CREATE UNIQUE INDEX IF NOT EXISTS library_sets_inbox ON library_sets(owner_id, target_lang) WHERE inbox;
 `
+
+/** Plan 111: the writer is named for what it is, not for one vendor; rows written before say `claude`. */
+export const LIBRARY_AI_LABELS_MIGRATION_SQL = `UPDATE library_covers SET provider = 'ai' WHERE provider = 'claude';
+UPDATE library_songs SET lyrics_by = 'ai' WHERE lyrics_by = 'claude';
+`

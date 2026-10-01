@@ -1,5 +1,5 @@
 /**
- * Covers (plan 106). A cover is a small spec of shapes and colours, never markup: Claude writes the
+ * Covers (plan 106). A cover is a small spec of shapes and colours, never markup: the model writes the
  * spec, or the server draws one from the title, and only `renderCover` turns it into SVG. Nothing a
  * model or a learner writes reaches the SVG as text, so a cover cannot carry a script, a link, an
  * image or words.
@@ -68,7 +68,7 @@ export const CoverSpecSchema = z.object({
 export type CoverSpec = z.infer<typeof CoverSpecSchema>
 type Shape = CoverSpec['shapes'][number]
 
-/** The JSON schema Claude answers in; `CoverSpecSchema` then checks the ranges. */
+/** The JSON schema the model answers in; `CoverSpecSchema` then checks the ranges. */
 export const COVER_JSON_SCHEMA: Record<string, unknown> = {
   type: 'object',
   additionalProperties: false,
@@ -121,7 +121,7 @@ export const COVER_JSON_SCHEMA: Record<string, unknown> = {
 }
 
 /**
- * Claude's answer as a spec: each shape keeps only its own kind's fields, and a shape out of range
+ * The model's answer as a spec: each shape keeps only its own kind's fields, and a shape out of range
  * is dropped rather than failing the cover. Throws when nothing drawable is left.
  */
 export function readCoverSpec(value: unknown): CoverSpec {
@@ -338,7 +338,7 @@ export function patternCover(seed: string): CoverSpec {
   }
 }
 
-/** The instructions for Claude's cover, which never contain the learner's text. */
+/** The instructions for the model's cover, which never contain the learner's text. */
 export const COVER_SYSTEM_PROMPT = [
   'You design square cover art for Loro, an app that teaches languages with short spoken phrases and songs.',
   `The canvas is ${COVER_SIZE}×${COVER_SIZE}. Answer with a spec of at most ${MAX_SHAPES} shapes over a two-colour linear gradient:`,

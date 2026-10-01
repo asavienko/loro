@@ -21,14 +21,22 @@ import { join } from 'node:path'
 
 export const config = {
   /**
-   * `anthropic` | `stub`. `stub` serves the bundled scenes and is the local default,
-   * which is what keeps the fallback path exercised (ADR-0010).
+   * The `/ai` scene provider; only `stub`, which serves the bundled scenes, is registered.
    */
   aiProvider: (): string => process.env['AI_PROVIDER'] ?? 'stub',
-  aiApiKey: (): string | undefined => process.env['ANTHROPIC_API_KEY'],
-  aiSuggestModel: (): string => process.env['AI_MODEL_TRANSLATE'] ?? 'claude-haiku-4-5-20251001',
-  /** The library's writer (plan 106): phrase decks, lyrics and cover specs. */
-  aiGenerateModel: (): string => process.env['AI_MODEL_GENERATE'] ?? 'claude-sonnet-5',
+
+  /**
+   * The text models (plan 111): DeepSeek on Fireworks first, the same model through OpenRouter
+   * when Fireworks fails. Either key alone works; with neither, the labelled fallbacks answer.
+   */
+  fireworksApiKey: (): string | undefined => trimmed(process.env['FIREWORKS_API_KEY']),
+  fireworksModel: (): string =>
+    process.env['FIREWORKS_MODEL'] ?? 'accounts/deepseek-ai/models/deepseek-v4p1-flash',
+  openRouterApiKey: (): string | undefined => trimmed(process.env['OPENROUTER_API_KEY']),
+  openRouterTextModel: (): string =>
+    process.env['OPENROUTER_TEXT_MODEL'] ?? 'deepseek/deepseek-v4.1-flash',
+  /** The model that draws covers, through OpenRouter's key. */
+  openRouterImageModel: (): string => process.env['OPENROUTER_IMAGE_MODEL'] ?? 'meta/muse-image',
 
   /**
    * A learner's daily allowances (plan 106), counted per UTC day: phrase decks, covers and songs.
@@ -164,6 +172,13 @@ export const config = {
 
   ttsCacheDir: (): string => process.env['TTS_CACHE_DIR'] ?? join(tmpdir(), 'loro-tts-cache'),
 } as const
+
+/** A secret that is only whitespace is no secret. */
+function trimmed(value: string | undefined): string | undefined {
+  const text = value?.trim()
+  if (!text) return undefined
+  return text
+}
 
 /** Session/token settings. Distinct from browser OAuth deployment settings. */
 export interface SessionAuthSettings {

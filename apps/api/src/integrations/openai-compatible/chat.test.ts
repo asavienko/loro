@@ -1,9 +1,12 @@
 import { createServer } from 'node:http'
 import { once } from 'node:events'
 import { describe, expect, it, vi } from 'vitest'
-import { AnthropicFailure, AnthropicMessages, type AnthropicOptions } from './messages.js'
+import { TextModelFailure } from '../text-model.js'
+import { ChatCompletions, FIREWORKS_CHAT_URL, type ChatCompletionsOptions } from './chat.js'
 
-const options: AnthropicOptions = {
+const options: ChatCompletionsOptions = {
+  name: 'test-provider',
+  url: FIREWORKS_CHAT_URL,
   apiKey: 'test-only-secret',
   model: 'test-model',
   timeoutMs: 1000,
@@ -28,19 +31,19 @@ const request = {
     return { ok: true }
   },
 }
-const envelope = (text = '{"ok":true}', stop = 'end_turn') => ({
-  usage: { input_tokens: 12, output_tokens: 4 },
-  content: [{ type: 'text', text }],
-  stop_reason: stop,
+const envelope = (content: unknown = '{"ok":true}', finish = 'stop') => ({
+  id: 'gen-1',
+  usage: { prompt_tokens: 12, completion_tokens: 4, total_tokens: 16 },
+  choices: [{ index: 0, finish_reason: finish, message: { role: 'assistant', content } }],
 })
 const response = (value: unknown) => Response.json(value)
 
-function setup(value: unknown = envelope(), changes: Partial<AnthropicOptions> = {}) {
+function setup(value: unknown = envelope(), changes: Partial<ChatCompletionsOptions> = {}) {
   const send = vi.fn<typeof fetch>().mockResolvedValue(response(value))
-  return { send, client: new AnthropicMessages({ ...options, ...changes }, send) }
+  return { send, client: new ChatCompletions({ ...options, ...changes }, send) }
 }
 
-describe('Anthropic provider-only messages adapter', () => {
+describe('OpenAI-compatible chat completions adapter', () => {
   it('holds capacity through streamed body parsing and rejects overlap without sending', async () => {
     let finish!: () => void
     const body = new ReadableStream<Uint8Array>({
@@ -53,13 +56,13 @@ describe('Anthropic provider-only messages adapter', () => {
     })
     const send = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response(body))
     send.mockImplementation(() => Promise.resolve(response(envelope())))
-    const client = new AnthropicMessages(options, send)
+    const client = new ChatCompletions(options, send)
     const pending = client.generate(request)
     const rejected = await client.generate(request).catch((error: unknown) => error)
-    expect(rejected).toBeInstanceOf(AnthropicFailure)
+    expect(rejected).toBeInstanceOf(TextModelFailure)
     expect(rejected).toMatchObject({
       code: 'capacity',
-      message: 'Anthropic request failed: capacity',
+      message: 'Text model request failed: capacity',
     })
     expect(send).toHaveBeenCalledTimes(1)
     finish()
@@ -77,8 +80,8 @@ describe('Anthropic provider-only messages adapter', () => {
       if (failure === 'parse')
         send.mockResolvedValueOnce(response(envelope('private invalid JSON')))
       send.mockImplementation(() => Promise.resolve(response(envelope())))
-      const client = new AnthropicMessages(options, send)
-      await expect(client.generate(request)).rejects.toBeInstanceOf(AnthropicFailure)
+      const client = new ChatCompletions(options, send)
+      await expect(client.generate(request)).rejects.toBeInstanceOf(TextModelFailure)
       expect(send).toHaveBeenCalledTimes(1)
       await expect(client.generate(request)).resolves.toHaveProperty('value.ok', true)
       expect(send).toHaveBeenCalledTimes(2)
@@ -99,7 +102,7 @@ describe('Anthropic provider-only messages adapter', () => {
         }),
     )
     send.mockImplementation(() => Promise.resolve(response(envelope())))
-    const client = new AnthropicMessages(options, send)
+    const client = new ChatCompletions(options, send)
     const controller = new AbortController()
     const pending = client.generate({ ...request, signal: controller.signal })
     controller.abort()
@@ -108,27 +111,44 @@ describe('Anthropic provider-only messages adapter', () => {
     await expect(client.generate(request)).resolves.toHaveProperty('value.ok', true)
   })
 
-  it('sends one bounded structured text request and returns independently validated output', async () => {
-    const { client, send } = setup()
+  it('sends one bounded JSON-schema request with a bearer and returns validated output', async () => {
+    const { client, send } = setup(envelope(), {
+      extraBody: { provider: { data_collection: 'deny' } },
+    })
     expect(await client.generate(request)).toEqual({
       value: { ok: true },
-      usage: {
-        inputTokens: 12,
-        outputTokens: 4,
-        cacheReadInputTokens: null,
-        cacheCreationInputTokens: null,
-      },
+      provider: 'test-provider',
+      usage: { inputTokens: 12, outputTokens: 4 },
     })
     expect(send).toHaveBeenCalledTimes(1)
     const [url, init] = send.mock.calls[0]!
-    expect(url).toBe('https://api.anthropic.com/v1/messages')
+    expect(url).toBe(FIREWORKS_CHAT_URL)
     expect(init).toMatchObject({ redirect: 'error', method: 'POST' })
-    expect(JSON.parse(init!.body as string)).toMatchObject({
+    expect((init!.headers as Record<string, string>)['authorization']).toBe(
+      'Bearer test-only-secret',
+    )
+    expect(JSON.parse(init!.body as string)).toEqual({
+      provider: { data_collection: 'deny' },
       model: 'test-model',
+      max_tokens: 100,
       stream: false,
-      messages: request.messages,
-      output_config: { format: { type: 'json_schema', schema: request.schema } },
+      messages: [{ role: 'system', content: request.system }, ...request.messages],
+      response_format: {
+        type: 'json_schema',
+        json_schema: { name: 'answer', strict: true, schema: request.schema },
+      },
     })
+  })
+
+  it('lets no extra field override the model, messages or answer format', async () => {
+    const { client, send } = setup(envelope(), {
+      extraBody: { model: 'other', messages: [], response_format: null, stream: true },
+    })
+    await client.generate(request)
+    const sent = JSON.parse(send.mock.calls[0]![1]!.body as string) as Record<string, unknown>
+    expect(sent).toMatchObject({ model: 'test-model', stream: false })
+    expect(sent['messages']).toHaveLength(2)
+    expect(sent['response_format']).toMatchObject({ type: 'json_schema' })
   })
 
   it('does not forward extra top-level or message attachment/tool fields', async () => {
@@ -140,17 +160,44 @@ describe('Anthropic provider-only messages adapter', () => {
     }
     await client.generate(withExtraFields)
     const sent: unknown = JSON.parse(send.mock.calls[0]![1]!.body as string)
-    expect(sent).toHaveProperty('messages', request.messages)
+    expect(sent).toHaveProperty('messages', [
+      { role: 'system', content: request.system },
+      ...request.messages,
+    ])
     expect(sent).not.toHaveProperty('tools')
   })
 
-  it.each(['max_tokens', 'refusal', 'tool_use', 'pause_turn'])(
-    'rejects incomplete/unsafe stop reason %s',
-    async (stop) => {
-      const { client } = setup(envelope('{"ok":true}', stop))
+  it.each(['length', 'content_filter', 'tool_calls', 'error'])(
+    'rejects incomplete/unsafe finish reason %s',
+    async (finish) => {
+      const { client } = setup(envelope('{"ok":true}', finish))
       await expect(client.generate(request)).rejects.toMatchObject({ code: 'invalid_output' })
     },
   )
+
+  it('rejects a provider error reported inside a 200', async () => {
+    const { client } = setup({ ...envelope(), error: { code: 502, message: 'private' } })
+    await expect(client.generate(request)).rejects.toMatchObject({ code: 'invalid_output' })
+  })
+
+  it.each([null, 42, ['{"ok":true}']])('rejects non-text content %j', async (content) => {
+    const { client } = setup(envelope(content))
+    await expect(client.generate(request)).rejects.toMatchObject({ code: 'invalid_output' })
+  })
+
+  it('rejects an answer that also calls tools', async () => {
+    const value = envelope()
+    const message = value.choices[0]!.message as Record<string, unknown>
+    message['tool_calls'] = [{ id: 'call-1', type: 'function' }]
+    const { client } = setup(value)
+    await expect(client.generate(request)).rejects.toMatchObject({ code: 'invalid_output' })
+  })
+
+  it('rejects more than one choice', async () => {
+    const value = envelope()
+    const { client } = setup({ ...value, choices: [...value.choices, ...value.choices] })
+    await expect(client.generate(request)).rejects.toMatchObject({ code: 'invalid_output' })
+  })
 
   it.each(['not json', '{"ok":false}'])(
     'rejects syntactic and semantic failures: %s',
@@ -169,7 +216,7 @@ describe('Anthropic provider-only messages adapter', () => {
     const bytes = Buffer.from(JSON.stringify(envelope('{"ok":true,"note":"marker"}')))
     bytes[bytes.indexOf('marker')] = 0xff
     const send = vi.fn<typeof fetch>().mockResolvedValue(new Response(bytes))
-    await expect(new AnthropicMessages(options, send).generate(request)).rejects.toMatchObject({
+    await expect(new ChatCompletions(options, send).generate(request)).rejects.toMatchObject({
       code: 'invalid_output',
     })
   })
@@ -186,9 +233,9 @@ describe('Anthropic provider-only messages adapter', () => {
       const send = vi
         .fn<typeof fetch>()
         .mockResolvedValue(new Response('private provider data', { status }))
-      const client = new AnthropicMessages(options, send)
+      const client = new ChatCompletions(options, send)
       const error = await client.generate(request).catch((failure: unknown) => failure)
-      expect(error).toBeInstanceOf(AnthropicFailure)
+      expect(error).toBeInstanceOf(TextModelFailure)
       expect(error).toMatchObject({ code: status === 429 ? 'rate_limited' : 'unavailable' })
       expect(String(error)).not.toContain('private')
       expect(send).toHaveBeenCalledTimes(1)
@@ -199,7 +246,7 @@ describe('Anthropic provider-only messages adapter', () => {
     const send = vi
       .fn<typeof fetch>()
       .mockRejectedValue(new Error('test-only-secret private phrase'))
-    const error = await new AnthropicMessages(options, send)
+    const error = await new ChatCompletions(options, send)
       .generate(request)
       .catch((failure: unknown) => failure)
     expect(error).toMatchObject({ code: 'unavailable' })
@@ -228,23 +275,26 @@ describe('Anthropic provider-only messages adapter', () => {
           )
         }),
     )
-    const client = new AnthropicMessages({ ...options, timeoutMs: 10 }, send)
+    const client = new ChatCompletions({ ...options, timeoutMs: 10 }, send)
     await expect(client.generate(request)).rejects.toMatchObject({ code: 'timeout' })
     send.mockImplementation(() => Promise.resolve(response(envelope())))
     await expect(client.generate(request)).resolves.toHaveProperty('value.ok', true)
     expect(send).toHaveBeenCalledTimes(2)
   })
 
-  it('rejects invalid configuration without revealing credentials', () => {
-    expect(() => new AnthropicMessages({ ...options, timeoutMs: Number.NaN })).toThrow(
-      'configuration',
-    )
+  it.each([
+    { timeoutMs: Number.NaN },
+    { url: 'http://api.fireworks.ai/inference/v1/chat/completions' },
+    { apiKey: ' ' },
+    { model: '' },
+  ])('rejects invalid configuration %j without revealing credentials', (change) => {
+    expect(() => new ChatCompletions({ ...options, ...change })).toThrow('configuration')
   })
 
   it.each([
     undefined,
-    { input_tokens: -1, output_tokens: 4 },
-    { input_tokens: 1.5, output_tokens: 4 },
+    { prompt_tokens: -1, completion_tokens: 4 },
+    { prompt_tokens: 1.5, completion_tokens: 4 },
   ])(
     'rejects missing or invalid reported usage instead of inventing accounting values',
     async (usage) => {
@@ -266,7 +316,7 @@ describe('Anthropic provider-only messages adapter', () => {
     if (!address || typeof address === 'string') throw new Error('Missing test listener')
     const send: typeof fetch = (_url, init) => fetch(`http://127.0.0.1:${address.port}`, init)
     try {
-      const client = new AnthropicMessages({ ...options, timeoutMs: 250 }, send)
+      const client = new ChatCompletions({ ...options, timeoutMs: 250 }, send)
       await expect(client.generate(request)).rejects.toMatchObject({ code: 'timeout' })
       expect(received).toBe(true)
     } finally {

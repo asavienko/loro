@@ -1,7 +1,7 @@
 /**
- * What the library's generators ask Claude for (plan 106), and what they do without it.
+ * What the library's generators ask the text model for (plans 106, 111), and what they do without it.
  *
- * Claude writes only when `ANTHROPIC_API_KEY` is set. Without it, or when it fails, each generator
+ * The model writes only when `FIREWORKS_API_KEY` or `OPENROUTER_API_KEY` is set. Without either, or when it fails, each generator
  * has a fallback that is labelled as such: phrase decks come from the phrase bank, lyrics are the
  * set's own phrases arranged as a song, and covers are drawn from the title. What the learner typed
  * is untrusted data: it only ever appears as a JSON value in the user message.
@@ -14,8 +14,8 @@ import type {
 } from '@loro/core/api/library'
 import { LibraryNotesSchema } from '@loro/core/api/library'
 import { z } from 'zod'
-import { config } from '../common/config.js'
-import { AnthropicMessages } from '../integrations/anthropic/messages.js'
+import { textModel } from '../integrations/models.js'
+import type { StructuredTextModel } from '../integrations/text-model.js'
 import { deviceNotes } from './notes/index.js'
 import { COVER_JSON_SCHEMA, COVER_SYSTEM_PROMPT, readCoverSpec, type CoverSpec } from './covers.js'
 
@@ -62,28 +62,24 @@ const MODE_BRIEF: Record<GeneratePhrasesRequest['mode'], string> = {
     'you may use it, shortened if needed.',
 }
 
-let client: AnthropicMessages | null | undefined
+let client: StructuredTextModel | null | undefined
 
-/** The configured Claude client, or null: the fallbacks answer instead. */
-export function writer(): AnthropicMessages | null {
+/** The configured text model, or null: the fallbacks answer instead. */
+export function writer(): StructuredTextModel | null {
   if (client !== undefined) return client
-  const apiKey = config.aiApiKey()?.trim()
-  client = apiKey
-    ? new AnthropicMessages({
-        apiKey,
-        model: config.aiGenerateModel(),
-        timeoutMs: 90_000,
-        maxTokens: 16_000,
-        maxRequestBytes: 64_000,
-        maxResponseBytes: 256_000,
-        maxConcurrentRequests: 4,
-      })
-    : null
+  client = textModel({
+    timeoutMs: 90_000,
+    primaryTimeoutMs: 60_000,
+    maxTokens: 16_000,
+    maxRequestBytes: 64_000,
+    maxResponseBytes: 256_000,
+    maxConcurrentRequests: 4,
+  })
   return client
 }
 
 /** For tests: forget the client so a changed environment is read again. */
-export function resetWriter(client_?: AnthropicMessages | null): void {
+export function resetWriter(client_?: StructuredTextModel | null): void {
   client = client_
 }
 
@@ -240,7 +236,7 @@ export function cleanNotes(value: unknown): LibraryNotes | null {
   return parsed.success ? parsed.data : null
 }
 
-/** Claude's phrases as the app may show them: tidy, one breath long, new, each once, whole notes. */
+/** The model's phrases as the app may show them: tidy, one breath long, new, each once, whole notes. */
 export function cleanPhrases(
   phrases: z.infer<typeof RawPhrases>['phrases'],
   request: GeneratePhrasesRequest,
@@ -263,9 +259,9 @@ export function cleanPhrases(
   return out
 }
 
-/** Phrases Claude wrote for the request; throws when it fails, refuses or answers nonsense. */
-export async function claudePhrases(
-  ai: AnthropicMessages,
+/** Phrases the model wrote for the request; throws when it fails, refuses or answers nonsense. */
+export async function aiPhrases(
+  ai: StructuredTextModel,
   request: GeneratePhrasesRequest,
 ): Promise<WrittenPhrase[]> {
   const result = await ai.generate({
@@ -368,9 +364,9 @@ export function bankPhrases(request: GeneratePhrasesRequest): WrittenPhrase[] {
   })
 }
 
-/** Notes and a picture Claude wrote for a phrase the learner typed; throws when it fails or answers nonsense. */
-export async function claudeNotes(
-  ai: AnthropicMessages,
+/** Notes and a picture the model wrote for a phrase the learner typed; throws when it fails or answers nonsense. */
+export async function aiNotes(
+  ai: StructuredTextModel,
   request: GenerateNotesRequest,
 ): Promise<{ image: string[]; notes: LibraryNotes }> {
   const target = LANGUAGE_NAMES[request.targetLang]
@@ -500,11 +496,11 @@ export interface SongPhrase {
 export const MAX_SONG_LINES = 16
 
 /**
- * Claude's song from the set: its phrases sung as written, a chorus that repeats one, a few short
+ * The model's song from the set: its phrases sung as written, a chorus that repeats one, a few short
  * lines between. Throws when it fails, or when a line claims a phrase it does not sing.
  */
-export async function claudeLyrics(
-  ai: AnthropicMessages,
+export async function aiLyrics(
+  ai: StructuredTextModel,
   input: {
     targetLang: V2Language
     nativeLang: V2Language
@@ -540,7 +536,7 @@ export async function claudeLyrics(
     name: section.name,
     lines: section.lines.map((line) => {
       const phrase = line.phraseId ? byId.get(line.phraseId) : undefined
-      // A line that says it sings a phrase must be that phrase; otherwise it is Claude's own line.
+      // A line that says it sings a phrase must be that phrase; otherwise it is the model's own line.
       const sings = phrase && fold(phrase.target) === fold(line.text)
       return {
         text: clip(tidy(line.text), MAX_TEXT),
@@ -573,9 +569,9 @@ export function assembleLyrics(phrases: SongPhrase[]): SongSection[] {
 
 // ---------- covers ----------
 
-/** A cover spec Claude designed for the title; throws when it fails or draws nothing usable. */
-export async function claudeCover(
-  ai: AnthropicMessages,
+/** A cover spec the model designed for the title; throws when it fails or draws nothing usable. */
+export async function aiCover(
+  ai: StructuredTextModel,
   input: { kind: 'set' | 'album'; title: string; description?: string | undefined },
 ): Promise<CoverSpec> {
   const result = await ai.generate({

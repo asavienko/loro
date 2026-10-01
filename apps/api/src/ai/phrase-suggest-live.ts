@@ -1,14 +1,14 @@
 /**
- * Optional Anthropic Discover suggest. Missing keys stay on the bundled path.
- * Query text is untrusted; the adapter never accepts audio.
+ * Optional live Discover suggest through the text models (plan 111). Missing keys stay on the bundled
+ * path. Query text is untrusted; the adapter never accepts audio.
  */
 import {
   PhraseSuggestCandidateSchema,
   type PhraseSuggestRequest,
   type PhraseSuggestResponse,
 } from '@loro/core/api/draft'
-import { config } from '../common/config.js'
-import { AnthropicMessages } from '../integrations/anthropic/messages.js'
+import { textModel } from '../integrations/models.js'
+import type { StructuredTextModel } from '../integrations/text-model.js'
 
 const CANDIDATE_JSON_SCHEMA = {
   type: 'object',
@@ -21,39 +21,47 @@ const CANDIDATE_JSON_SCHEMA = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['target_text', 'translation'],
+        // Strict schemas require every key; a row without a theme or emoji says null.
+        required: ['target_text', 'translation', 'theme', 'emoji'],
         properties: {
           target_text: { type: 'string' },
           translation: { type: 'string' },
-          theme: { type: 'string' },
-          emoji: { type: 'string' },
+          theme: { type: ['string', 'null'] },
+          emoji: { type: ['string', 'null'] },
         },
       },
     },
   },
 } as const
 
+let client: StructuredTextModel | null | undefined
+
+/** One shared client, so its concurrency cap holds across requests. */
+function suggestModel(): StructuredTextModel | null {
+  if (client !== undefined) return client
+  client = textModel({
+    timeoutMs: 20_000,
+    primaryTimeoutMs: 12_000,
+    maxTokens: 1024,
+    maxRequestBytes: 16_384,
+    maxResponseBytes: 32_768,
+    maxConcurrentRequests: 2,
+  })
+  return client
+}
+
+/** For tests: forget the client so a changed environment is read again, or use the one given. */
+export function resetSuggestModel(model?: StructuredTextModel | null): void {
+  client = model
+}
+
 export async function proposeLiveSuggestions(
   request: PhraseSuggestRequest,
-  send: typeof fetch = fetch,
 ): Promise<PhraseSuggestResponse | null> {
-  const apiKey = config.aiApiKey()?.trim()
-  const model = config.aiSuggestModel().trim()
-  if (!apiKey || !model) return null
+  const model = suggestModel()
+  if (!model) return null
   try {
-    const client = new AnthropicMessages(
-      {
-        apiKey,
-        model,
-        timeoutMs: 20_000,
-        maxTokens: 1024,
-        maxRequestBytes: 16_384,
-        maxResponseBytes: 32_768,
-        maxConcurrentRequests: 2,
-      },
-      send,
-    )
-    const result = await client.generate({
+    const result = await model.generate({
       system:
         'Propose short language-learning phrases. No audio. No catalog ids. Keep each target under 12 words.',
       messages: [

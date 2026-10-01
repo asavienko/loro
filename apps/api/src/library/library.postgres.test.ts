@@ -5,7 +5,7 @@
 import type { Pool } from 'pg'
 import { afterAll, beforeAll, expect, it, vi } from 'vitest'
 import { LoroError } from '../common/errors.js'
-import { AnthropicMessages } from '../integrations/anthropic/messages.js'
+import { ChatCompletions, FIREWORKS_CHAT_URL } from '../integrations/openai-compatible/chat.js'
 import { PostgresDatabase } from '../database/database.js'
 import {
   LORO_TEST_DATABASE_URL,
@@ -30,10 +30,12 @@ const code = async (work: Promise<unknown>) => {
   }
 }
 
-/** A Claude client whose every answer is `value`, or that always fails with `status`. */
-function claudeClient(send: () => Promise<Response>): AnthropicMessages {
-  return new AnthropicMessages(
+/** A text model whose every answer is `value`, or that always fails. */
+function modelClient(send: () => Promise<Response>): ChatCompletions {
+  return new ChatCompletions(
     {
+      name: 'test',
+      url: FIREWORKS_CHAT_URL,
       apiKey: 'test',
       model: 'test',
       timeoutMs: 1000,
@@ -45,17 +47,18 @@ function claudeClient(send: () => Promise<Response>): AnthropicMessages {
     send,
   )
 }
-const claudeAnswering = (value: unknown) =>
-  claudeClient(() =>
+const modelAnswering = (value: unknown) =>
+  modelClient(() =>
     Promise.resolve(
       Response.json({
-        stop_reason: 'end_turn',
-        content: [{ type: 'text', text: JSON.stringify(value) }],
-        usage: { input_tokens: 1, output_tokens: 1 },
+        choices: [
+          { finish_reason: 'stop', message: { role: 'assistant', content: JSON.stringify(value) } },
+        ],
+        usage: { prompt_tokens: 1, completion_tokens: 1 },
       }),
     ),
   )
-const claudeFailing = () => claudeClient(() => Promise.resolve(new Response('{}', { status: 500 })))
+const modelFailing = () => modelClient(() => Promise.resolve(new Response('{}', { status: 500 })))
 const writtenPhrase = {
   target: '¿Tienen habitaciones libres?',
   native: 'Do you have rooms free?',
@@ -77,7 +80,8 @@ describePostgres('the library against real PostgreSQL', () => {
   beforeAll(async () => {
     admin = connectAdmin(LORO_TEST_DATABASE_URL)
     vi.stubEnv('DATABASE_URL', await createSearchPathSchema(admin, schema, LORO_TEST_DATABASE_URL))
-    vi.stubEnv('ANTHROPIC_API_KEY', '')
+    vi.stubEnv('FIREWORKS_API_KEY', '')
+    vi.stubEnv('OPENROUTER_API_KEY', '')
     vi.stubEnv('MUSIC_PROVIDER', 'stub')
     vi.stubEnv('LIMIT_PHRASES_DAILY', '2')
     vi.stubEnv('LIMIT_SETS_KEPT', '3')
@@ -228,8 +232,8 @@ describePostgres('the library against real PostgreSQL', () => {
     for (let i = 0; i < 3; i++) expect((await deck('dee')).length).toBeGreaterThan(0)
     expect((await library.usage('dee')).daily.phrases.used).toBe(0)
 
-    // Claude's decks count, and the third of a day is refused until the day resets.
-    resetWriter(claudeAnswering({ phrases: [writtenPhrase] }))
+    // The model's decks count, and the third of a day is refused until the day resets.
+    resetWriter(modelAnswering({ phrases: [writtenPhrase] }))
     try {
       for (let i = 0; i < 2; i++) {
         const written = await library.generatePhrases('dee', {
@@ -238,7 +242,7 @@ describePostgres('the library against real PostgreSQL', () => {
           targetLang: 'es-ES',
           nativeLang: 'en-GB',
         })
-        expect(written.provider).toBe('claude')
+        expect(written.provider).toBe('ai')
       }
       expect((await library.usage('dee')).daily.phrases.used).toBe(2)
       const refused = await library
@@ -261,8 +265,8 @@ describePostgres('the library against real PostgreSQL', () => {
     }
   })
 
-  it('gives the allowance back when Claude fails and the bank answers instead', async () => {
-    resetWriter(claudeFailing())
+  it('gives the allowance back when the model fails and the bank answers instead', async () => {
+    resetWriter(modelFailing())
     try {
       const answered = await library.generatePhrases('dot', {
         mode: 'topic',
@@ -644,7 +648,7 @@ describePostgres('the library against real PostgreSQL', () => {
     vi.stubEnv('LIMIT_SPEECH_RENDERS_DAILY', '500')
   })
 
-  it('writes notes by the rules without Claude, for free, and for a typed phrase stored without them', async () => {
+  it('writes notes by the rules without a model, for free, and for a typed phrase stored without them', async () => {
     const before = await library.usage('rufus')
     const written = await library.generateNotes('rufus', {
       target: '¿Dónde está la estación?',
