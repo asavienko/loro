@@ -1,55 +1,61 @@
 # @loro/core
 
-Shared TypeScript domain model and wire contracts, used by `apps/api` and `packages/content`. A wire
-protocol defined twice in two languages diverges, and the divergence shows up as a learner losing
-their phrase library.
-
-The app (`apps/mobile`) does not import this package: its behaviour lives in
-`apps/mobile/src/shared` and it reaches the Rust core directly. The old app's practice engines,
-local SQLite persistence and their fixtures were removed with it; they remain in git history.
+The shared TypeScript domain model, the API's wire contracts and the sync field policy. `apps/api`
+and `packages/content` import it. The app (`apps/mobile`) does not: its behaviour lives in
+`apps/mobile/src/shared` and it calls the Rust core directly.
 
 ## Layout
 
-The `api/` Zod schemas describe current, planned and gated-draft wire surfaces, with inferred types
-and generated OpenAPI. Import them explicitly through `@loro/core/api/current`, `/target`, or
-`/draft`; they are not exported from the domain root. Auth, sync and content-query Nest controllers
-consume the shared schemas; see [the API contract](../../docs/architecture/api.md).
-
 ```
 src/
-├── index.ts              # the public surface
-├── api/                  # current/target/draft Zod contracts + operation registries
-├── api-tooling/          # build-time OpenAPI generation; no runtime exports
-├── domain/               # the vocabulary of the product
-│   ├── phrase.ts         # PhraseState, CatalogPhrase, Difficulty, Tag, LadderRung, isActive
-│   ├── languages.ts      # native languages, target locales, supported pairs
-│   ├── phraseReach.ts    # canonical phrase identity and the suggest route's limits
-│   ├── lyrics.ts         # lyric validation for phrase songs
-│   ├── lyric-plan.ts     # music styles and section planning
-│   ├── calendar.ts       # day keys and streaks — TS side of the core-rs parity fixtures
-│   └── ids.ts            # branded id types
-├── listening/            # listening-class asset identity and batches
-└── sync/
-    ├── fieldPolicy.ts    # ← EVERY syncable field declares its merge class here
-    └── syncableColumns.ts # one list of wire names, SQL names and merge classes
+├── index.ts         # the root export: domain, field policy, languages, lyrics, listening
+├── domain/          # phrase and FSRS state types, languages and pairs, ids, text folding,
+│                    #   phrase-suggest limits, lyric validation and music plans, calendar
+├── listening/       # listening-asset identity and batches
+├── sync/
+│   ├── fieldPolicy.ts      # the merge class of every field the /v1/sync API stores
+│   └── syncableColumns.ts  # wire names, SQL names and merge classes in one list
+├── api/             # Zod schemas: current, target and draft operation registries
+└── api-tooling/     # OpenAPI generation (build time only)
 ```
 
-The `*.fixtures.json` files in `domain/` are also read by `packages/core-rs/tests/parity.rs`; keep
-them even where no TypeScript caller remains.
+The `api/` schemas are not exported from the root. Import them by subpath: `@loro/core/api/current`,
+`/target`, `/draft`, `/account`, `/oauth`, `/sync`, `/library`, `/catalog` or `/chat-topic` (see
+`package.json`). `current` is the implemented surface, `target` the stable planned one and `draft`
+the gated one; `target` never imports `draft`. See
+[the API contract](../../docs/architecture/api.md).
 
-## The thing that matters most here
+## Generated OpenAPI
 
-### `sync/fieldPolicy.ts`
+```bash
+pnpm contracts:generate   # writes docs/architecture/openapi.current.json and openapi.target.json
+pnpm contracts:check      # fails when they differ from the schemas (part of pnpm check)
+```
 
-Every syncable field declares a merge class. A test fails if any field lacks one, which turns "added
-a field without thinking about sync" from a subtle data-loss bug into a build failure.
+The library routes the app uses are typed in `api/library.ts` but are not in either spec.
 
-See [sync-protocol.md](../../docs/architecture/sync-protocol.md#per-field-lww).
+## Shared fixtures
+
+`domain/calendar.fixtures.json`, `effort.fixtures.json` and `core-boundary.fixtures.json` are also
+read by `packages/core-rs/tests/parity.rs`. `domain/calendar.ts` mirrors `core-rs/src/calendar.rs`,
+and both sides assert the same fixtures, so keep them even where no TypeScript caller remains.
+
+## Merge classes
+
+Every field the HLC sync API stores declares a merge class in `sync/fieldPolicy.ts` (`lww`, `max`,
+`latest-review`, `append-only`, `tombstone`), and `fieldPolicy.test.ts` fails if one is missing. The
+app's own progress merge declares its classes in `apps/mobile/src/shared/state/merge.ts` instead.
+See [the sync protocol](../../docs/architecture/sync-protocol.md).
 
 ## Rules
 
-- **No platform imports.** No `react`, no `react-native`, no `@nestjs/*`, no `node:*`.
-- **No I/O.** Types, schemas and pure functions only.
-- **Reproducible maths belongs in `@loro/core-rs`**, not here
-  ([ADR-0002](../../docs/architecture/adr/0002-shared-rust-core.md)). If two platforms could
-  disagree about a number, it's computed in Rust.
+- No platform imports: no `react`, `react-native`, `@nestjs/*` or `node:*`.
+- No I/O: types, schemas and pure functions only.
+- A number two platforms could disagree about is computed in `@loro/core-rs`, not here
+  ([ADR-0002](../../docs/architecture/adr/0002-shared-rust-core.md)). `domain/calendar.ts` is the
+  one mirror, held to Rust by the shared fixtures.
+
+```bash
+pnpm --filter @loro/core test        # vitest
+pnpm --filter @loro/core typecheck
+```

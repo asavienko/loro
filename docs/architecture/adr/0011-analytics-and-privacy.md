@@ -1,6 +1,6 @@
 # 0011 · Recorded audio never leaves the device
 
-- **Status:** Accepted (updated 2026-09-30 for the current app)
+- **Status:** Accepted (amended 2026-09-30; updated 2026-10-01 for the current app)
 - **Date:** 2026-07-28
 
 ## Context
@@ -22,7 +22,9 @@ Loro makes to learners, and analytics is where privacy promises usually leak.
 Licensed **model** audio — server phrase clips, songs — is not learner audio; it may be downloaded
 and cached.
 
-The app records no audio. Learner data is never used to train models.
+The current app records no audio: `apps/mobile/app.config.ts` blocks the microphone permission on
+Android and turns off `expo-audio`'s microphone and recording permissions. Learner data is never
+used to train models.
 
 ### Product analytics and session replay (amended 2026-09-30)
 
@@ -32,11 +34,12 @@ be off by default with an allowlist of properties:
 
 - **On by default, opt-out.** Settings → Privacy → "Share usage data" turns it off; PostHog keeps
   the choice on the device (it survives sign-out) and stops events and recording at once.
-- **Events:** every store action (`src/shared/analytics/events.ts`: the event's scalar fields, list
-  lengths and the phrase playing), screen views, autocaptured taps, app lifecycle. A signed-in
-  person is identified by user id and email.
+- **Events:** every store action the learner causes (`src/shared/analytics/events.ts`: the event's
+  scalar fields, list lengths, and the phrase and phase playing), failed playback, screen views,
+  autocaptured taps and app lifecycle. A signed-in person is identified by user id and email.
 - **Session replay** on iOS and Android, unmasked — screens as the learner sees them, including text
-  they wrote. The sign-in code is the one masked view: it is a credential.
+  they wrote — with the app's console log and network request metadata. The sign-in code is the one
+  masked view: it is a credential.
 - **Never audio.** Replay captures pixels, not sound; the audio promise above is unchanged.
 - A build without `EXPO_PUBLIC_POSTHOG_KEY` sends nothing.
 

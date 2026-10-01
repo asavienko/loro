@@ -1,6 +1,6 @@
 # 0002 · Put all reproducible maths in a shared Rust core
 
-- **Status:** Accepted (updated 2026-09-30 for the current app)
+- **Status:** Accepted (updated 2026-10-01 for the current app)
 - **Date:** 2026-07-28
 
 ## Context
@@ -13,17 +13,14 @@ TypeScript, Swift and Kotlin guarantees that the copies drift.
 ## Decision
 
 One Rust crate, `packages/core-rs` (`loro-core`), owns every number that must match across
-platforms: FSRS scheduling, the HLC sync merge and ranking/selection. It is pure: no I/O, no clock
-and no randomness except what is passed in.
+platforms. It is pure: no I/O, no clock and no randomness except what is passed in.
 
 - **iOS/Android:** the `LoroCore` Expo module (`apps/mobile/modules/loro-core`) over UniFFI.
 - **Web:** the committed WASM browser build (`packages/core-rs/browser/`).
-- **API:** a Node WASM build (`@loro/core-rs/wasm`, built by `pnpm core-rs:build`) runs the
-  `/v1/sync` merge.
+- **API:** a Node WASM build (`@loro/core-rs/wasm`, built by `pnpm core-rs:build`).
 
-The app reaches the core through one JSON boundary, `core_call(method, input)`. The generated
-bindings and browser build are committed and drift-checked; fix the generator, never the output. The
-current app calls `fsrs_initialize` and `fsrs_review`.
+Callers reach the core through one JSON boundary, `core_call(method, input)`. The generated bindings
+and browser build are committed and drift-checked; fix the generator, never the output.
 
 ## Consequences
 
@@ -31,5 +28,9 @@ current app calls `fsrs_initialize` and `fsrs_review`.
 - The core is deterministic, so reference fixtures and a 365-day simulation run in `cargo test`.
 - The stack has a third language, and native builds need `cargo-ndk` and the Rust targets.
 - `cargo` must be on the PATH that `pnpm`/`turbo` see, or `@loro/core-rs` tasks fail.
-- The crate also holds code the current app doesn't call (DSP, ASR matching, ladder, notifications)
-  from the earlier app.
+- Today the app calls only `fsrs_initialize` and `fsrs_review`, and the API only the HLC merge
+  behind `/v1/sync` (`hlc_*`, `merge_row`), which no current client uses. The app orders its queue
+  and merges whole learner state ([sync-protocol.md](../sync-protocol.md)) in TypeScript; the same
+  code runs on every platform, so there is no second copy to drift. The crate's ranking, selection,
+  calendar, DSP, ASR matching, ladder and notification code is from the earlier app and has no
+  caller.

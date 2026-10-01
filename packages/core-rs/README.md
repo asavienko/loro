@@ -1,136 +1,89 @@
-# loro-core
+# loro-core (`@loro/core-rs`)
 
-Every number in Loro that must be **identical wherever it is computed**.
+The Rust crate for every number that must be identical wherever it is computed: on iOS, Android, the
+web and the server. Rationale: [ADR-0002](../../docs/architecture/adr/0002-shared-rust-core.md).
 
-Rationale: [ADR-0002](../../docs/architecture/adr/0002-shared-rust-core.md)
+## Who calls it
 
-## Why this crate exists
+Everything crosses one JSON boundary, `core_call(method, inputJson) -> outputJson`
+(`src/bridge.rs`), which decodes the input and calls the owning module.
 
-| Number                                   | Computed on           | Consequence of divergence                                         |
-| ---------------------------------------- | --------------------- | ----------------------------------------------------------------- |
-| **The sync merge**                       | client **and** server | **Silent data loss** — the two sides converge on different values |
-| FSRS intervals                           | iOS, Android, server  | Two devices disagree about when a card is due                     |
-| Pronunciation / prosody scores           | iOS, Android          | The same take scores differently on a learner's two phones        |
-| Stream rank, Refrain selection, the draw | iOS, Android          | Different practice on different devices                           |
-| The notification plan                    | iOS, Android          | Policy violations on one platform only                            |
+| Caller               | Methods                          | How it is reached                                                                                                                                   |
+| -------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The app (FSRS)       | `fsrs_initialize`, `fsrs_review` | `apps/mobile/src/shared/core/fsrs.ts`: the committed `browser/` build on the web and in unit tests, the `LoroCore` native module on iOS and Android |
+| The API (`/v1/sync`) | `merge_row`, `hlc_clamp`         | `apps/api/src/sync/merge.ts` loads `@loro/core-rs/wasm` (`pkg/`); `/v1/health/ready` answers 503 without it                                         |
 
-The sync-merge row is the one that justifies the whole crate. Two implementations of a
-conflict-resolution rule will diverge on some edge case, and nobody finds out for months.
+The FSRS policy (FSRS-6, 50% desired retention, the learning step, difficulty priors) is in
+[the FSRS model](../../docs/architecture/fsrs-model.md). The app's own progress merge is TypeScript
+(`apps/mobile/src/shared/state/merge.ts`); the Rust merge serves only the older HLC sync API
+([sync protocol](../../docs/architecture/sync-protocol.md)).
 
 ## Modules
 
 ```
 src/
-├── lib.rs           # UniFFI + wasm-bindgen surface
-├── fsrs/            # stability, difficulty, grade mapping, interval formatting
-├── rank.rs          # stream rank, repeat targets
-├── select.rs        # Refrain set selection, cloze masking
-├── ladder.rs        # rungs, need score, the Loop C draw
-├── sync/
-│   ├── hlc.rs       # hybrid logical clock
-│   └── merge.rs     # merge_row — THE function both client and server run
-├── asr.rs           # normalisation + forward-walk token matching
-├── dsp/
-│   ├── mod.rs       # frame/rate constants, TakeResult, the score_take entry point
-│   ├── pitch.rs     # F0: YIN / pYIN extraction, median filter, normalize_f0
-│   │                #   (there is no MFCC module yet)
-│   ├── align.rs     # DTW forced alignment against the native reference
-│   ├── score.rs     # melody, per-syllable, stress, rhythm; the bands and band()
-│   └── feedback.rs  # worst syllable → phoneme class → one concrete fix
-├── calendar.rs      # local_day, streak grace window, DST, timezone travel
-├── notify.rs        # the notification plan (caps, quiet hours, conditionality)
-│
-│                    # internal, never `pub`, absent from bindings/:
-├── rng.rs           # the seeded LCG — the crate's only randomness
-├── units.rs         # MS_PER_HOUR / MS_PER_DAY, so no module re-derives them
-└── test_support.rs  # #[cfg(test)] PhraseState + Hlc fixtures for the module suites
+├── lib.rs        # shared FFI types, UniFFI scaffolding, the wasm-bindgen surface
+├── bridge.rs     # core_call: the one JSON dispatch for WASM and the native module
+├── fsrs/         # FSRS-6 scheduler, grade mapping, interval formatting
+├── sync/         # hlc.rs (hybrid logical clock), merge.rs (merge_row, five merge classes)
+├── calendar.rs   # local day, streak grace, timezone travel
+├── rank.rs  select.rs  ladder.rs  graph.rs  asr.rs  notify.rs  dsp/
+├── rng.rs        # internal: the seeded LCG, the crate's only randomness
+├── units.rs      # internal: time constants
+└── bin/uniffi-bindgen.rs
 ```
 
-Both F0 functions live in `pitch.rs` and both score-band items in `score.rs`, so `feedback.rs` no
-longer reaches up into `dsp/mod.rs` for a threshold. UniFFI names are flat per crate, so `bindings/`
-is byte-identical across that move — verified, not assumed.
+`rank`, `select`, `ladder`, `graph`, `asr`, `notify` and `calendar` were written for the first app
+and stay tested, but nothing in the current app or API calls them. `dsp/` is a skeleton:
+`score_take` is a placeholder and no score from it reaches a learner.
 
-## Status
+## Build outputs
 
-Rust unit, official reference, compatibility, calendar and deterministic simulation suites run
-through `cargo test`. Browser parity exercises the same generated WASM bytes; native tests exercise
-the generated UniFFI boundary. Run clippy with `-D warnings` and `cargo fmt --check` before changes
-land.
+| Directory   | What                                                                       | Committed | Checked by                                         |
+| ----------- | -------------------------------------------------------------------------- | --------- | -------------------------------------------------- |
+| `pkg/`      | wasm-pack's Node.js build, loaded by the API                               | no        | the API's readiness check                          |
+| `browser/`  | a self-contained module with the WASM bytes inlined, for the app and tests | yes       | `pnpm check` (`check:browser`, a source digest)    |
+| `bindings/` | Swift and Kotlin UniFFI bindings for the `LoroCore` module                 | yes       | `pnpm check` (`check:uniffi`, regenerate-and-diff) |
 
-The [FSRS model and policy](../../docs/architecture/fsrs-model.md) pins FSRS-6, 50% desired
-retention, minute learning steps and declared difficulty priors. Existing 90% preview schedules
-retain their memory and history until an actual review adopts the canonical policy; state is never
-reset on load.
+`browser/manifest.json` records a digest of `Cargo.toml`, `Cargo.lock` and every `src/**/*.rs`, so
+any Rust change fails `pnpm check` until `pnpm core-rs:build` has rebuilt `browser/`. Commit the
+regenerated `browser/` and `bindings/`; never hand-edit them. The native libraries themselves are
+built by the app's module
+([`apps/mobile/modules/loro-core`](../../apps/mobile/modules/loro-core/README.md)).
 
-| Module        | State                                                                                      |
-| ------------- | ------------------------------------------------------------------------------------------ |
-| `rank`        | **Implemented** + tests — stream rank and repeat targets are blueprint contracts           |
-| `graph`       | **Implemented** + tests — Discover `assoc_score` / `assoc_order` (plan 101)                |
-| `asr`         | **Implemented** + tests — normalisation and forward-walk matching                          |
-| `calendar`    | **Implemented** + tests — day boundaries, streak grace, timezone travel                    |
-| `ladder`      | **Implemented** + tests — rungs, need score, the deterministic draw                        |
-| `sync::hlc`   | **Implemented** + tests — HLC arithmetic and skew detection                                |
-| `sync::merge` | **Implemented** + tests — `merge_row` with all five merge classes                          |
-| `notify`      | **Implemented** + tests — the full notification policy                                     |
-| `select`      | **Implemented** — priority set selection and multilingual cloze, used by app engines       |
-| `fsrs`        | **Implemented** — FSRS-6 reference review, real due dates, native/WASM parity              |
-| `dsp`         | Skeleton — normalisation, bands, correlation, axes, fix selection done; the pipeline is M3 |
+## Build and test
 
-DSP pitch, alignment, scoring and pipeline placeholders remain evidence-gated by plan 77. They are
-not exposed as real scores. Scheduling, cloze/selection, ranking and token matching use the
-canonical Rust implementation through the checked JSON dispatch in `bridge.rs`.
+Needs Rust 1.88 or later, `wasm-pack` and the `wasm32-unknown-unknown` target. `cargo` lives in
+`~/.cargo/bin`; put it on the `PATH` before running `pnpm`. The `pnpm` lines run from the repository
+root, the rest from `packages/core-rs`.
 
-`core_call` crosses both WASM and the synchronous Expo native module. `browser/` embeds generated
-WASM for offline startup; Swift/Kotlin bindings are generated into `bindings/`. The app's adapter
-maps types and catalog text without reimplementing scheduling maths. Browser source/output drift is
-checked by `pnpm check`; full rebuilt parity uses `scripts/embed-wasm.mjs --verify-build` after a
-WASM build. Native module build and physical-device acceptance are separate from algorithm parity.
+```bash
+pnpm core-rs:build                      # host library, pkg/, browser/ and bindings/
+./build.sh --mobile                     # also the iOS and Android targets
+pnpm core-rs:test                       # cargo test --all-features
+cargo test --test fsrs_parity           # FSRS reference vectors (tests/fixtures/)
+cargo test --test parity                # fixtures shared with packages/core/src/domain/
+cargo test --test sim                   # a deterministic year of reviews
+pnpm --filter @loro/core-rs lint        # clippy -D warnings and cargo fmt --check
+cargo bench                             # Criterion: rank, asr, ladder, notify
+```
+
+`LORO_SKIP_WASM=1` lets `build.sh` skip `pkg/` on purpose; an API built from that tree has no merge.
+`pnpm ci:local` runs short benchmarks but does not gate on them, and `pnpm ci:local:native` builds
+the iOS, Android and WASM targets.
 
 ## Rules
 
-1. **No I/O, no networking, no persistence.** Pure functions over passed-in state.
-2. **No ambient nondeterminism.** No system clock, no unseeded RNG. Both are parameters.
-3. **Every completed public function is unit-, golden-, parity-, or property-tested.** Public
-   placeholders are explicitly documented and must not be bound into production paths.
-4. **A moved golden score is explained in the PR**, never re-baselined silently.
+1. No I/O, no networking, no persistence: pure functions over passed-in state.
+2. No ambient nondeterminism: the clock and the RNG seed are parameters, so a bug reproduces from a
+   state and a seed.
+3. No `unsafe` (`#![forbid(unsafe_code)]`).
+4. Every public function is unit-, reference-, parity- or property-tested; a placeholder is
+   documented as one and never bound into a production path.
+5. A moved reference value is explained in the PR, never re-baselined silently.
+6. Learner audio never enters a fixture or any other repository path
+   ([ADR-0011](../../docs/architecture/adr/0011-analytics-and-privacy.md)).
 
-Rule 2 is what makes the crate trivially testable and makes a bug report reproducible from a seed
-and a state.
-
-## Build
-
-```bash
-pnpm core-rs:build            # host + wasm + UniFFI bindings
-cargo test                    # unit + integration
-cargo test --test parity      # calendar cross-language fixtures
-cargo bench                   # Criterion; CI fails on >10% regression
-```
-
-Targets: `aarch64-apple-ios`, `aarch64-apple-ios-sim`, `aarch64-linux-android`,
-`armv7-linux-androideabi`, `x86_64-linux-android`, `wasm32-unknown-unknown`.
-
-Before extending a module, define the canonical input/output and units, add reference or parity
-vectors, implement the pure Rust function, export it through the required generated bindings, and
-wire the adapter without a fabricated fallback. Remove any duplicate TypeScript implementation only
-after boundary parity passes.
-
-## Performance budgets
-
-Called synchronously from JS, so these are tight:
-
-| Function                                | Budget                            |
-| --------------------------------------- | --------------------------------- |
-| `stream_rank`                           | ≤ 1 µs                            |
-| `fsrs_next_interval`                    | ≤ 10 µs                           |
-| `match_tokens`                          | ≤ 50 µs                           |
-| `merge_row`                             | ≤ 20 µs                           |
-| `select_refrain_set` (2 000 candidates) | ≤ 2 ms                            |
-| `extract_pitch` (2 s audio)             | ≤ 60 ms _(async, native thread)_  |
-| `align_dtw` (2 s audio)                 | ≤ 80 ms _(async, native thread)_  |
-| `score_take` (full pipeline)            | ≤ 200 ms _(async, native thread)_ |
-
-## Missing golden corpus
-
-No committed DSP golden corpus exists yet; the only integration file is `tests/parity.rs`. Plan 77
-owns the consented corpus and score-stability gate. Learner audio must never enter that corpus or
-any other repository path ([ADR-0011](../../docs/architecture/adr/0011-analytics-and-privacy.md)).
+To add a calculation: define its input, output and units, add reference or parity vectors, implement
+it in its module, dispatch it from `bridge.rs`, rebuild, and call it from the app without a
+fallback.

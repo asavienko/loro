@@ -1,7 +1,7 @@
 # Loro documentation
 
 Only what is true of the current code. The running app in [`apps/mobile`](../apps/mobile/README.md)
-is the design reference; older docs, reviews and plans were removed on 2026-09-30 and remain in Git
+is the design reference. Older docs, reviews and plans were removed on 2026-09-30 and remain in Git
 history at `e36cc758`.
 
 ## Product
@@ -11,12 +11,13 @@ history at `e36cc758`.
 
 ## Architecture
 
-- [Overview](architecture/overview.md) — how the pieces fit
-- [The library](architecture/library.md) — packs, accounts, sharing, limits and AI generation
-- [Sync protocol](architecture/sync-protocol.md) — progress sync and merge
-- [FSRS model](architecture/fsrs-model.md) — the scheduler in `packages/core-rs`
-- [Backend](architecture/backend.md), [API contract](architecture/api.md) — the NestJS API
-  (`openapi.current.json` / `openapi.target.json` are generated and drift-checked)
+- [Overview](architecture/overview.md) — the system end to end, and where each part is described
+- [The library](architecture/library.md) — content, accounts, sharing, limits and AI generation
+- [Sync](architecture/sync-protocol.md) — how progress merges across tabs, devices and the account
+- [FSRS model](architecture/fsrs-model.md) — the scheduler and Loro's policy (upstream licence:
+  [`fsrs-upstream-license.txt`](architecture/fsrs-upstream-license.txt))
+- [Backend](architecture/backend.md) and [API](architecture/api.md) — the NestJS service and its
+  routes; `openapi.current.json` and `openapi.target.json` are generated and drift-checked
 - [Security and privacy](architecture/security-privacy.md)
 - [Decision records](architecture/adr/README.md)
 
@@ -28,13 +29,25 @@ history at `e36cc758`.
 ## Process
 
 - [Git workflow](process/git-workflow.md) — branches, Conventional Commits, requirement IDs
-- [CI / CD](process/ci-cd.md) — `pnpm check` and `pnpm ci:local`
-- [Local development](process/local-development.md) — containers, SOPS and age
+- [CI](process/ci-cd.md) — `pnpm check` and `pnpm ci:local`
+- [Local development](process/local-development.md) — on the host or in containers, SOPS and age
 - [Environments](process/environments.md) — configuration variables
 - [Local APK](process/local-apk.md) — Android testing builds
-- [EC2 deployment](process/ec2-deployment.md) and the
-  [backend testing runbook](runbooks/backend-testing.md)
+- [EC2 deployment](process/ec2-deployment.md) and
+  [EC2 backups and recovery](runbooks/backend-testing.md)
 
 ## Decisions
 
 - [Open questions](decisions/open-questions.md) — unresolved decisions, with owners and dates
+
+## Next to the code
+
+- [`apps/mobile`](../apps/mobile/README.md) and its
+  [`LoroCore` module](../apps/mobile/modules/loro-core/README.md)
+- [`apps/api`](../apps/api/README.md), its [authentication](../apps/api/src/auth/README.md), and the
+  [Anthropic](../apps/api/src/integrations/anthropic/README.md) and
+  [ElevenLabs](../apps/api/src/integrations/elevenlabs/README.md) integrations
+- [`packages/core`](../packages/core/README.md),
+  [`packages/core-rs`](../packages/core-rs/README.md),
+  [`packages/content`](../packages/content/README.md) and its
+  [bilingual review records](../packages/content/reviews/README.md)
