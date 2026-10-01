@@ -16,6 +16,12 @@ no audio, nothing recorded (ADR-0011).
 `wait(ms)` is a timer that keeps running with the screen locked. React Native's timers stop on
 Android once the app leaves the screen, so the loop's silences (the learner's turn, the rating hold),
 its clip watchdogs and the store's save are timed through it (`after` in `src/audio/media.ts`).
+Nothing on the loop's path may wait on a React Native timer, directly or not: `fetch` settles
+through `setTimeout(…, 0)`, so the check that a clip exists is a bare `XMLHttpRequest`
+(`src/platform/speech.ts`) — with `fetch` the loop stopped after the first clip once the phone was
+locked. On iOS each clip's player keeps the audio session active (`keepAudioSessionActive`):
+expo-audio otherwise ends the session when a clip finishes, which stops the silent loop below and
+lets iOS suspend the app before the next clip.
 
 ## Android
 
