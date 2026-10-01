@@ -5,17 +5,18 @@ actually considered, what we chose, and the consequences we accepted.
 
 ## Index
 
-| #                                         | Decision                              | Status   | Date       |
-| ----------------------------------------- | ------------------------------------- | -------- | ---------- |
-| [0002](0002-shared-rust-core.md)          | A shared Rust core via UniFFI         | Accepted | 2026-07-28 |
-| [0004](0004-fsrs-scheduler.md)            | FSRS as the scheduling algorithm      | Accepted | 2026-07-28 |
-| [0008](0008-backend-nestjs-postgres.md)   | NestJS + Postgres over a BaaS         | Accepted | 2026-07-28 |
-| [0011](0011-analytics-and-privacy.md)     | Privacy posture and the audio promise | Accepted | 2026-07-28 |
-| [0015](0015-open-model-providers.md)      | DeepSeek writes, Muse Image draws     | Accepted | 2026-10-01 |
-| [0016](0016-course-content-at-scale.md)   | Course content at 10,000 per course   | Accepted | 2026-10-01 |
-| [0017](0017-content-per-language-pair.md) | Content per language pair, in batches | Accepted | 2026-10-02 |
+| #                                                  | Decision                              | Status   | Date       |
+| -------------------------------------------------- | ------------------------------------- | -------- | ---------- |
+| [0002](0002-shared-rust-core.md)                   | A shared Rust core via UniFFI         | Accepted | 2026-07-28 |
+| [0004](0004-fsrs-scheduler.md)                     | FSRS as the scheduling algorithm      | Accepted | 2026-07-28 |
+| [0008](0008-backend-nestjs-postgres.md)            | NestJS + Postgres over a BaaS         | Accepted | 2026-07-28 |
+| [0011](0011-analytics-and-privacy.md)              | Privacy posture and the audio promise | Accepted | 2026-07-28 |
+| [0015](0015-open-model-providers.md)               | DeepSeek writes, Muse Image draws     | Accepted | 2026-10-01 |
+| [0016](0016-course-content-at-scale.md)            | Course content at 10,000 per course   | Accepted | 2026-10-01 |
+| [0017](0017-content-per-language-pair.md)          | Content per language pair, in batches | Accepted | 2026-10-02 |
+| [0018](0018-public-source-available-repository.md) | A public, source-available repository | Accepted | 2026-10-02 |
 
-The next new record is 0018; numbers are never reused.
+The next new record is 0019; numbers are never reused.
 
 ### Removed records
 

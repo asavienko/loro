@@ -33,8 +33,9 @@ it: `library/music-live.ts` calls ElevenLabs Music itself.
 
 ## Tests and limits
 
-`maxConcurrentRequests` works as in the [Anthropic transport](../anthropic/README.md): over the
-limit, a call fails at once with `capacity`. An injected fetch exercises the failure modes and a
-loopback server proves a stalled body is aborted; no live ElevenLabs traffic is sent.
+`maxConcurrentRequests` works as in the text-model transports (`../openai-compatible/`,
+`../openrouter/`): over the limit, a call fails at once with `capacity`. An injected fetch exercises
+the failure modes and a loopback server proves a stalled body is aborted; no live ElevenLabs traffic
+is sent.
 
 No recorded learner audio, ASR upload or voice-clone transport exists here.

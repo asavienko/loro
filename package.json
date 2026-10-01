@@ -1,6 +1,7 @@
 {
   "name": "loro",
   "private": true,
+  "license": "SEE LICENSE IN LICENSE",
   "version": "0.0.0",
   "description": "Loro — learn a language by the phrase. iOS + Android.",
   "packageManager": "pnpm@9.12.0",

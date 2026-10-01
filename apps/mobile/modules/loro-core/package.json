@@ -3,5 +3,5 @@
   "version": "0.1.0",
   "private": true,
   "description": "Expo bridge to the canonical Loro Rust core",
-  "license": "UNLICENSED"
+  "license": "SEE LICENSE IN LICENSE"
 }
