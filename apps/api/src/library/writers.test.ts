@@ -10,6 +10,7 @@ import {
   aiPhrases,
   cleanImage,
   resetWriter,
+  translateLines,
 } from './writers.js'
 
 const request = (
@@ -226,6 +227,24 @@ describe('lyrics', () => {
     expect(JSON.parse(again.find((m) => m.role === 'user')?.content ?? '{}')).not.toHaveProperty(
       'instruction',
     )
+  })
+
+  it('translates the lines a singer changed, one meaning per line, or nothing (plan 113)', async () => {
+    const input = {
+      lines: ['muy buenas noches amor', 'hasta mañana'],
+      targetLang: 'es-ES' as const,
+      nativeLang: 'en-GB' as const,
+    }
+    expect(
+      await translateLines(
+        answering({ meanings: [' Good night, my love ', 'See you tomorrow'] }),
+        input,
+      ),
+    ).toEqual(['Good night, my love', 'See you tomorrow'])
+    await expect(translateLines(answering({ meanings: ['Only one'] }), input)).rejects.toThrow(
+      'unusable',
+    )
+    expect(await translateLines(answering({ meanings: [] }), { ...input, lines: [] })).toEqual([])
   })
 })
 

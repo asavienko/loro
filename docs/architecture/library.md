@@ -191,6 +191,20 @@ the server's clip allowances), and the song is labelled "Spoken demo". Loro's ow
 voiced the same way once, in the background, after the server starts with a voice
 (`LIBRARY_VOICE_LORO_SONGS=0` turns it off).
 
+**A sung song is heard back** (plan 113, [ADR-0017](adr/0017-transcribing-generated-songs.md)).
+Right after ElevenLabs Music answers, the server sends the song it just received to ElevenLabs
+Scribe (`transcribe.ts`, the same key, `MUSIC_TRANSCRIBE=0` turns it off) for a transcript with a
+timestamp per word, and `align.ts` matches the words to the approved lines: a global alignment of
+folded tokens that forgives a transcriber a letter in a long word, attaches words sung inside or
+right beside a line to it, gives a line none of whose words was heard the words sung in its place,
+and ignores an ad-lib in a pause. The song is stored with each line as it was sung and when
+(`timingBy: 'transcript'`; the demo's bars are `demo`); a line the singer changed keeps the written
+line and its meaning in `written` and gets a meaning of its own from the text model
+(`translateLines`; the written meaning stands if it fails); a line the singer skipped keeps its
+words and has no timing. If hearing the song back fails, its lyrics stay as written and untimed
+(`timingBy: null`). A sung song's `durationMs` is measured from its MP3 frames. Only audio the
+server generated is ever transcribed; the app records nothing.
+
 **The lyrics come first** (plan [113](../../plans/113-lyrics-first-songs.md)). The app asks
 `POST /library/lyrics` (a set, a style, the learner's language, a title) for a draft, written by the
 text model in the background and polled at `GET /library/lyrics/:id`; the learner reads each line

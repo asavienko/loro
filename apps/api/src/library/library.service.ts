@@ -69,7 +69,10 @@ import type {
   UsageKind,
   UsageWire,
 } from './library.types.js'
+import { audioDurationMs } from '@loro/content/audio-duration'
+import { alignLyrics, type HeardSection } from './align.js'
 import { composeLive, liveMusicConfigured } from './music-live.js'
+import { transcribeSong, transcriptionConfigured } from './transcribe.js'
 import { imageModelConfigured, textModelConfigured } from '../integrations/models.js'
 import type { StructuredTextModel } from '../integrations/text-model.js'
 import { registerSpeech, registerSpeechMany, SpeechService, speechFor } from './speech.js'
@@ -85,6 +88,7 @@ import {
   ruleNotes,
   aiPhrases,
   artist,
+  translateLines,
   writer,
   type SongPhrase,
   type SongSection,
@@ -2522,7 +2526,14 @@ export class LibraryService {
           targetLang: input.targetLang,
           lengthMs: Math.min(120_000, Math.max(30_000, lineCount * 5_000)),
         })
-        audio = { ...live, durationMs: null, lines: null, by: 'elevenlabs', voiced: true }
+        audio = {
+          ...live,
+          // Measured from the MP3's frames; never estimated from the length asked for.
+          durationMs: audioDurationMs(live.bytes),
+          lines: null,
+          by: 'elevenlabs',
+          voiced: true,
+        }
       } else {
         // The demo sings the lines its size allows (synth.ts); the lyrics end where its sound does.
         sections = firstLines(sections, demoLineLimit(input.styleId))
@@ -2541,8 +2552,21 @@ export class LibraryService {
           voiced: voices.some((voice) => voice !== null),
         }
       }
-      const lyrics = timed(sections, audio.lines)
-      const timingBy: SongWire['timingBy'] = audio.lines ? 'demo' : null
+      let lyrics = timed(sections, audio.lines)
+      let timingBy: SongWire['timingBy'] = audio.lines ? 'demo' : null
+      // A sung song is heard back (plan 113): its lines as they were sung, each timed, and a line the
+      // singer changed translated again. Hearing it fail leaves the lyrics as written, untimed.
+      if (audio.by === 'elevenlabs' && transcriptionConfigured()) {
+        try {
+          const heard = alignLyrics(sections, await transcribeSong({ ...audio, ...input }))
+          lyrics = await this.meaningsOfChanged(heard, input, ai)
+          timingBy = 'transcript'
+        } catch (error) {
+          this.logger.warn(
+            `hearing song ${id} back failed: ${error instanceof Error ? error.message : 'unknown'}; keeping the lyrics as written`,
+          )
+        }
+      }
       // The sound and the song that plays it are saved together, so a clean-up in between can't
       // take a sound no song points at yet.
       await this.db.transaction(async (tx) => {
@@ -2576,6 +2600,39 @@ export class LibraryService {
         .catch(() => undefined)
       // A song that couldn't be made doesn't count against the day's songs.
       await this.refund(input.ownerId, 'song', input.chargedDay).catch(() => undefined)
+    }
+  }
+
+  /**
+   * The heard lines with a fresh meaning for each the singer changed, from the text model; when it
+   * fails (or there is none) the written meaning stands, which is near enough for a changed word.
+   */
+  private async meaningsOfChanged(
+    heard: HeardSection[],
+    input: { targetLang: Language; nativeLang: Language },
+    ai: StructuredTextModel | null,
+  ): Promise<SongRow['lyrics']> {
+    const changed = heard.flatMap((s) => s.lines).filter((line) => line.written !== null)
+    if (changed.length === 0 || !ai) return heard
+    try {
+      const meanings = await translateLines(ai, {
+        lines: changed.map((line) => line.text),
+        targetLang: input.targetLang,
+        nativeLang: input.nativeLang,
+      })
+      const byLine = new Map(changed.map((line, i) => [line, meanings[i] ?? line.meaning]))
+      return heard.map((section) => ({
+        name: section.name,
+        lines: section.lines.map((line) => ({
+          ...line,
+          meaning: byLine.get(line) ?? line.meaning,
+        })),
+      }))
+    } catch (error) {
+      this.logger.warn(
+        `translating sung lines failed: ${error instanceof Error ? error.message : 'unknown'}; keeping the written meanings`,
+      )
+      return heard
     }
   }
 
