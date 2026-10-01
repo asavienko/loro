@@ -4,12 +4,14 @@
 // show that one. Only one sounds at a time: a song pauses the phrase loop, and the loop pauses it.
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Platform } from 'react-native';
 import { apiUrl, unreachable } from '@shared/api/client';
 import { fetchSong, type Song } from '@shared/api/library';
 import { onSessionChange, sessionState } from '@shared/api/session';
 import { useLatest } from '@shared/lib/useLatest';
 import { clock } from '@shared/state/clock';
 import type { Album } from '@shared/content';
+import { backgroundPlayback } from '../audio/media';
 import { useCopy, useStore } from '../state/store';
 import { useToast } from '../ui/Toast';
 
@@ -76,8 +78,11 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   // (or after the music stopped) plays nothing.
   const loads = useRef(0);
 
+  // On Android the lock-screen controls hold the audio focus for the one player, for as long as it
+  // plays (modules/loro-media), so expo-audio asks for none of its own for each clip.
   useEffect(() => {
-    void setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true, interruptionMode: 'doNotMix' }).catch(() => {});
+    const interruptionMode = Platform.OS === 'android' && backgroundPlayback ? 'mixWithOthers' : 'doNotMix';
+    void setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true, interruptionMode }).catch(() => {});
   }, []);
 
   /** Plays `songs[at]`: true once it is the song playing, false if it can't be (or a newer load won). */
@@ -101,16 +106,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       wantsPlay.current = true;
       player.play();
       setSongInFront(true);
-      // The lock screen and notification shade show the song and control it (a no-op on the web).
-      try {
-        player.setActiveForLockScreen(true, {
-          title: song.title,
-          albumTitle: from?.title,
-          artist: from?.owner === 'loro' ? 'Loro' : (from?.author ?? undefined),
-        });
-      } catch {
-        // Controls are a nicety; the song plays without them.
-      }
+      // The lock screen and notification shade show it through src/audio/lockScreen.ts (P3-11).
       return true;
     },
     [player, toast, c],
@@ -208,11 +204,6 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     loads.current++;
     wantsPlay.current = false;
     player.pause();
-    try {
-      player.clearLockScreenControls();
-    } catch {
-      // Nothing was shown.
-    }
     setQueue([]);
     setAlbum(null);
     setIndex(0);
