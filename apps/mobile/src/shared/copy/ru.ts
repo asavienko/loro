@@ -711,6 +711,7 @@ export function makeRu(n: Plural): Copy {
       makeSong: 'Создать песню',
       songStarted: 'Песня создаётся',
       saveToAccount: 'Сохранить в аккаунт',
+      saving: 'Сохранение…',
       savedToAccount: 'Сохранено в аккаунт',
       setTitle: 'Название',
       setDescription: 'Для чего он (необязательно)',

@@ -709,6 +709,7 @@ export function makeBg(n: Plural): Copy {
       makeSong: 'Създай песента',
       songStarted: 'Песента се създава',
       saveToAccount: 'Запази в профила си',
+      saving: 'Запазване…',
       savedToAccount: 'Запазено в профила ви',
       setTitle: 'Заглавие',
       setDescription: 'За какво е (по желание)',

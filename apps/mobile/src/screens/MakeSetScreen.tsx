@@ -160,14 +160,15 @@ function MakeSet({ request }: { request: MakeRequest }) {
     void ask({ mode, input: tidy(input), targetLang, nativeLang }, false);
   };
 
-  // Opened from a search ("Suggest phrases about …"): the learner has said what they want.
+  // Opened from a search ("Suggest phrases about …"): the learner has said what they want. Asking
+  // needs an account, so a learner who isn't signed in yet is asked for once they are.
   const askLatest = useLatest(askFor);
   const startWith = request.resume ? undefined : request.input;
   useEffect(() => {
-    if (!startWith) return;
+    if (!startWith || !signedIn) return;
     askLatest.current('topic', startWith);
     return () => inFlight.current?.abort();
-  }, [startWith, askLatest]);
+  }, [startWith, signedIn, askLatest]);
 
   const keptCount = session.deck ? added(session.deck).length : 0;
 
@@ -785,7 +786,7 @@ function SaveStep({
       <Button
         variant="primary"
         icon="account_circle"
-        label={saving ? c.share.opening : into ? c.make.addInto(kept.length, into) : c.create.saveToAccount}
+        label={saving ? c.create.saving : into ? c.make.addInto(kept.length, into) : c.create.saveToAccount}
         disabled={!ready || saving}
         onPress={() => onSave(session.title, withCover)}
       />
