@@ -1500,5 +1500,1257 @@
         "text": "Before к, в sounds like f: «вкусно» is “fkusno”."
       }
     }
+  },
+  {
+    "id": "en-cafe-01",
+    "target": "Could I have a flat white, please?",
+    "translations": { "bg-BG": "Може ли едно флат уайт, моля?", "ru-RU": "Можно мне флэт уайт, пожалуйста?" },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["request", "politeness", "food"],
+    "image": ["coffee", "local_cafe"],
+    "words": {
+      "could i have": { "bg-BG": "може ли да получа", "ru-RU": "можно мне" },
+      "a flat white": { "bg-BG": "едно флат уайт (кафе с мляко)", "ru-RU": "флэт уайт (кофе с молоком)" },
+      "please": { "bg-BG": "моля", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Flat and white",
+        "text": "Picture the name: a «flat white» is coffee with a smooth, “flat” top of milk, not a tall foam like a cappuccino, and the milk makes it pale, “white”."
+      },
+      "grammar": {
+        "title": "«Could I have…?»",
+        "text": "«Could I have…?» is the polite way to ask for something at a counter. Say «could» rather than «I want», which sounds blunt, and finish with «please»."
+      },
+      "pronunciation": {
+        "title": "W is not V",
+        "ipa": "[kʊd aɪ həv ə ˌflæt ˈwaɪt pliːz]",
+        "respelling": "kood eye huv uh flat WYTE pleez",
+        "text": "Round your lips for the w in «white»: it is a short «oo» that glides into «ite», not a v. Keep the z at the end of «please» voiced, with a buzz, not a plain s."
+      }
+    }
+  },
+  {
+    "id": "en-cafe-02",
+    "target": "I'll have a tea to take away, please",
+    "translations": { "bg-BG": "Ще взема един чай за вкъщи, моля", "ru-RU": "Я возьму чай с собой, пожалуйста" },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["request", "politeness", "food"],
+    "image": ["free_breakfast", "shopping_bag"],
+    "words": {
+      "i'll have": { "bg-BG": "ще взема", "ru-RU": "я возьму" },
+      "a tea": { "bg-BG": "един чай", "ru-RU": "чай" },
+      "to take away": { "bg-BG": "за вкъщи (за носене)", "ru-RU": "с собой" },
+      "please": { "bg-BG": "моля", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Take it away",
+        "text": "Say it literally: you «take» the cup «away» with you. The shop's question mirrors it: «Eat in or take away?» (Americans say «to go»)."
+      },
+      "grammar": {
+        "title": "«I'll have…» decides on the spot",
+        "text": "«I'll» is «I will»: use it for a decision made right now, «I'll have a tea». It is the other everyday way to order, next to «Could I have…?». «To take away» says how you want it."
+      },
+      "pronunciation": {
+        "title": "Link «take away»",
+        "ipa": "[aɪl əv ə ˈtiː tə ˌteɪk əˈweɪ pliːz]",
+        "respelling": "ile uv uh TEE tuh tay-kuh-WAY pleez",
+        "text": "Run «take away» together as «tay-kuh-WAY»: the k slides onto the weak «a» that follows. «Have» shrinks to a quick «uv», and «a» and «to» to a quick «uh»."
+      }
+    }
+  },
+  {
+    "id": "en-cafe-03",
+    "target": "Just a bit of milk, please",
+    "translations": { "bg-BG": "Само малко мляко, моля", "ru-RU": "Только капельку молока, пожалуйста" },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["request", "food", "politeness"],
+    "image": ["local_drink", "water_drop"],
+    "words": {
+      "just": { "bg-BG": "само", "ru-RU": "только" },
+      "a bit of": { "bg-BG": "малко", "ru-RU": "немного" },
+      "milk": { "bg-BG": "мляко", "ru-RU": "молоко" },
+      "please": { "bg-BG": "моля", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "A bit, like a computer bit",
+        "text": "Think of a computer «bit», the tiniest piece of data: «a bit of milk» is the tiniest amount. Most Britons take milk in their tea, so this request comes up all the time."
+      },
+      "grammar": {
+        "title": "«A bit of» + something uncountable",
+        "text": "Use «a bit of» before a word for something you don't count: «a bit of milk», «a bit of sugar». For things you can count, say «a few»: «a few biscuits»."
+      },
+      "pronunciation": {
+        "title": "One syllable, linked words",
+        "ipa": "[dʒʌst ə ˈbɪt əv ˈmɪlk pliːz]",
+        "respelling": "just uh BIT uv MILK pleez",
+        "text": "Say «milk» as one syllable: don't slip a vowel in between the l and the k. Link «bit of» as «bi-tuv»: the t slides onto the weak «of»."
+      }
+    }
+  },
+  {
+    "id": "en-cafe-04",
+    "target": "Can I pay by card, please?",
+    "translations": { "bg-BG": "Мога ли да платя с карта, моля?", "ru-RU": "Можно заплатить картой, пожалуйста?" },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["question", "request", "politeness"],
+    "image": ["credit_card", "point_of_sale"],
+    "words": {
+      "can i": { "bg-BG": "мога ли", "ru-RU": "можно ли мне" },
+      "pay": { "bg-BG": "платя", "ru-RU": "заплатить" },
+      "by card": { "bg-BG": "с карта", "ru-RU": "картой" },
+      "please": { "bg-BG": "моля", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "«By» means “with”",
+        "text": "«By card» is simply “with a card”: the small word «by» does the job that a small word does in Bulgarian and an ending does in Russian. Learn «by card», «by phone», «by bus» as a set."
+      },
+      "grammar": {
+        "title": "No «the» after «by»",
+        "text": "After «by», a way of paying or travelling takes no article: «by card», «by phone», «by bus». For cash, say «in cash». «Can I…?» asks whether something is possible or allowed."
+      },
+      "pronunciation": {
+        "title": "No r in «card»",
+        "ipa": "[kən aɪ ˈpeɪ baɪ ˈkɑːd pliːz]",
+        "respelling": "kun eye PAY by KAHD pleez",
+        "text": "In standard Southern British English the r in «card» is silent: say a long «aa» and finish with d, «kaad». Don't roll an r, and keep the final d voiced."
+      }
+    }
+  },
+  {
+    "id": "en-pub-01",
+    "target": "A pint of lager and a half of cider, please",
+    "translations": {
+      "bg-BG": "Една пинта лагер и половин пинта сайдер, моля",
+      "ru-RU": "Пинту лагера и полпинты сидра, пожалуйста"
+    },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["request", "food", "politeness"],
+    "image": ["sports_bar", "local_drink"],
+    "words": {
+      "a pint of": { "bg-BG": "една пинта (≈ 0,57 л)", "ru-RU": "пинту (≈ 0,57 л)" },
+      "lager": { "bg-BG": "лагер (светла бира)", "ru-RU": "лагера (светлого пива)" },
+      "and": { "bg-BG": "и", "ru-RU": "и" },
+      "a half of": { "bg-BG": "половин (пинта)", "ru-RU": "полпинты" },
+      "cider": { "bg-BG": "сайдер (ябълково питие)", "ru-RU": "сидра (яблочного напитка)" },
+      "please": { "bg-BG": "моля", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Big glass, small glass",
+        "text": "Order by size: «a pint» is the full glass, 568 ml, a little more than half a litre, and «a half» is half of it, about 284 ml."
+      },
+      "grammar": {
+        "title": "«A half» means half a pint",
+        "text": "In a pub, «a half» on its own means half a pint, and «of» links the measure to the drink: «a pint of lager», «a half of cider». Say the measure first, then the drink."
+      },
+      "pronunciation": {
+        "title": "Weak «of», silent l",
+        "ipa": "[ə ˈpaɪnt əv ˈlɑːɡə ən ə ˈhɑːf əv ˈsaɪdə pliːz]",
+        "respelling": "uh PINT uv LAH-guh un uh HAHF uv SY-duh pleez",
+        "text": "«Of» shrinks to a short «uv», not «off», and the l in «half» is silent: say «haaf» with a long vowel."
+      }
+    }
+  },
+  {
+    "id": "en-pub-02",
+    "target": "It's my round. What are you having?",
+    "translations": {
+      "bg-BG": "Този път черпя аз. Какво ще пиеш?",
+      "ru-RU": "Теперь моя очередь угощать. Что будешь пить?"
+    },
+    "register": "informal",
+    "region": "GB",
+    "tags": ["question", "social", "food"],
+    "image": ["sports_bar", "groups"],
+    "words": {
+      "it's my round": { "bg-BG": "мой ред е да черпя", "ru-RU": "моя очередь угощать" },
+      "what": { "bg-BG": "какво", "ru-RU": "что" },
+      "are you having": { "bg-BG": "пиеш (букв. имаш)", "ru-RU": "будешь пить (букв. имеешь)" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "A round, like in boxing",
+        "text": "A «round» of drinks works like a round in boxing or a game: everyone takes a turn. When it is your turn to buy for the whole group, you say «It's my round»."
+      },
+      "grammar": {
+        "title": "«Having» for drinking",
+        "text": "«Have» also means eat or drink, and in that meaning it takes «-ing» for the present moment: «What are you having?» asks what you want right now."
+      },
+      "pronunciation": {
+        "title": "A soft r, and -ing without g",
+        "ipa": "[ɪts maɪ ˈraʊnd ˈwɒt ə jə ˈhævɪŋ]",
+        "respelling": "its my ROWND. WOT uh yuh HAV-ing",
+        "text": "The English r is not rolled: curl the tongue back without touching anything. End «having» with the «ng» of «sing», not a hard g."
+      }
+    }
+  },
+  {
+    "id": "en-pub-03",
+    "target": "Two fish and chips, please. We're on table six",
+    "translations": {
+      "bg-BG": "Две порции фиш енд чипс, моля. Ние сме на маса шест",
+      "ru-RU": "Две порции фиш-энд-чипс, пожалуйста. Мы за шестым столиком"
+    },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["request", "food", "numbers"],
+    "image": ["restaurant", "table_restaurant"],
+    "words": {
+      "two": { "bg-BG": "два (две порции)", "ru-RU": "два (две порции)" },
+      "fish and chips": {
+        "bg-BG": "фиш енд чипс (риба с пържени картофи)",
+        "ru-RU": "фиш-энд-чипс (рыба с жареной картошкой)"
+      },
+      "please": { "bg-BG": "моля", "ru-RU": "пожалуйста" },
+      "we're on": { "bg-BG": "ние сме на", "ru-RU": "мы за (столиком)" },
+      "table six": { "bg-BG": "маса шест", "ru-RU": "столик номер шесть" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Chips are not crisps",
+        "text": "Fish and chips come as one unit, hot and wrapped in paper. British «chips» are thick fried potatoes, not the thin ones from a bag: those are «crisps»."
+      },
+      "grammar": {
+        "title": "The number follows the noun",
+        "text": "A table is named with its number after it: «table six», with no «the» and no «of». People often say «on» with a table number: «We're on table six»."
+      },
+      "pronunciation": {
+        "title": "Short i: fish, chips, six",
+        "ipa": "[ˈtuː ˈfɪʃ ən ˈtʃɪps pliːz wɪər ɒn ˈteɪbl̩ ˈsɪks]",
+        "respelling": "TOO FISH un CHIPS pleez. weer on TAY-bul SIKS",
+        "text": "The vowel in «fish», «chips» and «six» is a short, relaxed «i», not the long «ee» of «sheep». Say it quickly and let the consonants finish the word."
+      }
+    }
+  },
+  {
+    "id": "en-pub-04",
+    "target": "Cheers, mate. I'll get the next one",
+    "translations": { "bg-BG": "Мерси, приятел. Следващото е от мен", "ru-RU": "Спасибо, дружище. Следующая за мной" },
+    "register": "informal",
+    "region": "GB",
+    "tags": ["social", "politeness"],
+    "image": ["sports_bar", "handshake"],
+    "words": {
+      "cheers": { "bg-BG": "наздраве; мерси", "ru-RU": "за здоровье; спасибо" },
+      "mate": { "bg-BG": "приятел", "ru-RU": "дружище" },
+      "i'll get": { "bg-BG": "ще взема (ще черпя)", "ru-RU": "я возьму (угощу)" },
+      "the next one": { "bg-BG": "следващото (питие)", "ru-RU": "следующая (кружка)" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "«Cheers» does two jobs",
+        "text": "«Cheers» is the toast when glasses clink and also a casual “thanks” when someone hands you a drink. Keep both meanings in one word."
+      },
+      "grammar": {
+        "title": "«One» replaces the noun",
+        "text": "«One» stands in for a noun that is already understood: «the next one» means “the next drink” (or round). «I'll get» is the everyday offer to buy; «get» means buy here."
+      },
+      "pronunciation": {
+        "title": "th in «the», silent r",
+        "ipa": "[ˈtʃɪəz ˈmeɪt aɪl ˈɡet ðə ˈneks ˈwʌn]",
+        "respelling": "CHEERZ MAYT ile GET thuh NEKS WUN",
+        "text": "For «the», put the tip of your tongue lightly between your teeth and buzz: it is «th», not z or d, followed by a quick «uh». The r in «cheers» is silent: say «chee-uz», ending on z."
+      }
+    }
+  },
+  {
+    "id": "en-transport-01",
+    "target": "A return ticket to Brighton, please",
+    "translations": {
+      "bg-BG": "Един билет за отиване и връщане до Брайтън, моля",
+      "ru-RU": "Билет туда и обратно до Брайтона, пожалуйста"
+    },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["request", "politeness", "directions"],
+    "image": ["confirmation_number", "train"],
+    "words": {
+      "a return ticket": { "bg-BG": "билет за отиване и връщане", "ru-RU": "билет туда и обратно" },
+      "to": { "bg-BG": "до", "ru-RU": "до" },
+      "brighton": { "bg-BG": "Брайтън (град на морето)", "ru-RU": "Брайтон (город на море)" },
+      "please": { "bg-BG": "моля", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Re-turn: turn back",
+        "text": "«Return» is «re-» (back) plus «turn»: you turn back at the end of the trip. The opposite is a «single», one way only."
+      },
+      "grammar": {
+        "title": "One noun describes another",
+        "text": "A noun can describe another noun and stands in front of it, with no ending: «a return ticket». The destination follows «to»: «to Brighton»."
+      },
+      "pronunciation": {
+        "title": "Silent gh, stress on «-turn»",
+        "ipa": "[ə rɪˈtɜːn ˈtɪkɪt tə ˈbraɪtn̩ pliːz]",
+        "respelling": "uh rih-TURN TIK-it tuh BRY-tn pleez",
+        "text": "In «Brighton» the gh is silent: say «bry-tn», not «brig-hton». «Return» is stressed on its second syllable, «ri-TURN», with a long «er» vowel and no rolled r."
+      }
+    }
+  },
+  {
+    "id": "en-transport-02",
+    "target": "Excuse me, which platform is the train to London on?",
+    "translations": {
+      "bg-BG": "Извинете, от кой перон тръгва влакът за Лондон?",
+      "ru-RU": "Извините, с какой платформы отправляется поезд на Лондон?"
+    },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["question", "directions", "politeness"],
+    "image": ["train", "subway"],
+    "words": {
+      "excuse me": { "bg-BG": "извинете", "ru-RU": "извините" },
+      "which platform": { "bg-BG": "кой перон", "ru-RU": "какая платформа" },
+      "is the train": { "bg-BG": "е влакът", "ru-RU": "(идёт) поезд" },
+      "to london": { "bg-BG": "за Лондон", "ru-RU": "до Лондона" },
+      "on": { "bg-BG": "на (перона)", "ru-RU": "на (платформе)" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Platform: a flat form",
+        "text": "«Platform» comes from French «plate-forme», literally a “flat form” to stand on. Hear «plat» (flat) and «form» (shape) and picture the flat strip beside the track."
+      },
+      "grammar": {
+        "title": "«Which» + noun, «on» at the end",
+        "text": "«Which» + a noun asks you to pick from a small set: «which platform», «which bus». The little word «on» stays at the end of the question: «Which platform is it on?»"
+      },
+      "pronunciation": {
+        "title": "Stress PLAT-form, w in «which»",
+        "ipa": "[ɪkˈskjuːz miː ˈwɪtʃ ˈplætfɔːm ɪz ðə ˈtreɪn tə ˈlʌndən ɒn]",
+        "respelling": "ik-SKYOOZ mee, WICH PLAT-form iz thuh TRAYN tuh LUN-dun on",
+        "text": "English stresses the first syllable, «PLAT-form», unlike the Bulgarian and Russian word for it. The «wh» in «which» is just w: round your lips and don't say v."
+      }
+    }
+  },
+  {
+    "id": "en-transport-03",
+    "target": "Does this bus go to the city centre?",
+    "translations": { "bg-BG": "Този автобус отива ли в центъра?", "ru-RU": "Этот автобус идёт в центр?" },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["question", "directions"],
+    "image": ["directions_bus", "location_city"],
+    "words": {
+      "does": { "bg-BG": "(помощна дума за въпрос)", "ru-RU": "(вспомогательное слово для вопроса)" },
+      "this bus": { "bg-BG": "този автобус", "ru-RU": "этот автобус" },
+      "go": { "bg-BG": "отива, пътува", "ru-RU": "идёт, едет" },
+      "to": { "bg-BG": "до, към", "ru-RU": "до, в" },
+      "the city centre": { "bg-BG": "центърът на града", "ru-RU": "центр города" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Centre is a word you know",
+        "text": "«Centre» is the same word as the Bulgarian and Russian one for “the middle”, spelled with «-re» in British English. Bus fronts in British cities often show «City Centre» as the destination."
+      },
+      "grammar": {
+        "title": "«Does» + go, not goes",
+        "text": "In a question with «does», the main verb has no -s: «Does this bus go…?», not «Does this bus goes…?». The -s already sits on «does»."
+      },
+      "pronunciation": {
+        "title": "A short «uh», voiced z",
+        "ipa": "[dʌz ðɪs ˈbʌs ˈɡəʊ tə ðə ˌsɪti ˈsentə]",
+        "respelling": "duz this BUS GOH tuh thuh sit-ee SEN-tuh",
+        "text": "The vowel in «does» and «bus» is a short, relaxed «uh»: don't round it into an «o». «Does» ends in a buzzing z: keep it voiced, while «bus» ends in a plain s."
+      }
+    }
+  },
+  {
+    "id": "en-transport-04",
+    "target": "Where do I change for Victoria?",
+    "translations": {
+      "bg-BG": "Къде да се прехвърля за Виктория?",
+      "ru-RU": "Где мне пересесть, чтобы доехать до Виктории?"
+    },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["question", "directions"],
+    "image": ["subway", "map"],
+    "words": {
+      "where": { "bg-BG": "къде", "ru-RU": "где" },
+      "do i change": { "bg-BG": "трябва да се прехвърля", "ru-RU": "мне пересесть" },
+      "for victoria": { "bg-BG": "за Виктория", "ru-RU": "до Виктории" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Change like clothes",
+        "text": "You change trains the way you change clothes: take one off, put another on. «Change for Victoria» means “swap here to get to Victoria”."
+      },
+      "grammar": {
+        "title": "Change for where you're going",
+        "text": "«Change for» is followed by where you want to end up, not by where you swap: «Change for Victoria» means you swap trains to reach Victoria. A question with an ordinary verb such as «change» needs «do»: «Where do I change…?»."
+      },
+      "pronunciation": {
+        "title": "End of «change», stress in Victoria",
+        "ipa": "[ˈweə də aɪ ˈtʃeɪndʒ fə vɪkˈtɔːriə]",
+        "respelling": "WAIR duh eye CHAYNJ fuh vik-TOR-ee-uh",
+        "text": "«Change» ends in a soft, voiced «j», as in «judge»: don't harden it to «ch». In «Victoria» the stress falls on «-tor-»: vik-TOR-ee-uh, and the v is a real v, with the teeth on the lip."
+      }
+    }
+  },
+  {
+    "id": "en-shops-01",
+    "target": "How much are the apples?",
+    "translations": { "bg-BG": "Колко струват ябълките?", "ru-RU": "Почём яблоки?" },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["question", "numbers", "food"],
+    "image": ["nutrition", "scale"],
+    "words": {
+      "how much": { "bg-BG": "колко", "ru-RU": "сколько" },
+      "are": { "bg-BG": "струват (букв. са)", "ru-RU": "стоят (букв. являются)" },
+      "the apples": { "bg-BG": "ябълките", "ru-RU": "яблоки" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "How + much",
+        "text": "Two small words: «how» and «much», literally “how a lot?”. Say them together whenever you see a price tag."
+      },
+      "grammar": {
+        "title": "Is for one, are for many",
+        "text": "«How much» takes «is» for one thing or a mass («How much is the milk?») and «are» for several things («How much are the apples?»). Match the verb to what you're asking about."
+      },
+      "pronunciation": {
+        "title": "Light h, «the» before a vowel",
+        "ipa": "[ˈhaʊ ˈmʌtʃ ə ði ˈæp.l̩z]",
+        "respelling": "HOW MUCH uh thee AP-ulz",
+        "text": "The h of «how» is a light puff of breath, much softer than the scraping «kh» of Bulgarian and Russian. Before a vowel «the» turns into «thee»: «thee APPLES»."
+      }
+    }
+  },
+  {
+    "id": "en-shops-02",
+    "target": "Have you got a carrier bag, please?",
+    "translations": { "bg-BG": "Имате ли торбичка, моля?", "ru-RU": "У вас есть пакет, пожалуйста?" },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["question", "request", "politeness"],
+    "image": ["shopping_bag", "storefront"],
+    "words": {
+      "have you got": { "bg-BG": "имате ли", "ru-RU": "у вас есть" },
+      "a carrier bag": { "bg-BG": "торбичка (за покупки)", "ru-RU": "пакет (для покупок)" },
+      "please": { "bg-BG": "моля", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "A bag that carries",
+        "text": "Hear «carry» inside «carrier»: a carrier bag is simply the bag that carries your shopping home. Say «carrier bag» as one chunk."
+      },
+      "grammar": {
+        "title": "«Have you got…?»",
+        "text": "«Have you got…?» is an everyday British question: «have» moves in front of «you», with no «do». «Do you have…?» is also correct and common."
+      },
+      "pronunciation": {
+        "title": "Final v and g stay voiced",
+        "ipa": "[hæv jə ˈɡɒt ə ˈkæriə ˌbæɡ pliːz]",
+        "respelling": "hav yuh GOT uh KA-ree-uh bag pleez",
+        "text": "The v at the end of «have» and the g at the end of «bag» must keep their buzz: «bag» is not «back», and «have» is not «haf». Voice them, then stop."
+      }
+    }
+  },
+  {
+    "id": "en-shops-03",
+    "target": "Is there a corner shop near here?",
+    "translations": { "bg-BG": "Има ли наблизо някое магазинче?", "ru-RU": "Здесь поблизости есть магазинчик?" },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["question", "directions"],
+    "image": ["storefront", "near_me"],
+    "words": {
+      "is there": { "bg-BG": "има ли", "ru-RU": "есть ли" },
+      "a corner shop": { "bg-BG": "магазинче на ъгъла", "ru-RU": "магазинчик на углу" },
+      "near here": { "bg-BG": "тук наблизо", "ru-RU": "здесь поблизости" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Corner, like in football",
+        "text": "«Corner» is the football word you already know, and a «corner shop» is the small shop on the corner of a street, often open late. Picture it glowing on the corner."
+      },
+      "grammar": {
+        "title": "«Is there a…?»",
+        "text": "«Is there a…?» asks whether one thing exists nearby. For several things say «Are there any…?»: «Are there any shops near here?»."
+      },
+      "pronunciation": {
+        "title": "Long «aw», short «o»",
+        "ipa": "[ɪz ðeər ə ˈkɔːnə ˌʃɒp nɪə ˈhɪə]",
+        "respelling": "iz thair-uh KAW-nuh shop neer HEER",
+        "text": "Hold the vowel of «corner» long, «kaw», and keep the one in «shop» short. None of these words has a rolled r: «corner» ends in a soft «uh», and «near» and «here» glide to a soft «uh»."
+      }
+    }
+  },
+  {
+    "id": "en-shops-04",
+    "target": "Excuse me, is this till open?",
+    "translations": { "bg-BG": "Извинете, тази каса работи ли?", "ru-RU": "Извините, эта касса работает?" },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["question", "politeness"],
+    "image": ["point_of_sale", "storefront"],
+    "words": {
+      "excuse me": { "bg-BG": "извинете", "ru-RU": "извините" },
+      "is this": { "bg-BG": "тази … ли", "ru-RU": "эта … ли" },
+      "till": { "bg-BG": "каса", "ru-RU": "касса" },
+      "open": { "bg-BG": "работи, отворена", "ru-RU": "работает, открыта" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "The till that dings",
+        "text": "Picture the cash drawer that pops open with a ding at the end of the queue: that is the «till» (Americans say «register»)."
+      },
+      "grammar": {
+        "title": "«Excuse me», then the question",
+        "text": "«Excuse me» opens the question and politely gets someone's attention. In «Is this till open?» the «is» comes first to make the question, with no «do»."
+      },
+      "pronunciation": {
+        "title": "Excuse ends in z",
+        "ipa": "[ɪkˈskjuːz miː ɪz ðɪs ˈtɪl ˈəʊpən]",
+        "respelling": "ik-SKYOOZ mee, iz this TIL OH-pun",
+        "text": "The verb «excuse» ends in a buzzing z, «ik-SKYOOZ», with the stress on «-cuse». In «this», put the tip of your tongue between your teeth."
+      }
+    }
+  },
+  {
+    "id": "en-smalltalk-01",
+    "target": "Hi, I'm Alex. Nice to meet you",
+    "translations": { "bg-BG": "Здравей, аз съм Алекс. Приятно ми е", "ru-RU": "Привет, я Алекс. Очень приятно" },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["social", "politeness"],
+    "image": ["handshake", "person_add"],
+    "words": {
+      "hi": { "bg-BG": "здравей", "ru-RU": "привет" },
+      "i'm": { "bg-BG": "аз съм", "ru-RU": "я (есть)" },
+      "alex": { "bg-BG": "Алекс (име)", "ru-RU": "Алекс (имя)" },
+      "nice to meet you": { "bg-BG": "приятно ми е (да се запознаем)", "ru-RU": "приятно познакомиться" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Nice = pleasant",
+        "text": "Line the words up with your own language: «nice» is “pleasant”, «to meet you» is “to get to know you”. Bulgarian and Russian greet with “pleasant” too, so you can map it word for word."
+      },
+      "grammar": {
+        "title": "English always needs «be»",
+        "text": "Unlike Russian, English always uses the verb «be»: «I'm Alex» (I am Alex), never «I Alex». The short form «I'm» is what you hear in speech."
+      },
+      "pronunciation": {
+        "title": "Long «ee» in «meet»",
+        "ipa": "[ˈhaɪ aɪm ˈælɪks ˈnaɪs tə ˈmiːt juː]",
+        "respelling": "HY ime AL-iks NYSS tuh MEET yoo",
+        "text": "Hold the vowel of «meet»: it is a long «ee», much longer than the short vowel in «it». With a short vowel it would sound like «mit». The t then joins «you» smoothly."
+      }
+    }
+  },
+  {
+    "id": "en-smalltalk-02",
+    "target": "And where are you from?",
+    "translations": { "bg-BG": "А ти откъде си?", "ru-RU": "А ты откуда?" },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["question", "social"],
+    "image": ["public", "person_pin_circle"],
+    "words": {
+      "and": { "bg-BG": "а", "ru-RU": "а" },
+      "where": { "bg-BG": "къде", "ru-RU": "где" },
+      "are you": { "bg-BG": "си (ти)", "ru-RU": "ты (есть)" },
+      "from": { "bg-BG": "от", "ru-RU": "из, от" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "The answer echoes «from»",
+        "text": "Answer with the same word that ends the question: «Where are you from?» — «I'm from…». Hold on to «from» and you have both halves."
+      },
+      "grammar": {
+        "title": "«From» stays at the end",
+        "text": "In English the little word «from» goes at the end of the question: «Where are you from?», not «From where are you?», which sounds stiff. Keep «are you» in that order."
+      },
+      "pronunciation": {
+        "title": "Linking r",
+        "ipa": "[ən ˈweər ə ju ˈfrɒm]",
+        "respelling": "un WAIR-uh yoo FROM",
+        "text": "The r in «where» is silent on its own, but it comes back when a vowel follows: «where are» sounds like «WAIR-uh». Stress «from», the last word, and keep its vowel short and round."
+      }
+    }
+  },
+  {
+    "id": "en-smalltalk-03",
+    "target": "It's a lovely day, isn't it?",
+    "translations": { "bg-BG": "Какъв прекрасен ден, нали?", "ru-RU": "Какой чудесный день, правда?" },
+    "register": "neutral",
+    "region": "GB",
+    "tags": ["social"],
+    "image": ["sunny", "sentiment_satisfied"],
+    "words": {
+      "it's a": { "bg-BG": "е (един)", "ru-RU": "это" },
+      "lovely": { "bg-BG": "прекрасен", "ru-RU": "чудесный" },
+      "day": { "bg-BG": "ден", "ru-RU": "день" },
+      "isn't it": { "bg-BG": "нали (не е ли така)", "ru-RU": "правда (не так ли)" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "A tail that asks for a nod",
+        "text": "Stick «isn't it?» on the end of a remark like a little tail: it works like the small “right?” words of Bulgarian and Russian. People usually answer «It is» or «Lovely»."
+      },
+      "grammar": {
+        "title": "Tag questions",
+        "text": "A tag question turns a remark into an invitation to agree. After a positive sentence with «is», add the negative: «It is… isn't it?». Match the verb: «They are… aren't they?»."
+      },
+      "pronunciation": {
+        "title": "Join the words",
+        "ipa": "[ɪts ə ˈlʌvli ˈdeɪ ˈɪz.n̩t ɪt]",
+        "respelling": "its uh LUV-lee DAY IZ-unt it",
+        "text": "Run «it's a» together as «it-sa», with a quick «uh» for «a». «Isn't it» flows as «iz-nt-it», the t sliding onto «it». The z in «isn't» is voiced: it buzzes."
+      }
+    }
+  },
+  {
+    "id": "en-smalltalk-04",
+    "target": "Hey, how's it going?",
+    "translations": { "bg-BG": "Здрасти, как върви?", "ru-RU": "Привет, как дела?" },
+    "register": "informal",
+    "region": "GB",
+    "tags": ["social", "question"],
+    "image": ["forum", "sentiment_very_satisfied"],
+    "words": {
+      "hey": { "bg-BG": "здрасти", "ru-RU": "привет" },
+      "how's": { "bg-BG": "как е", "ru-RU": "как" },
+      "it": { "bg-BG": "всичко", "ru-RU": "всё" },
+      "going": { "bg-BG": "върви", "ru-RU": "идёт" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "How is it going along?",
+        "text": "The words are almost a picture: «how is it going along?». Bulgarian and Russian use their verb “to go” for the same question, so you already think this way."
+      },
+      "grammar": {
+        "title": "A greeting more than a question",
+        "text": "«How's it going?» is a greeting more than a real question: people answer «Not bad, thanks. You?» or «Good, thanks». «How's» is the short form of «how is»."
+      },
+      "pronunciation": {
+        "title": "A glide in «going»",
+        "ipa": "[ˈheɪ ˈhaʊz ɪt ˈɡəʊɪŋ]",
+        "respelling": "HAY HOWZ it GOH-ing",
+        "text": "The vowel in «going» glides from a relaxed «uh» to a hint of «oo»: it is never a pure «o». «How's it» joins up as «how-zit», with a voiced z."
+      }
+    }
+  },
+  {
+    "id": "ru-kafe-01",
+    "target": "Мне кофе с молоком, пожалуйста",
+    "translations": { "en-GB": "A coffee with milk, please", "bg-BG": "Едно кафе с мляко, моля" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["request", "food", "politeness"],
+    "image": ["coffee", "local_drink"],
+    "words": {
+      "мне": { "en-GB": "(for) me, to me", "bg-BG": "на мен, за мен" },
+      "кофе": { "en-GB": "coffee", "bg-BG": "кафе" },
+      "с молоком": { "en-GB": "with milk", "bg-BG": "с мляко" },
+      "пожалуйста": { "en-GB": "please", "bg-BG": "моля" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Moloko: milk",
+        "text": "«Молоко» is “milk”: the “moloko plus” milk bar in A Clockwork Orange borrowed the word from Russian. «Кофе» is the coffee you already know, so «кофе с молоком» is coffee with a splash of moloko."
+      },
+      "grammar": {
+        "title": "«С» + instrumental",
+        "text": "After «с» (“with”) the noun takes the instrumental case, so «молоко» becomes «молоком». English and Bulgarian leave the noun as it is; Russian changes its ending."
+      },
+      "pronunciation": {
+        "title": "Weak vowels in молоком",
+        "ipa": "[mnʲe ˈkofʲɪ s məlɐˈkom pɐˈʐaləstə]",
+        "respelling": "mnyeh KOH-fyih s muh-luh-KOHM puh-ZHAH-luh-stuh",
+        "text": "Only the last syllable of «молоком» is stressed, so the first two о shrink to short, weak vowels: muh-luh-KOHM. Say «с молоком» as one smooth word, with «с» leaning on it."
+      }
+    }
+  },
+  {
+    "id": "ru-kafe-02",
+    "target": "Чай без сахара, если можно",
+    "translations": { "en-GB": "A tea without sugar, if that's all right", "bg-BG": "Чай без захар, ако може" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["request", "food", "politeness"],
+    "image": ["free_breakfast", "block"],
+    "words": {
+      "чай": { "en-GB": "tea", "bg-BG": "чай" },
+      "без": { "en-GB": "without", "bg-BG": "без" },
+      "сахара": { "en-GB": "sugar (the form after «без»)", "bg-BG": "захар" },
+      "если": { "en-GB": "if", "bg-BG": "ако" },
+      "можно": { "en-GB": "possible, allowed", "bg-BG": "може, възможно" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Сахар: saccharin",
+        "text": "«Чай» is the “chai” of chai latte. «Сахар» (sugar) is a distant relative of “saccharin”, so picture a sweetener packet and say «без сахара»: without it."
+      },
+      "grammar": {
+        "title": "«Без» + genitive",
+        "text": "«Без» (“without”) is followed by the genitive case: «сахар» becomes «сахара». Many masculine nouns end in -а in the genitive. «Если можно» (“if it is possible”) softens a request."
+      },
+      "pronunciation": {
+        "title": "Fading vowels in сахара",
+        "ipa": "[ˈt͡ɕaj bʲɪs ˈsaxərə ˈjesʲlʲɪ ˈmoʐnə]",
+        "respelling": "CHAI byis SAH-khuh-ruh YES-lyih MOZH-nuh",
+        "text": "In «сахара» only the first а is stressed, and the last two vowels fade to a short “uh”: SAH-khuh-ruh. The х is a rasp from the back of the throat, like “loch”, not a k."
+      }
+    }
+  },
+  {
+    "id": "ru-kafe-03",
+    "target": "Я возьму капучино с собой",
+    "translations": { "en-GB": "I'll have a cappuccino to take away", "bg-BG": "Ще взема капучино за навън" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["request", "food"],
+    "image": ["coffee", "directions_walk"],
+    "words": {
+      "я": { "en-GB": "I", "bg-BG": "аз" },
+      "возьму": { "en-GB": "I'll take", "bg-BG": "ще взема" },
+      "капучино": { "en-GB": "cappuccino", "bg-BG": "капучино" },
+      "с собой": { "en-GB": "with me, to take away", "bg-BG": "със себе си, за навън" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "С собой: with yourself",
+        "text": "«С собой» is literally “with oneself”: picture yourself walking out with the cup in your hand. «Капучино» is the Italian word you already know, and «возьму» means “I'll take”."
+      },
+      "grammar": {
+        "title": "«Возьму»: I'll take",
+        "text": "«Возьму» looks like a present tense, but it is the future of one completed act: “I will take it”. It is the natural way to say what you are going to have, and Russian needs no word for “will” here."
+      },
+      "pronunciation": {
+        "title": "Stress on -МУ and -ЧИ-",
+        "ipa": "[ja vɐzʲˈmu kəpʊˈt͡ɕinə s sɐˈboj]",
+        "respelling": "ya vuz-MOO kuh-poo-CHEE-nuh s suh-BOY",
+        "text": "The stress is on the last syllable of «возьму» and on «чи» in «капучино»; the unstressed vowels around them stay short. The soft sign in «возьму» softens the з, so do not add a vowel after it: vuz-MOO."
+      }
+    }
+  },
+  {
+    "id": "ru-kafe-04",
+    "target": "Принесите счёт, пожалуйста",
+    "translations": { "en-GB": "Could I have the bill, please?", "bg-BG": "Донесете ми сметката, моля" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["request", "politeness"],
+    "image": ["receipt_long", "payments"],
+    "words": {
+      "принесите": { "en-GB": "bring (polite)", "bg-BG": "донесете" },
+      "счёт": { "en-GB": "the bill", "bg-BG": "сметката" },
+      "пожалуйста": { "en-GB": "please", "bg-BG": "моля" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "При-нести: carry it over",
+        "text": "«Принесите» is «при-» (towards) plus «нести» (to carry): “carry it over to me”. «Счёт» belongs with «считать», “to count”: the bill is what the waiter has counted up."
+      },
+      "grammar": {
+        "title": "Polite imperative: -те",
+        "text": "«Принесите» is the polite “bring”: it is the friendly «Принеси» plus -те. The same form speaks to a group; to one friend or a child you say plain «Принеси»."
+      },
+      "pronunciation": {
+        "title": "сч is a long soft щ",
+        "ipa": "[prʲɪnʲɪˈsʲitʲɪ ˈɕːɵt pɐˈʐaləstə]",
+        "respelling": "pree-nyih-SEE-tyih SHCHYOT puh-ZHAH-luh-stuh",
+        "text": "«Сч» in «счёт» is read as one long, soft “sh” (the same sound as «щ»), softer and longer than the “sh” in “sheep”: SHCHYOT. The stress is on -СИ- in «принесите»."
+      }
+    }
+  },
+  {
+    "id": "ru-gorod-01",
+    "target": "Где здесь метро?",
+    "translations": { "en-GB": "Where's the metro round here?", "bg-BG": "Къде има метро тук наблизо?" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["question", "directions"],
+    "image": ["subway", "near_me"],
+    "words": {
+      "где": { "en-GB": "where", "bg-BG": "къде" },
+      "здесь": { "en-GB": "here, around here", "bg-BG": "тук" },
+      "метро": { "en-GB": "the metro", "bg-BG": "метрото" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Метро: stress the end",
+        "text": "«Метро» is the word you know, only with the stress on the end: myih-TRO. «Где здесь…?» is literally “where here…?”, so you can finish it with any place: «Где здесь аптека?»."
+      },
+      "grammar": {
+        "title": "No “is” in the present",
+        "text": "Russian leaves out the present tense of “to be”: «Где здесь метро?» is literally “Where here metro?”, with no “is”."
+      },
+      "pronunciation": {
+        "title": "гд and the weak е",
+        "ipa": "[ˈɡdʲe ˈzdʲesʲ mʲɪˈtro]",
+        "respelling": "GDYEH ZDYES myih-TRO",
+        "text": "«Гд» in «где» is two consonants together, g and d, with no vowel between them: gdyeh. In «метро» the unstressed е sounds like a short “ih”: myih-TRO."
+      }
+    }
+  },
+  {
+    "id": "ru-gorod-02",
+    "target": "Один билет на метро, пожалуйста",
+    "translations": { "en-GB": "One metro ticket, please", "bg-BG": "Един билет за метрото, моля" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["request", "numbers", "politeness"],
+    "image": ["confirmation_number", "subway"],
+    "words": {
+      "один": { "en-GB": "one", "bg-BG": "един" },
+      "билет": { "en-GB": "ticket", "bg-BG": "билет" },
+      "на метро": { "en-GB": "for the metro", "bg-BG": "за метрото" },
+      "пожалуйста": { "en-GB": "please", "bg-BG": "моля" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Билет: billet-doux",
+        "text": "«Билет» goes back to the French «billet», a short note (as in the English “billet-doux”): a ticket is a little note that lets you through the gate."
+      },
+      "grammar": {
+        "title": "«Один» agrees with the noun",
+        "text": "«Один» changes with the gender of the noun: «один билет» (masculine), «одна карта» (feminine), «одно место» (neuter). «Билет» is masculine, so it takes «один»."
+      },
+      "pronunciation": {
+        "title": "Stress on the last syllable",
+        "ipa": "[ɐˈdʲin bʲɪˈlʲet nə mʲɪˈtro pɐˈʐaləstə]",
+        "respelling": "uh-DYEEN byih-LYET nuh myih-TRO puh-ZHAH-luh-stuh",
+        "text": "«Один», «билет» and «метро» are all stressed on their last syllable: uh-DYEEN, byih-LYET, myih-TRO. The л in «билет» is soft, almost “ly”."
+      }
+    }
+  },
+  {
+    "id": "ru-gorod-03",
+    "target": "Этот автобус идёт до центра?",
+    "translations": { "en-GB": "Does this bus go to the centre?", "bg-BG": "Този автобус отива ли до центъра?" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["question", "directions"],
+    "image": ["directions_bus", "location_city"],
+    "words": {
+      "этот": { "en-GB": "this", "bg-BG": "този" },
+      "автобус": { "en-GB": "bus", "bg-BG": "автобус" },
+      "идёт": { "en-GB": "goes, runs", "bg-BG": "отива, върви" },
+      "до": { "en-GB": "as far as, to", "bg-BG": "до" },
+      "центра": { "en-GB": "centre (the form after «до»)", "bg-BG": "центъра" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Words you already know",
+        "text": "«Автобус» is “auto-bus” and «центр» is “centre”: you already know most of this question. Only «идёт», “goes”, is new: picture a bus with «ЦЕНТР» on its destination sign."
+      },
+      "grammar": {
+        "title": "«Идёт»: a bus “goes”",
+        "text": "A bus on a route is said to «идти» (literally “to walk”): «автобус идёт». After «до» (“as far as”) the noun takes the genitive: «центр» becomes «центра»."
+      },
+      "pronunciation": {
+        "title": "ц and the f in автобус",
+        "ipa": "[ˈɛtət ɐfˈtobʊs ɪˈdʲɵt də ˈt͡sɛntrə]",
+        "respelling": "EH-tuht uhf-TOH-boos ih-DYOT duh TSEN-truh",
+        "text": "«Ц» is one sound, “ts”, as in “cats”: TSEN-truh. The в in «автобус» is said as “f” because т follows it: uhf-TOH-boos."
+      }
+    }
+  },
+  {
+    "id": "ru-gorod-04",
+    "target": "На какой остановке мне выходить?",
+    "translations": { "en-GB": "Which stop do I get off at?", "bg-BG": "На коя спирка трябва да сляза?" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["question", "directions"],
+    "image": ["directions_bus", "pin_drop"],
+    "words": {
+      "на какой остановке": { "en-GB": "at which stop", "bg-BG": "на коя спирка" },
+      "мне": { "en-GB": "I (literally: to me)", "bg-BG": "аз (буквално: на мен)" },
+      "выходить": { "en-GB": "to get off, to go out", "bg-BG": "да сляза, да изляза" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Выход: the exit sign",
+        "text": "Every exit sign in Russia says «ВЫХОД»: it is «вы-» (out) plus «ход» (going). «Выходить» is the verb, “to go out”: you step out of the bus at your stop."
+      },
+      "grammar": {
+        "title": "«Мне» + infinitive",
+        "text": "«Мне» (“to me”) followed by an infinitive asks what you are supposed to do: «Мне выходить?» is “Should I get off?”. No word for “should” is needed; the question words «на какой остановке» simply go in front."
+      },
+      "pronunciation": {
+        "title": "The sound ы",
+        "ipa": "[nə kɐˈkoj ɐstɐˈnofkʲɪ mnʲe vɨxɐˈdʲitʲ]",
+        "respelling": "nuh kuh-KOY uh-stuh-NOF-kyih mnyeh vuy-khuh-DEET'",
+        "text": "«Ы» (“uy” in the respelling) has no English or Bulgarian twin: say the “i” of “bit”, then pull the tongue back as if about to say “oo”, but keep the lips spread. It comes right after в in «выходить»."
+      }
+    }
+  },
+  {
+    "id": "ru-rynok-01",
+    "target": "Сколько это стоит?",
+    "translations": { "en-GB": "How much is this?", "bg-BG": "Колко струва това?" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["question", "numbers"],
+    "image": ["storefront", "payments"],
+    "words": {
+      "сколько": { "en-GB": "how much", "bg-BG": "колко" },
+      "это": { "en-GB": "this", "bg-BG": "това" },
+      "стоит": { "en-GB": "costs", "bg-BG": "струва" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "«Сколько»: a three-beat question",
+        "text": "Say it as a drumbeat, SKOL-ko EH-tuh STOH-eet, one beat per word, while you point at the price. «Сколько» is “how much”, and «стоит» is “costs”, so the whole question is “how much this costs”."
+      },
+      "grammar": {
+        "title": "«Стоит» or «стоят»",
+        "text": "«Стоит» is “costs” for one thing; for several things use «стоят»: «Сколько стоят помидоры?». The question word comes first, and no helper verb like “does” is needed."
+      },
+      "pronunciation": {
+        "title": "Soft ль and weak endings",
+        "ipa": "[ˈskolʲkə ˈɛtə ˈstoɪt]",
+        "respelling": "SKOL'-kuh EH-tuh STOH-eet",
+        "text": "The л in «сколько» is soft, close to “ly”, and the endings of «сколько» and «это» fade to a short “uh”: SKOL'-kuh EH-tuh. All three words are stressed on the first syllable."
+      }
+    }
+  },
+  {
+    "id": "ru-rynok-02",
+    "target": "Дайте, пожалуйста, килограмм помидоров",
+    "translations": { "en-GB": "A kilo of tomatoes, please", "bg-BG": "Един килограм домати, моля" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["request", "numbers", "food", "politeness"],
+    "image": ["nutrition", "scale"],
+    "words": {
+      "дайте": { "en-GB": "give (me)", "bg-BG": "дайте (ми)" },
+      "пожалуйста": { "en-GB": "please", "bg-BG": "моля" },
+      "килограмм": { "en-GB": "kilogram, kilo", "bg-BG": "килограм" },
+      "помидоров": { "en-GB": "of tomatoes", "bg-BG": "домати" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Помидор: golden apple",
+        "text": "«Помидор» comes from the Italian «pomodoro», “golden apple”: the same word as in “pomodoro” sauce. So «килограмм помидоров» is a kilo of golden apples."
+      },
+      "grammar": {
+        "title": "Amounts take the genitive plural",
+        "text": "After a measure such as «килограмм» the goods stand in the genitive plural, which is why «помидоры» becomes «помидоров». The Russian ending does the job of “of”."
+      },
+      "pronunciation": {
+        "title": "Final в sounds like f",
+        "ipa": "[ˈdajtʲɪ pɐˈʐaləstə kʲɪlɐˈɡram pəmʲɪˈdorəf]",
+        "respelling": "DAI-tyih puh-ZHAH-luh-stuh kyih-luh-GRAM puh-myih-DOH-ruhf",
+        "text": "A voiced consonant at the end of a word is said as its voiceless twin, so the в in «помидоров» sounds like “f”: puh-myih-DOH-ruhf. The stress is on -ДО-."
+      }
+    }
+  },
+  {
+    "id": "ru-rynok-03",
+    "target": "У вас есть пакет?",
+    "translations": { "en-GB": "Do you have a bag?", "bg-BG": "Имате ли торбичка?" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["question", "request"],
+    "image": ["shopping_bag", "search"],
+    "words": {
+      "у вас": { "en-GB": "you (literally: at you)", "bg-BG": "вие (буквално: при вас)" },
+      "есть": { "en-GB": "there is, (you) have", "bg-BG": "има" },
+      "пакет": { "en-GB": "(carrier) bag", "bg-BG": "торбичка, плик" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Пакет and есть",
+        "text": "«Пакет» is “packet”: in Russian it is also the carrier bag you get at a shop or stall. Hear «есть» as “yest”, a bit like “yes”: yes, there is some."
+      },
+      "grammar": {
+        "title": "“Have” is «у … есть»",
+        "text": "In everyday speech Russian does not use a verb “to have”: it says «У вас есть…?», literally “At you there is…?”. The thing you ask about stays in its basic form: «пакет»."
+      },
+      "pronunciation": {
+        "title": "Soft есть and softened к",
+        "ipa": "[u ˈvas ˈjesʲtʲ pɐˈkʲet]",
+        "respelling": "oo VAHS YEST' puh-KYET",
+        "text": "«Есть» starts with a “ye” and ends in a soft “-st'”: say the т with the tongue flat and high, without a vowel after it. The к in «пакет» is also softened by the е: puh-KYET."
+      }
+    }
+  },
+  {
+    "id": "ru-rynok-04",
+    "target": "Можно заплатить картой?",
+    "translations": { "en-GB": "Can I pay by card?", "bg-BG": "Може ли да платя с карта?" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["question", "request"],
+    "image": ["credit_card", "point_of_sale"],
+    "words": {
+      "можно": { "en-GB": "is it possible, may I", "bg-BG": "може ли" },
+      "заплатить": { "en-GB": "to pay", "bg-BG": "да платя" },
+      "картой": { "en-GB": "by card", "bg-BG": "с карта" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Картой: by card",
+        "text": "Picture tapping your card on the terminal: «карта» is the “card” of English (both go back to Latin «charta»). The verb «заплатить» is “to pay”, and the ending -ой in «картой» means “by card”."
+      },
+      "grammar": {
+        "title": "Means: instrumental, no preposition",
+        "text": "To say “by card” Russian uses the instrumental case alone: «картой», with no «с». Use «с» only for “together with” («с молоком»). Feminine nouns in -а usually take -ой."
+      },
+      "pronunciation": {
+        "title": "Stress at the end, then at the start",
+        "ipa": "[ˈmoʐnə zəplɐˈtʲitʲ ˈkartəj]",
+        "respelling": "MOZH-nuh zuh-pluh-TEET' KAR-tuhy",
+        "text": "«Заплатить» is stressed on its last syllable, but «картой» on its first: zuh-pluh-TEET', KAR-tuhy. The ending -ой in «картой» is unstressed and weak, not a full “oy”."
+      }
+    }
+  },
+  {
+    "id": "ru-znakomstvo-01",
+    "target": "Как вас зовут?",
+    "translations": { "en-GB": "What's your name?", "bg-BG": "Как се казвате?" },
+    "register": "formal",
+    "region": "RU",
+    "tags": ["question", "social", "politeness"],
+    "image": ["badge", "person"],
+    "words": {
+      "как": { "en-GB": "how", "bg-BG": "как" },
+      "вас": { "en-GB": "you (polite or plural)", "bg-BG": "вас, вие" },
+      "зовут": { "en-GB": "(they) call", "bg-BG": "зоват, наричат" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Literally “how do they call you”",
+        "text": "«Как вас зовут?» is literally “How do they call you?”: «зовут» comes from «звать», “to call”, so picture people shouting your name across a square."
+      },
+      "grammar": {
+        "title": "«Вас» (polite) or «тебя»",
+        "text": "«Вас» is the polite (or plural) “you”, the accusative of «вы»; with a friend or a child say «Как тебя зовут?». The verb «зовут» is “they call”, so there is no “is” in the phrase."
+      },
+      "pronunciation": {
+        "title": "Stress at the end",
+        "ipa": "[ˈkak vɐs zɐˈvut]",
+        "respelling": "KAK vuhs zuh-VOOT",
+        "text": "The stress falls on the last syllable, «зовут», so the first о shrinks to a short, weak vowel: zuh-VOOT. «Как вас» is said almost as one word, with «вас» light and quick."
+      }
+    }
+  },
+  {
+    "id": "ru-znakomstvo-02",
+    "target": "Меня зовут Анна",
+    "translations": { "en-GB": "My name's Anna", "bg-BG": "Казвам се Анна" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["social"],
+    "image": ["account_circle", "badge"],
+    "words": {
+      "меня": { "en-GB": "me", "bg-BG": "мене, ме" },
+      "зовут": { "en-GB": "(they) call", "bg-BG": "зоват, наричат" },
+      "анна": { "en-GB": "Anna (say your own name here)", "bg-BG": "Анна (кажете своето име)" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Меня and тебя rhyme",
+        "text": "«Меня» (“me”) and «тебя» (“you”) rhyme, so keep them as a pair: «Меня зовут…», «Как тебя зовут?». Put your own name in place of «Анна»."
+      },
+      "grammar": {
+        "title": "“I am called”: меня зовут",
+        "text": "Russian does not say “my name is”: it says «Меня зовут Анна», literally “They call me Anna”. «Меня» is the accusative of «я», and the name stays in its basic form."
+      },
+      "pronunciation": {
+        "title": "Soft н and long нн",
+        "ipa": "[mʲɪˈnʲa zɐˈvut ˈanːə]",
+        "respelling": "myih-NYA zuh-VOOT AN-nuh",
+        "text": "In «меня» the н is soft, one “ny” sound, and the stress is on the last syllable: myih-NYA. The double нн in «Анна» is held a little longer: AN-nuh."
+      }
+    }
+  },
+  {
+    "id": "ru-znakomstvo-03",
+    "target": "Очень приятно познакомиться",
+    "translations": { "en-GB": "Nice to meet you", "bg-BG": "Много ми е приятно да се запознаем" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["social", "politeness"],
+    "image": ["handshake", "sentiment_very_satisfied"],
+    "words": {
+      "очень": { "en-GB": "very", "bg-BG": "много" },
+      "приятно": { "en-GB": "pleasant, nice", "bg-BG": "приятно" },
+      "познакомиться": { "en-GB": "to meet, to get acquainted", "bg-BG": "да се запознаем" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Приятно: a pleasant yacht",
+        "text": "Hear «приятно» as “pree-YACHT-no” and picture a pleasant first meeting on a yacht. Inside «познакомиться» you can spot «знакомый», “familiar”: you become familiar with someone."
+      },
+      "grammar": {
+        "title": "«Приятно» + infinitive",
+        "text": "«Приятно» (“it is pleasant”) can be followed straight by an infinitive: «Приятно познакомиться» is “(It's) pleasant to meet”. There is no “I” and no “is”; «очень» makes it warmer."
+      },
+      "pronunciation": {
+        "title": "-ться sounds like “tsa”",
+        "ipa": "[ˈot͡ɕɪnʲ prʲɪˈjatnə pəznɐˈkomʲɪt͡sə]",
+        "respelling": "OH-chin' pree-YAHT-nuh puh-znuh-KOH-myih-tsuh",
+        "text": "The ending -ться is said “tsuh”: «познакомиться» ends in “-myih-tsuh”, not “-tisya”. The stress is on -КО-: puh-znuh-KOH-myih-tsuh."
+      }
+    }
+  },
+  {
+    "id": "ru-znakomstvo-04",
+    "target": "Откуда вы родом?",
+    "translations": { "en-GB": "Where are you from?", "bg-BG": "Откъде сте?" },
+    "register": "formal",
+    "region": "RU",
+    "tags": ["question", "social", "politeness"],
+    "image": ["public", "location_on"],
+    "words": {
+      "откуда": { "en-GB": "where from", "bg-BG": "откъде" },
+      "вы": { "en-GB": "you (polite or plural)", "bg-BG": "вие" },
+      "родом": { "en-GB": "originally, by birth", "bg-BG": "родом" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Откуда: from where",
+        "text": "«Откуда» is «от» (“from”) plus «куда» (“where to”): the arrow leaves a place. «Родом» belongs with «родина» (“homeland”) and «родиться» (“to be born”): where were you born?"
+      },
+      "grammar": {
+        "title": "Three kinds of “where”",
+        "text": "Russian splits “where” in three: «где» (being somewhere), «куда» (going somewhere) and «откуда» (coming from somewhere). This phrase asks about origin, so it is «откуда»."
+      },
+      "pronunciation": {
+        "title": "The tapped р",
+        "ipa": "[ɐtˈkudə vɨ ˈrodəm]",
+        "respelling": "uht-KOO-duh vuy RO-duhm",
+        "text": "The р in «родом» is a quick tap or trill of the tongue tip behind the teeth, like the r in Spanish “pero”, not the English “r”. The stress is on -КУ- and РО-: uht-KOO-duh, RO-duhm."
+      }
+    }
+  },
+  {
+    "id": "ru-restoran-01",
+    "target": "Столик на двоих, пожалуйста",
+    "translations": { "en-GB": "A table for two, please", "bg-BG": "Маса за двама, моля" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["request", "numbers", "politeness"],
+    "image": ["table_restaurant", "people"],
+    "words": {
+      "столик": { "en-GB": "table (in a restaurant)", "bg-BG": "маса (в ресторант)" },
+      "на двоих": { "en-GB": "for two (people)", "bg-BG": "за двама" },
+      "пожалуйста": { "en-GB": "please", "bg-BG": "моля" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Столик: a little stool-table",
+        "text": "«Стол» is related to the English “stool”, and -ик makes it small: a «столик» is a little table, which is what you book in a restaurant."
+      },
+      "grammar": {
+        "title": "«На двоих»: two people",
+        "text": "«На двоих» is “for two people”. For people, Russian often uses the collective «двое», «трое» (here in the form «двоих», «троих») instead of the plain «два», «три»."
+      },
+      "pronunciation": {
+        "title": "дв and the weak о",
+        "ipa": "[ˈstolʲɪk nə dvɐˈix pɐˈʐaləstə]",
+        "respelling": "STOH-lyik nuh dvuh-EEKH puh-ZHAH-luh-stuh",
+        "text": "«Дв» in «двоих» is two consonants, d and v, said together. The о before the stressed и shrinks to a weak “uh”: dvuh-EEKH. The final х is a rasp at the back of the throat, not a k."
+      }
+    }
+  },
+  {
+    "id": "ru-restoran-02",
+    "target": "Что вы можете порекомендовать?",
+    "translations": { "en-GB": "What would you recommend?", "bg-BG": "Какво препоръчвате?" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["question", "food", "politeness"],
+    "image": ["menu_book", "record_voice_over"],
+    "words": {
+      "что": { "en-GB": "what", "bg-BG": "какво" },
+      "вы": { "en-GB": "you (polite)", "bg-BG": "вие" },
+      "можете": { "en-GB": "you can", "bg-BG": "можете" },
+      "порекомендовать": { "en-GB": "to recommend", "bg-BG": "да препоръчате" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Recommend, in Cyrillic",
+        "text": "«Порекомендовать» hides the word “recommend”: по + рекомендовать. Read it syllable by syllable and you already have most of it."
+      },
+      "grammar": {
+        "title": "«Мочь»: г becomes ж",
+        "text": "«Вы можете» means “you can” and is followed by an infinitive. In «мочь» the г of «я могу» becomes ж in «ты можешь», «вы можете»."
+      },
+      "pronunciation": {
+        "title": "что is “shto”",
+        "ipa": "[ˈʂto vɨ ˈmoʐɨtʲɪ pərʲɪkəmʲɪndɐˈvatʲ]",
+        "respelling": "SHTOH vuy MOH-zhuy-tyih puh-ryih-kuh-myin-duh-VAHT'",
+        "text": "«Что» is spelled with ч but said “shto”. The long word «порекомендовать» has one stress, on the last syllable, -ВАТЬ; every vowel before it is weak."
+      }
+    }
+  },
+  {
+    "id": "ru-restoran-03",
+    "target": "Я бы хотел рыбу и салат",
+    "translations": { "en-GB": "I'd like the fish and a salad, please", "bg-BG": "Бих искал риба и салата, моля" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["request", "food", "politeness"],
+    "image": ["restaurant_menu", "restaurant"],
+    "words": {
+      "я бы хотел": { "en-GB": "I would like (a woman says «хотела»)", "bg-BG": "бих искал (жена казва «хотела»)" },
+      "рыбу": { "en-GB": "fish (as the thing ordered)", "bg-BG": "риба" },
+      "и": { "en-GB": "and", "bg-BG": "и" },
+      "салат": { "en-GB": "salad", "bg-BG": "салата" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Рыба: think of ribs",
+        "text": "Hear «рыба» as “RUY-ba” and picture the ribs of a fish. «Салат» is the “salad” you know, with the stress on the last syllable."
+      },
+      "grammar": {
+        "title": "«Я бы хотел»: I would like",
+        "text": "«Бы» plus the past form «хотел» makes the polite “I would like”. «Бы» never changes, but «хотел» shows who is speaking: a woman says «Я бы хотела»."
+      },
+      "pronunciation": {
+        "title": "Two ы and two stressed ends",
+        "ipa": "[ja bɨ xɐˈtʲel ˈrɨbʊ i sɐˈlat]",
+        "respelling": "ya buy khuh-TYEL RUY-boo ee suh-LAHT",
+        "text": "«Ы» appears twice, in «бы» and «рыбу» (“uy” in the respelling): the “i” of “bit” with the tongue pulled back. Stress falls on the last syllable of «хотел» and «салат»: khuh-TYEL, suh-LAHT."
+      }
+    }
+  },
+  {
+    "id": "ru-restoran-04",
+    "target": "Всё было очень вкусно, спасибо",
+    "translations": { "en-GB": "Everything was very tasty, thank you", "bg-BG": "Всичко беше много вкусно, благодаря" },
+    "register": "neutral",
+    "region": "RU",
+    "tags": ["social", "food", "politeness"],
+    "image": ["thumb_up", "sentiment_very_satisfied"],
+    "words": {
+      "всё": { "en-GB": "everything", "bg-BG": "всичко" },
+      "было": { "en-GB": "was", "bg-BG": "беше" },
+      "очень": { "en-GB": "very", "bg-BG": "много" },
+      "вкусно": { "en-GB": "tasty, delicious", "bg-BG": "вкусно" },
+      "спасибо": { "en-GB": "thank you", "bg-BG": "благодаря" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Спасибо: God save you",
+        "text": "«Спасибо» began as «спаси Бог», “God save (you)”, so thanking someone is wishing them well. «Вкусно» (“tasty”) is built on «вкус», “taste”."
+      },
+      "grammar": {
+        "title": "«Было» agrees with «всё»",
+        "text": "«Всё» (“everything”) is neuter, so the past tense is «было»; with a masculine subject it would be «был», with a feminine «была». «Вкусно» is an adverb here and does not change."
+      },
+      "pronunciation": {
+        "title": "в sounds like f",
+        "ipa": "[ˈfsʲɵ ˈbɨlə ˈot͡ɕɪnʲ ˈfkusnə spɐˈsʲibə]",
+        "respelling": "FSYOH BUY-luh OH-chin' FKOOS-nuh spuh-SEE-buh",
+        "text": "Before voiceless sounds в is said as “f”: «всё» is FSYOH and «вкусно» is FKOOS-nuh. The ё in «всё» is stressed and sounds like “yo”."
+      }
+    }
   }
 ]

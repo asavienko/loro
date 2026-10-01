@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
 import { fixturePack, installFixture } from './fixture';
-import { applyItemCover, findContentPhrase, installedPack, installPacks, keepOnlyLoros, songCoverUrl } from './index';
+import { applyItemCover, findContentPhrase, installedPack, installPacks, keepOnlyLoros, resetContent, songCoverUrl } from './index';
 
 const A = '/library/covers/cover-a.svg';
 const B = '/library/covers/cover-b.svg';
@@ -24,6 +24,8 @@ describe('the learner’s own covers of phrases and songs', () => {
   });
 
   it('one drawn just now shows at once, and the others stay', () => {
+    // Only the Spanish course, so another has no pack to change.
+    resetContent();
     installPacks([{ ...fixturePack('es-ES'), covers: { phrases: { 'cafe-01': A }, songs: {} } }]);
     const pack = applyItemCover('es-ES', 'phrase', 'cafe-02', C);
     assert.deepEqual(pack?.covers?.phrases, { 'cafe-01': A, 'cafe-02': C }, 'kept with the course, to be saved');

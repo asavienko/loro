@@ -4078,6 +4078,2958 @@
           "text": "«Ря» in «трябва» is an r with a y-glide: TRYAB-va."
         }
       }
+    },
+    {
+      "id": "bank-health-en-01",
+      "theme": "health",
+      "targetLang": "en-GB",
+      "target": "Where's the nearest chemist?",
+      "translations": { "bg-BG": "Къде е най-близката аптека?", "ru-RU": "Где ближайшая аптека?" },
+      "image": ["local_pharmacy", "near_me"],
+      "notes": {
+        "mnemonic": {
+          "title": "Chemist, as in chemistry",
+          "text": "«Chemist» belongs to the «chemistry» family. In Britain it also names the shop (often «chemist's») where you buy medicine, and the pharmacist who works there; «pharmacy» is understood too."
+        },
+        "grammar": {
+          "title": "«The nearest»: adjective + -est",
+          "text": "«Where's» is «where is». A short adjective makes its superlative with «-est»: «near» → «the nearest». Always put «the» before a superlative: «the nearest chemist»."
+        },
+        "pronunciation": {
+          "title": "Ch is a k",
+          "ipa": "[ˈweəz ðə ˈnɪə.rɪst ˈkem.ɪst]",
+          "respelling": "WAIRZ thuh NEER-ist KEM-ist",
+          "text": "The «ch» of «chemist» is a «k», as in «chemistry», not the «ch» of «cheese». The stress is on the first syllable: KEM-ist."
+        }
+      }
+    },
+    {
+      "id": "bank-health-en-02",
+      "theme": "health",
+      "targetLang": "en-GB",
+      "target": "Have you got anything for a cough?",
+      "translations": { "bg-BG": "Имате ли нещо против кашлица?", "ru-RU": "У вас есть что-нибудь от кашля?" },
+      "image": ["pill", "sick"],
+      "notes": {
+        "mnemonic": {
+          "title": "Cough sounds like a cough",
+          "text": "Say «cough» out loud and you can hear the cough in it: «kof». The spelling is the odd part, so remember the sound first and the letters second."
+        },
+        "grammar": {
+          "title": "«Have you got» and «anything»",
+          "text": "«Have you got…?» is the everyday British way to ask «Do you have…?», and it needs no «do». In a question, «anything» is the usual word. An illness takes «a»: «a cough», «a cold»."
+        },
+        "pronunciation": {
+          "title": "The f of cough, the th of anything",
+          "ipa": "[həv ju ˈɡɒt ˈen.i.θɪŋ fər ə ˈkɒf]",
+          "respelling": "huv yoo GOT EN-ee-thing fer uh KOF",
+          "text": "«Cough» ends in an «f», like «off»: «kof». The «gh» is not read. The «th» in «anything» is the breathy one: tongue lightly between the teeth, with no «s» and no «t»."
+        }
+      }
+    },
+    {
+      "id": "bank-health-en-03",
+      "theme": "health",
+      "targetLang": "en-GB",
+      "target": "I've had a headache since this morning",
+      "translations": { "bg-BG": "От сутринта ме боли главата", "ru-RU": "У меня с утра болит голова" },
+      "image": ["sentiment_dissatisfied", "history"],
+      "notes": {
+        "mnemonic": {
+          "title": "Head + ache",
+          "text": "«Headache» is just «head» + «ache» (pain), built like «toothache» and «earache». Learn «ache» once and you can name pains all over the body."
+        },
+        "grammar": {
+          "title": "«I've had… since»",
+          "text": "For something that began in the past and is still true, English uses the present perfect: «I've had…», not «I have… since». Use «since» with a starting point (this morning, Monday) and «for» with a length of time (for two days)."
+        },
+        "pronunciation": {
+          "title": "«Ache» rhymes with «cake»",
+          "ipa": "[aɪv hæd ə ˈhed.eɪk sɪns ðɪs ˈmɔː.nɪŋ]",
+          "respelling": "ai-v had uh HED-ayk sinss thiss MOR-ning",
+          "text": "The «ache» in «headache» is «ayk», rhyming with «cake»: the «ch» is a «k», not a «ch». Stress the first syllable: HED-ayk."
+        }
+      }
+    },
+    {
+      "id": "bank-health-en-04",
+      "theme": "health",
+      "targetLang": "en-GB",
+      "target": "I'm allergic to penicillin",
+      "translations": { "bg-BG": "Имам алергия към пеницилин", "ru-RU": "У меня аллергия на пенициллин" },
+      "image": ["allergy", "pill", "block"],
+      "notes": {
+        "mnemonic": {
+          "title": "Words you already know",
+          "text": "Both long words are international and probably exist in your own language too, so you already know them. Only the stress is new."
+        },
+        "grammar": {
+          "title": "«Allergic to»",
+          "text": "«Allergic» is an adjective, so it goes with «I'm» and takes «to»: «allergic to penicillin», «allergic to nuts». The noun is «allergy»: «a penicillin allergy»."
+        },
+        "pronunciation": {
+          "title": "The g is a j",
+          "ipa": "[aɪm əˈlɜː.dʒɪk tə ˌpen.ɪˈsɪl.ɪn]",
+          "respelling": "ai-m uh-LUR-jik tuh pen-ih-SIL-in",
+          "text": "In «allergic» the «g» sounds like the «j» in «jam», and the stress is on «ler»: uh-LUR-jik. In «penicillin» it falls on «cil»: pen-i-SIL-in."
+        }
+      }
+    },
+    {
+      "id": "bank-health-en-05",
+      "theme": "health",
+      "targetLang": "en-GB",
+      "target": "I'd like an appointment with a GP, please",
+      "translations": {
+        "bg-BG": "Може ли да запиша час при личен лекар, моля?",
+        "ru-RU": "Мне бы записаться на приём к терапевту, пожалуйста"
+      },
+      "image": ["stethoscope", "event"],
+      "notes": {
+        "mnemonic": {
+          "title": "GP: your first doctor",
+          "text": "«GP» stands for «general practitioner», the family doctor you see first in Britain, before any specialist. Say the letters aloud, «jee-pee», and picture the doctor around the corner."
+        },
+        "grammar": {
+          "title": "«I'd like», «a» and «an»",
+          "text": "«I'd like» (I would like) is the polite way to ask; «I want» sounds blunt. The article follows the sound, not the spelling: «an appointment» (vowel sound), but «a GP» (it starts with the consonant sound «j»)."
+        },
+        "pronunciation": {
+          "title": "Stress: uh-POINT-ment",
+          "ipa": "[aɪd ˈlaɪk ən əˈpɔɪnt.mənt wɪð ə ˌdʒiːˈpiː pliːz]",
+          "respelling": "ai-d LIKE un uh-POINT-ment with uh jee-PEE, pleez",
+          "text": "Stress the middle syllable: uh-POINT-ment, with «oy» as in «boy». The first syllable is a weak «uh», not «ap»."
+        }
+      }
+    },
+    {
+      "id": "bank-hotel-en-01",
+      "theme": "hotel",
+      "targetLang": "en-GB",
+      "target": "I've booked a double room for two nights",
+      "translations": {
+        "bg-BG": "Имам резервация за двойна стая за две нощи",
+        "ru-RU": "У меня забронирован двухместный номер на две ночи"
+      },
+      "image": ["book_online", "nights_stay"],
+      "notes": {
+        "mnemonic": {
+          "title": "Booking.com in a sentence",
+          "text": "You may know «Booking.com»: «to book» is the verb for reserving. The same word as «book» (the thing you read) is also a verb: «I've booked a room» means «I've made a booking»."
+        },
+        "grammar": {
+          "title": "«I've booked»: done, and it matters now",
+          "text": "The present perfect «I've booked» links a past action to now: the room is booked, and that matters at the desk. «For two nights» gives the length: «for» + a period of time."
+        },
+        "pronunciation": {
+          "title": "«Booked» is one syllable",
+          "ipa": "[aɪv ˈbʊkt ə ˈdʌb.l̩ ruːm fə tuː ˈnaɪts]",
+          "respelling": "ai-v BOOKT uh DUB-ul room fuh too NITES",
+          "text": "After a «k» the «-ed» sounds like «t»: «booked» is «bookt», one syllable, with a short «oo» as in «good». Don't say «boo-ked»."
+        }
+      }
+    },
+    {
+      "id": "bank-hotel-en-02",
+      "theme": "hotel",
+      "targetLang": "en-GB",
+      "target": "What time is breakfast served?",
+      "translations": { "bg-BG": "В колко часа е закуската?", "ru-RU": "Во сколько подают завтрак?" },
+      "image": ["free_breakfast", "schedule"],
+      "notes": {
+        "mnemonic": {
+          "title": "Break + fast",
+          "text": "«Breakfast» is «break» + «fast»: the meal that breaks the long fast of the night. This «fast» means not eating, not speed."
+        },
+        "grammar": {
+          "title": "The passive: «is served»",
+          "text": "Breakfast doesn't serve anyone; it is served by the hotel. The passive is «is/are» + past participle: «is served», «are included». The question words come first, with no «do»: «What time is breakfast served?»"
+        },
+        "pronunciation": {
+          "title": "BREK-fust, not break-fast",
+          "ipa": "[wɒt ˈtaɪm ɪz ˈbrek.fəst ˈsɜːvd]",
+          "respelling": "wot TIME iz BREK-fust SURVD",
+          "text": "The «ea» is short, as in «bed», and the stress is on the first syllable: BREK-fust. The last syllable is weak, so «fast» is not said like the word «fast»."
+        }
+      }
+    },
+    {
+      "id": "bank-hotel-en-03",
+      "theme": "hotel",
+      "targetLang": "en-GB",
+      "target": "Could I have an extra towel, please?",
+      "translations": { "bg-BG": "Може ли още една хавлия, моля?", "ru-RU": "Можно ещё одно полотенце, пожалуйста?" },
+      "image": ["bathtub", "add"],
+      "notes": {
+        "mnemonic": {
+          "title": "An international word",
+          "text": "«Extra» is an international word you probably use already. The same frame, «Could I have an extra…?», fits a pillow, a blanket, a hanger or a key."
+        },
+        "grammar": {
+          "title": "«Could I have…?» and «an»",
+          "text": "«Could I have…?» is the polite British way to ask for something, softer than «I want». Use «an» before a vowel sound: «an extra towel», but «a towel»."
+        },
+        "pronunciation": {
+          "title": "Silent l, and a two-beat towel",
+          "ipa": "[kʊd aɪ həv ən ˈek.strə ˈtaʊ.əl pliːz]",
+          "respelling": "kood ai huv un EK-struh TOW-ul pleez",
+          "text": "The «l» in «could» is silent: «kood», with a short «oo». «Towel» has two beats, TOW-ul, with «ow» as in «cow», not «toe-el»."
+        }
+      }
+    },
+    {
+      "id": "bank-hotel-en-04",
+      "theme": "hotel",
+      "targetLang": "en-GB",
+      "target": "There's no hot water in my room",
+      "translations": { "bg-BG": "В стаята ми няма топла вода", "ru-RU": "В моём номере нет горячей воды" },
+      "image": ["water_drop", "thermostat", "block"],
+      "notes": {
+        "mnemonic": {
+          "title": "Hot, as in hot dog",
+          "text": "«Hot» is the first word of «hot dog», a sausage served hot. Picture yourself under a cold shower, then say «no hot water»."
+        },
+        "grammar": {
+          "title": "«There's no…»",
+          "text": "«There's no…» (there is no) says something is missing: «There's no hot water», «There's no Wi-Fi». Add the place with «in»: «in my room». Don't say «I haven't hot water»."
+        },
+        "pronunciation": {
+          "title": "Rounded w, soft h",
+          "ipa": "[ðeəz ˈnəʊ ˈhɒt ˈwɔː.tə ɪn maɪ ˈruːm]",
+          "respelling": "thairz NOH HOT WOR-tuh in my ROOM",
+          "text": "In «water» the «w» is made with rounded lips and no contact with the teeth: «w», not «v». The «h» of «hot» is a soft breath, with no scrape in the throat."
+        }
+      }
+    },
+    {
+      "id": "bank-hotel-en-05",
+      "theme": "hotel",
+      "targetLang": "en-GB",
+      "target": "Can we leave our bags here after check-out?",
+      "translations": {
+        "bg-BG": "Може ли да оставим багажа си тук, след като освободим стаята?",
+        "ru-RU": "Можно оставить багаж здесь после выезда?"
+      },
+      "image": ["luggage", "door_open"],
+      "notes": {
+        "mnemonic": {
+          "title": "Check-out is a word you know",
+          "text": "Booking sites use «check-in» and «check-out» everywhere, so you may know them already. «Bags» is the everyday word for luggage."
+        },
+        "grammar": {
+          "title": "«Can we» + plain verb, «after» + noun",
+          "text": "After «can» comes the plain verb with no «to»: «Can we leave…?». «After» is a preposition, so a noun or an -ing form follows: «after check-out», «after checking out»."
+        },
+        "pronunciation": {
+          "title": "Short a and a voiced z in «bags»",
+          "ipa": "[kən wi ˈliːv aʊə ˈbæɡz hɪər ˈɑːf.tə ˈtʃek.aʊt]",
+          "respelling": "kun wee LEEV ow-uh BAGZ heer AHF-tuh CHEK-owt",
+          "text": "«Bags» has the short «a» of «cat», and its last sound is a «z»: «bagz». Keep the «g» voiced; don't harden it into a «k» at the end."
+        }
+      }
+    },
+    {
+      "id": "bank-clothes-en-01",
+      "theme": "clothes",
+      "targetLang": "en-GB",
+      "target": "Do you have this in a medium?",
+      "translations": { "bg-BG": "Имате ли това в среден размер?", "ru-RU": "У вас есть это в среднем размере?" },
+      "image": ["apparel", "straighten"],
+      "notes": {
+        "mnemonic": {
+          "title": "Medium = middle",
+          "text": "«Medium» comes from the Latin word for «middle», like «Mediterranean» («in the middle of the land»). It's the size between «small» and «large»: tags say S, M or L."
+        },
+        "grammar": {
+          "title": "«In» for size and colour",
+          "text": "Say «in» for size and colour: «in a medium», «in black», «in a smaller size». «Do you have…?» asks whether the shop has it."
+        },
+        "pronunciation": {
+          "title": "Th in «this», long ee in «medium»",
+          "ipa": "[də ju ˈhæv ðɪs ɪn ə ˈmiː.di.əm]",
+          "respelling": "duh yoo HAV this in uh MEE-dee-um",
+          "text": "In «this» the «th» is voiced: tongue lightly between the teeth, not «z» or «d», and the «i» is short. «Medium» starts with a long «ee»: MEE-dee-um."
+        }
+      }
+    },
+    {
+      "id": "bank-clothes-en-02",
+      "theme": "clothes",
+      "targetLang": "en-GB",
+      "target": "Can I try this on?",
+      "translations": { "bg-BG": "Може ли да пробвам това?", "ru-RU": "Можно это примерить?" },
+      "image": ["checkroom", "accessibility_new"],
+      "notes": {
+        "mnemonic": {
+          "title": "Try it ON",
+          "text": "Picture the shirt going ON your shoulders: you «try» it «on». That little word «on» is the whole idea, so keep it at the end."
+        },
+        "grammar": {
+          "title": "«Try on»: pronoun in the middle",
+          "text": "«Try on» is a phrasal verb. A pronoun goes between its two parts: «try it on», «try them on», never «try on it». A noun can go either side: «try on this shirt» or «try this shirt on»."
+        },
+        "pronunciation": {
+          "title": "Weak «can»",
+          "ipa": "[kən aɪ ˈtraɪ ðɪs ˈɒn]",
+          "respelling": "kun ai TRY this ON",
+          "text": "In «Can I try this on?» the word «can» is weak, almost «kn», and the stress lands on «try» and «on». The «th» in «this» is the voiced one: tongue lightly between the teeth."
+        }
+      }
+    },
+    {
+      "id": "bank-clothes-en-03",
+      "theme": "clothes",
+      "targetLang": "en-GB",
+      "target": "Where are the changing rooms?",
+      "translations": { "bg-BG": "Къде са пробните?", "ru-RU": "Где примерочные?" },
+      "image": ["curtains", "location_on"],
+      "notes": {
+        "mnemonic": {
+          "title": "A room to change in",
+          "text": "A «changing room» is simply a room to «change» in: one set of clothes off, another on. Shops say «fitting room» too, but «changing room» is the usual British word."
+        },
+        "grammar": {
+          "title": "«Where are» with plurals",
+          "text": "«Are» goes with plural nouns: «Where are the changing rooms?», but «Where is the changing room?». In «changing room» the -ing word says what the room is for, as in «waiting room» and «dining room»."
+        },
+        "pronunciation": {
+          "title": "«-ing» is one nasal sound",
+          "ipa": "[ˈweər ə ðə ˈtʃeɪn.dʒɪŋ ˈruːmz]",
+          "respelling": "WAIR uh thuh CHAYN-jing ROOMZ",
+          "text": "The «ng» of «changing» is one sound made at the back of the mouth, with no separate «g» or «k» after it. Say CHAYN-jing, with the «j» of «jam» in the middle."
+        }
+      }
+    },
+    {
+      "id": "bank-clothes-en-04",
+      "theme": "clothes",
+      "targetLang": "en-GB",
+      "target": "It's a bit tight, I'm afraid",
+      "translations": { "bg-BG": "Малко е тясно, за съжаление", "ru-RU": "Боюсь, немного тесновато" },
+      "image": ["apparel", "sentiment_dissatisfied"],
+      "notes": {
+        "mnemonic": {
+          "title": "«I'm afraid» cushions bad news",
+          "text": "«I'm afraid» doesn't mean you are scared. It puts a soft cushion under bad news, like «I'm sorry to say». Picture yourself handing back a jacket with a gentle smile."
+        },
+        "grammar": {
+          "title": "«A bit» softens",
+          "text": "«A bit» + adjective makes a complaint gentler: «a bit tight», «a bit big», «a bit short». British speakers understate, so «a bit tight» may mean quite tight."
+        },
+        "pronunciation": {
+          "title": "Short i in «bit»",
+          "ipa": "[ɪts ə ˈbɪt ˈtaɪt aɪm əˈfreɪd]",
+          "respelling": "its uh BIT TITE, ai-m uh-FRAYD",
+          "text": "The «i» in «bit» is short and relaxed, quite different from the long «ee» of «beat»: a «bit» is small, a «beat» is a drum. Say «bit» quickly, without lengthening it."
+        }
+      }
+    },
+    {
+      "id": "bank-clothes-en-05",
+      "theme": "clothes",
+      "targetLang": "en-GB",
+      "target": "Is this in the sale?",
+      "translations": { "bg-BG": "Това намалено ли е?", "ru-RU": "Это со скидкой?" },
+      "image": ["storefront", "trending_down"],
+      "notes": {
+        "mnemonic": {
+          "title": "«Sale» sounds like «sail»",
+          "text": "You've seen «SALE» in shop windows everywhere. Say it «sayl», like the «sail» of a boat: the two words sound identical."
+        },
+        "grammar": {
+          "title": "«In the sale»",
+          "text": "In Britain, goods with reduced prices are «in the sale»: «Is this in the sale?». «On sale» is the usual American wording. «The sale» is the whole period of reductions."
+        },
+        "pronunciation": {
+          "title": "Two voiced th's",
+          "ipa": "[ɪz ðɪs ɪn ðə ˈseɪl]",
+          "respelling": "iz this in thuh SAYL",
+          "text": "«This» and «the» both start with the voiced «th»: tongue lightly between the teeth, not «z» or «d». «Sale» has the «ay» of «day» and rhymes with «tail»."
+        }
+      }
+    },
+    {
+      "id": "bank-meeting-en-01",
+      "theme": "meeting",
+      "targetLang": "en-GB",
+      "target": "What do you do?",
+      "translations": { "bg-BG": "С какво се занимаваш?", "ru-RU": "Чем ты занимаешься?" },
+      "image": ["work", "badge"],
+      "notes": {
+        "mnemonic": {
+          "title": "Say «do» twice",
+          "text": "Tap it out on two fingers: «What DO you DO?». The first «do» is only a helper; the second one means «work as». The question asks about your job or your studies."
+        },
+        "grammar": {
+          "title": "Job or right now?",
+          "text": "«What do you do?» (present simple) asks about your regular job. «What are you doing?» (present continuous) asks what you are doing right now. A good answer is «I'm a nurse» or «I work in a bank»."
+        },
+        "pronunciation": {
+          "title": "W is not v",
+          "ipa": "[ˌwɒt də ju ˈduː]",
+          "respelling": "WOT duh yoo DOO",
+          "text": "The «w» in «what» is made with rounded lips and no contact with the teeth: «wot», not «vot». The vowel is a short, rounded «o»."
+        }
+      }
+    },
+    {
+      "id": "bank-meeting-en-02",
+      "theme": "meeting",
+      "targetLang": "en-GB",
+      "target": "Have you been here long?",
+      "translations": { "bg-BG": "Отдавна ли си тук?", "ru-RU": "Ты давно здесь?" },
+      "image": ["hourglass_top", "pin_drop"],
+      "notes": {
+        "mnemonic": {
+          "title": "A long queue",
+          "text": "Picture a long bus queue and ask the person next to you: «Have you been here long?». The word «long» carries the whole question, so you needn't say «a long time»."
+        },
+        "grammar": {
+          "title": "Present perfect for “so far”",
+          "text": "To ask how long someone has been somewhere up to now, English uses the present perfect: «Have you been here long?», not «Are you here long?». «Long» alone works in questions and negatives; in positive sentences say «a long time» or «for two weeks»."
+        },
+        "pronunciation": {
+          "title": "A soft h",
+          "ipa": "[həv ju bɪn ˈhɪə ˈlɒŋ]",
+          "respelling": "huv yoo bin HEER LONG",
+          "text": "The «h» in «have» and «here» is a soft breath, like fogging a mirror, with no scrape in the throat. In «long» the «ng» is one nasal sound, with no hard «g» after it."
+        }
+      }
+    },
+    {
+      "id": "bank-meeting-en-03",
+      "theme": "meeting",
+      "targetLang": "en-GB",
+      "target": "Are you here on holiday?",
+      "translations": { "bg-BG": "Тук ли си на почивка?", "ru-RU": "Ты здесь в отпуске?" },
+      "image": ["luggage", "sunny"],
+      "notes": {
+        "mnemonic": {
+          "title": "A holy day off",
+          "text": "«Holiday» began as «holy day»: a special day off. In Britain it now means a whole trip or time away from work, what Americans call «vacation»."
+        },
+        "grammar": {
+          "title": "«On holiday», not «in»",
+          "text": "It is a fixed phrase: «on holiday», «on business», «on a trip». Not «in holiday» or «at holiday». The question is made with «Are you…?», with no «do»."
+        },
+        "pronunciation": {
+          "title": "HOL-i-day: stress the first syllable",
+          "ipa": "[ə ju ˈhɪər ɒn ˈhɒl.ɪ.deɪ]",
+          "respelling": "uh yoo HEER-on HOL-ih-day",
+          "text": "Stress the first syllable: HOL-i-day, with a short, round «o» and a weak middle. Don't stress the end, as in «holi-DAY». The «h» is a soft breath."
+        }
+      }
+    },
+    {
+      "id": "bank-meeting-en-04",
+      "theme": "meeting",
+      "targetLang": "en-GB",
+      "target": "Sorry, my English isn't very good",
+      "translations": {
+        "bg-BG": "Съжалявам, английският ми не е много добър",
+        "ru-RU": "Извините, у меня не очень хороший английский"
+      },
+      "image": ["translate", "globe_uk"],
+      "notes": {
+        "mnemonic": {
+          "title": "Start with «sorry»",
+          "text": "Open with «Sorry,» the way Britons do before almost anything awkward: it sounds friendly, not weak. Picture yourself smiling as you say it, and the rest of the sentence follows."
+        },
+        "grammar": {
+          "title": "«Good» or «well»?",
+          "text": "After «my English is…» use an adjective: «good», «not very good». With the verb «speak» use an adverb: «I speak English well». «Isn't» is «is not»."
+        },
+        "pronunciation": {
+          "title": "ING-glish",
+          "ipa": "[ˈsɒr.i maɪ ˈɪŋ.ɡlɪʃ ˈɪz.n̩t ˈver.i ˈɡʊd]",
+          "respelling": "SOR-ee, my ING-glish IZ-unt VEH-ree GOOD",
+          "text": "«English» starts with a short «i», as in «bit», not «e»: ING-glish. The «ng» is followed by a clear «g»; compare «singer», where the «g» is silent."
+        }
+      }
+    },
+    {
+      "id": "bank-meeting-en-05",
+      "theme": "meeting",
+      "targetLang": "en-GB",
+      "target": "How do you know Sam?",
+      "translations": { "bg-BG": "Откъде познаваш Сам?", "ru-RU": "Откуда ты знаешь Сэма?" },
+      "image": ["people", "handshake"],
+      "notes": {
+        "mnemonic": {
+          "title": "Know-how, reversed",
+          "text": "«Know-how» is a loanword in many languages, so you may already know the pair. This question just puts the two words the other way round: «How do you know…?»"
+        },
+        "grammar": {
+          "title": "«How», not «where from»",
+          "text": "English most often asks «How do you know…?», because the answer is a connection: «We work together», «She's my cousin». «Know» is a state verb, so it stays in the simple present: «do you know», not «are you knowing»."
+        },
+        "pronunciation": {
+          "title": "The k in «know» is silent",
+          "ipa": "[ˈhaʊ də ju ˈnəʊ ˈsæm]",
+          "respelling": "HOW duh yoo NOH SAM",
+          "text": "«Know» sounds exactly like «no»: the «k» is silent. In «how» the «h» is a soft breath and «ow» is the sound in «cow»."
+        }
+      }
+    },
+    {
+      "id": "bank-weather-en-01",
+      "theme": "weather",
+      "targetLang": "en-GB",
+      "target": "It's supposed to rain later",
+      "translations": { "bg-BG": "По-късно се очаква дъжд", "ru-RU": "Говорят, позже пойдёт дождь" },
+      "image": ["rainy", "schedule"],
+      "notes": {
+        "mnemonic": {
+          "title": "Supposed = presumed",
+          "text": "«Supposed» means «presumed»: the forecast presumes rain. Picture the TV weatherman pointing at a cloud and saying «it's supposed to rain later»: expected, not certain."
+        },
+        "grammar": {
+          "title": "«Be supposed to» = expected",
+          "text": "«Be supposed to» + verb says what is expected, often from a forecast or a timetable: «It's supposed to rain», «The shop is supposed to open at nine». It is less sure than «It will rain»."
+        },
+        "pronunciation": {
+          "title": "«Supposed to» runs together",
+          "ipa": "[ɪts səˈpəʊs.tə ˈreɪn ˈleɪ.tə]",
+          "respelling": "its suh-POHS-tuh RAYN LAY-tuh",
+          "text": "«Supposed to» is said as one word, suh-POHS-tuh: the «d» disappears and «to» is a weak «tuh». The «-er» of «later» is a plain «uh», with no «r»."
+        }
+      }
+    },
+    {
+      "id": "bank-weather-en-02",
+      "theme": "weather",
+      "targetLang": "en-GB",
+      "target": "What's the forecast for tomorrow?",
+      "translations": { "bg-BG": "Каква е прогнозата за утре?", "ru-RU": "Какой прогноз погоды на завтра?" },
+      "image": ["cloudy", "calendar_today"],
+      "notes": {
+        "mnemonic": {
+          "title": "Fore + cast",
+          "text": "«Fore-» means «before», as in «foresee», and «cast» means «throw»: a forecast is a guess thrown forward in time."
+        },
+        "grammar": {
+          "title": "«The forecast for…»",
+          "text": "«What's» is «what is». «For» says which day the forecast covers: «for tomorrow», «for the weekend». «Tomorrow» needs no «on» or «in»."
+        },
+        "pronunciation": {
+          "title": "FORE-cast, to-MOR-row",
+          "ipa": "[ˈwɒts ðə ˈfɔː.kɑːst fə təˈmɒr.əʊ]",
+          "respelling": "WOTS thuh FOR-kahst fuh tuh-MOR-oh",
+          "text": "«Forecast» is stressed on the first syllable, FOR-kahst, with a long «ah» in British English. In «tomorrow» the stress is on «mor»: tuh-MOR-oh."
+        }
+      }
+    },
+    {
+      "id": "bank-weather-en-03",
+      "theme": "weather",
+      "targetLang": "en-GB",
+      "target": "It's freezing out there",
+      "translations": { "bg-BG": "Навън е ледено", "ru-RU": "На улице ужасно холодно" },
+      "image": ["ac_unit", "thermostat"],
+      "notes": {
+        "mnemonic": {
+          "title": "Freezer weather",
+          "text": "«Freezing» is the «-ing» form of «freeze», the verb inside «freezer». Imagine stepping outside into an open freezer."
+        },
+        "grammar": {
+          "title": "Weather needs «it»",
+          "text": "An English statement needs a subject, so weather talk starts with «it»: «It's freezing», «It's raining», «It's sunny». Don't leave «it» out."
+        },
+        "pronunciation": {
+          "title": "Voiced z and th",
+          "ipa": "[ɪts ˈfriː.zɪŋ ˈaʊt ðeə]",
+          "respelling": "its FREE-zing OWT thair",
+          "text": "The middle of «freezing» is a voiced «z», not «s», and the «ee» is long. In «there» the «th» is voiced: tongue lightly between the teeth, not «d» or «z»."
+        }
+      }
+    },
+    {
+      "id": "bank-weather-en-04",
+      "theme": "weather",
+      "targetLang": "en-GB",
+      "target": "It's really boiling today",
+      "translations": { "bg-BG": "Днес е адски горещо", "ru-RU": "Сегодня просто адская жара" },
+      "image": ["wb_sunny", "thermostat"],
+      "notes": {
+        "mnemonic": {
+          "title": "Hot as a kettle",
+          "text": "Water is at its hottest when it's boiling, so on a very hot day Britons say it's «boiling», just as they say «freezing» for very cold. Picture a whistling kettle."
+        },
+        "grammar": {
+          "title": "«Really boiling», not «very»",
+          "text": "«Boiling» already means «very hot», so it takes «really» or «absolutely», not «very»: «really boiling». The same goes for «freezing», «huge» and «exhausted»."
+        },
+        "pronunciation": {
+          "title": "The English r is not rolled",
+          "ipa": "[ɪts ˈrɪə.li ˈbɔɪ.lɪŋ təˈdeɪ]",
+          "respelling": "its REE-uh-lee BOY-ling tuh-DAY",
+          "text": "The «r» in «really» is not rolled: the tongue tip curls back without touching anything, and the lips round a little. «Boiling» has the «oy» of «boy»."
+        }
+      }
+    },
+    {
+      "id": "bank-weather-en-05",
+      "theme": "weather",
+      "targetLang": "en-GB",
+      "target": "You'd better take an umbrella",
+      "translations": { "bg-BG": "По-добре вземи чадър", "ru-RU": "Лучше возьми зонтик" },
+      "image": ["umbrella", "rainy"],
+      "notes": {
+        "mnemonic": {
+          "title": "A little shade",
+          "text": "«Umbrella» goes back to the Latin word for «shade», «umbra»: it is literally a little shade you carry over your head."
+        },
+        "grammar": {
+          "title": "«You'd better» + plain verb",
+          "text": "«You'd better» (you had better) gives strong advice: do it, or something bad may happen. It is followed by the plain verb, with no «to»: «You'd better take…», «You'd better not forget»."
+        },
+        "pronunciation": {
+          "title": "um-BREL-uh: stress in the middle",
+          "ipa": "[jʊd ˈbet.ə ˈteɪk ən ʌmˈbrel.ə]",
+          "respelling": "yood BET-uh TAYK un um-BREL-uh",
+          "text": "«Umbrella» is stressed on the second syllable: um-BREL-uh. The first syllable is short and weak, with the «u» of «cup», and the last is a weak «uh»."
+        }
+      }
+    },
+    {
+      "id": "bank-plans-en-01",
+      "theme": "plans",
+      "targetLang": "en-GB",
+      "target": "Are you free this weekend?",
+      "translations": { "bg-BG": "Имаш ли време този уикенд?", "ru-RU": "У тебя есть время в эти выходные?" },
+      "image": ["calendar_month", "event_available"],
+      "notes": {
+        "mnemonic": {
+          "title": "Free = empty in the diary",
+          "text": "«Free» means «not busy» as well as «costing nothing». Picture a diary with nothing written in the weekend: that weekend is «free»."
+        },
+        "grammar": {
+          "title": "No preposition before «this weekend»",
+          "text": "Words like «this», «next» and «last» do the work of a preposition: «this weekend», «next week», «last night». Don't add «in» or «on»."
+        },
+        "pronunciation": {
+          "title": "Week-END",
+          "ipa": "[ə ju ˈfriː ðɪs ˌwiːkˈend]",
+          "respelling": "uh yoo FREE this week-END",
+          "text": "In «weekend» the main stress is on the second part: week-END. The «w» is made with rounded lips: «week» starts like «we», not «ve»."
+        }
+      }
+    },
+    {
+      "id": "bank-plans-en-02",
+      "theme": "plans",
+      "targetLang": "en-GB",
+      "target": "Do you fancy going for a drink?",
+      "translations": { "bg-BG": "Искаш ли да пийнем по нещо?", "ru-RU": "Не хочешь пойти выпить?" },
+      "image": ["sports_bar", "people"],
+      "notes": {
+        "mnemonic": {
+          "title": "Fancy comes from fantasy",
+          "text": "«Fancy» is a short form of «fantasy». If you «fancy» something, it catches your imagination: you feel like it. In Britain, «a drink» often means a pint or a glass out."
+        },
+        "grammar": {
+          "title": "«Fancy» + noun or -ing",
+          "text": "As a verb, «fancy» means «feel like» and takes a noun or an -ing form: «Do you fancy a drink?», «Do you fancy going out?», not «fancy to go». With a person it means «be attracted to», so «Do you fancy Sam?» is a different question."
+        },
+        "pronunciation": {
+          "title": "Open a in «fancy»",
+          "ipa": "[də ju ˈfæn.si ˈɡəʊ.ɪŋ fər ə ˈdrɪŋk]",
+          "respelling": "duh yoo FAN-see GOH-ing fer uh DRINK",
+          "text": "The «a» in «fancy» is the open vowel of «cat»: jaw low, between «e» and «a». In «going» the vowel glides, GOH-ing: it isn't a pure «o»."
+        }
+      }
+    },
+    {
+      "id": "bank-plans-en-03",
+      "theme": "plans",
+      "targetLang": "en-GB",
+      "target": "Let's meet outside the cinema at half six",
+      "translations": {
+        "bg-BG": "Да се срещнем пред киното в шест и половина",
+        "ru-RU": "Давай встретимся у кинотеатра в половине седьмого"
+      },
+      "image": ["local_activity", "pin_drop", "schedule"],
+      "notes": {
+        "mnemonic": {
+          "title": "Cinema, short for cinematograph",
+          "text": "«Cinema» shares its root with «kino» in Bulgarian and Russian: both are short for «cinematograph». In Britain you go to the cinema; Americans say «movie theater»."
+        },
+        "grammar": {
+          "title": "«Half six» means 6.30",
+          "text": "Britons say «half six» for 6.30: it's short for «half past six», and it never means 5.30. With clock times use «at»: «at half six», «at seven». «Let's» + plain verb makes a suggestion."
+        },
+        "pronunciation": {
+          "title": "Silent l in «half»",
+          "ipa": "[ˈlets ˈmiːt aʊtˈsaɪd ðə ˈsɪn.ə.mə ət ˈhɑːf ˈsɪks]",
+          "respelling": "LETS MEET owt-SIDE thuh SIN-uh-muh at HAHF SIX",
+          "text": "The «l» in «half» is silent: «hahf», with a long «ah». Stress «cinema» on the first syllable: SIN-uh-muh, not «ci-NE-ma»."
+        }
+      }
+    },
+    {
+      "id": "bank-plans-en-04",
+      "theme": "plans",
+      "targetLang": "en-GB",
+      "target": "I'm running a bit late, sorry",
+      "translations": { "bg-BG": "Малко закъснявам, извинявай", "ru-RU": "Я немного опаздываю, извини" },
+      "image": ["directions_run", "schedule"],
+      "notes": {
+        "mnemonic": {
+          "title": "Running after the clock",
+          "text": "Picture someone sprinting down the street with one eye on a watch: that's «running late». It's an idiom, so learn the whole chunk together."
+        },
+        "grammar": {
+          "title": "«I'm running late»: still on my way",
+          "text": "The present continuous «I'm running late» describes what's happening now and warns of a delay: you are on your way and will arrive late. «I'm late» says you are already late."
+        },
+        "pronunciation": {
+          "title": "The u of «cup» in «running»",
+          "ipa": "[aɪm ˈrʌn.ɪŋ ə ˈbɪt ˈleɪt ˈsɒr.i]",
+          "respelling": "ai-m RUN-ing uh BIT LAYT SOR-ee",
+          "text": "«Running» has the short, relaxed «u» of «cup»: RUN-ing, closer to «a» than to «o». The ending is one nasal «ng», with no «g»."
+        }
+      }
+    },
+    {
+      "id": "bank-plans-en-05",
+      "theme": "plans",
+      "targetLang": "en-GB",
+      "target": "I can't make it on Friday. How about Saturday?",
+      "translations": {
+        "bg-BG": "В петък не мога. Какво ще кажеш за събота?",
+        "ru-RU": "В пятницу не получится. А как насчёт субботы?"
+      },
+      "image": ["event_busy", "event_repeat"],
+      "notes": {
+        "mnemonic": {
+          "title": "Saturn's day",
+          "text": "«Saturday» is «Saturn's day»: it begins just like the planet Saturn, named after the same Roman god. Picture the ringed planet hanging over your plans for the weekend."
+        },
+        "grammar": {
+          "title": "«On» with days",
+          "text": "Use «on» before a day: «on Friday», «on Saturday» (and «at» before a clock time: «at seven»). «Make it» means manage to come, and «How about…?» suggests an alternative."
+        },
+        "pronunciation": {
+          "title": "Long ah in «can't»",
+          "ipa": "[aɪ ˈkɑːnt ˈmeɪk ɪt ɒn ˈfraɪ.deɪ ˈhaʊ əˌbaʊt ˈsæt.ə.deɪ]",
+          "respelling": "ai KAHNT MAYK it on FRY-day. HOW uh-BOWT SAT-uh-day",
+          "text": "In British English «can't» has a long «ah», KAHNT, and a clear final «t», while «can» is a quick «kn». That long vowel is how listeners tell «I can't» from «I can»."
+        }
+      }
+    },
+    {
+      "id": "bank-airport-en-01",
+      "theme": "airport",
+      "targetLang": "en-GB",
+      "target": "Where do I check in, please?",
+      "translations": { "bg-BG": "Къде да се регистрирам, моля?", "ru-RU": "Где пройти регистрацию, пожалуйста?" },
+      "image": ["airplane_ticket", "checked_bag"],
+      "notes": {
+        "mnemonic": {
+          "title": "You already know «check-in»",
+          "text": "The word is probably in your own language already, from airport signs and apps. Picture the desk with that sign above it, then put «Where do I…?» in front."
+        },
+        "grammar": {
+          "title": "Questions with «do»",
+          "text": "After «where», the question needs «do» before the subject: «Where do I check in?». The main verb stays in its base form, with no ending."
+        },
+        "pronunciation": {
+          "title": "A voiced z in «please»",
+          "ipa": "[ˈweə də aɪ ˈtʃek ɪn ˈpliːz]",
+          "respelling": "WAIR duh eye CHEK in, PLEEZ",
+          "text": "Keep your voice on to the very end of «please»: it finishes with z, not s. Bulgarian and Russian both let final consonants go quiet, so listen for the buzz."
+        }
+      }
+    },
+    {
+      "id": "bank-airport-en-02",
+      "theme": "airport",
+      "targetLang": "en-GB",
+      "target": "Has the gate been announced yet?",
+      "translations": { "bg-BG": "Обявиха ли вече изхода?", "ru-RU": "Выход на посадку уже объявили?" },
+      "image": ["door_front", "hourglass_empty"],
+      "notes": {
+        "mnemonic": {
+          "title": "Waiting at the empty gate",
+          "text": "Picture the departures board with the gate still blank: «announced» is the moment a number appears, and «yet» waits at the end of the question like a passenger by the empty gate."
+        },
+        "grammar": {
+          "title": "«Yet» and the present perfect",
+          "text": "«Has… been announced yet?» asks whether something expected has happened by now. «Yet» goes at the end, and the verb is in the present perfect: «has been announced»."
+        },
+        "pronunciation": {
+          "title": "«Announced» ends in -nst",
+          "ipa": "[həz ðə ˈɡeɪt bɪn əˈnaʊnst jet]",
+          "respelling": "haz thuh GAYT bin uh-NOWNST yet",
+          "text": "The ending of «announced» is a quick t after s: three sounds in a row, n, s, t, with no vowel added. Put the stress on the second syllable: a-NOUNCED."
+        }
+      }
+    },
+    {
+      "id": "bank-airport-en-03",
+      "theme": "airport",
+      "targetLang": "en-GB",
+      "target": "Is this OK as hand luggage?",
+      "translations": { "bg-BG": "Става ли това за ръчен багаж?", "ru-RU": "Это подойдёт как ручная кладь?" },
+      "image": ["carry_on_bag", "check_circle"],
+      "notes": {
+        "mnemonic": {
+          "title": "Luggage for your hand",
+          "text": "It says what it is: luggage you carry in your hand. Your own language builds the same two-word name, so picture a small bag held at your side."
+        },
+        "grammar": {
+          "title": "«As», not «like»",
+          "text": "«As» says what something is used or counted as: «OK as hand luggage». «Like» means “similar to” and doesn't fit here. Many languages use one word for both."
+        },
+        "pronunciation": {
+          "title": "A short u in «luggage»",
+          "ipa": "[ɪz ðɪs əʊˈkeɪ əz ˈhænd ˌlʌɡ.ɪdʒ]",
+          "respelling": "iz this oh-KAY uz HAND lug-ij",
+          "text": "The u in «luggage» is the short, relaxed vowel of «cup»: not a clear “a” and not “oo”. The ending is a quick ij, as in «village»."
+        }
+      }
+    },
+    {
+      "id": "bank-airport-en-04",
+      "theme": "airport",
+      "targetLang": "en-GB",
+      "target": "Is the flight to Paris on time?",
+      "translations": { "bg-BG": "Навреме ли е полетът за Париж?", "ru-RU": "Рейс на Париж вылетает вовремя?" },
+      "image": ["flight", "schedule"],
+      "notes": {
+        "mnemonic": {
+          "title": "On the clock",
+          "text": "Picture the plane parked right on the clock face at the planned minute: «on time» means exactly then. «In time» is a different phrase, for being early enough."
+        },
+        "grammar": {
+          "title": "«On time» or «in time»",
+          "text": "«On time» means at the planned moment: the flight leaves on time. «In time» means early enough for something: «We got there in time for the flight». Your own language may use one word for both."
+        },
+        "pronunciation": {
+          "title": "«Paris» is stressed at the start",
+          "ipa": "[ɪz ðə ˈflaɪt tə ˈpær.ɪs ɒn ˈtaɪm]",
+          "respelling": "iz thuh FLITE tuh PA-riss on TIME",
+          "text": "Stress the first syllable, PA-riss, and end on a plain s, not the zh-like ending the name has in your own language. The second vowel is short and weak."
+        }
+      }
+    },
+    {
+      "id": "bank-airport-en-05",
+      "theme": "airport",
+      "targetLang": "en-GB",
+      "target": "My suitcase hasn't arrived",
+      "translations": { "bg-BG": "Куфарът ми не е пристигнал", "ru-RU": "Мой чемодан не прилетел" },
+      "image": ["no_luggage", "flight_land"],
+      "notes": {
+        "mnemonic": {
+          "title": "A case for a suit",
+          "text": "A «suitcase» is «suit» + «case»: a case for a suit of clothes. Picture one neat suit folded inside the bag that has not come round on the belt."
+        },
+        "grammar": {
+          "title": "«Has» for one, «have» for more",
+          "text": "The present perfect, «has/have» + past participle, links the past to now: the bag isn't here yet. One suitcase takes «hasn't»; several bags take «haven't»: «My bags haven't arrived»."
+        },
+        "pronunciation": {
+          "title": "«Arrived»: a voiced v",
+          "ipa": "[maɪ ˈsuːt.keɪs ˈhæz.ənt əˈraɪvd]",
+          "respelling": "my SOOT-kayss HAZ-unt uh-RYVD",
+          "text": "In «arrived» the ending is just a d after a voiced v: uh-RYVD, two syllables, no extra vowel. Don't let the v turn into f."
+        }
+      }
+    },
+    {
+      "id": "bank-help-en-01",
+      "theme": "help",
+      "targetLang": "en-GB",
+      "target": "Could you give me a hand, please?",
+      "translations": { "bg-BG": "Може ли да ми помогнете, моля?", "ru-RU": "Вы не могли бы мне помочь, пожалуйста?" },
+      "image": ["support", "front_hand"],
+      "notes": {
+        "mnemonic": {
+          "title": "A hand that helps",
+          "text": "A hand is help: picture someone holding out a hand to pull you up. Your own language has the same picture, so «give me a hand» is easy to guess."
+        },
+        "grammar": {
+          "title": "«Could you…?» for a polite request",
+          "text": "«Could you…?» is the polite way to ask for help. «Could» is followed by the bare verb: «give», never “to give”."
+        },
+        "pronunciation": {
+          "title": "A soft h, a short a",
+          "ipa": "[kʊd ju ˈɡɪv mi ə ˈhænd ˈpliːz]",
+          "respelling": "kood yoo GIV mee uh HAND, PLEEZ",
+          "text": "The h of «hand» is only a breath of air from the throat, much softer than a scraping “kh”. The vowel is short and open, as in «trap», not “e”."
+        }
+      }
+    },
+    {
+      "id": "bank-help-en-02",
+      "theme": "help",
+      "targetLang": "en-GB",
+      "target": "Please call an ambulance. It's an emergency",
+      "translations": {
+        "bg-BG": "Моля, извикайте линейка. Спешен случай е",
+        "ru-RU": "Пожалуйста, вызовите скорую. Это очень срочно"
+      },
+      "image": ["ambulance", "call"],
+      "notes": {
+        "mnemonic": {
+          "title": "Emergency comes from «emerge»",
+          "text": "An «emergency» is something that suddenly emerges, comes out of nowhere. In Britain you dial 999 for an ambulance, and 112 works too."
+        },
+        "grammar": {
+          "title": "Polite commands with «please»",
+          "text": "A command is just the plain verb with no subject: «Call an ambulance». Put «please» at the start or the end to make it polite: «Please call…» or «Call…, please». The next sentence names the situation: «It's an emergency»."
+        },
+        "pronunciation": {
+          "title": "AM-byuh-lunss and ih-MUR-jen-see",
+          "ipa": "[ˈpliːz ˈkɔːl ən ˈæm.bjʊ.ləns ɪts ən ɪˈmɜː.dʒən.si]",
+          "respelling": "PLEEZ KAWL un AM-byuh-lunss, its un ih-MUR-jen-see",
+          "text": "«Ambulance» is stressed on its first syllable: AM-byuh-lunss. In «emergency» the stress is on the second syllable, ih-MUR-jen-see: a long vowel as in «bird», no r sound, and the g is a j."
+        }
+      }
+    },
+    {
+      "id": "bank-help-en-03",
+      "theme": "help",
+      "targetLang": "en-GB",
+      "target": "Someone's stolen my wallet",
+      "translations": { "bg-BG": "Откраднаха ми портфейла", "ru-RU": "У меня украли кошелёк" },
+      "image": ["wallet", "person_alert"],
+      "notes": {
+        "mnemonic": {
+          "title": "Steal, stole, stolen",
+          "text": "Chant the three forms before you say the phrase: steal, stole, stolen. They all start with st, and the o of «stole» comes back in «stolen»."
+        },
+        "grammar": {
+          "title": "«Someone's» means «someone has»",
+          "text": "The present perfect, «has» + past participle, gives recent news that still matters. Here «'s» is «has», not «is», because «stolen» is a participle."
+        },
+        "pronunciation": {
+          "title": "The gliding o in «stolen»",
+          "ipa": "[ˈsʌm.wʌnz ˈstəʊ.lən maɪ ˈwɒl.ɪt]",
+          "respelling": "SUM-wunz STOH-lun my WOL-it",
+          "text": "The vowel in «stolen» is a glide: it starts at a weak “uh” and moves to “oo”, not a pure short “o”. Say STOH-lun slowly and let your lips round as you go."
+        }
+      }
+    },
+    {
+      "id": "bank-help-en-04",
+      "theme": "help",
+      "targetLang": "en-GB",
+      "target": "Where's the nearest police station?",
+      "translations": {
+        "bg-BG": "Къде е най-близкото полицейско управление?",
+        "ru-RU": "Где ближайшее отделение полиции?"
+      },
+      "image": ["local_police", "near_me"],
+      "notes": {
+        "mnemonic": {
+          "title": "Two old friends",
+          "text": "Both words are in your own language too: the police and a station. Join them in your head as a station with a blue lamp over the door."
+        },
+        "grammar": {
+          "title": "«Police station»: two nouns",
+          "text": "In «police station» the first noun says what kind of station it is, and it takes no -s: «police station», «bus station», «train station». «Where's» is short for «where is»."
+        },
+        "pronunciation": {
+          "title": "po-LEESS: stress on -lice",
+          "ipa": "[ˈweəz ðə ˈnɪə.rɪst pəˈliːs ˈsteɪ.ʃən]",
+          "respelling": "WAIRZ thuh NEER-ist puh-LEESS STAY-shun",
+          "text": "Stress «police» on the second syllable, like the word in your own language: puh-LEESS, ending in s. The -tion of «station» is sh: STAY-shun."
+        }
+      }
+    },
+    {
+      "id": "bank-help-en-05",
+      "theme": "help",
+      "targetLang": "en-GB",
+      "target": "I've lost my passport. What should I do?",
+      "translations": {
+        "bg-BG": "Изгубих паспорта си. Какво да правя?",
+        "ru-RU": "У меня пропал паспорт. Что мне делать?"
+      },
+      "image": ["badge", "search"],
+      "notes": {
+        "mnemonic": {
+          "title": "Pass + port",
+          "text": "A «passport» lets you pass through a port: «pass» + «port». It is the one document you must not lose."
+        },
+        "grammar": {
+          "title": "«What should I do?»",
+          "text": "«Should» gives or asks for advice, and it is followed by the bare verb: «What should I do?». It never takes «to» or an -s."
+        },
+        "pronunciation": {
+          "title": "No r in «passport»",
+          "ipa": "[aɪv ˈlɒst maɪ ˈpɑːs.pɔːt ˈwɒt ʃəd aɪ ˈduː]",
+          "respelling": "ive LOST my PAHSS-pawt, WOT shood eye DOO",
+          "text": "British English drops the r before a consonant: PAHSS-pawt, with a long open “ah” and a long “aw”. The stress is on the first syllable."
+        }
+      }
+    },
+    {
+      "id": "bank-work-en-01",
+      "theme": "work",
+      "targetLang": "en-GB",
+      "target": "I've got a meeting at ten",
+      "translations": { "bg-BG": "Имам среща в десет", "ru-RU": "У меня встреча в десять" },
+      "image": ["groups", "schedule"],
+      "notes": {
+        "mnemonic": {
+          "title": "A table, chairs and a clock",
+          "text": "Picture a round table with chairs and a clock pointing to ten. A «meeting» is what happens when people «meet», with -ing added."
+        },
+        "grammar": {
+          "title": "«I've got» means «I have»",
+          "text": "British English often says «I've got» for «I have». It is present tense: «got» doesn't make it past. «At» goes with clock times: «at ten»."
+        },
+        "pronunciation": {
+          "title": "Long ee, short i",
+          "ipa": "[aɪv ˈɡɒt ə ˈmiː.tɪŋ ət ˈten]",
+          "respelling": "ive GOT uh MEE-ting at TEN",
+          "text": "In «meeting» the first vowel is long: MEE-. The second is short and relaxed: -ting. Don't give both syllables the same vowel."
+        }
+      }
+    },
+    {
+      "id": "bank-work-en-02",
+      "theme": "work",
+      "targetLang": "en-GB",
+      "target": "Could you send me the report by Friday?",
+      "translations": {
+        "bg-BG": "Може ли да ми изпратиш доклада до петък?",
+        "ru-RU": "Не могли бы вы прислать мне отчёт до пятницы?"
+      },
+      "image": ["description", "send"],
+      "notes": {
+        "mnemonic": {
+          "title": "A finish line on Friday",
+          "text": "Picture a finish line drawn on Friday, with the report already across it. «By» means “no later than”."
+        },
+        "grammar": {
+          "title": "«By» is not «until»",
+          "text": "«By Friday» means on or before Friday: it is a deadline. «Until Friday» means all the way up to Friday and then stops. Your own language uses a single word for both."
+        },
+        "pronunciation": {
+          "title": "A soft English r",
+          "ipa": "[kʊd ju ˈsend mi ðə rɪˈpɔːt baɪ ˈfraɪ.deɪ]",
+          "respelling": "kood yoo SEND mee thuh ri-PAWT by FRY-day",
+          "text": "Make the r in «Friday» and «report» with the tongue curled back and not touching anything: no rolling. At the end of «report» there is no r at all, and the stress falls on -PORT."
+        }
+      }
+    },
+    {
+      "id": "bank-work-en-03",
+      "theme": "work",
+      "targetLang": "en-GB",
+      "target": "I work from home on Fridays",
+      "translations": { "bg-BG": "Всеки петък работя от вкъщи", "ru-RU": "По пятницам я работаю из дома" },
+      "image": ["home_work", "laptop"],
+      "notes": {
+        "mnemonic": {
+          "title": "A row of Fridays",
+          "text": "Picture a row of Fridays on a calendar, with you on the sofa with a laptop in every one. The -s on «Fridays» means every Friday."
+        },
+        "grammar": {
+          "title": "«On Fridays» means every Friday",
+          "text": "A day name with -s describes a habit: «on Fridays» is every Friday, while «on Friday» is one particular Friday. Routines use the present simple: «I work»."
+        },
+        "pronunciation": {
+          "title": "No r in «work»",
+          "ipa": "[aɪ ˈwɜːk frəm ˈhəʊm ɒn ˈfraɪ.deɪz]",
+          "respelling": "eye WERK frum HOHM on FRY-dayz",
+          "text": "«Work» has no r sound: it is a long “er” as in «bird», then k. «From» is quick and weak, like “frum”."
+        }
+      }
+    },
+    {
+      "id": "bank-work-en-04",
+      "theme": "work",
+      "targetLang": "en-GB",
+      "target": "Have you got a minute?",
+      "translations": { "bg-BG": "Имаш ли минутка?", "ru-RU": "У тебя есть минутка?" },
+      "image": ["timer", "forum"],
+      "notes": {
+        "mnemonic": {
+          "title": "Word for word",
+          "text": "Word for word this is the question you already ask in your own language: have you a little minute? Picture a colleague tapping on your desk and holding up one finger."
+        },
+        "grammar": {
+          "title": "Answer with «have»",
+          "text": "Short answers repeat «have»: «Yes, I have» or «Sorry, I haven't». Don't answer «Yes, I got»: it sounds like the past."
+        },
+        "pronunciation": {
+          "title": "MIN-it, not mi-NOOT",
+          "ipa": "[hæv ju ˈɡɒt ə ˈmɪn.ɪt]",
+          "respelling": "hav yoo GOT uh MIN-it",
+          "text": "The noun «minute» has two short syllables, with the stress at the start: MIN-it. Don't copy the stress or the long u of the word in your own language."
+        }
+      }
+    },
+    {
+      "id": "bank-work-en-05",
+      "theme": "work",
+      "targetLang": "en-GB",
+      "target": "I'll finish it by the end of the day",
+      "translations": { "bg-BG": "Ще го довърша до края на деня", "ru-RU": "Закончу это до конца дня" },
+      "image": ["task_alt", "today"],
+      "notes": {
+        "mnemonic": {
+          "title": "Sunset on the to-do list",
+          "text": "Picture the sun going down with the last item on your list ticked. Word for word it matches your own language: «by the end of the day»."
+        },
+        "grammar": {
+          "title": "«I'll» for a promise",
+          "text": "«I'll» (I will) is how you promise or offer something at work. It is followed by the bare verb: «I'll finish», never “I'll to finish”."
+        },
+        "pronunciation": {
+          "title": "Short, weak little words",
+          "ipa": "[aɪl ˈfɪn.ɪʃ ɪt baɪ ði ˈend əv ðə ˈdeɪ]",
+          "respelling": "eyel FIN-ish it by thee END uv thuh DAY",
+          "text": "«Finish», «end» and «day» carry the stress. «By», «of» and «the» are quick and weak: «of» is just “uv”, and «the» before a vowel is “thee”."
+        }
+      }
+    },
+    {
+      "id": "bank-phone-en-01",
+      "theme": "phone",
+      "targetLang": "en-GB",
+      "target": "What's the Wi-Fi password, please?",
+      "translations": {
+        "bg-BG": "Каква е паролата за уай-фай, моля?",
+        "ru-RU": "Какой пароль от вай-фая, пожалуйста?"
+      },
+      "image": ["wifi_password", "key"],
+      "notes": {
+        "mnemonic": {
+          "title": "A word that lets you pass",
+          "text": "A «password» is «pass» + «word»: the word the doorkeeper wants before you may pass. Your own language borrowed it from French «parole», “word”, so the idea is the same."
+        },
+        "grammar": {
+          "title": "Noun + noun: «Wi-Fi password»",
+          "text": "In English the first noun describes the second, with no «of» or «for»: «Wi-Fi password», «phone charger», «bus ticket». The main noun comes last."
+        },
+        "pronunciation": {
+          "title": "Stress on the first syllable",
+          "ipa": "[ˈwɒts ðə ˈwaɪ.faɪ ˈpɑːs.wɜːd ˈpliːz]",
+          "respelling": "WOTS thuh WY-fy PAHSS-werd, PLEEZ",
+          "text": "In «Wi-Fi» and «password» the stress is on the first syllable: WY-fy, PAHSS-werd. The first vowel of «password» is a long, open “ah”."
+        }
+      }
+    },
+    {
+      "id": "bank-phone-en-02",
+      "theme": "phone",
+      "targetLang": "en-GB",
+      "target": "My phone's dying. Could I borrow your charger?",
+      "translations": {
+        "bg-BG": "Батерията ми почти свърши. Може ли да взема зарядното ви назаем?",
+        "ru-RU": "Телефон садится. Можно одолжить вашу зарядку?"
+      },
+      "image": ["battery_alert", "charger"],
+      "notes": {
+        "mnemonic": {
+          "title": "A phone that «dies»",
+          "text": "Your own language probably says a phone «dies» when the battery runs flat. Picture the red battery icon as a heartbeat line going flat."
+        },
+        "grammar": {
+          "title": "«Borrow» is not «lend»",
+          "text": "You «borrow» something from someone and give it back; they «lend» it to you. «Could I borrow your charger?» means the same as «Could you lend me your charger?». Your own language may use one verb for both."
+        },
+        "pronunciation": {
+          "title": "Ch and j in «charger»",
+          "ipa": "[maɪ ˈfəʊnz ˈdaɪ.ɪŋ kʊd aɪ ˈbɒr.əʊ jɔː ˈtʃɑː.dʒə]",
+          "respelling": "my FOHNZ DY-ing, kood eye BOR-oh yaw CHAH-juh",
+          "text": "«Charger» starts with ch, as in «church», and its g is a j. British English has no r at the end: CHAH-juh."
+        }
+      }
+    },
+    {
+      "id": "bank-phone-en-03",
+      "theme": "phone",
+      "targetLang": "en-GB",
+      "target": "I'll ring you later",
+      "translations": { "bg-BG": "Ще ти звънна по-късно", "ru-RU": "Я тебе позвоню позже" },
+      "image": ["phone_callback", "schedule"],
+      "notes": {
+        "mnemonic": {
+          "title": "Make the phone ring",
+          "text": "«To ring» means to make someone's phone ring. Your own language uses the same picture for a phone call, so imagine a screen lighting up with your name."
+        },
+        "grammar": {
+          "title": "Ring someone, no «to»",
+          "text": "British English says «ring someone» with no preposition: «ring you», never “ring to you”. «Ring» is the usual British word for phoning; «call» works too and is the American choice."
+        },
+        "pronunciation": {
+          "title": "ng with no g",
+          "ipa": "[aɪl ˈrɪŋ ju ˈleɪ.tə]",
+          "respelling": "eyel RING yoo LAY-tuh",
+          "text": "In «ring» the ng is one sound at the back of the mouth. Don't add a g or a k after it, and slide straight into «you»."
+        }
+      }
+    },
+    {
+      "id": "bank-phone-en-04",
+      "theme": "phone",
+      "targetLang": "en-GB",
+      "target": "I can't get any signal here",
+      "translations": { "bg-BG": "Тук нямам никакъв обхват", "ru-RU": "Здесь нет никакой связи" },
+      "image": ["signal_cellular_off", "smartphone"],
+      "notes": {
+        "mnemonic": {
+          "title": "Empty bars",
+          "text": "«Signal» is the same word you know from your own language. Picture the bars in the corner of your screen, all empty: not even one, and that is what «any» means here."
+        },
+        "grammar": {
+          "title": "One negative is enough",
+          "text": "In English one negative is enough: «can't get any signal», never “can't get no signal”. Languages with double negatives tempt learners to add a second one."
+        },
+        "pronunciation": {
+          "title": "The g in «signal»",
+          "ipa": "[aɪ ˈkɑːnt ɡet ˈen.i ˈsɪɡ.nəl ˈhɪə]",
+          "respelling": "eye KAHNT get EN-ee SIG-nul HEER",
+          "text": "In «signal» the g is pronounced: SIG-nul, with a short i. Compare «sign», where the g is silent and the vowel is long."
+        }
+      }
+    },
+    {
+      "id": "bank-phone-en-05",
+      "theme": "phone",
+      "targetLang": "en-GB",
+      "target": "Could you text me the address?",
+      "translations": {
+        "bg-BG": "Можеш ли да ми пратиш адреса по есемес?",
+        "ru-RU": "Можете прислать мне адрес сообщением?"
+      },
+      "image": ["mail", "location_on"],
+      "notes": {
+        "mnemonic": {
+          "title": "A text, then «text me»",
+          "text": "A «text» is a short written message, and here the noun has become a verb: «text me» means “send me a text”. Picture a speech bubble flying to your phone with an address pin on it."
+        },
+        "grammar": {
+          "title": "The person first, no «to»",
+          "text": "With «text», «send» and «give», put the person first and drop «to»: «text me the address». If you use «to», the order flips: «text the address to me»."
+        },
+        "pronunciation": {
+          "title": "uh-DRESS: stress at the end",
+          "ipa": "[kʊd ju ˈtekst mi ði əˈdres]",
+          "respelling": "kood yoo TEKST mee thee uh-DRESS",
+          "text": "Stress the second syllable of «address»: uh-DRESS. The first vowel is a weak “uh”, not a full “a”, unlike the word in your own language."
+        }
+      }
+    },
+    {
+      "id": "bank-family-en-01",
+      "theme": "family",
+      "targetLang": "en-GB",
+      "target": "I've got a brother and a sister",
+      "translations": { "bg-BG": "Имам брат и сестра", "ru-RU": "У меня есть брат и сестра" },
+      "image": ["family_group", "people"],
+      "notes": {
+        "mnemonic": {
+          "title": "Old family words",
+          "text": "«Brother» and «sister» are relatives of the words in your own language: you can hear the br-…-r in one and the s-…-str in the other. They come from the same ancestors."
+        },
+        "grammar": {
+          "title": "«A» before each noun",
+          "text": "A singular countable noun needs «a» (or «the», «my»): «a brother and a sister». Bulgarian and Russian speakers often leave it out, so repeat «a» before each noun."
+        },
+        "pronunciation": {
+          "title": "A voiced th in «brother»",
+          "ipa": "[aɪv ˈɡɒt ə ˈbrʌð.ər ən ə ˈsɪs.tə]",
+          "respelling": "ive GOT uh BRUDH-er un uh SIS-tuh",
+          "text": "The th in «brother» is voiced: put the tip of your tongue lightly between your teeth and let your voice buzz, as in «the». The vowel is the short “uh” of «cup»."
+        }
+      }
+    },
+    {
+      "id": "bank-family-en-02",
+      "theme": "family",
+      "targetLang": "en-GB",
+      "target": "Do you have any children?",
+      "translations": { "bg-BG": "Имате ли деца?", "ru-RU": "У вас есть дети?" },
+      "image": ["child_care", "family_restroom"],
+      "notes": {
+        "mnemonic": {
+          "title": "A polite knock",
+          "text": "Picture a polite knock at a door: «any» asks whether there are some at all, which is why it belongs in questions."
+        },
+        "grammar": {
+          "title": "Child, children",
+          "text": "The plural of «child» is «children», not “childs”: an irregular plural with no -s. Learn it together with man → men and person → people."
+        },
+        "pronunciation": {
+          "title": "Two vowels: child and children",
+          "ipa": "[də ju ˈhæv ˈen.i ˈtʃɪl.drən]",
+          "respelling": "duh yoo HAV EN-ee CHIL-drun",
+          "text": "«Child» has the long “eye” sound, but «children» has a short i: CHIL-drun. Don't put a vowel between l and d."
+        }
+      }
+    },
+    {
+      "id": "bank-family-en-03",
+      "theme": "family",
+      "targetLang": "en-GB",
+      "target": "My mum lives in a small town",
+      "translations": { "bg-BG": "Майка ми живее в малък град", "ru-RU": "Моя мама живёт в небольшом городе" },
+      "image": ["woman", "home"],
+      "notes": {
+        "mnemonic": {
+          "title": "The start of mama",
+          "text": "«Mum» sounds like the first half of «mama»: both are built on the «m» that babies make early on. British children say «mum»; Americans say «mom»."
+        },
+        "grammar": {
+          "title": "-s after he, she and it",
+          "text": "In the present simple only «he», «she» and «it» take -s: «my mum lives», but «I live» and «my parents live»."
+        },
+        "pronunciation": {
+          "title": "A long aw and a gliding ow",
+          "ipa": "[maɪ ˈmʌm ˈlɪvz ɪn ə ˈsmɔːl ˈtaʊn]",
+          "respelling": "my MUM LIVZ in uh SMAWL TOWN",
+          "text": "«Small» has a long, rounded “aw”, not a short “o”. «Town» glides from “ah” to “oo”, as in «now», not «ton»."
+        }
+      }
+    },
+    {
+      "id": "bank-family-en-04",
+      "theme": "family",
+      "targetLang": "en-GB",
+      "target": "My daughter's five",
+      "translations": { "bg-BG": "Дъщеря ми е на пет години", "ru-RU": "Моей дочери пять лет" },
+      "image": ["child_care", "cake"],
+      "notes": {
+        "mnemonic": {
+          "title": "Daughter rhymes with water",
+          "text": "Picture her holding a glass: in British English «daughter» rhymes with «water», DAW-tuh and WAW-tuh. The gh is silent."
+        },
+        "grammar": {
+          "title": "Age uses «be»",
+          "text": "English gives age with «be»: «my daughter is five», «I'm thirty». «Years old» is optional, and «have» is never used."
+        },
+        "pronunciation": {
+          "title": "A silent gh",
+          "ipa": "[maɪ ˈdɔː.təz ˈfaɪv]",
+          "respelling": "my DAW-tuz FIVE",
+          "text": "The gh in «daughter» is silent, and the vowel is a long “aw”: DAW-tuh, with no r at the end."
+        }
+      }
+    },
+    {
+      "id": "bank-family-en-05",
+      "theme": "family",
+      "targetLang": "en-GB",
+      "target": "We're visiting my grandparents on Sunday",
+      "translations": {
+        "bg-BG": "В неделя ще ходим при баба и дядо",
+        "ru-RU": "В воскресенье мы едем к бабушке и дедушке"
+      },
+      "image": ["elderly", "elderly_woman", "directions_car"],
+      "notes": {
+        "mnemonic": {
+          "title": "Grand parents",
+          "text": "«Grand» + «parents»: the parents of your parents. Picture a big family photo with two white-haired people in the middle."
+        },
+        "grammar": {
+          "title": "The present continuous for a plan",
+          "text": "For a plan that is already arranged, English uses the present continuous: «We're visiting… on Sunday», which sounds more natural than «We will visit». «On» goes with days."
+        },
+        "pronunciation": {
+          "title": "W and v",
+          "ipa": "[wɪə ˈvɪz.ɪ.tɪŋ maɪ ˈɡræn.peə.rənts ɒn ˈsʌn.deɪ]",
+          "respelling": "weer VIZ-i-ting my GRAN-pair-unts on SUN-day",
+          "text": "Make w with rounded lips and no teeth, and v with your top teeth on your lower lip: «we're» and «visiting» are a pair to practise. Stress «visiting» on the first syllable: VIZ-i-ting."
+        }
+      }
+    },
+    {
+      "id": "bank-booking-en-01",
+      "theme": "booking",
+      "targetLang": "en-GB",
+      "target": "I'd like to book a table for four, please",
+      "translations": {
+        "bg-BG": "Може ли да запазя маса за четирима, моля?",
+        "ru-RU": "Можно забронировать столик на четверых, пожалуйста?"
+      },
+      "image": ["table_restaurant", "event_available", "groups"],
+      "notes": {
+        "mnemonic": {
+          "title": "A name in the book",
+          "text": "You «book» a table by writing it in a book: picture the restaurant's reservation book with your name on the page. The verb and the book are the same word."
+        },
+        "grammar": {
+          "title": "«I'd like to» + verb",
+          "text": "«I'd like» (I would like) is softer and more polite than «I want». After it comes «to» and the bare verb: «I'd like to book»."
+        },
+        "pronunciation": {
+          "title": "A short oo in «book»",
+          "ipa": "[aɪd ˈlaɪk tə ˈbʊk ə ˈteɪ.bəl fə ˈfɔː ˈpliːz]",
+          "respelling": "eyed LIKE tuh BOOK uh TAY-bul fuh FAW, PLEEZ",
+          "text": "«Book» has a short, relaxed vowel, the same as in «good» and «look»: not the long “oo” of «boot». «Four» is long and has no r sound."
+        }
+      }
+    },
+    {
+      "id": "bank-booking-en-02",
+      "theme": "booking",
+      "targetLang": "en-GB",
+      "target": "Do you have a table free at eight?",
+      "translations": { "bg-BG": "Имате ли свободна маса в осем?", "ru-RU": "У вас есть свободный столик на восемь?" },
+      "image": ["table_restaurant", "schedule"],
+      "notes": {
+        "mnemonic": {
+          "title": "A table is a flat board",
+          "text": "«Table» comes from Latin «tabula», a flat board, which also gave Bulgarian and Russian «tablitsa», a table of figures. Picture a flat board laid for dinner, with a clock showing eight."
+        },
+        "grammar": {
+          "title": "«At» for clock times",
+          "text": "«At» goes with clock times: «at eight», «at half past seven». Days take «on» («on Friday») and months take «in» («in May»)."
+        },
+        "pronunciation": {
+          "title": "Two syllables in «table»",
+          "ipa": "[də ju ˈhæv ə ˈteɪ.bəl ˈfriː ət ˈeɪt]",
+          "respelling": "duh yoo HAV uh TAY-bul FREE at AYT",
+          "text": "«Table» has two syllables, TAY-bul: the second has no real vowel, just a quick «b» and an «l» made with the tip of the tongue behind the top teeth. «Eight» is a long «ay» with a clear final t."
+        }
+      }
+    },
+    {
+      "id": "bank-booking-en-03",
+      "theme": "booking",
+      "targetLang": "en-GB",
+      "target": "I've got a booking at seven, under Petrov",
+      "translations": {
+        "bg-BG": "Имам резервация за седем, на името на Петров",
+        "ru-RU": "У меня бронь на семь, на фамилию Петров"
+      },
+      "image": ["event_available", "badge"],
+      "notes": {
+        "mnemonic": {
+          "title": "Filed under P",
+          "text": "Picture the host running a finger down the page of the reservation book until it stops at the letter P. Your booking is filed «under» your surname."
+        },
+        "grammar": {
+          "title": "«Under», not «on»",
+          "text": "A booking is «under» a name: «under Petrov». Your own language uses a different preposition here, but English uses «under»."
+        },
+        "pronunciation": {
+          "title": "SEV-n: stress at the start",
+          "ipa": "[aɪv ˈɡɒt ə ˈbʊk.ɪŋ ət ˈsev.ən ˈʌn.də ˈpet.rɒv]",
+          "respelling": "ive GOT uh BOOK-ing at SEV-n, UN-duh PET-rov",
+          "text": "Stress the first syllable of «seven»: SEV-n, with the second syllable nearly gone. Don't put the stress on the end."
+        }
+      }
+    },
+    {
+      "id": "bank-booking-en-04",
+      "theme": "booking",
+      "targetLang": "en-GB",
+      "target": "Do we need to book?",
+      "translations": { "bg-BG": "Трябва ли да резервираме?", "ru-RU": "Нужно бронировать столик?" },
+      "image": ["book_online", "table_restaurant"],
+      "notes": {
+        "mnemonic": {
+          "title": "Booking essential",
+          "text": "Picture the sign on a busy restaurant door: “Booking essential”. Your question is the polite version of that sign."
+        },
+        "grammar": {
+          "title": "«Do we need to…?»",
+          "text": "In everyday speech «need» is an ordinary verb, so the question takes «do»: «Do we need to…?». The next verb follows «to» in its bare form: «to book»."
+        },
+        "pronunciation": {
+          "title": "Long ee, voiced d",
+          "ipa": "[də wi ˈniːd tə ˈbʊk]",
+          "respelling": "duh wee NEED tuh BOOK",
+          "text": "«Need» has a long “ee” and ends in a voiced d, not a t: keep it long and clear before «to»: NEED tuh BOOK."
+        }
+      }
+    },
+    {
+      "id": "bank-booking-en-05",
+      "theme": "booking",
+      "targetLang": "en-GB",
+      "target": "Sorry, I need to cancel our booking for tonight",
+      "translations": {
+        "bg-BG": "Съжалявам, трябва да отменя резервацията ни за довечера",
+        "ru-RU": "Извините, мне нужно отменить нашу бронь на сегодня"
+      },
+      "image": ["event_busy", "table_restaurant"],
+      "notes": {
+        "mnemonic": {
+          "title": "Crossed out with an X",
+          "text": "To «cancel» is to cross a name out of the book with a big X. Picture the waiter doing that to your table."
+        },
+        "grammar": {
+          "title": "«For tonight»",
+          "text": "A booking is «for» a time: «for tonight», «for Friday», «for seven». «Tonight» takes no preposition of its own, so never “in tonight”."
+        },
+        "pronunciation": {
+          "title": "CAN-sul and tuh-NITE",
+          "ipa": "[ˈsɒr.i aɪ ˈniːd tə ˈkæn.səl ˈaʊə ˈbʊk.ɪŋ fə təˈnaɪt]",
+          "respelling": "SOR-ee eye NEED tuh CAN-sul OW-uh BOOK-ing fuh tuh-NITE",
+          "text": "«Cancel» is stressed at the start: CAN-sul, with the short open “a” of «cat». «Tonight» goes the other way: tuh-NITE, with a weak first syllable."
+        }
+      }
+    },
+    {
+      "id": "bank-health-ru-01",
+      "theme": "health",
+      "targetLang": "ru-RU",
+      "target": "Где здесь ближайшая аптека?",
+      "translations": { "en-GB": "Where's the nearest chemist?", "bg-BG": "Къде е най-близката аптека?" },
+      "image": ["local_pharmacy", "near_me"],
+      "notes": {
+        "mnemonic": {
+          "title": "Аптека: the apothecary's shop",
+          "text": "«Аптека» comes from the same Greek word as English “apothecary”, meaning “storehouse”: the shop where remedies are kept."
+        },
+        "grammar": {
+          "title": "Adjectives match the noun",
+          "text": "«Аптека» is feminine, so the adjective ends in «-ая»: «ближайшая аптека». Russian has no “the” or “a”, and no word for “is” in the present tense."
+        },
+        "pronunciation": {
+          "title": "Gde zdes: no vowel in between",
+          "ipa": "[ˈɡdʲe ˈzdʲesʲ blʲɪˈʐajʂəjə ɐpˈtʲekə]",
+          "respelling": "GDYEH ZDYES blee-ZHAI-shuh-yuh uhp-TYEH-kuh",
+          "text": "«Где здесь» has two consonant clusters, «гд» and «зд»: say them without a vowel in between. «Ближайшая» is stressed on «-жай-», and the ending «-шая» shrinks to a quick “shuh-yuh”."
+        }
+      }
+    },
+    {
+      "id": "bank-health-ru-02",
+      "theme": "health",
+      "targetLang": "ru-RU",
+      "target": "У вас есть что-нибудь от головной боли?",
+      "translations": { "en-GB": "Do you have anything for a headache?", "bg-BG": "Имате ли нещо за главоболие?" },
+      "image": ["medication", "sentiment_dissatisfied"],
+      "notes": {
+        "mnemonic": {
+          "title": "Головная боль: head pain",
+          "text": "«Головная боль» is built like “headache”: «голова» (head) plus «боль» (pain). The root of «боль» also gives «болит» (it hurts)."
+        },
+        "grammar": {
+          "title": "«От» + genitive for remedies",
+          "text": "«От» plus the genitive says what a remedy is for: «от головной боли», «от кашля» (for a cough). «Что-нибудь» is “anything”, and «У вас есть…?» is how Russian asks “do you have…?”, literally “at you is…?”."
+        },
+        "pronunciation": {
+          "title": "Weak о before the stress",
+          "ipa": "[u ˈvas ˈjesʲtʲ ˈʂto nʲɪˌbutʲ ɐd ɡəlɐvˈnoj ˈbolʲɪ]",
+          "respelling": "oo VAHS YEST' SHTO nee-boot' uhd guh-luhv-NOY BO-lee",
+          "text": "In «головной» the stress is on the last syllable, «-ной», so both earlier «о» shrink to weak vowels: guh-luhv-NOY. Before a voiced «г», the «т» of «от» is said as «д»: «ад головной»."
+        }
+      }
+    },
+    {
+      "id": "bank-health-ru-03",
+      "theme": "health",
+      "targetLang": "ru-RU",
+      "target": "У меня болит горло",
+      "translations": { "en-GB": "I've got a sore throat", "bg-BG": "Боли ме гърлото" },
+      "image": ["sick", "voice_over_off"],
+      "notes": {
+        "mnemonic": {
+          "title": "Горло and gargle",
+          "text": "«Горло» (throat) sounds a little like “gargle”, which is just what you do with it when it is sore."
+        },
+        "grammar": {
+          "title": "The sore part is the subject",
+          "text": "In «У меня болит…» (literally “at me hurts…”) the sore part is the subject, so the verb agrees with it: «болит горло» for one thing, «болят уши» for several."
+        },
+        "pronunciation": {
+          "title": "Stress on -лит",
+          "ipa": "[ʊ mʲɪˈnʲa bɐˈlʲit ˈɡorlə]",
+          "respelling": "oo mee-NYA buh-LEET GOR-luh",
+          "text": "The stress is on the last syllable of «болит», so the first «о» is weak, a short “buh”. The «л» is soft before «и»: lift the middle of the tongue, buh-LEET."
+        }
+      }
+    },
+    {
+      "id": "bank-health-ru-04",
+      "theme": "health",
+      "targetLang": "ru-RU",
+      "target": "Мне нужно к врачу",
+      "translations": { "en-GB": "I need to see a doctor", "bg-BG": "Трябва да отида на лекар" },
+      "image": ["stethoscope", "medical_services"],
+      "notes": {
+        "mnemonic": {
+          "title": "To me, needed, to the doctor",
+          "text": "Say it as a tiny story: «мне» (to me), «нужно» (needed), «к врачу» (to the doctor). That is how Russian “needs” things: the person is “to me”, not “I”."
+        },
+        "grammar": {
+          "title": "«К» + dative",
+          "text": "«К» means “to (a person)” and takes the dative: «врач» becomes «к врачу». The verb “go” is left out: «Мне нужно к врачу» is “I need [to go] to the doctor”."
+        },
+        "pronunciation": {
+          "title": "Soft ч, stress on -чу",
+          "ipa": "[mnʲe ˈnuʐnə k vrɐˈt͡ɕu]",
+          "respelling": "mnyeh NOOZH-nuh k vruh-CHOO",
+          "text": "«Ч» is always soft: like the “ch” of “cheese” with the tongue flat and forward. The stress is on the last syllable, so the «а» before it is weak: vruh-CHOO."
+        }
+      }
+    },
+    {
+      "id": "bank-health-ru-05",
+      "theme": "health",
+      "targetLang": "ru-RU",
+      "target": "У меня аллергия на орехи",
+      "translations": { "en-GB": "I'm allergic to nuts", "bg-BG": "Имам алергия към ядки" },
+      "image": ["allergy", "block"],
+      "notes": {
+        "mnemonic": {
+          "title": "Allergy in Cyrillic",
+          "text": "«Аллергия» is “allergy” written in Cyrillic, with «лл» for ll and the ending «-ия» you also see in «история» and «география». «Орехи» are nuts."
+        },
+        "grammar": {
+          "title": "Allergy «на» + accusative",
+          "text": "Russian says “allergy on” something: «аллергия на» plus the accusative, here «орехи». «У меня…» (“at me [is]…”) is the usual way to say “I have”."
+        },
+        "pronunciation": {
+          "title": "Weak о, rough х",
+          "ipa": "[ʊ mʲɪˈnʲa ɐlʲɪrˈɡʲijə nɐ ɐˈrʲexʲɪ]",
+          "respelling": "oo mee-NYA uh-lyir-GEE-yuh nuh uh-RYEH-khee",
+          "text": "In «орехи» the stress is on «-ре-», so the first «о» is a weak “uh”. The «х» is a rough “kh”, like Scottish “loch”, a little softer before «и». «Аллергия» has one stress, on «-ги-»."
+        }
+      }
+    },
+    {
+      "id": "bank-hotel-ru-01",
+      "theme": "hotel",
+      "targetLang": "ru-RU",
+      "target": "У меня бронь на фамилию Иванов",
+      "translations": {
+        "en-GB": "I've got a booking under the name Ivanov",
+        "bg-BG": "Имам резервация на името на Иванов"
+      },
+      "image": ["book_online", "badge"],
+      "notes": {
+        "mnemonic": {
+          "title": "Бронь: the booking",
+          "text": "On any hotel website you will see «бронирование» (booking) and a button «Забронировать»: «бронь» is the short spoken form of that same family."
+        },
+        "grammar": {
+          "title": "«На» + accusative: under a name",
+          "text": "«На» plus the accusative gives “in the name of”: «фамилия» (surname) becomes «фамилию». The surname itself stays unchanged: «на фамилию Иванов»."
+        },
+        "pronunciation": {
+          "title": "Иванов ends in an f",
+          "ipa": "[ʊ mʲɪˈnʲa ˈbronʲ nɐ fɐˈmʲilʲɪjʊ ɪvɐˈnof]",
+          "respelling": "oo mee-NYA BRON' nuh fuh-MEE-lee-yoo ee-vuh-NOF",
+          "text": "Many surnames in «-ов» (Иванов, Петров, Смирнов) are stressed on the last syllable, and the final «в» is said as «ф»: a voiced consonant at the end of a word turns voiceless."
+        }
+      }
+    },
+    {
+      "id": "bank-hotel-ru-02",
+      "theme": "hotel",
+      "targetLang": "ru-RU",
+      "target": "Во сколько завтрак?",
+      "translations": { "en-GB": "What time is breakfast?", "bg-BG": "В колко часа е закуската?" },
+      "image": ["free_breakfast", "schedule"],
+      "notes": {
+        "mnemonic": {
+          "title": "One chant for the meals",
+          "text": "Learn the three meals as one chant: «завтрак, обед, ужин» (breakfast, lunch, dinner). Note that «обед» is lunch, the main midday meal."
+        },
+        "grammar": {
+          "title": "«Во сколько?»: at what time",
+          "text": "«Во сколько…?» is the standard way to ask “at what time…?”: «в» (“at”) becomes «во» before a tight group of consonants such as «ск». There is no verb in the present tense: «Во сколько завтрак?» is literally “At how-much breakfast?”."
+        },
+        "pronunciation": {
+          "title": "«В» sounds like ф in завтрак",
+          "ipa": "[vɐ ˈskolʲkə ˈzaftrək]",
+          "respelling": "vuh SKOL-kuh ZAF-truhk",
+          "text": "In «завтрак» the «в» is said as «ф» because it sits before the voiceless «т»: ZAF-truhk, never “zav”. The last «а» is weak, a short “uh”."
+        }
+      }
+    },
+    {
+      "id": "bank-hotel-ru-03",
+      "theme": "hotel",
+      "targetLang": "ru-RU",
+      "target": "Принесите, пожалуйста, ещё одно полотенце",
+      "translations": {
+        "en-GB": "Could you bring another towel, please?",
+        "bg-BG": "Донесете ми още една кърпа, моля"
+      },
+      "image": ["bathtub", "dry", "add"],
+      "notes": {
+        "mnemonic": {
+          "title": "Полотенце: a small piece of cloth",
+          "text": "«Полотенце» grows out of «полотно» (linen cloth, canvas), so a towel is a small piece of cloth."
+        },
+        "grammar": {
+          "title": "«Пожалуйста» after the verb",
+          "text": "«Принесите, пожалуйста, …» is the usual order for a polite request: «пожалуйста» sits right after the verb, between commas. «Одно» is neuter to match «полотенце», and a neuter noun looks the same as an object as in its basic form, so «ещё одно полотенце» does not change."
+        },
+        "pronunciation": {
+          "title": "Щ is a long soft sh",
+          "ipa": "[prʲɪnʲɪˈsʲitʲɪ pɐˈʐaləstə jɪˈɕːo ɐdˈno pəlɐˈtʲent͡sɨ]",
+          "respelling": "pree-nee-SEE-tee puh-ZHAH-luh-stuh yee-SHCHO uhd-NO puh-luh-TYEN-tsuy",
+          "text": "«Щ» is a long, soft «ш»: often approximated as the “sh-ch” of “fresh cheese”, but said as one sound with the tongue flat and forward. «Ещё» is yee-SHCHO, and «ё» is always stressed."
+        }
+      }
+    },
+    {
+      "id": "bank-hotel-ru-04",
+      "theme": "hotel",
+      "targetLang": "ru-RU",
+      "target": "В номере нет горячей воды",
+      "translations": { "en-GB": "There's no hot water in the room", "bg-BG": "В стаята няма топла вода" },
+      "image": ["bathtub", "water_drop", "block"],
+      "notes": {
+        "mnemonic": {
+          "title": "Горячая вода: water that burns",
+          "text": "«Горячий» (hot) shares its root with «гореть» (to burn): hot water is water that “burns”. You will meet «горячая вода» (“hot water”) on notices and utility bills."
+        },
+        "grammar": {
+          "title": "«Нет» takes the genitive",
+          "text": "After «нет» (there is no) comes the genitive: «вода» becomes «воды» and «горячая» becomes «горячей». Absence changes the endings. «Номер» here is the hotel room, not a number."
+        },
+        "pronunciation": {
+          "title": "The vowel ы",
+          "ipa": "[v ˈnomʲɪrʲɪ ˈnʲet ɡɐˈrʲat͡ɕɪj vɐˈdɨ]",
+          "respelling": "v NO-mee-ree NYET guh-RYA-chiy vuh-DUY",
+          "text": "«Ы» (“uy” in the respelling) is the hard partner of «и»: say “ee” with the tongue pulled back and flat. «Воды» ends in it, with the stress on the last syllable: vuh-DUY."
+        }
+      }
+    },
+    {
+      "id": "bank-hotel-ru-05",
+      "theme": "hotel",
+      "targetLang": "ru-RU",
+      "target": "Можно оставить чемодан до вечера?",
+      "translations": {
+        "en-GB": "Can I leave my suitcase until this evening?",
+        "bg-BG": "Може ли да оставя куфара си до вечерта?"
+      },
+      "image": ["luggage", "schedule"],
+      "notes": {
+        "mnemonic": {
+          "title": "Чемо-ДАН: Dan's suitcase",
+          "text": "The stress of «чемодан» falls on the last syllable, «-дан»: picture a man called Dan hauling a suitcase, «чемо-Дан»."
+        },
+        "grammar": {
+          "title": "«Можно» + infinitive",
+          "text": "«Можно» plus an infinitive asks permission, and no “I” is needed: «Можно оставить…?» is “May I leave…?”. «До» means “until” and takes the genitive: «вечер» becomes «до вечера»."
+        },
+        "pronunciation": {
+          "title": "Weak vowels, strong -дан",
+          "ipa": "[ˈmoʐnə ɐˈstavʲɪtʲ t͡ɕɪmɐˈdan dɐ ˈvʲet͡ɕɪrə]",
+          "respelling": "MOZH-nuh a-STA-veet' chee-muh-DAN duh VYEH-chee-ruh",
+          "text": "Only «-дан» carries the stress, so the «е» and «о» before it are weak: chee-muh-DAN. The «ч» is soft, as always."
+        }
+      }
+    },
+    {
+      "id": "bank-clothes-ru-01",
+      "theme": "clothes",
+      "targetLang": "ru-RU",
+      "target": "У вас есть это в другом размере?",
+      "translations": { "en-GB": "Do you have this in another size?", "bg-BG": "Имате ли това в друг размер?" },
+      "image": ["apparel", "straighten"],
+      "notes": {
+        "mnemonic": {
+          "title": "At you, is there…?",
+          "text": "Hear «у вас есть» as a little picture: you point at the shop assistant, “at you, is there…?”. The same three words open nearly every “Do you have…?”."
+        },
+        "grammar": {
+          "title": "«В» + prepositional",
+          "text": "«В» (in) with a state or place takes the prepositional case: «размер» becomes «в размере» and «другой» becomes «в другом». Masculine endings: «-е» on the noun, «-ом» on the adjective."
+        },
+        "pronunciation": {
+          "title": "Final unstressed е is “i”",
+          "ipa": "[u ˈvas ˈjesʲtʲ ˈɛtə v druˈɡom rɐzˈmʲerʲɪ]",
+          "respelling": "oo VAHS YEST' E-tuh v droo-GOM ruz-MYEH-ree",
+          "text": "An unstressed «е» at the end of a word is a short “i”, not “eh”: «размере» ends in “-ree”. The stress is on «-ме-», and on the last syllable of «другом»: droo-GOM."
+        }
+      }
+    },
+    {
+      "id": "bank-clothes-ru-02",
+      "theme": "clothes",
+      "targetLang": "ru-RU",
+      "target": "Можно это примерить?",
+      "translations": { "en-GB": "Can I try this on?", "bg-BG": "Може ли да пробвам това?" },
+      "image": ["checkroom", "accessibility_new"],
+      "notes": {
+        "mnemonic": {
+          "title": "Measure it on",
+          "text": "«Примерить» is «при-» (on, up against) plus «мерить» (to measure): trying something on is measuring it against yourself."
+        },
+        "grammar": {
+          "title": "Perfective: one try-on",
+          "text": "«Примерить» is perfective: a single try-on that gets finished. Its imperfective twin «примерять» describes trying things on over and over. After «можно», use the perfective when you ask for one go."
+        },
+        "pronunciation": {
+          "title": "Soft ть, stress on -ме-",
+          "ipa": "[ˈmoʐnə ˈɛtə prʲɪˈmʲerʲɪtʲ]",
+          "respelling": "MOZH-nuh E-tuh pree-MYEH-reet'",
+          "text": "The final «ть» is a soft «т»: lift the middle of the tongue as if adding a faint “y”. The stress is on «-ме-»: pree-MYEH-reet'."
+        }
+      }
+    },
+    {
+      "id": "bank-clothes-ru-03",
+      "theme": "clothes",
+      "targetLang": "ru-RU",
+      "target": "Есть что-нибудь подешевле?",
+      "translations": { "en-GB": "Do you have anything cheaper?", "bg-BG": "Имате ли нещо по-евтино?" },
+      "image": ["payments", "trending_down"],
+      "notes": {
+        "mnemonic": {
+          "title": "Нибудь: “be it anything”",
+          "text": "«-нибудь» ends in «будь», the command “be”: «что-нибудь» is “whatever it may be”, so “anything”. It even sounds like “boot”: picture a boot with a price tag and ask for anything cheaper."
+        },
+        "grammar": {
+          "title": "по- + the comparative",
+          "text": "«Дешевле» (cheaper) is the comparative of «дешёвый» (cheap) and never changes its ending. The prefix «по-» softens it: «подешевле» is “a bit cheaper”, a polite way to ask."
+        },
+        "pronunciation": {
+          "title": "Ш is always hard",
+          "ipa": "[ˈjesʲtʲ ˈʂto nʲɪˌbutʲ pədʲɪˈʂevlʲɪ]",
+          "respelling": "YEST' SHTO nee-boot' puh-dee-SHEV-lee",
+          "text": "«Ш» is always hard, even before «е»: say “sheh”, never “shyeh”. The stress is on «-ше-»: puh-dee-SHEV-lee."
+        }
+      }
+    },
+    {
+      "id": "bank-clothes-ru-04",
+      "theme": "clothes",
+      "targetLang": "ru-RU",
+      "target": "Мне это немного велико",
+      "translations": { "en-GB": "It's a bit big on me", "bg-BG": "Това ми е малко голямо" },
+      "image": ["apparel", "zoom_out_map"],
+      "notes": {
+        "mnemonic": {
+          "title": "Велико: too great for you",
+          "text": "«Велик» is the word in «великий» (great). Said of clothes it means “too big”: the garment is “too great” for you. Learn the pair «велико» (too big) and «мало» (too small)."
+        },
+        "grammar": {
+          "title": "Short adjectives mean “too…”",
+          "text": "Short forms such as «велик, велика, велико, велики» mean “too big for me” and agree with the thing: «это» is neuter, so «велико». The person it does not fit goes in the dative: «мне». For a skirt: «Юбка мне велика»."
+        },
+        "pronunciation": {
+          "title": "Stress on the last syllable",
+          "ipa": "[mnʲe ˈɛtə nʲɪmˈnoɡə vʲɪlʲɪˈko]",
+          "respelling": "mnyeh E-tuh neem-NO-guh vee-lee-KO",
+          "text": "«Велико» is stressed on «-ко», so the first two vowels are weak: vee-lee-KO. The «л» is soft before «и». Compare «великий» (great), stressed on «-ли-»."
+        }
+      }
+    },
+    {
+      "id": "bank-clothes-ru-05",
+      "theme": "clothes",
+      "targetLang": "ru-RU",
+      "target": "Я просто смотрю, спасибо",
+      "translations": { "en-GB": "I'm just looking, thanks", "bg-BG": "Само разглеждам, благодаря" },
+      "image": ["visibility", "storefront"],
+      "notes": {
+        "mnemonic": {
+          "title": "«Смотрю»: a viewing platform",
+          "text": "«Смотрю» is “I look”, from the same root as «смотровая площадка», a viewing platform: a place you go only to look. «Просто» means “just”, so «Я просто смотрю» says you are only browsing."
+        },
+        "grammar": {
+          "title": "One present tense",
+          "text": "Russian has a single present tense for “I look” and “I'm looking”: «я смотрю». The ending «-ю» goes with «я» (I), as in «я работаю»."
+        },
+        "pronunciation": {
+          "title": "Stress on -рю",
+          "ipa": "[ja ˈprostə smɐˈtrʲu spɐˈsʲibə]",
+          "respelling": "ya PRO-stuh smuh-TRYOO spuh-SEE-buh",
+          "text": "The stress is on the last syllable of «смотрю», so the first «о» is weak: smuh-TRYOO. The «р» is tapped, and soft before «ю»."
+        }
+      }
+    },
+    {
+      "id": "bank-meeting-ru-01",
+      "theme": "meeting",
+      "targetLang": "ru-RU",
+      "target": "Чем вы занимаетесь?",
+      "translations": { "en-GB": "What do you do?", "bg-BG": "С какво се занимавате?" },
+      "image": ["work", "badge"],
+      "notes": {
+        "mnemonic": {
+          "title": "Занято: busy with",
+          "text": "«Заниматься» (to be busy with, to do) is built on «занят» (busy): the sign «Занято» on a toilet door means “occupied”. What you do is what you are busy with."
+        },
+        "grammar": {
+          "title": "«Заниматься» + instrumental",
+          "text": "«Заниматься» takes the instrumental case with no preposition: «чем?» (with what?) is the instrumental of «что». The answer uses it too: «Я занимаюсь спортом» (I do sport)."
+        },
+        "pronunciation": {
+          "title": "Stress on -ма-",
+          "ipa": "[ˈt͡ɕem vɨ zənʲɪˈmajɪtʲɪsʲ]",
+          "respelling": "CHEM vuy zuh-nee-MA-yih-tyihs'",
+          "text": "«Занимаетесь» has five syllables, and the stress is on the third, «-ма-»: zuh-nee-MA-yih-tyihs'. The vowels around it are weak, and the final «сь» is soft."
+        }
+      }
+    },
+    {
+      "id": "bank-meeting-ru-02",
+      "theme": "meeting",
+      "targetLang": "ru-RU",
+      "target": "Давайте на ты",
+      "translations": { "en-GB": "Shall we drop the formalities?", "bg-BG": "Да минем на ти?" },
+      "image": ["handshake", "people"],
+      "notes": {
+        "mnemonic": {
+          "title": "Ты is “thou”",
+          "text": "«Ты» is the Russian “thou”: the two share an ancient root, and like “thou” it is for friends, family and children, while «вы» is the polite “you”."
+        },
+        "grammar": {
+          "title": "«Давайте»: let's",
+          "text": "«Давайте» (the polite or plural form of «давай», “come on, let's”) starts a suggestion; here the verb is left out. After «на», «ты» and «вы» do not change: «на ты» (informal), «на вы» (formal)."
+        },
+        "pronunciation": {
+          "title": "«Ты» is not «ти»",
+          "ipa": "[dɐˈvajtʲɪ nɐ ˈtɨ]",
+          "respelling": "duh-VY-tyih nuh TUY",
+          "text": "The vowel in «ты» is «ы», a hard “i” made with the tongue pulled back. Compare «ти» ([tʲi], soft) with «ты» ([tɨ], hard): the letter decides the sound."
+        }
+      }
+    },
+    {
+      "id": "bank-meeting-ru-03",
+      "theme": "meeting",
+      "targetLang": "ru-RU",
+      "target": "Я учу русский язык",
+      "translations": { "en-GB": "I'm learning Russian", "bg-BG": "Уча руски език" },
+      "image": ["school", "menu_book"],
+      "notes": {
+        "mnemonic": {
+          "title": "Язык: tongue and language",
+          "text": "«Язык» means both “tongue” and “language”, just as English says “mother tongue”: you are learning the Russian tongue."
+        },
+        "grammar": {
+          "title": "«Учить» takes an object",
+          "text": "«Учить» (to learn, to study) takes a direct object: «Я учу русский язык». A masculine thing without a soul looks the same in the accusative, so «русский язык» does not change. Do not mix it up with «учиться» (to study as a student), which takes no direct object."
+        },
+        "pronunciation": {
+          "title": "Doubled с, weak я",
+          "ipa": "[ja ʊˈt͡ɕu ˈrusːkʲɪj jɪˈzɨk]",
+          "respelling": "ya oo-CHOO ROOS-skee yih-ZUYK",
+          "text": "The doubled «сс» in «русский» is held a touch longer: ROOS-skee. The stress in «язык» is on the last syllable, so «я» turns into a weak “yi”: yih-ZUYK."
+        }
+      }
+    },
+    {
+      "id": "bank-meeting-ru-04",
+      "theme": "meeting",
+      "targetLang": "ru-RU",
+      "target": "Вы давно здесь живёте?",
+      "translations": { "en-GB": "Have you lived here long?", "bg-BG": "Отдавна ли живеете тук?" },
+      "image": ["hourglass_top", "pin_drop"],
+      "notes": {
+        "mnemonic": {
+          "title": "Жив-: alive",
+          "text": "«Живёте» contains «жив-», “alive”, a distant cousin of the «viv-» in “vivid” and “survive”. To live is to be alive: «жить», «живой», «жизнь»."
+        },
+        "grammar": {
+          "title": "Present for what continues",
+          "text": "Russian uses the present tense for something that began in the past and goes on: «Вы давно здесь живёте?» is “Have you lived here long?”. «Давно» means “for a long time”."
+        },
+        "pronunciation": {
+          "title": "Жи sounds like zhih",
+          "ipa": "[ˈvɨ dɐvˈno ˈzdʲesʲ ʐɨˈvʲotʲɪ]",
+          "respelling": "VUY duhv-NO zdyes zhuy-VYO-tee",
+          "text": "After «ж» (and «ш», «ц») the letter «и» is pronounced «ы»: «жи» is “zhuy”, not “zhee”. «Ё» is always stressed: zhuy-VYO-tee."
+        }
+      }
+    },
+    {
+      "id": "bank-meeting-ru-05",
+      "theme": "meeting",
+      "targetLang": "ru-RU",
+      "target": "Вы говорите по-английски?",
+      "translations": { "en-GB": "Do you speak English?", "bg-BG": "Говорите ли английски?" },
+      "image": ["forum", "globe_uk"],
+      "notes": {
+        "mnemonic": {
+          "title": "по- … -ски: any language",
+          "text": "Here is one recipe for any language: «по-» in front and «-ски» at the end. So «по-английски», «по-русски», «по-болгарски»."
+        },
+        "grammar": {
+          "title": "«По-…-ски» after говорить",
+          "text": "After «говорить», a language is an adverb, «по-английски», not an adjective: «говорить по-русски». «Вы говорите» uses the polite «вы» with the ending «-ите»."
+        },
+        "pronunciation": {
+          "title": "Weak о before the stress",
+          "ipa": "[ˈvɨ ɡəvɐˈrʲitʲɪ pɐ ɐnˈɡlʲijskʲɪ]",
+          "respelling": "VUY guh-vuh-REE-tee puh uhn-GLEE-skee",
+          "text": "«Говорите» is stressed on «-ри-», so both «о» are weak: guh-vuh-REE-tee. In «английски» the stress is on «-лий-»: uhn-GLEE-skee, with a hard «г» as in “go”."
+        }
+      }
+    },
+    {
+      "id": "bank-weather-ru-01",
+      "theme": "weather",
+      "targetLang": "ru-RU",
+      "target": "Какая сегодня погода?",
+      "translations": { "en-GB": "What's the weather like today?", "bg-BG": "Какво е времето днес?" },
+      "image": ["sunny", "cloudy"],
+      "notes": {
+        "mnemonic": {
+          "title": "Погода: a pagoda in the rain",
+          "text": "«Погода» sounds like “pagoda”: picture a pagoda in the rain, and “weather” will follow."
+        },
+        "grammar": {
+          "title": "«Какая» agrees with «погода»",
+          "text": "«Какая» is the feminine form of «какой» (what kind of) because «погода» is feminine, like most nouns ending in «-а». The masculine is «какой» and the neuter «какое»."
+        },
+        "pronunciation": {
+          "title": "Сегодня is said sevodnya",
+          "ipa": "[kɐˈkajə sʲɪˈvodnʲə pɐˈɡodə]",
+          "respelling": "kuh-KA-yuh see-VOD-nya puh-GO-duh",
+          "text": "In «сегодня» the «г» is pronounced «в»: see-VOD-nya. The same happens in the endings «-ого» and «-его»."
+        }
+      }
+    },
+    {
+      "id": "bank-weather-ru-02",
+      "theme": "weather",
+      "targetLang": "ru-RU",
+      "target": "Ну и жара!",
+      "translations": { "en-GB": "It's boiling!", "bg-BG": "Каква жега!" },
+      "image": ["sunny", "thermostat"],
+      "notes": {
+        "mnemonic": {
+          "title": "Жара: the family of жарить",
+          "text": "«Жара» (heat) is in the family of «жарить» (to fry, to roast): heat so strong you could fry an egg."
+        },
+        "grammar": {
+          "title": "«Ну и…» + noun",
+          "text": "«Ну и» plus a noun makes an exclamation, “what a…”: «Ну и жара», «Ну и погода», «Ну и день». There is no verb."
+        },
+        "pronunciation": {
+          "title": "Hard ж, stress on the end",
+          "ipa": "[nu i ʐɐˈra]",
+          "respelling": "noo ee zhuh-RA",
+          "text": "«Жара» is stressed on the last syllable, so the first «а» is weak: zhuh-RA. The «ж» is always hard, like the “s” in “measure”."
+        }
+      }
+    },
+    {
+      "id": "bank-weather-ru-03",
+      "theme": "weather",
+      "targetLang": "ru-RU",
+      "target": "Завтра будет дождь?",
+      "translations": { "en-GB": "Is it going to rain tomorrow?", "bg-BG": "Ще вали ли утре?" },
+      "image": ["rainy", "calendar_today"],
+      "notes": {
+        "mnemonic": {
+          "title": "Дождь: “dosh” from the sky",
+          "text": "Hear «дождь» as “dosht”, close to British “dosh” (money): picture money pouring down tomorrow."
+        },
+        "grammar": {
+          "title": "«Будет» + noun: “there will be”",
+          "text": "Russian has no “it” for weather: «будет дождь» is “there will be rain”, with «дождь» as the subject. «Будет» is the future of «быть» (to be). A yes/no question is just rising intonation: «Завтра будет дождь?»."
+        },
+        "pronunciation": {
+          "title": "Дождь is said dosht",
+          "ipa": "[ˈzaftrə ˈbudʲɪt ˈdoʂtʲ]",
+          "respelling": "ZAF-truh BOO-dyeet DOSHT'",
+          "text": "«Дождь» is written with «жд» but said “dosht'”: the voiced «жд» turns into voiceless «шт», and the soft sign leaves a light “y” at the end."
+        }
+      }
+    },
+    {
+      "id": "bank-weather-ru-04",
+      "theme": "weather",
+      "targetLang": "ru-RU",
+      "target": "Возьми с собой зонтик",
+      "translations": { "en-GB": "Take an umbrella with you", "bg-BG": "Вземи си чадър" },
+      "image": ["umbrella", "rainy"],
+      "notes": {
+        "mnemonic": {
+          "title": "Зонтик: a sun-cover",
+          "text": "«Зонтик» comes from Dutch zondek, “sun cover” (zon is “sun”, as in German Sonne): a sunshade that learned to handle rain."
+        },
+        "grammar": {
+          "title": "«С собой»: with yourself",
+          "text": "«Возьми» is the informal command of «взять» (to take); to a stranger or a group it is «возьмите». «С собой» means “with oneself” and never changes, whoever is taking the umbrella."
+        },
+        "pronunciation": {
+          "title": "The soft sign in возьми",
+          "ipa": "[vɐzʲˈmʲi sːɐˈboj ˈzontʲɪk]",
+          "respelling": "vuz'-MEE s-suh-BOY ZON-teek",
+          "text": "The soft sign «ь» in «возьми» makes the «з» soft before «м»: add a light “y” to the «з». The stress is on the last syllable: vuz'-MEE."
+        }
+      }
+    },
+    {
+      "id": "bank-weather-ru-05",
+      "theme": "weather",
+      "targetLang": "ru-RU",
+      "target": "На улице очень холодно",
+      "translations": { "en-GB": "It's very cold outside", "bg-BG": "Навън е много студено" },
+      "image": ["ac_unit", "thermostat"],
+      "notes": {
+        "mnemonic": {
+          "title": "Холодно echoes “cold”",
+          "text": "«Холодно» has the same consonant skeleton as English “cold”: х-л-д against c-l-d, in the same order. A chilly word for a chilly day."
+        },
+        "grammar": {
+          "title": "No “it is” for temperature",
+          "text": "Russian weather uses an adverb with no subject: «холодно» (cold), «жарко» (hot), «тепло» (warm). «На улице» (literally “on the street”) means “outside”."
+        },
+        "pronunciation": {
+          "title": "Rough х, weak о",
+          "ipa": "[nɐ ˈulʲɪt͡sɨ ˈot͡ɕɪnʲ ˈxolədnə]",
+          "respelling": "nuh OO-lee-tsuy OH-cheen' KHO-luhd-nuh",
+          "text": "Only the first syllable is stressed in «холодно»: KHO-luhd-nuh. The «х» is a rough “kh”, like Scottish “loch”, never an English “h”, and the unstressed «о» shrinks to “uh”."
+        }
+      }
+    },
+    {
+      "id": "bank-plans-ru-01",
+      "theme": "plans",
+      "targetLang": "ru-RU",
+      "target": "Что ты делаешь завтра вечером?",
+      "translations": { "en-GB": "What are you up to tomorrow evening?", "bg-BG": "Какво правиш утре вечер?" },
+      "image": ["event", "local_activity"],
+      "notes": {
+        "mnemonic": {
+          "title": "Делать: do a deal",
+          "text": "Hear «дело» (a matter, business) as “deal”: «делать» is the verb for doing things, even “doing a deal”. «Делаешь» is “you do”."
+        },
+        "grammar": {
+          "title": "Present for planned future",
+          "text": "Russian often uses the present tense for plans: «Что ты делаешь завтра?» is “What are you doing tomorrow?”. «Вечером» (in the evening) is the instrumental and needs no preposition."
+        },
+        "pronunciation": {
+          "title": "Что is said shto",
+          "ipa": "[ˈʂto tɨ ˈdʲeləjɪʂ ˈzaftrə ˈvʲet͡ɕɪrəm]",
+          "respelling": "SHTO tuy DYEH-luh-yish ZAF-truh VYEH-chee-ruhm",
+          "text": "«Что» is written with «чт» but said “shto”, never “chto”. In «вечером» the stress is on «ве-» and the ending «-ером» is weak: VYEH-chee-ruhm."
+        }
+      }
+    },
+    {
+      "id": "bank-plans-ru-02",
+      "theme": "plans",
+      "targetLang": "ru-RU",
+      "target": "Тебе удобно в семь?",
+      "translations": { "en-GB": "Does seven suit you?", "bg-BG": "Удобно ли ти е в седем?" },
+      "image": ["schedule", "thumb_up"],
+      "notes": {
+        "mnemonic": {
+          "title": "Удобно hides доб-",
+          "text": "«Удобно» hides «доб-», as in «добрый» (kind, good) and «Доброе утро»: something convenient is good for you."
+        },
+        "grammar": {
+          "title": "Dative + удобно",
+          "text": "The person goes in the dative, followed by an adverb, with no verb: «Тебе удобно?» (“to you [is it] convenient?”), «Мне удобно». The time is «в семь», with no «часов» needed."
+        },
+        "pronunciation": {
+          "title": "«В семь» sounds like fsem",
+          "ipa": "[tʲɪˈbʲe ʊˈdobnə f ˈsʲemʲ]",
+          "respelling": "tee-BYEH oo-DOB-nuh f SYEM'",
+          "text": "Before the voiceless «с», the preposition «в» is said as «ф»: [f sʲemʲ], almost one word, “fsyem”. The final «ь» keeps the «м» soft."
+        }
+      }
+    },
+    {
+      "id": "bank-plans-ru-03",
+      "theme": "plans",
+      "targetLang": "ru-RU",
+      "target": "Давай встретимся у театра",
+      "translations": { "en-GB": "Let's meet at the theatre", "bg-BG": "Да се срещнем пред театъра" },
+      "image": ["theater_comedy", "pin_drop"],
+      "notes": {
+        "mnemonic": {
+          "title": "Давай: give it a go",
+          "text": "«Давай» literally means “give”, but Russians use it as “come on, let's”. Think “give it a go”: «Давай встретимся» is “let's give meeting a go”."
+        },
+        "grammar": {
+          "title": "Давай + we-form",
+          "text": "«Давай» plus the «мы» form of a perfective verb means “let's…”: «встретимся» (we'll meet), «пойдём» (let's go). The ending «-ся» makes it mutual: “meet each other”."
+        },
+        "pronunciation": {
+          "title": "Four consonants: встр",
+          "ipa": "[dɐˈvaj ˈfstrʲetʲɪmsʲə ʊ tʲɪˈatrə]",
+          "respelling": "duh-VY FSTRYEH-tee-msya oo tee-A-truh",
+          "text": "«Встретимся» opens with four consonants, [fstrʲ]: the «в» is said as «ф», and you do not add a vowel. The stress is on «-стре-», and the ending «-мся» is “msya”."
+        }
+      }
+    },
+    {
+      "id": "bank-plans-ru-04",
+      "theme": "plans",
+      "targetLang": "ru-RU",
+      "target": "Я немного опаздываю, извини",
+      "translations": { "en-GB": "I'm running a bit late, sorry", "bg-BG": "Малко закъснявам, извинявай" },
+      "image": ["directions_run", "schedule"],
+      "notes": {
+        "mnemonic": {
+          "title": "Позд- hides in опаздываю",
+          "text": "Spot the consonants п-з-д of «поздно» (late) inside «опаздываю»: that is the chunk for “late”."
+        },
+        "grammar": {
+          "title": "Imperfective: running late",
+          "text": "«Опаздываю» is imperfective, so it says you are late right now, in progress. The perfective «опоздаю» looks ahead (“I'll be late”). «Извини» is the informal sorry; to a stranger, say «извините»."
+        },
+        "pronunciation": {
+          "title": "Stress on -паз-, hard ы",
+          "ipa": "[ja nʲɪmˈnoɡə ɐˈpazdɨvəju ɪzvʲɪˈnʲi]",
+          "respelling": "ya neem-NO-guh uh-PAZ-duy-vuh-yoo eez-vee-NEE",
+          "text": "Put the stress on «-паз-»: the first «о» becomes a weak “uh”. The «ы» in «-ды-» is the hard “i”, with the tongue pulled back: uh-PAZ-duy-vuh-yoo."
+        }
+      }
+    },
+    {
+      "id": "bank-plans-ru-05",
+      "theme": "plans",
+      "targetLang": "ru-RU",
+      "target": "Сегодня не получится, может, в другой раз?",
+      "translations": {
+        "en-GB": "Today won't work. Maybe another time?",
+        "bg-BG": "Днес няма да стане, може би друг път?"
+      },
+      "image": ["event_busy", "event_repeat"],
+      "notes": {
+        "mnemonic": {
+          "title": "Получится: it gets itself done",
+          "text": "«Получится» is «получить» (to get) plus «-ся» (itself): in Russian, things “get themselves done”, they “work out”."
+        },
+        "grammar": {
+          "title": "Perfective verbs point to the future",
+          "text": "A perfective verb has no present tense: its present-looking form means the future. So «получится» is “it will work out” and «не получится» is “it won't”. «Может» (maybe) opens a soft suggestion."
+        },
+        "pronunciation": {
+          "title": "-тся is said ц",
+          "ipa": "[sʲɪˈvodnʲə nʲɪ pɐˈlut͡ɕɪt͡sə ˈmoʐɨt v druˈɡoj ˈras]",
+          "respelling": "see-VOD-nya nee puh-LOO-chee-tsuh MO-zhuyt v droo-GOY RAS",
+          "text": "«-тся» is pronounced “ts”: «получится» ends in “-chee-tsuh”, with one «ц», not “t-sya”. The stress is on «-лу-»."
+        }
+      }
+    },
+    {
+      "id": "bank-airport-ru-01",
+      "theme": "airport",
+      "targetLang": "ru-RU",
+      "target": "Где стойка регистрации?",
+      "translations": { "en-GB": "Where is the check-in desk?", "bg-BG": "Къде е гишето за регистрация?" },
+      "image": ["airplane_ticket", "checked_bag"],
+      "notes": {
+        "mnemonic": {
+          "title": "«Стойка»: where you stand",
+          "text": "«Регистрация» is “registration”, the word you know from every airport. «Стойка» is a counter, and it hides «стоять» (“to stand”): you stand at it to check in."
+        },
+        "grammar": {
+          "title": "The second noun takes the genitive",
+          "text": "Where English says “of”, Russian changes the ending of the second noun: «регистрация» becomes «регистрации» in «стойка регистрации» (“desk of check-in”). There is no word for “is” in the present tense, so «Где…?» is enough."
+        },
+        "pronunciation": {
+          "title": "Stress on стра, and ци is “tsih”",
+          "ipa": "[ˈɡdʲe ˈstojkə rʲɪɡʲɪˈstrat͡sɨjɪ]",
+          "respelling": "GDYEH STOY-kuh ree-gee-STRAH-tsih-ee",
+          "text": "Put the stress on «стра» (ree-gee-STRAH-tsih-ee) and let the other syllables shrink. After «ц» the letter «и» is spoken as «ы», a flat «i», so «ци» is “tsih”, not “tsee”."
+        }
+      }
+    },
+    {
+      "id": "bank-airport-ru-02",
+      "theme": "airport",
+      "targetLang": "ru-RU",
+      "target": "С какого выхода посадка?",
+      "translations": { "en-GB": "Which gate do we board from?", "bg-BG": "От кой изход се качваме на самолета?" },
+      "image": ["flight_takeoff", "door_open"],
+      "notes": {
+        "mnemonic": {
+          "title": "Exit to the plane",
+          "text": "«Выход» is an exit, so a gate is the way out to the plane. «Посадка» comes from «садиться» (“to sit down”): boarding is when you go and take your seat."
+        },
+        "grammar": {
+          "title": "«С» + genitive means “from”",
+          "text": "«С» followed by the genitive means “from”. That is why «выход» becomes «выхода» and «какой» becomes «какого»."
+        },
+        "pronunciation": {
+          "title": "г is said в, д is said т",
+          "ipa": "[skɐˈkovə ˈvɨxədə pɐˈsatkə]",
+          "respelling": "skuh-KO-vuh VUY-khuh-duh puh-SAT-kuh",
+          "text": "In «какого» the «г» is pronounced «в»: kuh-KO-vuh. In «посадка» the «д» before «к» sounds like «т»: puh-SAT-kuh."
+        }
+      }
+    },
+    {
+      "id": "bank-airport-ru-03",
+      "theme": "airport",
+      "targetLang": "ru-RU",
+      "target": "У меня только ручная кладь",
+      "translations": { "en-GB": "I've only got hand luggage", "bg-BG": "Имам само ръчен багаж" },
+      "image": ["carry_on_bag"],
+      "notes": {
+        "mnemonic": {
+          "title": "«Ручная» comes from «рука»",
+          "text": "«Ручная» comes from «рука» (“hand”), so «ручная кладь» is “hand baggage”, the bag you carry yourself. Picture a hand gripping a small case."
+        },
+        "grammar": {
+          "title": "«У меня»: “I have”",
+          "text": "Everyday Russian does not use a verb “to have”: it says “at me” («у меня») and then the thing. «Есть» (“there is”) is left out when you say exactly what you have, as here."
+        },
+        "pronunciation": {
+          "title": "Stress on -ня and -на",
+          "ipa": "[u mʲɪˈnʲa ˈtolʲkə rʊt͡ɕˈnajə ˈklatʲ]",
+          "respelling": "oo mee-NYA TOL-kuh rooch-NAH-yuh KLAHT'",
+          "text": "In «меня» the stress is on «я», so the «е» before it shrinks to a short «и»: mi-NYA. «Ручная» is stressed on «на», and the «ч» is always soft."
+        }
+      }
+    },
+    {
+      "id": "bank-airport-ru-04",
+      "theme": "airport",
+      "targetLang": "ru-RU",
+      "target": "Можно место у окна, пожалуйста?",
+      "translations": { "en-GB": "Could I have a window seat, please?", "bg-BG": "Може ли място до прозореца, моля?" },
+      "image": ["airline_seat_recline_normal", "flight"],
+      "notes": {
+        "mnemonic": {
+          "title": "Window: the eye of the house",
+          "text": "«Окно» (window) comes from «око», an old word for “eye”: a window is the eye of the house. Say «у окна» and picture an eye looking out."
+        },
+        "grammar": {
+          "title": "«Можно» + a noun",
+          "text": "«Можно» means “is it possible / may I”. Put a noun straight after it and it asks for that thing: «Можно место?» is “May I have a seat?”. After «у» (“by”) the noun takes the genitive: «окно» becomes «окна»."
+        },
+        "pronunciation": {
+          "title": "Hard ж, quick пожалуйста",
+          "ipa": "[ˈmoʐnə ˈmʲestə u ɐkˈna pɐˈʐaləstə]",
+          "respelling": "MOZH-nuh MYEH-stuh oo uhk-NAH puh-ZHAH-luh-stuh",
+          "text": "«Ж» is always hard, like the s in “measure”, in both «можно» and «пожалуйста». In «пожалуйста» the stress is on «жа», the «й» is barely heard, and the last two vowels are weak: puh-ZHAH-luh-stuh."
+        }
+      }
+    },
+    {
+      "id": "bank-airport-ru-05",
+      "theme": "airport",
+      "targetLang": "ru-RU",
+      "target": "Мой чемодан не прилетел",
+      "translations": { "en-GB": "My suitcase hasn't arrived", "bg-BG": "Куфарът ми не пристигна" },
+      "image": ["no_luggage", "conveyor_belt"],
+      "notes": {
+        "mnemonic": {
+          "title": "A suitcase that did not fly in",
+          "text": "«Прилетел» is «при-» (arriving) plus «лететь» (“to fly”): it “flew in”. A suitcase that «не прилетел» never made the trip."
+        },
+        "grammar": {
+          "title": "при-, у-, вы-: where it goes",
+          "text": "Prefixes on «лететь» (“to fly”) show direction: «прилететь» is to arrive by air, «улететь» to fly away, «вылететь» to depart. Learn them as pairs: «прилетел» (arrived) and «улетел» (left)."
+        },
+        "pronunciation": {
+          "title": "Stress at the end, vowels weaken",
+          "ipa": "[ˈmoj t͡ɕɪmɐˈdan nʲɪ prʲɪlʲɪˈtʲel]",
+          "respelling": "MOY chee-muh-DAN nee pree-lee-TYEL",
+          "text": "Both long words are stressed on the last syllable: «чемодан» is chee-muh-DAN and «прилетел» is pree-lee-TYEL. The unstressed vowels shrink, so the first «е» and «о» of «чемодан» sound like a short “i” and “uh”."
+        }
+      }
+    },
+    {
+      "id": "bank-help-ru-01",
+      "theme": "help",
+      "targetLang": "ru-RU",
+      "target": "Вы не могли бы мне помочь?",
+      "translations": { "en-GB": "Could you help me?", "bg-BG": "Бихте ли могли да ми помогнете?" },
+      "image": ["front_hand", "support"],
+      "notes": {
+        "mnemonic": {
+          "title": "Help is built on «мочь»",
+          "text": "«Помочь» (“to help”) is built on «мочь» (“can, to be able”), the root you also hear in «могли». Helping is lending someone your ability."
+        },
+        "grammar": {
+          "title": "Softening with «не… бы»",
+          "text": "A negative question with «бы» is the polite way to ask: «Вы не могли бы…?» is “Couldn't you…?”. «Могли» is a past form, and adding «бы» turns it into “could”."
+        },
+        "pronunciation": {
+          "title": "Flat ы and the stress on ли",
+          "ipa": "[ˈvɨ nʲɪ mɐˈɡlʲi bɨ mnʲɪ pɐˈmot͡ɕ]",
+          "respelling": "VUY nee muh-GLEE buy mnee puh-MOCH",
+          "text": "«Ы» is a flat, back “i”, said with the tongue pulled back and the lips unrounded: «вы» is “vuy”, not “vee”. In «могли» the stress is on «ли», so the first «о» weakens to «а»: muh-GLEE."
+        }
+      }
+    },
+    {
+      "id": "bank-help-ru-02",
+      "theme": "help",
+      "targetLang": "ru-RU",
+      "target": "Вызовите скорую, пожалуйста!",
+      "translations": { "en-GB": "Call an ambulance, please!", "bg-BG": "Извикайте линейка, моля!" },
+      "image": ["ambulance", "call"],
+      "notes": {
+        "mnemonic": {
+          "title": "«Скорая»: the quick one",
+          "text": "«Скорая помощь» is “quick help”: the ambulance. People shorten it to «скорая», so you only need to remember the “quick” one."
+        },
+        "grammar": {
+          "title": "Accusative: -ая becomes -ую",
+          "text": "The thing you call is the object, so it takes the accusative. Feminine adjectives in -ая change to -ую: «скорая» becomes «скорую». The ending -ите makes the command polite (to «вы»)."
+        },
+        "pronunciation": {
+          "title": "Stress on the first syllable",
+          "ipa": "[ˈvɨzəvʲɪtʲɪ ˈskorʊjʊ pɐˈʐaləstə]",
+          "respelling": "VUY-zuh-vee-tee SKO-roo-yoo puh-ZHAH-luh-stuh",
+          "text": "«Вызовите» and «скорую» are both stressed on the first syllable: VUY-zuh-vee-tee, SKO-roo-yoo. The «о» inside «вызовите» is unstressed and weakens to a short «а»."
+        }
+      }
+    },
+    {
+      "id": "bank-help-ru-03",
+      "theme": "help",
+      "targetLang": "ru-RU",
+      "target": "У меня украли телефон",
+      "translations": { "en-GB": "My phone has been stolen", "bg-BG": "Откраднаха ми телефона" },
+      "image": ["person_alert", "smartphone"],
+      "notes": {
+        "mnemonic": {
+          "title": "The thief's root: «кра-»",
+          "text": "«Телефон» is the word you already know. The new part is «украли», from «красть» (“to steal”), which also gives «кража» (“theft”)."
+        },
+        "grammar": {
+          "title": "No subject: “they stole”",
+          "text": "«Украли» is a plural past form with no «они» (“they”). Russian uses it when the thief is unknown, where English says “was stolen”: «у меня украли телефон», literally “at me they stole a phone”."
+        },
+        "pronunciation": {
+          "title": "Soft л, and the stress at the end",
+          "ipa": "[u mʲɪˈnʲa ʊˈkralʲɪ tʲɪlʲɪˈfon]",
+          "respelling": "oo mee-NYA oo-KRAH-lee tee-lee-FON",
+          "text": "Stress «кра» in «украли» and «фон» in «телефон», not the first syllable as in English. The «л» before «и» is soft, like the l in “leaf”, not the heavy l of “full”."
+        }
+      }
+    },
+    {
+      "id": "bank-help-ru-04",
+      "theme": "help",
+      "targetLang": "ru-RU",
+      "target": "Где ближайшее отделение полиции?",
+      "translations": {
+        "en-GB": "Where is the nearest police station?",
+        "bg-BG": "Къде е най-близкото полицейско управление?"
+      },
+      "image": ["local_police", "near_me"],
+      "notes": {
+        "mnemonic": {
+          "title": "«Ближайшее»: the nearest",
+          "text": "«Ближайшее» is built on «близко» (“near”), and «полиция» sounds almost like “police”. Together: “where [is the] nearest section of police?”"
+        },
+        "grammar": {
+          "title": "The adjective copies the noun",
+          "text": "«Отделение» is a neuter noun, so the adjective ends in -ее: «ближайшее». For a masculine noun it would be «ближайший», for a feminine one «ближайшая». «Полиции» (“of police”) is the genitive."
+        },
+        "pronunciation": {
+          "title": "Three stresses in a long phrase",
+          "ipa": "[ˈɡdʲe blʲɪˈʐajʂɨjə ɐdʲɪˈlʲenʲɪjə pɐˈlʲit͡sɨjɪ]",
+          "respelling": "GDYEH blee-ZHAI-shuy-yuh uh-dee-LYEH-nee-yuh puh-LEE-tsuy-ee",
+          "text": "Say the stressed syllables clearly («жай», «ле», «ли») and let the rest shrink. The «ж» and «ш» are always hard, and «ше» after them sounds like «шы»."
+        }
+      }
+    },
+    {
+      "id": "bank-help-ru-05",
+      "theme": "help",
+      "targetLang": "ru-RU",
+      "target": "Кто-нибудь говорит по-английски?",
+      "translations": { "en-GB": "Does anyone speak English?", "bg-BG": "Говори ли някой английски?" },
+      "image": ["translate", "record_voice_over"],
+      "notes": {
+        "mnemonic": {
+          "title": "«Кто» + «нибудь»: anybody",
+          "text": "«Кто-нибудь» is “anybody”: «кто» (“who”) plus «нибудь», the same ending as in «что-нибудь» (“anything”). Picture yourself calling it across a crowded hall, then adding the language."
+        },
+        "grammar": {
+          "title": "«-нибудь» for questions",
+          "text": "Add «-нибудь» to «кто» to ask about “anyone at all” when you do not know whether there is such a person. «Кто-то» is “somebody”, a particular person you know exists."
+        },
+        "pronunciation": {
+          "title": "Final soft т, stress at the end",
+          "ipa": "[ˈkto nʲɪˌbutʲ ɡəvɐˈrʲit pɐ ɐnˈɡlʲijskʲɪ]",
+          "respelling": "KTO nee-boot' guh-vuh-REET puh uhn-GLEE-skee",
+          "text": "In «кто-нибудь» the main stress is on «кто», but «буд» keeps a light second stress, and the final «дь» is said as a soft «т»: nee-boot'. «Говорит» is stressed on the end: guh-vuh-REET."
+        }
+      }
+    },
+    {
+      "id": "bank-work-ru-01",
+      "theme": "work",
+      "targetLang": "ru-RU",
+      "target": "Я работаю удалённо по пятницам",
+      "translations": { "en-GB": "I work from home on Fridays", "bg-BG": "Всеки петък работя от вкъщи" },
+      "image": ["home_work", "laptop"],
+      "notes": {
+        "mnemonic": {
+          "title": "Работа and “robot”",
+          "text": "«Работаю» (“I work”) comes from «работа» (“work”), the same Slavic root that gave the world “robot”, from Czech “robota”. «Удалённо» is “remotely”: it comes from «даль», “distance”."
+        },
+        "grammar": {
+          "title": "«По пятницам»: every Friday",
+          "text": "«По» + a plural day in the dative means “on those days, regularly”: «по пятницам» is “on Fridays” in general. For one particular Friday you would say «в пятницу»."
+        },
+        "pronunciation": {
+          "title": "ё is always stressed",
+          "ipa": "[ja rɐˈbotəju ʊdɐˈlʲonːə pɐ ˈpʲatnʲɪt͡səm]",
+          "respelling": "ya ruh-BO-tuh-yoo oo-duh-LYO-nuh puh PYAT-nee-tsuhm",
+          "text": "The letter «ё» is always stressed: «удалённо» is oo-duh-LYO-nuh. In «работаю» the stress is on «бо» (ruh-BO-tuh-yoo), and the other «а» and «о» weaken."
+        }
+      }
+    },
+    {
+      "id": "bank-work-ru-02",
+      "theme": "work",
+      "targetLang": "ru-RU",
+      "target": "Можешь прислать мне отчёт?",
+      "translations": { "en-GB": "Can you send me the report?", "bg-BG": "Можеш ли да ми изпратиш отчета?" },
+      "image": ["mail", "description"],
+      "notes": {
+        "mnemonic": {
+          "title": "«Прислать»: send it here",
+          "text": "«Прислать» is «при-» (“towards me”) plus «слать» (“to send”), the root of «посылка» (“parcel”). Picture the report coming towards you."
+        },
+        "grammar": {
+          "title": "Perfective for one request",
+          "text": "«Прислать» is perfective: it asks for one sending that will be completed. The imperfective «присылать» would mean sending regularly. After «можешь», a one-off request uses the perfective."
+        },
+        "pronunciation": {
+          "title": "Soft ть, and тч run together",
+          "ipa": "[ˈmoʐɨʂ prʲɪˈslatʲ mnʲɪ ɐtˈt͡ɕot]",
+          "respelling": "MO-zhuysh pree-SLAHT' mnee uht-CHOT",
+          "text": "The final «ть» in «прислать» is a soft «т»: pree-SLAT'. In «отчёт» the «т» and «ч» run together and the «ё» is stressed: uht-CHOT."
+        }
+      }
+    },
+    {
+      "id": "bank-work-ru-03",
+      "theme": "work",
+      "targetLang": "ru-RU",
+      "target": "Я опоздаю минут на десять",
+      "translations": { "en-GB": "I'll be about ten minutes late", "bg-BG": "Ще закъснея с десетина минути" },
+      "image": ["schedule", "directions_run"],
+      "notes": {
+        "mnemonic": {
+          "title": "Number after the noun: a shrug",
+          "text": "Hear «минут на десять» as a shrug in words: when «десять» trails behind «минут», the speaker means “ten, give or take”. «Минут» is “minutes”, the word you already know."
+        },
+        "grammar": {
+          "title": "Number after the noun: about",
+          "text": "Put the number after the noun and it becomes approximate: «минут на десять» is “about ten minutes”. The exact version is «на десять минут». «Опоздаю» is perfective, so it already means “I will be late”."
+        },
+        "pronunciation": {
+          "title": "ZDA stress, soft ть",
+          "ipa": "[ja ɐpɐˈzdaju mʲɪˈnut nɐ ˈdʲesʲɪtʲ]",
+          "respelling": "ya uh-puh-ZDAH-yoo mee-NOOT nuh DYEH-seet'",
+          "text": "In «опоздаю» the stress is on «зда», and the first two «о» weaken to short «а»: uh-puh-ZDAH-yoo. «Десять» is stressed on «де» and ends in a soft «ть»."
+        }
+      }
+    },
+    {
+      "id": "bank-work-ru-04",
+      "theme": "work",
+      "targetLang": "ru-RU",
+      "target": "Можно перенести встречу на завтра?",
+      "translations": {
+        "en-GB": "Could we move the meeting to tomorrow?",
+        "bg-BG": "Може ли да преместим срещата за утре?"
+      },
+      "image": ["event_repeat", "calendar_today"],
+      "notes": {
+        "mnemonic": {
+          "title": "«Пере-» + «нести»: carry across",
+          "text": "«Перенести» is «пере-» (“across”) plus «нести» (“to carry”): you pick the meeting up and carry it across to tomorrow."
+        },
+        "grammar": {
+          "title": "Feminine -а becomes -у",
+          "text": "A feminine noun in -а changes to -у when it is the object: «встреча» (meeting) becomes «встречу». «На» + accusative then names the new time: «на завтра», «на пятницу»."
+        },
+        "pronunciation": {
+          "title": "в sounds like ф",
+          "ipa": "[ˈmoʐnə pʲɪrʲɪnʲɪˈstʲi ˈfstrʲet͡ɕʊ nə ˈzaftrə]",
+          "respelling": "MOZH-nuh pee-ree-nee-STEE FSTRYE-choo nuh ZAHF-truh",
+          "text": "Before a voiceless «с» the «в» is pronounced «ф»: «встречу» is FSTRYE-choo. In «завтра» the «в» also becomes «ф»: ZAF-tra. Say the clusters without adding a vowel."
+        }
+      }
+    },
+    {
+      "id": "bank-work-ru-05",
+      "theme": "work",
+      "targetLang": "ru-RU",
+      "target": "У тебя есть минутка?",
+      "translations": { "en-GB": "Have you got a minute?", "bg-BG": "Имаш ли минутка?" },
+      "image": ["hourglass_top", "forum"],
+      "notes": {
+        "mnemonic": {
+          "title": "A minute between two fingers",
+          "text": "Picture a colleague at your desk holding up a thumb and finger, a pinch of time: «минутка» is a very small minute."
+        },
+        "grammar": {
+          "title": "The friendly ending -ка",
+          "text": "The suffix «-ка» makes a feminine noun small and friendly: «минута» becomes «минутка». It softens a request: you are asking for a tiny favour."
+        },
+        "pronunciation": {
+          "title": "«Есть» starts with y",
+          "ipa": "[u tʲɪˈbʲa ˈjesʲtʲ mʲɪˈnutkə]",
+          "respelling": "oo tee-BYA YEST' mee-NOOT-kuh",
+          "text": "«Есть» starts with a “y” sound (YEST') and ends in a soft «ть». In «тебя» the stress is on «я», so the first «е» shrinks to «и»: tee-BYA."
+        }
+      }
+    },
+    {
+      "id": "bank-phone-ru-01",
+      "theme": "phone",
+      "targetLang": "ru-RU",
+      "target": "Какой пароль от вайфая?",
+      "translations": { "en-GB": "What's the wifi password?", "bg-BG": "Каква е паролата за интернета?" },
+      "image": ["wifi_password", "router"],
+      "notes": {
+        "mnemonic": {
+          "title": "Пароль is “parole”",
+          "text": "«Пароль» (“password”) comes from French “parole” (“word”), which English borrowed too: a password is the word that lets you in. «Вайфай» is simply how Russians write “wifi”."
+        },
+        "grammar": {
+          "title": "«Пароль от…»: the password to",
+          "text": "«От» + genitive links a code or key to what it opens: «пароль от вайфая», «ключ от квартиры». «Вайфай» is declined like a masculine noun, so it becomes «вайфая»."
+        },
+        "pronunciation": {
+          "title": "Soft ль, stress on ро and фа",
+          "ipa": "[kɐˈkoj pɐˈrolʲ ɐt vɐjˈfajə]",
+          "respelling": "kuh-KOY puh-ROL' uht vai-FAH-yuh",
+          "text": "The final «ль» of «пароль» is a soft «л»: say pa-ROL with the tongue pressed flat against the roof of the mouth, no vowel added. «Какой» is stressed on the end: ka-KOY."
+        }
+      }
+    },
+    {
+      "id": "bank-phone-ru-02",
+      "theme": "phone",
+      "targetLang": "ru-RU",
+      "target": "У меня сел телефон",
+      "translations": { "en-GB": "My phone has died", "bg-BG": "Телефонът ми остана без батерия" },
+      "image": ["battery_0_bar", "smartphone"],
+      "notes": {
+        "mnemonic": {
+          "title": "A phone that sat down",
+          "text": "«Сел» comes from «сесть» (“to sit down”): picture your phone sinking into a chair because it has no energy left."
+        },
+        "grammar": {
+          "title": "The past tense agrees in gender",
+          "text": "A past verb takes the gender of its subject: «телефон» is masculine, so «сел». For a battery you would say «батарея села» (feminine -а). The person comes first with «у меня», “at me”."
+        },
+        "pronunciation": {
+          "title": "Soft с in сел",
+          "ipa": "[u mʲɪˈnʲa ˈsʲel tʲɪlʲɪˈfon]",
+          "respelling": "oo mee-NYA SYEL tee-lee-FON",
+          "text": "The letter «е» softens the consonant before it: «сел» is “syel”, not “sel”, and «меня» sounds like mi-NYA. «Телефон» is stressed on the last syllable."
+        }
+      }
+    },
+    {
+      "id": "bank-phone-ru-03",
+      "theme": "phone",
+      "targetLang": "ru-RU",
+      "target": "Я перезвоню тебе позже",
+      "translations": { "en-GB": "I'll call you back later", "bg-BG": "Ще ти звънна по-късно" },
+      "image": ["phone_callback", "schedule"],
+      "notes": {
+        "mnemonic": {
+          "title": "«Звонить»: a ringing bell",
+          "text": "«Звонить» (“to call”) comes from «звон» (“a ringing”, like a bell). The prefix «пере-» adds “back”: you ring again."
+        },
+        "grammar": {
+          "title": "Calling takes the dative",
+          "text": "In Russian you call “to” someone, so the person after «перезвонить» is in the dative: «тебе», «вам», «ему». The perfective «перезвоню» already means “I will call back”."
+        },
+        "pronunciation": {
+          "title": "Long ж in позже",
+          "ipa": "[ja pʲɪrʲɪzvɐˈnʲu tʲɪˈbʲe ˈpoʐːɪ]",
+          "respelling": "ya pee-ree-zvuh-NYOO tee-BYEH POZH-zhih",
+          "text": "«Перезвоню» ends with the stress: pee-ree-zvuh-NYOO, the «ню» soft and short. In «позже» the «зж» merges into one long «ж»: POZH-zhih."
+        }
+      }
+    },
+    {
+      "id": "bank-phone-ru-04",
+      "theme": "phone",
+      "targetLang": "ru-RU",
+      "target": "Тебя плохо слышно",
+      "translations": { "en-GB": "I can't hear you very well", "bg-BG": "Не те чувам добре" },
+      "image": ["hearing", "signal_cellular_off"],
+      "notes": {
+        "mnemonic": {
+          "title": "«Слышно»: from «слух»",
+          "text": "«Слышно» (“audible”) shares its root with «слух» (“hearing”) and «слушать» (“to listen”). «Плохо слышно» is “badly audible”, what you say when the line is poor."
+        },
+        "grammar": {
+          "title": "No subject: «слышно»",
+          "text": "«Слышно» is an impersonal word meaning “it is audible”. The person you can or can't hear goes in the accusative: «тебя», or «вас» if you are formal: «Вас плохо слышно»."
+        },
+        "pronunciation": {
+          "title": "Flat ы, rough х",
+          "ipa": "[tʲɪˈbʲa ˈploxə ˈslɨʂnə]",
+          "respelling": "tee-BYA PLO-khuh SLUYSH-nuh",
+          "text": "The «ы» in «слышно» is a flat, back “i”, not «и»: sluysh-nuh. The «х» in «плохо» is the rough h of Scottish “loch”."
+        }
+      }
+    },
+    {
+      "id": "bank-phone-ru-05",
+      "theme": "phone",
+      "targetLang": "ru-RU",
+      "target": "Давай обменяемся номерами",
+      "translations": { "en-GB": "Let's swap numbers", "bg-BG": "Хайде да си разменим номерата" },
+      "image": ["contact_phone", "smartphone"],
+      "notes": {
+        "mnemonic": {
+          "title": "«Обмен»: an exchange",
+          "text": "«Обменяемся» is built on «обмен» (“exchange”): think of a currency exchange, but for phone numbers."
+        },
+        "grammar": {
+          "title": "«Давай» + we: let's",
+          "text": "«Давай» followed by a «мы»-form of a perfective verb means “let's”: «давай обменяемся». The thing swapped is in the instrumental: «номерами» (“with numbers”)."
+        },
+        "pronunciation": {
+          "title": "One stress in a long word",
+          "ipa": "[dɐˈvaj ɐbmʲɪˈnʲajɪmsʲə nɐmʲɪˈramʲɪ]",
+          "respelling": "duh-VAI uhb-mee-NYAH-yim-syuh nuh-mee-RAH-mee",
+          "text": "In «обменяемся» only «ня» is stressed: uhb-mee-NYA-yim-syuh. Squeeze the other syllables, and say the ending «-ся» as a soft “sya”."
+        }
+      }
+    },
+    {
+      "id": "bank-family-ru-01",
+      "theme": "family",
+      "targetLang": "ru-RU",
+      "target": "Мой старший брат живёт в Лондоне",
+      "translations": { "en-GB": "My older brother lives in London", "bg-BG": "По-големият ми брат живее в Лондон" },
+      "image": ["boy", "location_city"],
+      "notes": {
+        "mnemonic": {
+          "title": "«Старший»: the older one",
+          "text": "«Старший» comes from «старый» (“old”) and «младший» from «молодой» (“young”). «Брат» and “brother” are the same ancient word."
+        },
+        "grammar": {
+          "title": "Older or younger",
+          "text": "Russian usually says which brother or sister you mean: «старший» is older, «младший» is younger. The adjective matches the noun, so it is «старший брат» but «старшая сестра»."
+        },
+        "pronunciation": {
+          "title": "жи and ши are said жы, шы",
+          "ipa": "[moj ˈstarʂɨj ˈbrat ʐɨˈvʲot ˈvlondənʲɪ]",
+          "respelling": "moy STAR-shuy BRAT zhuy-VYOT VLON-duh-nee",
+          "text": "After «ж» and «ш» the letter «и» is spoken as «ы»: «старший» is STAR-shuy and «живёт» is zhuy-VYOT. Both consonants are always hard, and «ё» is always stressed."
+        }
+      }
+    },
+    {
+      "id": "bank-family-ru-02",
+      "theme": "family",
+      "targetLang": "ru-RU",
+      "target": "Моей дочери пять лет",
+      "translations": { "en-GB": "My daughter is five", "bg-BG": "Дъщеря ми е на пет години" },
+      "image": ["child_care", "cake"],
+      "notes": {
+        "mnemonic": {
+          "title": "Дочь is “daughter”",
+          "text": "«Дочь» and “daughter” come from the same ancient word, which is why both start with a d."
+        },
+        "grammar": {
+          "title": "Age goes in the dative",
+          "text": "Russian gives age “to” the person: «моей дочери» is the dative of «моя дочь», followed by the number and «лет». After 5 you need «лет»; for 1 it is «год» and for 2 to 4 «года»."
+        },
+        "pronunciation": {
+          "title": "Weak vowels, soft ть",
+          "ipa": "[mɐˈjej ˈdot͡ɕɪrʲɪ ˈpʲatʲ ˈlʲet]",
+          "respelling": "muh-YAY DO-chee-ree PYAT' LYET",
+          "text": "In «моей» the stress is on «ей»: muh-YAY. In «дочери» it is on «до», and the other vowels weaken. «Пять» ends in a soft «ть», with the tongue lifted: pyat'."
+        }
+      }
+    },
+    {
+      "id": "bank-family-ru-03",
+      "theme": "family",
+      "targetLang": "ru-RU",
+      "target": "В воскресенье мы едем к бабушке",
+      "translations": { "en-GB": "On Sunday we're going to Grandma's", "bg-BG": "В неделя отиваме при баба" },
+      "image": ["elderly_woman", "directions_car"],
+      "notes": {
+        "mnemonic": {
+          "title": "Sunday: the day of rising again",
+          "text": "«Воскресенье» (Sunday) means “resurrection”, from «воскреснуть», “to rise again”: every Sunday is a little Easter."
+        },
+        "grammar": {
+          "title": "«К» + dative: to someone's",
+          "text": "To go towards a person you use «к» + dative: «к бабушке» is “to Grandma's”. To be at their place you say «у» + genitive: «у бабушки»."
+        },
+        "pronunciation": {
+          "title": "к becomes г before б",
+          "ipa": "[vvəskrʲɪˈsʲenʲjə mɨ ˈjedʲɪm ɡˈbabʊʂkʲɪ]",
+          "respelling": "vvuh-skree-SYEN-yuh muy YE-deem g-BAH-boosh-kee",
+          "text": "A voiceless sound turns voiced before a voiced one: «к» before «б» sounds like «г», so «к бабушке» is g-BAH-boosh-kee. «Воскресенье» is stressed on «се»: vvuh-skree-SYEN-yuh."
+        }
+      }
+    },
+    {
+      "id": "bank-family-ru-04",
+      "theme": "family",
+      "targetLang": "ru-RU",
+      "target": "Мы с сестрой очень похожи",
+      "translations": { "en-GB": "My sister and I look very alike", "bg-BG": "Със сестра ми много си приличаме" },
+      "image": ["woman", "people"],
+      "notes": {
+        "mnemonic": {
+          "title": "Сестра is “sister”",
+          "text": "«Сестра» and “sister” share an ancient root, so the s-s-t sounds will carry you: sis-TRA. «Мы с» is “we with”, the Russian way of teaming up."
+        },
+        "grammar": {
+          "title": "«Мы с сестрой»: my sister and I",
+          "text": "«Мы с сестрой» is literally “we with sister” and means “my sister and I”. The noun after «с» is in the instrumental (-ой for feminine nouns in -а), and the adjective is plural: «похожи»."
+        },
+        "pronunciation": {
+          "title": "A long «с» and the stress at the end",
+          "ipa": "[mɨ s sʲɪˈstroj ˈot͡ɕɪnʲ pɐˈxoʐɨ]",
+          "respelling": "muy s see-STROY O-chin' puh-KHO-zhuy",
+          "text": "«С сестрой» is said as one unit: the two «с» merge into a long «с», and the stress is on the last syllable: s-sis-TROY. «Очень» is stressed on «о» and ends in a soft «нь»."
+        }
+      }
+    },
+    {
+      "id": "bank-family-ru-05",
+      "theme": "family",
+      "targetLang": "ru-RU",
+      "target": "У вас есть дети?",
+      "translations": { "en-GB": "Do you have any children?", "bg-BG": "Имате ли деца?" },
+      "image": ["family_restroom", "child_care"],
+      "notes": {
+        "mnemonic": {
+          "title": "Дети sounds like “yeti”",
+          "text": "«Дети» (“children”) sounds like “yeti” with a d in front: picture a yeti surrounded by a crowd of children."
+        },
+        "grammar": {
+          "title": "Child and children: two words",
+          "text": "The singular of «дети» is not «детя»: one child is «ребёнок». Learn the pair «ребёнок» / «дети». «У вас есть…?» is the polite “do you have…?”."
+        },
+        "pronunciation": {
+          "title": "Soft т, short ending",
+          "ipa": "[u ˈvas ˈjesʲtʲ ˈdʲetʲɪ]",
+          "respelling": "oo VAHS YEST' DYEH-tee",
+          "text": "«Есть» starts with a “y” (YEST') and ends in a soft «ть». «Дети» has a soft «т» too: the tongue lifts towards the palate, DYE-ti, and the final «и» is very short."
+        }
+      }
+    },
+    {
+      "id": "bank-booking-ru-01",
+      "theme": "booking",
+      "targetLang": "ru-RU",
+      "target": "Я хочу забронировать столик на четверых",
+      "translations": { "en-GB": "I'd like to book a table for four", "bg-BG": "Искам да запазя маса за четирима" },
+      "image": ["table_restaurant", "groups"],
+      "notes": {
+        "mnemonic": {
+          "title": "«Четверых»: the fourth day",
+          "text": "«Четверых» (“four people”) is built on «четыре» (“four”), and the same root names Thursday, «четверг»: the fourth day of the Russian week."
+        },
+        "grammar": {
+          "title": "«Я хочу» + infinitive",
+          "text": "«Я хочу» plus an infinitive means “I want to…”: «хочу забронировать». It is not blunt in Russian: it is the normal way to say what you would like to do. «Хотеть» is irregular: «я хочу», «ты хочешь», «он хочет», but «мы хотим», «вы хотите», «они хотят»."
+        },
+        "pronunciation": {
+          "title": "Stress hops from word to word",
+          "ipa": "[ja xɐˈt͡ɕu zəbrɐˈnʲirəvətʲ ˈstolʲɪk nə t͡ɕɪtvʲɪˈrɨx]",
+          "respelling": "ya khuh-CHOO zuh-bruh-NEE-ruh-vuht' STO-leek nuh chee-tvee-RUYKH",
+          "text": "Four words carry a stress: khuh-CHOO, zuh-bruh-NEE-ruh-vuht', STO-leek and chee-tvee-RUYKH; «я» and «на» stay light. The «ч» in «хочу» and «четверых» is always soft."
+        }
+      }
+    },
+    {
+      "id": "bank-booking-ru-02",
+      "theme": "booking",
+      "targetLang": "ru-RU",
+      "target": "У вас есть свободный столик на восемь?",
+      "translations": {
+        "en-GB": "Do you have a table free at eight?",
+        "bg-BG": "Имате ли свободна маса за осем часа?"
+      },
+      "image": ["restaurant", "schedule"],
+      "notes": {
+        "mnemonic": {
+          "title": "Свободный: free like свобода",
+          "text": "«Свободный» (“free, available”) comes from «свобода» (“freedom”): a free table is a table at liberty."
+        },
+        "grammar": {
+          "title": "«На восемь»: for eight o'clock",
+          "text": "«На» + a number names the time you book for: «на восемь» is “for eight o'clock”, with «часов» left out in speech. For eight people you would say «на восьмерых»."
+        },
+        "pronunciation": {
+          "title": "Flat ы, soft final ь",
+          "ipa": "[u ˈvas ˈjesʲtʲ svɐˈbodnɨj ˈstolʲɪk nə ˈvosʲɪmʲ]",
+          "respelling": "oo VAHS YEST' svuh-BOD-nuy STO-leek nuh VO-seem'",
+          "text": "In «свободный» the stress is on «бод» and the ending «-ный» has a flat «ы»: svuh-BOD-nuy. «Восемь» is stressed on «во» and ends in a soft «мь»."
+        }
+      }
+    },
+    {
+      "id": "bank-booking-ru-03",
+      "theme": "booking",
+      "targetLang": "ru-RU",
+      "target": "Можно столик на веранде?",
+      "translations": { "en-GB": "Could we have a table on the terrace?", "bg-BG": "Може ли маса на терасата?" },
+      "image": ["deck", "table_restaurant"],
+      "notes": {
+        "mnemonic": {
+          "title": "«Веранда»: a veranda",
+          "text": "«Веранда» is the “veranda” you know, and in Russia it is the summer terrace of a café or restaurant. Picture your «столик» out on the veranda in the sun."
+        },
+        "grammar": {
+          "title": "«На» + prepositional: at a place",
+          "text": "To say where something is, Russian uses «в» or «на» with the prepositional case, whose ending is usually -е: «веранда» becomes «на веранде». Many places take «на» rather than «в»: «на веранде», «на улице», «на балконе». «Можно столик…?» (“may we have a table…?”) has no verb."
+        },
+        "pronunciation": {
+          "title": "Stress on -ран-",
+          "ipa": "[ˈmoʐnə ˈstolʲɪk nɐ vʲɪˈrandʲɪ]",
+          "respelling": "MOZH-nuh STO-leek nuh vee-RAN-dyih",
+          "text": "«Веранде» is stressed on «ран»: vee-RAN-dyih. The first «е» is weak, a short “i”, and the «д» before the final «е» is soft, almost “dy”."
+        }
+      }
+    },
+    {
+      "id": "bank-booking-ru-04",
+      "theme": "booking",
+      "targetLang": "ru-RU",
+      "target": "Нам нужен детский стульчик",
+      "translations": { "en-GB": "We need a highchair", "bg-BG": "Трябва ни детско столче" },
+      "image": ["child_care", "table_restaurant"],
+      "notes": {
+        "mnemonic": {
+          "title": "«Детский»: children's",
+          "text": "«Детский» is built on «дети» (“children”), and «стульчик» is a small «стул» (“chair”): a child's little chair, the highchair."
+        },
+        "grammar": {
+          "title": "«Нам нужен…»: we need",
+          "text": "Russian says “to us needed…”: the people are in the dative («нам», «мне») and «нужен» agrees with the thing needed: «нужен» (m.), «нужна» (f.), «нужно» (n.), «нужны» (pl.)."
+        },
+        "pronunciation": {
+          "title": "тск is said цк",
+          "ipa": "[ˈnam ˈnuʐɨn ˈdʲet͡skʲɪj ˈstulʲt͡ɕɪk]",
+          "respelling": "NAM NOO-zhuyn DYETS-kiy STOOL'-chik",
+          "text": "In «детский» the letters «тск» are pronounced «цк»: DYETS-kiy. In «стульчик» the «ль» before «ч» is soft: STOOL'-chik."
+        }
+      }
+    },
+    {
+      "id": "bank-booking-ru-05",
+      "theme": "booking",
+      "targetLang": "ru-RU",
+      "target": "Надо бронировать заранее?",
+      "translations": { "en-GB": "Do we need to book in advance?", "bg-BG": "Трябва ли да резервираме предварително?" },
+      "image": ["event_available", "calendar_month"],
+      "notes": {
+        "mnemonic": {
+          "title": "Заранее: before it's early",
+          "text": "«Заранее» is «за-» (“before”) plus «рано» (“early”): “beforehand”. «Надо» is “must”, the everyday word for what you have to do."
+        },
+        "grammar": {
+          "title": "«Надо» + infinitive",
+          "text": "«Надо» plus an infinitive means “one has to”: no subject is needed. The verb is imperfective («бронировать») because you ask about the general rule, not one finished booking."
+        },
+        "pronunciation": {
+          "title": "Reduced vowels in «заранее»",
+          "ipa": "[ˈnadə brɐˈnʲirəvətʲ zɐˈranʲɪjə]",
+          "respelling": "NA-duh bruh-NEE-ruh-vuht' zuh-RA-nee-yuh",
+          "text": "Stress «на», «ни» and «ра»; every other «а» and «о» weakens to a short, unclear “uh”: NA-duh, bruh-NEE-ruh-vuht', zuh-RA-nee-yuh. The final «ть» of «бронировать» is soft."
+        }
+      }
     }
   ]
 }

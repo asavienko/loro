@@ -7,11 +7,19 @@ import type { V2Note } from '@loro/content/v2'
 import type { LanguageCode, PhraseNotes } from './content.js'
 import { transcribeBulgarian } from './bg.js'
 import { transcribeSpanish } from './es.js'
-import { BULGARIAN_GRAMMAR, type GrammarRule, SPANISH_GRAMMAR } from './grammar.js'
+import {
+  BULGARIAN_GRAMMAR,
+  ENGLISH_GRAMMAR,
+  type GrammarRule,
+  RUSSIAN_GRAMMAR,
+  SPANISH_GRAMMAR,
+} from './grammar.js'
+import { learnedPronunciation } from './learned.js'
 import { NOTE_LANGUAGES, type NoteLocale, type NoteText } from './locale.js'
-import { memoryNote } from './memory.js'
+import { memoryNote, memoryNoteBySpelling } from './memory.js'
 import { pictureFor } from './picture.js'
 import { pronunciationNote } from './pronunciation.js'
+import { ENGLISH_SOUND_TIPS, RUSSIAN_SOUND_TIPS } from './tips.js'
 
 /** A note's other languages, by note kind, then by native language. */
 export type NoteTranslations = Partial<
@@ -33,6 +41,20 @@ export interface DeviceNotes {
 
 /** The course languages the device has sound rules for. */
 export const DEVICE_NOTE_LANGUAGES: readonly LanguageCode[] = ['es-ES', 'bg-BG']
+
+/**
+ * The course languages whose notes are chosen from the spelling alone, their sounds taken from
+ * Loro's own phrases (learned.ts): English spelling doesn't give its sounds, and Russian hides its
+ * stress.
+ */
+export const SPELLING_NOTE_LANGUAGES: readonly LanguageCode[] = ['en-GB', 'ru-RU']
+
+const BY_SPELLING: Partial<
+  Record<LanguageCode, { grammar: GrammarRule[]; tips: typeof ENGLISH_SOUND_TIPS }>
+> = {
+  'en-GB': { grammar: ENGLISH_GRAMMAR, tips: ENGLISH_SOUND_TIPS },
+  'ru-RU': { grammar: RUSSIAN_GRAMMAR, tips: RUSSIAN_SOUND_TIPS },
+}
 
 function grammarNote(rules: GrammarRule[], text: string): Partial<Record<NoteLocale, NoteText>> {
   for (const rule of rules) {
@@ -63,16 +85,51 @@ function silent(input: DeviceNotesInput): DeviceNotes {
   }
 }
 
-function compose(input: DeviceNotesInput): DeviceNotes {
+/** Each note kind in each note language, with the phrase's IPA and respelling. */
+interface Composed {
+  byKind: Record<keyof PhraseNotes, Partial<Record<NoteLocale, NoteText>>>
+  ipa: string
+  respelling: string
+}
+
+function bySounds(input: DeviceNotesInput): Composed | null {
   const spanish = input.targetLang === 'es-ES'
   const sound = spanish ? transcribeSpanish(input.target) : transcribeBulgarian(input.target)
-  if (sound.words.length === 0) return silent(input)
+  if (sound.words.length === 0) return null
   const lang = spanish ? 'es-ES' : 'bg-BG'
-  const byKind = {
-    mnemonic: memoryNote({ ...input, sound }) as Partial<Record<NoteLocale, NoteText>>,
-    grammar: grammarNote(spanish ? SPANISH_GRAMMAR : BULGARIAN_GRAMMAR, input.target),
-    pronunciation: pronunciationNote(lang, sound),
+  return {
+    byKind: {
+      mnemonic: memoryNote({ ...input, sound }),
+      grammar: grammarNote(spanish ? SPANISH_GRAMMAR : BULGARIAN_GRAMMAR, input.target),
+      pronunciation: pronunciationNote(lang, sound),
+    },
+    ipa: sound.ipa,
+    respelling: sound.respelling,
   }
+}
+
+function bySpelling(
+  input: DeviceNotesInput,
+  rules: NonNullable<(typeof BY_SPELLING)[LanguageCode]>,
+): Composed | null {
+  if (!/[\p{L}\p{N}]/u.test(input.target)) return null
+  const { say, sounds } = learnedPronunciation(rules.tips, input.target, input.targetLang)
+  return {
+    byKind: {
+      mnemonic: memoryNoteBySpelling(input),
+      grammar: grammarNote(rules.grammar, input.target),
+      pronunciation: say,
+    },
+    ipa: sounds.ipa,
+    respelling: sounds.respelling,
+  }
+}
+
+function compose(input: DeviceNotesInput): DeviceNotes {
+  const rules = BY_SPELLING[input.targetLang]
+  const composed = rules ? bySpelling(input, rules) : bySounds(input)
+  if (!composed) return silent(input)
+  const { byKind } = composed
   const en = (kind: keyof typeof byKind): NoteText => {
     const note = byKind[kind].en
     // Every rule list ends in one that always applies, and every rule speaks English.
@@ -82,7 +139,7 @@ function compose(input: DeviceNotesInput): DeviceNotes {
   const notes: PhraseNotes = {
     mnemonic: en('mnemonic'),
     grammar: en('grammar'),
-    pronunciation: { ...en('pronunciation'), ipa: sound.ipa, respelling: sound.respelling },
+    pronunciation: { ...en('pronunciation'), ipa: composed.ipa, respelling: composed.respelling },
   }
   // The other note languages, never the phrase's own (a Bulgarian speaker doesn't learn Bulgarian).
   const noteTranslations: NoteTranslations = {}

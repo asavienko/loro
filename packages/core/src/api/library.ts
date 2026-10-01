@@ -11,7 +11,7 @@ import { MUSIC_STYLE_IDS } from '../domain/lyric-plan.js'
  * which `GET /v1/library/languages` serves (literal here for zod; content's v2 test keeps them equal).
  */
 export const LIBRARY_LANGUAGES = ['en-GB', 'es-ES', 'bg-BG', 'ru-RU'] as const
-export const LIBRARY_COURSES = ['es-ES', 'bg-BG'] as const
+export const LIBRARY_COURSES = ['en-GB', 'es-ES', 'bg-BG', 'ru-RU'] as const
 export const LibraryLanguageSchema = z.enum(LIBRARY_LANGUAGES)
 export const LibraryCourseSchema = z.enum(LIBRARY_COURSES)
 /** `private`: only its owner. `link`: anyone holding its share code. `public`: listed in Community. */
