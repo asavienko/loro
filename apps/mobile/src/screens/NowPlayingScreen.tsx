@@ -40,7 +40,7 @@ import { PhraseNotesView } from '../ui/Notes';
 import { PhaseFill } from '../ui/PhaseFill';
 import { PhraseImage } from '../ui/PhraseImage';
 import { PullDownWindow, PullHandle } from '../ui/PullDown';
-import { GradeRow, RatedLine, RatingLine } from '../ui/Rating';
+import { GradeRow, RatedLine, RatedPanel, RatingLine } from '../ui/Rating';
 import { Sheet } from '../ui/Sheet';
 import { ToastOffsetContext, useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
@@ -301,10 +301,10 @@ function PlayTime({ phrase }: { phrase: Phrase }) {
 }
 
 /**
- * Three grades, never preselected and without times. Once one is given it stays marked, and the line
- * over them says what it did, with Undo, for the rating's five-minute window. A rating given in the
- * hold moves the loop on: then the line offers Undo for that phrase for a few seconds, over the next
- * one's grades.
+ * Three grades, never preselected and without times. Once one is given they go for the rating's
+ * five-minute window: in their place, the grade given, what it did and Undo. A rating given in the
+ * hold moves the loop on: then the line over the next phrase's grades offers Undo for that phrase for
+ * a few seconds.
  */
 function Rating({ phrase }: { phrase: Phrase }) {
   const c = useCopy();
@@ -321,20 +321,26 @@ function Rating({ phrase }: { phrase: Phrase }) {
   return (
     <View style={[styles.rating, hold && styles.ratingHold]}>
       {active ? (
-        <RatedLine
+        <RatedPanel
+          grade={active.grade}
+          title={c.player.ratedAs(c.common.grade[active.grade])}
           text={upNextIds(state.player).includes(phrase.id) ? c.player.backLater : c.player.scheduled}
           undo={{ label: c.player.undoFor(formatElapsed(left)), accessibilityLabel: c.player.undoLabel(formatElapsed(left)), onPress: () => actions.unrate() }}
         />
-      ) : previous ? (
-        <RatedLine text={c.player.ratedPrevious(c.common.grade[previous.grade])} undo={{ label: c.common.undo, onPress: () => actions.unrate(previous.phraseId) }} />
       ) : (
-        <RatingLine>
-          <Txt variant={hold ? 'body' : 'label'} weight={hold ? 700 : 500} color={hold ? 'onSurface' : 'secondary'} align="center" numberOfLines={2}>
-            {beforeTurn ? c.player.rateAfterTurn : c.player.howDidItGo}
-          </Txt>
-        </RatingLine>
+        <>
+          {previous ? (
+            <RatedLine text={c.player.ratedPrevious(c.common.grade[previous.grade])} undo={{ label: c.common.undo, onPress: () => actions.unrate(previous.phraseId) }} />
+          ) : (
+            <RatingLine>
+              <Txt variant={hold ? 'body' : 'label'} weight={hold ? 700 : 500} color={hold ? 'onSurface' : 'secondary'} align="center" numberOfLines={2}>
+                {beforeTurn ? c.player.rateAfterTurn : c.player.howDidItGo}
+              </Txt>
+            </RatingLine>
+          )}
+          <GradeRow onRate={rate} />
+        </>
       )}
-      <GradeRow selected={active?.grade ?? null} onRate={rate} />
       {hold && (
         <View style={styles.holdTrack}>
           <PhaseFill deplete style={{ backgroundColor: colors.primaryContainer, height: 4, borderRadius: radius.full }} />

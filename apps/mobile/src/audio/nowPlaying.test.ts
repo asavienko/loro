@@ -6,6 +6,7 @@ import { getSet, type Album } from '@shared/content';
 import { copyFor } from '@shared/copy';
 import { findPhrase, promptOf } from '@shared/state/catalog';
 import { transition } from '@shared/state/machine';
+import { RATING_WINDOW_MS } from '@shared/state/memory';
 import { done, fresh, load, T0 } from '@shared/state/testing';
 import type { AppState } from '@shared/state/types';
 import { phraseNowPlaying, phraseRatable, rasterCover, songNowPlaying } from './nowPlaying';
@@ -52,7 +53,7 @@ describe('the lock screen: the phrase loop', () => {
     assert.equal(revealed?.artist, prompt.text);
   });
 
-  it('offers the three grades in the app’s order, and marks the one given', () => {
+  it('offers the three grades in the app’s order, and none while a rating’s window is open', () => {
     const s = load(fresh());
     const before = phraseNowPlaying(s, c, T0);
     assert.deepEqual(
@@ -65,11 +66,8 @@ describe('the lock screen: the phrase loop', () => {
     );
     // The same RATE the player dispatches.
     const rated = transition(s, { type: 'RATE', grade: 'easy', now: T0 + 1000 });
-    const after = phraseNowPlaying(rated, c, T0 + 1000);
-    const easy = after?.grades?.find((g) => g.selected);
-    assert.equal(easy?.grade, 'easy');
-    assert.match(easy?.detail ?? '', /^Rated Easy — back in /);
-    assert.equal(after?.grades?.filter((g) => g.selected).length, 1);
+    assert.equal(phraseNowPlaying(rated, c, T0 + 1000)?.grades, null);
+    assert.equal(phraseNowPlaying(rated, c, T0 + 1000 + RATING_WINDOW_MS)?.grades?.length, 3, 'back once the window closes');
   });
 
   it('a paused phrase says so; previous and next follow the queue', () => {
@@ -125,17 +123,17 @@ describe('the lock screen: a song', () => {
     assert.equal(shown.grades, null);
   });
 
-  it('offers the grades when it sings the course’s phrases, and marks the one given', () => {
-    const shown = songNowPlaying({ ...base, rating: { count: 3, given: 'hard' } }, c);
+  it('offers the grades when it sings the course’s phrases, and none once it is rated', () => {
+    const shown = songNowPlaying({ ...base, rating: { count: 3, given: null } }, c);
     assert.deepEqual(
       shown.grades?.map((g) => [g.grade, g.selected]),
       [
         ['missed', false],
-        ['hard', true],
+        ['hard', false],
         ['easy', false],
       ],
     );
-    assert.equal(shown.grades?.[1].detail, 'Hard: its 3 phrases are reviewed.');
+    assert.equal(songNowPlaying({ ...base, rating: { count: 3, given: 'hard' } }, c).grades, null);
   });
 });
 
