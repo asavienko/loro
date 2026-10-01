@@ -26,12 +26,19 @@ import { Txt } from '../ui/Txt';
 import { colors, radius, shadow, TARGET } from '../ui/theme';
 import { useRoom } from '../ui/useRoom';
 
+const CONTENT_WIDTH = 560;
+
 export function SongScreen() {
   const c = useCopy();
   const nav = useNav();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { compact } = useRoom();
+  const { compact, width: roomWidth, height: roomHeight } = useRoom();
+  // The cover runs edge to edge, as the phrase player's picture does: as wide as the page (measured,
+  // less any scrollbar), up to square, and short enough to leave the controls on the first screen.
+  const [pageWidth, setPageWidth] = useState<number | null>(null);
+  const coverWidth = Math.min(pageWidth ?? roomWidth, CONTENT_WIDTH);
+  const coverHeight = Math.min(coverWidth, Math.round(roomHeight * 0.36));
   const music = useMusic();
   const { state, actions } = useStore();
   const [meanings, setMeanings] = useState(true);
@@ -79,9 +86,12 @@ export function SongScreen() {
           <View style={{ width: TARGET }} />
         </View>
       </PullHandle>
-      <ScrollView contentContainerStyle={[styles.content, compact && styles.compactContent, { paddingBottom: insets.bottom + 32 }]}>
-        <View style={styles.cover}>
-          <AlbumCover url={songCoverUrl(song.id) ?? music.album?.coverUrl ?? null} px={220} rounded={20} redraw={{ kind: 'song', song }} />
+      <ScrollView
+        onContentSizeChange={(w) => setPageWidth(Math.round(w))}
+        contentContainerStyle={[styles.content, compact && styles.compactContent, { paddingBottom: insets.bottom + 32 }]}
+      >
+        <View style={[styles.cover, { marginHorizontal: compact ? -16 : -24 }]}>
+          <AlbumCover url={songCoverUrl(song.id) ?? music.album?.coverUrl ?? null} px={coverWidth} height={coverHeight} rounded={0} redraw={{ kind: 'song', song }} />
         </View>
         <View style={styles.titleRow}>
           <Txt variant="displaySm" face="serif" weight={600} accessibilityRole="header" style={{ flex: 1 }}>
@@ -256,9 +266,9 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, minHeight: 52, width: '100%', maxWidth: 560, alignSelf: 'center' },
   topText: { flex: 1, alignItems: 'center' },
   kind: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  content: { paddingHorizontal: 24, gap: 12, width: '100%', maxWidth: 560, alignSelf: 'center' },
+  content: { paddingHorizontal: 24, gap: 12, width: '100%', maxWidth: CONTENT_WIDTH, alignSelf: 'center' },
   compactContent: { paddingHorizontal: 16 },
-  cover: { alignItems: 'center', paddingVertical: 12 },
+  cover: { alignItems: 'center', paddingBottom: 12 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   heart: { width: TARGET, height: TARGET, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
