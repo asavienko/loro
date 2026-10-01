@@ -325,11 +325,13 @@ export function makeEn(n: Plural) {
       rateAs: (grade: string) => `Rate it ${grade}`,
       undoGrade: (grade: string) => `Undo ${grade}`,
       /** The end of a pass through a queue that keeps going: what happened, at the top of the player. */
+      /** The end of a pass: a title, and under it what happens now. */
       pass: {
-        again: 'Played through — starting again',
-        next: (title: string) => `Played through — on to ${title}`,
-        nextReview: 'Played through — on to your reviews',
-        done: 'Played through — nothing new to go on with yet',
+        title: 'Played through',
+        again: 'Starting again from the first phrase',
+        next: (title: string) => `On to ${title}`,
+        nextReview: 'On to your reviews',
+        done: 'Nothing new to go on with yet',
         goOn: (title: string) => `Next set: ${title}`,
       },
       undoFor: (time: string) => `Undo · ${time}`,
