@@ -16,6 +16,7 @@ import { restoreContent } from '@shared/api/contentCache';
 import { loadSession } from '@shared/api/session';
 import { copyForNative } from '@shared/copy';
 import { openStorage, Stored } from '@shared/state/storage';
+import { Analytics } from '../src/analytics/Analytics';
 import { usePlaybackDriver } from '../src/audio/driver';
 import { MusicProvider } from '../src/music/MusicPlayer';
 import { Shell } from '../src/nav/Shell';
@@ -57,9 +58,11 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <AccountProvider>
-          <StoreProvider stored={stored}>
-            <App />
-          </StoreProvider>
+          <Analytics>
+            <StoreProvider stored={stored}>
+              <App />
+            </StoreProvider>
+          </Analytics>
         </AccountProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

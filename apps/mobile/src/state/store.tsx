@@ -14,6 +14,7 @@ import { flushState, loadState, parseState, saveState, SaveResult } from '@share
 import { onOtherTabSave, readRaw, Stored } from '@shared/state/storage';
 import type { AppState } from '@shared/state/types';
 import { useLatest } from '@shared/lib/useLatest';
+import { trackEvent } from '../analytics/posthog';
 
 export type { Actions } from '@shared/state/actions';
 
@@ -37,7 +38,15 @@ const StoreContext = createContext<StoreValue | null>(null);
 export function StoreProvider({ children, stored }: { children: ReactNode; stored: Stored }) {
   const [state, dispatch] = useReducer(transition, stored, (s) => loadState(s, (device) => initialState(device.id, device.instance)));
   const latest = useLatest(state);
-  const actions = useMemo(() => makeActions(dispatch, latest), [latest]);
+  // Every action is recorded for product analytics (src/analytics) as it is dispatched.
+  const actions = useMemo(
+    () =>
+      makeActions((event) => {
+        trackEvent(event, latest.current);
+        dispatch(event);
+      }, latest),
+    [latest],
+  );
   const [saveProblem, setSaveProblem] = useState<SaveResult | null>(null);
   const record = (result: SaveResult) => setSaveProblem(result === 'saved' ? null : result);
   const recordRef = useLatest(record);

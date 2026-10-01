@@ -25,7 +25,9 @@ pnpm --filter @loro/mobile bundle     # proves the iOS bundle compiles
 ```
 
 The app needs the API (`EXPO_PUBLIC_API_URL` in `.env`, default `http://localhost:3000/v1`) the first
-time it opens a course; after that it works offline. On the Android emulator run
+time it opens a course; after that it works offline. Analytics and session replay are sent only when
+`EXPO_PUBLIC_POSTHOG_KEY` (a public PostHog project key) is set; `EXPO_PUBLIC_POSTHOG_HOST` defaults to
+`https://eu.i.posthog.com` (ADR-0011). On the Android emulator run
 `adb reverse tcp:3000 tcp:3000`. See [library.md](../../docs/architecture/library.md#running-it-locally).
 
 Expo Go can't run it: the Rust core comes from `modules/loro-core`, a local Expo module
