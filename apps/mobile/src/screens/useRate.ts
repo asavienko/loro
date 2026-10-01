@@ -1,6 +1,6 @@
-// Rates the current phrase, with its cue, and says the result once (the web prototype's
-// src/screens/useRate.ts). A rating given while the grades wait moves straight on, so it is also
-// shown, with Undo, because the screen has already moved on.
+// Rates the current phrase, with its cue, and says it to a screen reader (the web prototype's
+// src/screens/useRate.ts). What the screen shows of it is each surface's own, with no message over
+// it: the player marks the grade with Undo, the bar turns it into Undo for a few seconds.
 import { easyCue, gentleCue } from '@shared/audio/cues';
 import { useLatest } from '@shared/lib/useLatest';
 import { requeuesOn } from '@shared/state/machine';
@@ -12,20 +12,16 @@ import { useToast } from '../ui/Toast';
 export function useRate(): (grade: Grade) => void {
   const c = useCopy();
   const { state, actions } = useStore();
-  const { announce, toast } = useToast();
-  const latest = useLatest({ state, actions, c, announce, toast });
+  const { announce } = useToast();
+  const latest = useLatest({ state, actions, c, announce });
   return (grade) => {
-    const { state: s, actions: a, c: copy, announce: say, toast: show } = latest.current;
+    const { state: s, actions: a, c: copy, announce: say } = latest.current;
     const id = currentPhraseId(s.player);
     if (id === null) return;
-    const movesOn = s.player.phase === 'rate';
     a.rate(grade);
     if (grade === 'easy') easyCue();
     else gentleCue();
-    // What it did, without when the phrase comes back: FSRS decides that, and no grade shows it.
     const again = upNextIds(s.player).includes(id) || requeuesOn(s.player, grade);
-    const text = `${copy.player.ratedAs(copy.common.grade[grade])}. ${again ? copy.player.backLater : copy.player.scheduled}`;
-    if (movesOn) show(text, { action: { label: copy.common.undo, run: () => a.unrate(id) } });
-    else say(text);
+    say(`${copy.player.ratedAs(copy.common.grade[grade])}. ${again ? copy.player.backLater : copy.player.scheduled}`);
   };
 }
