@@ -1,4 +1,4 @@
-// Suggestions come from the server only (plan 108): Claude where it writes, otherwise its phrase
+// Suggestions come from the server only (plan 108): a model where it writes, otherwise its phrase
 // bank. The result says which, so the screen can say it too; a failure is the screen's to show.
 import { coursePhrases, findSetView, promptOf, sameKey } from '../state/catalog';
 import type { LearnerState } from '../state/types';
@@ -57,5 +57,5 @@ export function fromWritten(learner: LearnerState, written: readonly WrittenPhra
 /** A deal of suggestions from the server. Rejects when it can't be asked, fails, or `signal` aborts it. */
 export async function suggest(learner: LearnerState, request: SuggestRequest, options: SuggestOptions): Promise<SuggestResult> {
   const written = await writePhrases(request, options.avoid, options.signal);
-  return { suggestions: fromWritten(learner, written.phrases, options.exclude), writer: written.provider === 'claude' ? 'ai' : 'bank' };
+  return { suggestions: fromWritten(learner, written.phrases, options.exclude), writer: written.provider };
 }

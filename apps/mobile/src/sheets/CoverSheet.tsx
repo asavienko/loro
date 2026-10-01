@@ -33,7 +33,7 @@ export function CoverSheet({ open, onClose }: { open: boolean; onClose: () => vo
       const cover = await generateCover({ kind, title, attachTo: id, ...(description ? { description } : {}) });
       await content.refresh();
       void account.refreshUsage();
-      toast(c.share.coverBy[cover.provider]);
+      toast(cover.status === 'rendering' ? c.share.coverLater : c.share.coverBy[cover.provider]);
     } catch (error) {
       toast(problemText(c, error));
     } finally {

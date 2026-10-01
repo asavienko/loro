@@ -128,8 +128,9 @@ export function AlbumScreen({ id }: { id: string }) {
   const drawCover = async () => {
     setDrawing(true);
     try {
-      await generateCover({ kind: 'album', title: album.title, ...(album.description ? { description: album.description } : {}), attachTo: album.id });
+      const cover = await generateCover({ kind: 'album', title: album.title, ...(album.description ? { description: album.description } : {}), attachTo: album.id });
       await Promise.all([load(), content.refresh(), account.refreshUsage()]);
+      if (cover.status === 'rendering') toast(c.share.coverLater);
     } catch (error) {
       toast(problemText(c, error));
     } finally {

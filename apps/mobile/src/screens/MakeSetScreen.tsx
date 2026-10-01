@@ -198,7 +198,11 @@ function MakeSet({ request }: { request: MakeRequest }) {
         id = made.set.id;
         toast(c.create.savedToAccount, { tone: 'success' });
         if (withCover) {
-          await generateCover({ kind: 'set', title: clean, attachTo: id }).catch((error: unknown) => toast(problemText(c, error)));
+          // Drawn in the background (plan 111): the set opens now and its cover lands when it is ready.
+          void generateCover({ kind: 'set', title: clean, attachTo: id }).then(
+            () => content.refresh(),
+            (error: unknown) => toast(problemText(c, error)),
+          );
         }
       }
       await content.refresh();
@@ -299,7 +303,7 @@ function AskStep({
 }: {
   session: MakeSession;
   /** Who writes suggestions on this server, once the day's usage is known. */
-  writer: 'claude' | 'bank' | null;
+  writer: 'ai' | 'bank' | null;
   pending: AbortController | null;
   onChange: (patch: Partial<MakeSession>) => void;
   onAsk: (mode: SuggestMode, input: string) => void;
@@ -408,9 +412,9 @@ function AskStep({
 
       {writer !== null && (
         <View style={styles.byline}>
-          <Icon name={writer === 'claude' ? 'auto_awesome' : 'library_music'} size="sm" color="secondary" />
+          <Icon name={writer === 'ai' ? 'auto_awesome' : 'library_music'} size="sm" color="secondary" />
           <Txt variant="label" color="secondary" style={styles.flex}>
-            {writer === 'claude' ? c.make.byAi : c.make.byBank}
+            {writer === 'ai' ? c.make.byAi : c.make.byBank}
           </Txt>
         </View>
       )}

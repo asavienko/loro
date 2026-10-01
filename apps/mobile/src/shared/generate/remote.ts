@@ -1,5 +1,5 @@
 // The API's phrase and notes writers (plan 106: POST /library/generate/phrases and /notes), the only
-// place suggestions and notes come from (plan 108). The server answers with Claude where it writes,
+// place suggestions and notes come from (plan 108). The server answers with a model where it writes,
 // otherwise with its phrase bank (phrases) or its written rules (notes), and says which. A failure
 // is the caller's to show. The app ships without zod, so the reply is checked by hand.
 import { api, apiUrl } from '../api/client';
@@ -22,7 +22,7 @@ export interface WrittenPhrase {
   native: string;
   image: string[];
   notes: OwnNotes;
-  /** Written by Claude just now, or a phrase of Loro's bank (by its id). */
+  /** Written by a model just now, or a phrase of Loro's bank (by its id). */
   source: 'ai' | 'bank';
   bankId?: string;
   /** Its clips by language, where the server has a voice. */
@@ -30,14 +30,14 @@ export interface WrittenPhrase {
 }
 
 export interface WrittenPhrases {
-  /** Who answered: Claude, or the server's phrase bank. */
-  provider: 'claude' | 'bank';
+  /** Who answered: a model, or the server's phrase bank. */
+  provider: 'ai' | 'bank';
   phrases: WrittenPhrase[];
 }
 
 export interface WrittenNotes {
-  /** Who wrote them: Claude, or the server's written rules. */
-  provider: 'claude' | 'rules';
+  /** Who wrote them: a model, or the server's written rules. */
+  provider: 'ai' | 'rules';
   image: string[];
   notes: OwnNotes;
 }
@@ -75,7 +75,8 @@ export function readAudio(v: unknown): Partial<Record<LanguageCode, string>> | u
 /** The reply's phrases, each with its picture and notes, or null if it isn't a list of them. */
 export function readPhrases(body: unknown): WrittenPhrases | null {
   if (!isObject(body) || !Array.isArray(body.phrases)) return null;
-  const provider = body.provider === 'bank' ? 'bank' : 'claude';
+  // Anything but the bank is a model's (`ai`; an older server said `claude`).
+  const provider = body.provider === 'bank' ? 'bank' : 'ai';
   const phrases: WrittenPhrase[] = [];
   for (const item of body.phrases) {
     if (!isObject(item) || typeof item.target !== 'string' || typeof item.native !== 'string') return null;
@@ -102,7 +103,7 @@ export async function writeNotes(
   const notes = isObject(body) ? readNotes(body.notes) : null;
   const image = isObject(body) ? readImage(body.image) : null;
   if (!notes || !image) throw new Error('unreadable reply');
-  return { provider: isObject(body) && body.provider === 'rules' ? 'rules' : 'claude', notes, image };
+  return { provider: isObject(body) && body.provider === 'rules' ? 'rules' : 'ai', notes, image };
 }
 
 /** Phrases written for the request, none of `avoid`; throws when the server can't be asked or answers nonsense. */
