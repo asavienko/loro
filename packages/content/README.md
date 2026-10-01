@@ -1,20 +1,15 @@
 > **F-08:** `loadLearningCatalog(targetLocale, nativeLanguage)` now provides seven pairs with 31
 > phrases per Spanish/Bulgarian/Russian target. New translations await bilingual review.
-> `loadCatalog()` and the Spanish authoring pipeline below remain the v1 compatibility boundary. See
-> [localization](../../docs/process/localization.md).
+> `loadCatalog()` and the Spanish authoring pipeline below remain the v1 compatibility boundary.
 
 # @loro/content
 
 The bundled Spanish catalog: phrases, scenarios, authored graph edges, packs, and countdown drop
 schedules. The package is usable by Metro, Node, and the browser and is validated in CI.
 
-The long-term delivery model is independent content releases
-([ADR-0009](../../docs/architecture/adr/0009-content-pipeline-and-packs.md)). **That publisher does
-not exist yet.** Today the app and API consume the JSON snapshot bundled with this workspace, so a
-catalog change still ships with code.
-
-Process: [content-authoring.md](../../docs/process/content-authoring.md) · Model:
-[content-model.md](../../docs/product/content-model.md)
+The long-term delivery model is independent content releases. **That publisher does not exist yet.**
+Today the app and API consume the JSON snapshot bundled with this workspace, so a catalog change
+still ships with code.
 
 ## Current inventory
 

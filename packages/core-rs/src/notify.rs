@@ -6,8 +6,6 @@
 //!
 //! That is what makes rule `N-04` ("no guilt, no streak-loss warnings, no
 //! re-engagement bait") enforceable rather than aspirational.
-//!
-//! See docs/architecture/widgets-notifications.md#notifications
 
 /// Hard daily cap across every category. Three a day is already a lot.
 pub const MAX_PER_DAY: u32 = 3;

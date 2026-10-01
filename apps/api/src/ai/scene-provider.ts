@@ -4,10 +4,8 @@
  * `AI_PROVIDER` used to be a branch inside `AiService`, which meant the live provider
  * could only arrive as a second branch in the same method — and every provider after
  * that as a third. A provider is now a class that registers itself under the name
- * `AI_PROVIDER` selects, so adding Claude (plans/26, plans/45) is a new file plus one
+ * `AI_PROVIDER` selects, so adding Claude is a new file plus one
  * line in `app.module.ts` (Open/Closed).
- *
- * See docs/architecture/ai-services.md and ADR-0010.
  */
 
 import type { Scene } from './scene.js'

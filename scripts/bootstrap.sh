@@ -3,8 +3,6 @@
 #
 #   pnpm bootstrap              full setup
 #   pnpm bootstrap --no-rust    skip the Rust toolchain (UI-only contributors)
-#
-# See docs/process/onboarding.md
 
 set -euo pipefail
 cd "$(dirname "$0")/.."

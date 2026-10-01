@@ -1,6 +1,4 @@
 //! Set selection and cloze masking — Loop B's daily choices.
-//!
-//! See docs/architecture/scheduling.md#3--automaticity--loop-b
 
 use std::collections::HashSet;
 

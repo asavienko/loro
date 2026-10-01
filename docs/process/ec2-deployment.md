@@ -1,153 +1,70 @@
-# EC2 development backend
+# EC2 development host
 
-The Nest API can run on one Amazon Linux 2023 x86 EC2 instance using `infra/ec2/template.yaml`. This
-is a restricted development deployment. Its current account profile uses persistent PostgreSQL and
-authenticated tenant-scoped sync. The [public gateway](public-api.md) enables Google testing
-sign-in. Earlier content-only releases are retained below as dated evidence. Production operations
-and full device acceptance remain separate gates.
+The API runs on one restricted Amazon Linux 2023 EC2 instance (`infra/ec2/template.yaml`): a
+t3.small with an encrypted 30 GiB disk, IMDSv2, Docker, and SSH from one IPv4 address. The API binds
+to host loopback; admin access is an SSH tunnel. This is a development host, not production.
 
-The template creates a t3.small with an encrypted 30 GiB gp3 disk, IMDSv2 required, Docker enabled
-at boot, and SSH ingress from one IPv4 address. It opens no HTTP port. The API binds only to host
-loopback; access is encrypted through SSH. The public subnet must have an Internet Gateway route and
-belong to the specified VPC. EC2, disk and public IPv4 incur AWS charges.
+## Current instance
+
+- AWS profile `loro` (SSO), region `eu-central-1`, stack `loro-api-dev`, instance
+  `i-0ce58e049c8fe0f7b`, key pair `loro-ec2-dev` (private key at `~/.ssh/loro-ec2-dev`).
+- The public DNS can change after stop/start; read the stack outputs before connecting. If your IP
+  changes, re-run `scripts/provision-ec2.sh` with the new `ADMIN_CIDR`.
+- Merging to `main` does not redeploy; the running image is whatever was last deployed.
 
 ## Provision
 
-Prerequisites: AWS CLI credentials with CloudFormation/EC2 access and permission to read the public
-AMI SSM parameter; an existing VPC/public subnet and EC2 key pair in the chosen region.
+Needs AWS credentials with CloudFormation/EC2 access, an existing VPC with a public subnet, and a
+key pair.
 
 ```bash
-export AWS_REGION=eu-central-1
-export VPC_ID=vpc-REPLACE SUBNET_ID=subnet-REPLACE KEY_NAME=REPLACE
-export ADMIN_CIDR=YOUR_PUBLIC_IPV4/32
+export AWS_REGION=eu-central-1 VPC_ID=vpc-… SUBNET_ID=subnet-… KEY_NAME=… ADMIN_CIDR=YOUR_IP/32
 ./scripts/provision-ec2.sh
 ```
 
-The script prints the instance ID and public DNS host. Configure `IdentityFile` for that host in
-`~/.ssh/config`. Verify the instance SSH host key through a trusted AWS console channel, then add it
-to known_hosts with an interactive SSH connection. Deployment requires strict host-key checking. The
-script waits for cloud-init; CloudFormation completion alone does not prove Docker is ready. Live
-deployment and manual rollback were verified on 2026-09-07; see the instance details below.
+Verify the host key through the AWS console, add it to `known_hosts` (deploys use strict host-key
+checking) and set `IdentityFile` in `~/.ssh/config`.
 
-## Deploy and access
+## Database
 
-Use Node 22 (`nvm use 22`), installed workspace dependencies (`pnpm install --frozen-lockfile`),
-Rust/wasm-pack (`export PATH="$HOME/.cargo/bin:$PATH"`) and a running Docker daemon with amd64 build
-support. Run the repository gate before deploying:
+`scripts/ec2-database.sh` creates a persistent `loro-postgres` volume on a private `loro-backend`
+Docker network (no host port) with a non-superuser `loro` owner; it never resets an existing
+database. Runtime config comes from `secrets/ec2-api.enc.env` and `secrets/ec2-postgres.enc.env`,
+decrypted locally, copied over SSH to root-owned mode-600 files (`/opt/loro/runtime/api.env`,
+`/opt/loro/database/postgres.env`), then removed locally.
+
+## Deploy
+
+Node 22, installed dependencies, cargo on PATH and Docker with amd64 builds:
 
 ```bash
 pnpm check
-./scripts/deploy-ec2.sh EC2_PUBLIC_DNS
-ssh -N -L 3000:127.0.0.1:3000 ec2-user@EC2_PUBLIC_DNS
-# In another terminal:
-curl --fail http://127.0.0.1:3000/v1/health/ready
-```
-
-Deployment builds WASM, bundles the API and builds the existing Dockerfile for linux/amd64, then
-streams the image over SSH without a registry or cloud credentials on the instance. A timestamped
-commit tag identifies the image (local working-tree changes are included). The release script locks
-concurrent cutovers, checks an unpublished candidate, retains the previous container, replaces the
-service and checks readiness again. Cutover has brief downtime; this is not blue-green routing.
-Failed final readiness restores the previous container. A host crash during cutover may require
-manual recovery. Container logs rotate and resource limits constrain the API. Restart policy
-restores the active container after reboot; Docker health status alone does not auto-restart it.
-
-## Operations
-
-```bash
-ssh ec2-user@EC2_PUBLIC_DNS 'sudo docker logs --tail 100 loro-api'
-ssh ec2-user@EC2_PUBLIC_DNS 'sudo docker inspect loro-api-previous --format "{{.Config.Image}}"'
-# Deploy a retained image through the same health gate:
-ssh ec2-user@EC2_PUBLIC_DNS 'sudo bash -s -- loro-api:PREVIOUS_TAG' < scripts/ec2-release.sh
-```
-
-Check disk space periodically. Old images remain available for rollback; remove only explicitly
-selected unused image tags after the rollback window. Do not prune containers during a deployment.
-To remove this development environment, delete the named CloudFormation stack in the selected
-region. This destroys the instance and its disk, including account-profile database volumes and
-local backups. Retain and verify a separate recovery copy first.
-
-The template follows AWS's
-[instance metadata options](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-ec2-instance-metadataoptions.html).
-
-The historical 2026-09-07 image below predates main's optional Google/Apple account support. The
-original deployment did not provision provider credentials or PostgreSQL. The optional durable
-account profile below now supplies them. Merging repository changes does not replace the running EC2
-image.
-
-## Verified development instance — 2026-09-07
-
-- AWS profile: `loro` (SSO); region: `eu-central-1`.
-- CloudFormation stack: `loro-api-dev`; instance: `i-0ce58e049c8fe0f7b`.
-- Host: `ec2-3-70-202-73.eu-central-1.compute.amazonaws.com`.
-- EC2 key pair: `loro-ec2-dev`; private key stays locally at `~/.ssh/loro-ec2-dev`.
-- Host-specific SSH configuration and a verified known_hosts entry are installed locally.
-- Image: `loro-api:67741e690fce-20260907131530`.
-
-```bash
-ssh -N -L 127.0.0.1:13000:127.0.0.1:3000 ec2-user@ec2-3-70-202-73.eu-central-1.compute.amazonaws.com
-# Another terminal:
+bash scripts/deploy-ec2.sh HOST /opt/loro/runtime/api.env loro-backend
+ssh -N -L 127.0.0.1:13000:127.0.0.1:3000 ec2-user@HOST
 curl --fail http://127.0.0.1:13000/v1/health/ready
 ```
 
-The public IP/DNS can change after stop/start; retrieve current stack outputs before connecting. SSH
-ingress is restricted to the provisioning machine's public IPv4 /32. If it changes, update the
-stack's AdminCidr using the provisioning script with the same region/network/key parameters. The key
-pair was imported separately and is not deleted with the stack. The verification tunnel was closed
-after testing; use the command above to open one when needed.
-
-## Earlier content-only release — 2026-09-08
-
-Image `loro-api:26dc09e2a27a-20260908114912` is healthy. It includes provider discovery and the
-multilingual content API; provider credentials and PostgreSQL remain unconfigured. The standalone
-APK can use the [read-only HTTPS gateway](public-api.md). See the
-[readiness review](../reviews/2026-09-08-readiness.md) for verified capabilities and missing
-essentials. The public gateway does not expose the legacy sync or AI routes.
-
-## Durable account release (F-01/F-04)
-
-The account profile uses `scripts/ec2-database.sh` on the existing host. It creates a persistent
-`loro-postgres` Docker volume and private `loro-backend` network, exposes no PostgreSQL host port,
-and creates a non-superuser `loro` database owner. It never resets an existing database. The host's
-encrypted EBS disk holds the volume; instance deletion still requires a separately retained backup.
-
-Encrypted configuration sources are `secrets/ec2-api.enc.env` and `secrets/ec2-postgres.enc.env`.
-Decrypt only into ignored local files, transfer over verified SSH, install root-owned mode-600
-runtime copies at `/opt/loro/runtime/api.env` and `/opt/loro/database/postgres.env`, and remove the
-transfer copies. The API uses the Docker database hostname, not localhost. Never print
-configuration.
+The script builds WASM and the linux/amd64 image locally (working-tree changes included), streams it
+over SSH, takes a PostgreSQL dump, starts a candidate, swaps it in and re-checks readiness; a failed
+check restores the previous container. Cutover has brief downtime. The previous container is kept as
+`loro-api-previous`; roll back by redeploying its image tag:
 
 ```bash
-bash scripts/deploy-ec2.sh HOST /opt/loro/runtime/api.env loro-backend
+ssh ec2-user@HOST 'sudo bash -s -- loro-api:PREVIOUS_TAG' < scripts/ec2-release.sh
+ssh ec2-user@HOST 'sudo docker logs --tail 100 loro-api'
 ```
 
-The configured release takes a custom-format PostgreSQL backup before candidate startup/migrations,
-then uses the same environment/network for candidate and active containers. A failed backup or
-candidate leaves the current API running. Container rollback retains the previous container's own
-configuration and never restores an older database over new writes. Migrations must remain backward
-compatible. Local pre-release dumps under `/opt/loro/backups` are not off-host disaster recovery;
-scheduled backups, retained storage, monitoring and the full plan-88 operational profile remain
-open.
+Migrations must stay backward compatible: rollback never restores an older database over new writes.
 
-Google development setup uses project `loro-508020`, a Web application OAuth client and the exact
-public `/v1/auth/google/callback` URL. The app callback allowlist currently contains
-`loro://account`. Web preview origins require an explicit HTTPS callback entry before use. Google
-remains in testing mode. Local Expo web also needs the loopback Account redirects. Apple remains
-unconfigured. Email uses `inbox:local` on this development host.
+## Public HTTPS gateway
 
-## Verified account release — 2026-09-08
+API Gateway → a VPC Lambda → nginx on the host (`infra/ec2/https.yaml`, installed by
+`scripts/deploy-ec2-proxy.sh HOST readonly|accounts`). It allows an explicit list of routes: health,
+the content endpoints, and (in `accounts` mode) sign-in, `/me` and sync. The `/v1/library/*` routes
+the current app uses are **not** on that list yet. Google sign-in is in testing mode (project
+`loro-508020`); Apple is unconfigured; email codes go to a host-local inbox.
 
-- API image: `loro-api:0efdb14f2a20-20260908201218`.
-- Google project: `loro-508020`; owner test account registered. Apple remains unavailable. Email
-  uses the host-local inbox until a public mail sender is configured.
-- Local `pnpm check` and all 171 API tests against isolated PostgreSQL passed. The exact amd64 image
-  passed durable readiness, guarded sync, multilingual content and degraded content-only checks.
-- Candidate and active API readiness passed with real PostgreSQL and WASM. An isolated restore of a
-  post-migration dump reproduced all 20 tables; the API database role is not a superuser.
-- nginx account profile and CloudFormation `AccountAccess=enabled` deployed. The HTTPS probe passed
-  Google start/cancellation handoff, healthy database/core and anonymous account/sync rejection.
-- Complete live consent/ticket/session verification is pending the device test: the in-app browser
-  blocked the AWS hostname. This is not a confirmed end-to-end Google sign-in result.
+## Teardown
 
-Disable gateway account access before manually rolling back to a pre-authentication API image.
-Current rollback containers retain their own configuration; never expose legacy sync publicly.
+Deleting the stack destroys the instance, its disk, the database volume and local backups. Take and
+verify an off-host backup first ([backend-testing.md](../runbooks/backend-testing.md)).

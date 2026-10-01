@@ -1,8 +1,7 @@
 //! Cross-language parity: the Rust half.
 //!
 //! `packages/core/src/domain/calendar.ts` is a TypeScript mirror of `calendar.rs`,
-//! which exists only because the app has no UniFFI bridge yet
-//! (`plans/09-native-toolchain-and-dev-client.md`). A mirror that nothing checks is a
+//! kept as the TypeScript side of the shared fixtures. A mirror that nothing checks is a
 //! second source of truth, which ADR-0002 exists to prevent — so both halves assert the
 //! same fixture, and a divergence fails one build or the other.
 //!

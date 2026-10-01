@@ -3,7 +3,7 @@
 //! These are called synchronously from JS across the UniFFI boundary, so the budgets
 //! are tight. CI fails on a >10% regression.
 //!
-//! Budgets — docs/architecture/performance.md#loro-core-rust
+//! Budgets:
 //!   stream_rank        <= 1 us      (per phrase; called across a 2 000-row library)
 //!   match_tokens       <= 50 us
 //!   merge_row          <= 20 us

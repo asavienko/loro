@@ -22,21 +22,25 @@ test('the working tree index matches top-level plans and next is highest assigne
   assert.deepEqual(checkPlanIndex(root), [])
   const topLevel = discoverTopLevelPlans(join(root, 'plans')).map((plan) => plan.id)
   const assigned = discoverAssignedIds(join(root, 'plans'))
-  assert.ok(topLevel.includes(99), 'plan 99 listen companion must stay top-level')
-  assert.ok(assigned.includes(100), 'plan 100 hygiene still occupies ID 100 after archive')
+  assert.ok(topLevel.includes(104), 'plan 104, the main app, is top-level')
+  assert.ok(assigned.includes(107), 'archived plan 107 still occupies its ID')
   assert.equal(Math.max(...assigned) + 1, nextId)
 })
 
-test('two 96 rows still pass when the collision is documented', () => {
-  assert.equal(hasRowForPlan(readme, '96-phrase-music-generation.md'), true)
-  assert.equal(hasRowForPlan(readme, '96-account-sign-in-screens.md'), true)
-  assert.equal(documentedCollision(readme, 96), true)
-  assert.equal(hasRowForPlan(readme, '100-ui-design-system.md'), true)
-  assert.equal(documentedCollision(readme, 100), true)
+test('every top-level plan has a README row', () => {
+  for (const plan of discoverTopLevelPlans(join(root, 'plans'))) {
+    assert.equal(hasRowForPlan(readme, plan.name), true, plan.name)
+  }
+})
+
+test('a collision note names its ID', () => {
+  const note = 'Number collision (unresolved): two 96s.\n'
+  assert.equal(documentedCollision(note, 96), true)
+  assert.equal(documentedCollision(note, 97), false)
 })
 
 test('removing a remaining top-level row from a copy of README fails', () => {
-  const stripped = readme.replace(/\| \[99\]\(99-batch-phrase-audio-export\.md\).*\n/, '')
+  const stripped = readme.replace(/\| \[104\]\(104-prototype-react-native\.md\).*\n/, '')
   const errors = planIndexErrors({
     plans: discoverTopLevelPlans(join(root, 'plans')),
     assignedIds: discoverAssignedIds(join(root, 'plans')),
@@ -44,7 +48,7 @@ test('removing a remaining top-level row from a copy of README fails', () => {
   })
   assert.ok(
     errors.some((error) =>
-      error.includes('Top-level plan has no README row: 99-batch-phrase-audio-export.md'),
+      error.includes('Top-level plan has no README row: 104-prototype-react-native.md'),
     ),
     errors.join('\n'),
   )
@@ -69,9 +73,8 @@ test('“next is N” is required while N-1 is the highest assigned ID', () => {
 test('reusing an archived ID as a new top-level file fails unless that ID is named in a collision note', () => {
   const assigned = discoverAssignedIds(join(root, 'plans'))
   const archived = discoverArchivedIds(join(root, 'plans'))
-  assert.ok(archived.includes(100), 'plan 100 must remain archived for this reuse pin')
-  // 100 already has a documented collision (hygiene archive vs UI kit). Use a
-  // synthetic unused archived ID so this pin still fails without a note.
+  assert.ok(archived.includes(107), 'plan 107 is archived')
+  // A synthetic archived ID, so this pin fails without a collision note.
   const reused = planIndexErrors({
     plans: [...discoverTopLevelPlans(join(root, 'plans')), { name: '50-oops.md', id: 50 }],
     assignedIds: assigned,

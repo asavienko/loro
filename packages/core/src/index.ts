@@ -8,7 +8,7 @@
  *     is a declared exception: it mirrors `core-rs/src/calendar.rs` for JS callers until
  *     plan 70. UniFFI already exports the same functions; the JSON WASM bridge does not
  *     dispatch calendar methods. A shared fixture fails the build if the two drift. See
- *     its header, and plans/archive/2026-07-30/05-fix-shared-maths-duplication.md.
+ *     its header.
  */
 
 export * from './domain/ids.js'

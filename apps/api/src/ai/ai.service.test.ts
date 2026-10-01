@@ -69,7 +69,7 @@ describe('the AI scene pipeline', () => {
 
     // NOTE: the retry goes back to the SAME provider for the default theme, which is
     // the behaviour as shipped — a provider broken for every theme would still be asked
-    // twice. The repair-then-fallback ladder that closes that hole is plans/45's.
+    // twice. A repair-then-fallback ladder would close that hole.
     expect(await ai.scene('Hotel')).toEqual({
       id: 'fallback',
       scene: bundledScene('Café'),

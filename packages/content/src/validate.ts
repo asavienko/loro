@@ -62,7 +62,7 @@ function main(): void {
   report(warnings, 'warnings')
 
   if (errors.length > 0) {
-    console.error(`\nFAILED — ${errors.length} error(s). See docs/process/content-authoring.md`)
+    console.error(`\nFAILED — ${errors.length} error(s).`)
     process.exit(1)
   }
   if (strict && warnings.length > 0) {

@@ -11,8 +11,7 @@
     "     flight produces anxiety, not retention.",
     "  2. A missed drop stays available and merges into the next day. Never debt.",
     "",
-    "A schedule is picked by nearest length and padded with review days.",
-    "See docs/product/trip-arc.md#the-daily-drop"
+    "A schedule is picked by nearest length and padded with review days."
   ],
   "lang": "es-ES",
 

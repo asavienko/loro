@@ -3,7 +3,6 @@
  *
  * The CATALOG is immutable, versioned, shared content. LEARNER STATE is private,
  * synced, and per-user. They join on `phraseId` and are never merged into one type.
- * See docs/product/content-model.md#separation-rule
  */
 
 import type { TargetLocale, NativeLanguage } from './languages.js'
@@ -17,7 +16,6 @@ export const MAX_OWN_PHRASE_TEXT_CODE_UNITS = 2_000
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The learner's two signals — the connective thread
-// docs/product/learning-model.md#the-two-signals
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -47,7 +45,6 @@ export const REPEAT_TARGET: Record<Difficulty, number> = { hard: 4, med: 3, easy
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Progress models — three independent axes
-// docs/product/learning-model.md#mastery-states
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**

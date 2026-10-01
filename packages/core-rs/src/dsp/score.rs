@@ -2,8 +2,6 @@
 //!
 //! **Status: skeleton.** The weightings and the skill-axis update are implemented (the
 //! latter is a blueprint contract); the acoustic scoring lands in M3.
-//!
-//! See docs/architecture/prosody-dsp.md#4--scoring
 
 /// The native reference data a phrase carries, built at content-build time.
 #[derive(Debug, Clone)]

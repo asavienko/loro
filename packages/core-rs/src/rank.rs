@@ -1,7 +1,6 @@
 //! Stream ranking and repeat targets.
 //!
 //! Both formulae come from the blueprint and are **contracts**, not display models.
-//! See docs/architecture/scheduling.md#1--stream-rank
 
 use crate::{Difficulty, PhraseState};
 

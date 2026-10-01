@@ -1,139 +1,47 @@
-# CI / CD
+# CI
 
 ## Local-only policy
 
 Run checks locally. Do not enable, dispatch or rerun GitHub Actions unless the user explicitly
-changes this policy. Actions is disabled in the GitHub repository settings. All eight former
-workflows are preserved in [`.github/workflows-disabled/`](../../.github/workflows-disabled/),
-outside GitHub's workflow discovery directory. No push, PR, schedule or tag runs them.
+changes this policy. Actions is disabled in the repository settings; the former workflows are
+inactive references in `.github/workflows-disabled/`.
 
-## Setup and full gate
+## Gates
 
-Use Node 22, pnpm 9.12.0, Rust stable with rustfmt/clippy, wasm-pack, and a running local Docker
-engine (for the disposable PostgreSQL 16 auth transaction gate):
+| Command                | What it runs                                                                                                     |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `pnpm check`           | Fast gate: plan index, script tests, contracts, lint, typecheck, tests, content, core-rs browser/UniFFI drift    |
+| `pnpm ci:local`        | Full gate (below)                                                                                                |
+| `pnpm ci:local:native` | Rust for two iOS, three Android and the WASM target, then calendar parity (macOS, Xcode, Android NDK, cargo-ndk) |
+| `pnpm ci:local:audit`  | `pnpm audit --audit-level=high` and `cargo audit` (needs network)                                                |
+
+Setup for the full gate: Node 22, pnpm 9, Rust stable with rustfmt and clippy, the
+`wasm32-unknown-unknown` target, `wasm-pack`, and a running Docker engine.
 
 ```bash
 nvm use 22
 export PATH="$HOME/.cargo/bin:$PATH"
-rustup component add clippy rustfmt
-rustup target add wasm32-unknown-unknown
-cargo install wasm-pack --locked
 pnpm ci:local
+CI_BASE_REF=origin/main pnpm ci:local   # also lints the branch's commit messages
 ```
 
-Alternatively `bash scripts/ci-local.sh` selects Node 22 through nvm when available, including when
-pnpm is initially off PATH. The runner exits on failure and refuses to run in GitHub Actions. It
-sets `CI=1` and forces Turbo checks to execute instead of accepting cached task results. The full
-runner schedules independent jobs with a bounded default of two (`LORO_CI_JOBS`); Turbo's internal
-task limit remains separately configurable with `LORO_CI_CONCURRENCY`.
+`pnpm ci:local` runs in phases: frozen-lockfile install and the host/WASM/UniFFI build;
+`pnpm check`; then concurrently the auth/PostgreSQL tests (a disposable PostgreSQL 16 container),
+formatting, commit lint and generated-file drift; then the app's iOS bundle and the API
+build/smoke/image in separate temporary workspaces; then short Criterion benchmarks. It forces Turbo
+to re-run tasks, refuses to run inside GitHub Actions, and never publishes or deploys.
+`LORO_CI_JOBS` bounds parallel jobs (default 2). Logs and `summary.json` go to
+`.ci-local-reports/<run>`.
 
-The full gate runs in dependency-aware phases:
+Record the checked commit, commands and results in the PR.
 
-1. Frozen-lockfile dependency installation, then the host/WASM/UniFFI build.
-2. `pnpm check`: plan index, script tests, contracts, lint, typecheck, JS/TS/Rust tests and content.
-   This phase stays exclusive because Turbo and generated artifacts share the checkout.
-3. Auth/PostgreSQL, optional golden tests, formatting, optional commit-range lint and generated
-   drift checks run concurrently. The auth transaction tests use a disposable PostgreSQL 16
-   container; missing golden targets are reported as omitted.
-4. The app's iOS bundle (`pnpm --filter @loro/mobile bundle`) and API build/smoke/image verification
-   run concurrently in separate temporary source workspaces. Each workspace has its own Expo/Metro
-   cache, temporary directory, export output and reports. There is no browser E2E suite since the
-   first app was removed on 2026-09-30.
-5. Criterion benchmarks run exclusively with short warm-up and measurement windows.
+## What a green gate doesn't prove
 
-`LORO_CI_JOBS=1` restores serial top-level scheduling. A lock prevents two full runs from sharing a
-checkout. Each run writes logs, an event stream and `summary.json` under `.ci-local-reports/<run>`;
-temporary workspaces and owned child processes are cleaned up on failure or interruption.
-Cancellation stops install fallbacks and queued commands, then escalates owned process groups from
-SIGTERM to SIGKILL after a bounded grace period. Cleanup waits for those groups before removing
-workspaces and removes the run-owned API containers, network and image even when shell traps were
-skipped. The workspace snapshot comes from Git's NUL-delimited tracked and non-ignored inventory,
-plus the required generated WASM, bindings and Expo declarations. It preserves working-tree edits
-and deletions, omits secrets, dependencies and native build output, and rejects symlinks that escape
-the source tree. Authored source and commit identity are captured before validation, matched against
-the snapshot, checked between phases and rechecked after benchmarks; generated input identity is
-recorded separately.
+Native audio, lifecycle, device persistence, offline resume and physical-device behaviour need a
+device. Calendar parity is a Rust fixture test, not a Swift/Kotlin check.
 
-To validate branch commits, provide a locally available base ref:
+## Deployment and distribution
 
-```bash
-CI_BASE_REF=origin/main pnpm ci:local
-```
-
-Without `CI_BASE_REF`, commit lint is explicitly omitted; no network fetch or push is performed.
-`pnpm check` remains the fast development command. Full CI installs dependencies when needed but
-never publishes, deploys, queues EAS, or calls GitHub. The full runner's checkout lock prevents
-unsafe concurrent runs; isolated suites select their own free local ports and leave existing
-development servers alone.
-
-Record the checked commit, commands and results in the PR. No GitHub status check is required by
-this policy. If a repository rule later requires an old Actions check, remove that obsolete check
-requirement while retaining review/branch protections; do not re-enable CI to satisfy it.
-
-## Additional local gates
-
-- `pnpm ci:local:native`: the former six-target Rust matrix (two iOS, three Android, WASM), then
-  calendar parity. Requires macOS with full Xcode, the Android SDK/NDK configured for cargo-ndk,
-  `cargo install cargo-ndk --locked`, and all six Rust targets installed with `rustup target add`.
-  Missing toolchains fail this explicit gate; they are not silently skipped.
-- `pnpm ci:local:audit`: `pnpm audit --audit-level=high` and `cargo audit`. Install the latter with
-  `cargo install cargo-audit --locked`. Advisory lookups require network access.
-- Content checks also remain available through `pnpm content:validate`.
-
-Run the native gate for native/Rust target changes and audits for dependency changes. These are
-separate from the default host/browser gate so routine checks need neither mobile SDKs nor advisory
-services. The historical nightly scheduler simulation has no test target, and device/offline/load
-and content-quality jobs were placeholders; they are not pretend local successes.
-
-## Reports and limits
-
-Criterion keeps results in `packages/core-rs/target/criterion/`. Results remain local; nothing
-uploads them. Generated bindings must match Git: regenerate from source and review/commit changes.
-
-A green local gate does not prove native audio, microphone, lifecycle, device persistence, offline
-resume, notifications or widgets. Calendar parity is a Rust fixture test, not Swift/Kotlin parity.
-Criterion measures performance but does not enforce a durable 10% regression baseline. No golden DSP
-corpus exists yet. Tests do not generate coverage percentages by default.
-
-## Deployment and release
-
-<a id="backend-deploys"></a> <a id="ota-updates"></a>
-
-Deployment, EAS, content publishing and release workflows remain inactive historical scaffolds.
-Authentication, migrations, deployment/rollback, device-farm validation and store submission need
-real implementations and separate authorization. The archived release workflow references missing
-commands; it must not be treated as a working release procedure. Tags do not start store builds.
-
-### Future EC2 testing deployment
-
-[Plan 88](../../plans/archive/2026-09-09/88-low-cost-backend-infrastructure.md) owns one EC2 testing
-deployment. The `dev`/`staging`/`production` chain and traffic-shift echoes in the archived
-workflows are scaffolding to replace, not a required test topology.
-
-The implemented path must:
-
-1. Select the exact commit whose local CI passed and serialize testing deployments locally.
-2. Build real WASM before the `linux/amd64` API image. Scan/test the image, publish to private ECR
-   and deploy by digest with approved short-lived AWS credentials and SSM, without permanent AWS
-   keys.
-3. Pull the release before downtime, close traffic, stop API writes and verify a pre-migration S3
-   backup before running a separate compatible migration.
-4. Start the image and verify real readiness and authenticated synthetic sync/content checks before
-   reopening traffic. Repeat an external HTTPS smoke check.
-5. Restore the previous image only if schema compatibility is established; otherwise stay in
-   maintenance. Never automatically downgrade schema or restore over newer data.
-
-An `echo TODO`, missing credential or skipped job cannot satisfy these gates. Infrastructure
-verification can precede auth, but unfinished API routes stay closed until plans 66/67 provide
-durable tenant-scoped access. Device sync is a separate feature gate. Deployment and recovery
-evidence is recorded in [the testing runbook](../runbooks/backend-testing.md).
-
-Cloud infrastructure itself is applied from the separate Terraform roots and must not be replaced by
-an ordinary application deployment. Production rollout policy remains with plan 73; the testing host
-does not require blue-green replicas or staged traffic percentages.
-
-## Local APK distribution
-
-[The local APK workflow](local-apk.md) builds an installable Android preview with Gradle and uploads
-it to a draft GitHub prerelease. Run `pnpm apk:local` or `pnpm apk:github`; GitHub Actions and EAS
-remain disabled. This testing distribution uses development signing, not store credentials.
+- The development API runs on one restricted EC2 host: [ec2-deployment.md](ec2-deployment.md).
+- Android testing builds: [local-apk.md](local-apk.md).
+- There is no store release, EAS or OTA pipeline.

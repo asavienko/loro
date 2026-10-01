@@ -1,7 +1,7 @@
 //! Discover association score.
 //!
 //! Ranks unowned catalog neighbors **inside** the authored same-theme-first bands.
-//! See `plans/101-phrase-sound-graph.md`. Not Stream rank and not FSRS.
+//! Not Stream rank and not FSRS.
 
 use crate::{Difficulty, Tag};
 use serde::{Deserialize, Serialize};
