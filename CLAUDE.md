@@ -155,6 +155,7 @@ pnpm local:up / pnpm local:down       # SOPS-decrypted API + Expo web containers
 | `apps/mobile/src/platform/`                | Native storage, speech, cues, Rust core, Intl polyfills          |
 | `apps/mobile/src/{screens,sheets,ui,nav}/` | The UI                                                           |
 | `apps/mobile/modules/loro-core/`           | Expo module over the Rust core (UniFFI)                          |
+| `apps/mobile/modules/loro-media/`          | Expo module: the player on the lock screen and shade (P3-11)     |
 | `apps/api/`                                | NestJS backend                                                   |
 | `packages/core/`                           | Shared TS domain and API contracts — used by the API and content |
 | `packages/core-rs/`                        | Rust: FSRS, ranking (and the older `/v1/sync` merge)             |

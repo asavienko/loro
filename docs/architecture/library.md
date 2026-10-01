@@ -52,9 +52,10 @@ sung from it (`songCount` on every set); an album the song icon. Phrases and son
 the bar above the tabs and `/player` show what was started last (a song wears a music-note badge),
 and starting one pauses the other. A song has a heart (a `song:<id>` like) and Missed / Hard / Easy,
 which review every phrase of the learner's course it sings (`RATE_PHRASES`, the usual window and
-undo). A playing song takes the lock screen and notification shade, and plays on with the screen
-locked. Everything is in the app's light palette, drawn covers included (light grounds; Loro's
-covers carry the seed revision in their ids, since covers are served as immutable).
+undo). The one player — a song or a phrase — takes the lock screen and notification shade with its
+grades, and plays on with the screen locked (`modules/loro-media`). Everything is in the app's light
+palette, drawn covers included (light grounds; Loro's covers carry the seed revision in their ids,
+since covers are served as immutable).
 
 ## Accounts
 

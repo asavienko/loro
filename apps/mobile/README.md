@@ -32,7 +32,8 @@ time it opens a course; after that it works offline. Analytics and session repla
 `adb reverse tcp:3000 tcp:3000`. See [library.md](../../docs/architecture/library.md#running-it-locally).
 
 Expo Go can't run it: the Rust core comes from `modules/loro-core`, a local Expo module
-(`packages/core-rs/build.sh` builds its Android libraries).
+(`packages/core-rs/build.sh` builds its Android libraries), and the player on the lock screen from
+`modules/loro-media` ([its README](modules/loro-media/README.md)).
 
 ## How it's built
 
@@ -49,6 +50,11 @@ Expo Go can't run it: the Rust core comes from `modules/loro-core`, a local Expo
   from expo-crypto, instead of leaving the tab). On the web the originals run.
 - **The connected state — `src/state/`.** The store, the account (`account.tsx`), the course's
   content (`content.tsx`) and progress sync (`progressSync.ts`); songs play in `src/music/`.
+- **Playback — `src/audio/`.** The loop's driver (`driver.ts`), and the one player on the lock
+  screen and in the notification shade with its grades (`lockScreen.ts`, P3-11), through the
+  `LoroMedia` module. On iOS and Android the player plays on with the screen locked: the loop's
+  silences are timed natively (`after` in `media.ts`), and calls, other apps and unplugged
+  headphones pause it.
 - **UI.** `app/` holds the routes (expo-router), `src/screens/` and `src/sheets/` the screens,
   `src/ui/` the primitives and tokens (`theme.ts`), `src/nav/Shell.tsx` navigation.
 - **The keyboard.** The app is drawn edge to edge, so Android resizes no window for the keyboard,
