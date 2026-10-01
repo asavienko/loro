@@ -1,0 +1,37 @@
+{
+  "runId": "spike-translate-pl-2",
+  "at": "2026-10-01T22:39:02.943Z",
+  "stages": [
+    "translate",
+    "judge-translate"
+  ],
+  "langs": [
+    "pl"
+  ],
+  "course": "es-ES",
+  "levels": [
+    "A1"
+  ],
+  "topics": [
+    "eating-out"
+  ],
+  "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+  "pricing": "assumed on 2026-10-02, not verified against the providers' price lists; the run summary's dollar figure is an estimate until this file is checked",
+  "spend": {
+    "calls": 0,
+    "cached": 2,
+    "usd": 0,
+    "inputTokens": 0,
+    "outputTokens": 0
+  },
+  "outcomes": [
+    {
+      "setId": "set-es-a1-cafe-counter-2",
+      "status": "translated",
+      "lang": "pl",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "4 ok, 8 review, 0 reject"
+    }
+  ]
+}

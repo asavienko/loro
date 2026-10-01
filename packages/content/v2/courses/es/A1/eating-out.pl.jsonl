@@ -1,0 +1,39 @@
+{"kind":"set","id":"set-es-a1-cafe-counter","subtitle":"Zamawianie śniadaniowych napojów i tostów przy barze w madryckiej kawiarni."}
+{"kind":"phrase","id":"es-7j7qahq","translation":"Czy poda nam pan dwa soki, proszę?","words":{"nos":"nam","pone":"poda (pan)","dos":"dwa","zumos":"soki","por favor":"proszę"}}
+{"kind":"phrase","id":"es-jrpw2vw","translation":"Siadamy przy stoliku?","words":{"nos":"się","sentamos":"siadamy","en":"przy","una":"jakimś","mesa":"stoliku"}}
+{"kind":"phrase","id":"es-td3y33c","translation":"Czy mają państwo kawę z mlekiem?","words":{"tienen":"mają (państwo)","café con leche":"kawa z mlekiem"}}
+{"kind":"phrase","id":"es-kcwjb6g","translation":"Czy poda mi pan kawę solo, proszę?","words":{"me":"mi","pone":"poda (pan)","un":"jedną","café":"kawę","solo":"solo","por favor":"proszę"}}
+{"kind":"phrase","id":"es-3t3nu4a","translation":"Czy poda nam pan dwie tostady?","words":{"nos":"nam","pone":"poda (pan)","dos":"dwie","tostadas":"tostady"}}
+{"kind":"phrase","id":"es-y7dvynj","translation":"Chce pan cukier?","words":{"quiere":"chce (pan)","azúcar":"cukier"}}
+{"kind":"phrase","id":"es-hsdzpxu","translation":"To na wynos?","words":{"es":"to jest","para llevar":"na wynos"}}
+{"kind":"phrase","id":"es-wxjusx5","translation":"Ile płacę?","words":{"cuánto":"ile","es":"płacę"}}
+{"kind":"phrase","id":"es-j25n6h4","translation":"Dla mnie bezkofeinowa z ekspresu.","words":{"para mí":"dla mnie","un":"jedna","descafeinado":"bezkofeinowa","de":"z","máquina":"ekspresu"}}
+{"kind":"phrase","id":"es-56szgjm","translation":"Dla mnie croissant, dziękuję.","words":{"un":"jeden","croissant":"croissant","para mí":"dla mnie","gracias":"dziękuję"}}
+{"kind":"phrase","id":"es-p75xvbp","translation":"Nie, dziękuję, piję solo.","words":{"no":"nie","gracias":"dziękuję","lo":"ją","tomo":"piję","solo":"solo"}}
+{"kind":"phrase","id":"es-iauq3dj","translation":"Płacę gotówką, dziękuję.","words":{"pago":"płacę","en":"w","efectivo":"gotówce","gracias":"dziękuję"}}
+{"kind":"set","id":"set-es-a1-paying","subtitle":"Płacenie po posiłku lub kawie, gdy się spieszysz"}
+{"kind":"phrase","id":"es-jzbynd7","translation":"Czy może mi pan przyjąć płatność kartą, proszę?","words":{"me":"(dla) mnie","cobra":"(pan) pobiera, przyjmuje płatność","con":"przez, za pomocą","tarjeta":"karta","por favor":"proszę"}}
+{"kind":"phrase","id":"es-q5vrej5","translation":"Płacę gotówką, da mi pan resztę?","words":{"pago":"płacę","en":"w","efectivo":"gotówka","me":"(mi)","da":"(pan) daje","el":"(rodzajnik określony)","cambio":"reszta"}}
+{"kind":"phrase","id":"es-3leenxo","translation":"Może nam pan przyjąć płatność osobno, proszę?","words":{"nos":"(nam)","cobra":"(pan) pobiera, przyjmuje płatność","por separado":"osobno","por favor":"proszę"}}
+{"kind":"phrase","id":"es-bmucxkz","translation":"Płacimy razem, może mi pan przyjąć płatność?","words":{"pagamos":"płacimy","juntos":"razem","me":"(dla) mnie","cobra":"(pan) pobiera, przyjmuje płatność"}}
+{"kind":"phrase","id":"es-l5vgoel","translation":"Dziś ja stawiam, może mi pan przyjąć płatność?","words":{"hoy":"dziś","invito":"stawiam, płacę","yo":"ja","me":"(dla) mnie","cobra":"(pan) pobiera, przyjmuje płatność"}}
+{"kind":"phrase","id":"es-y65fyh7","translation":"Może mi pan przyjąć płatność za rachunek, proszę?","words":{"me":"(dla) mnie","cobra":"(pan) pobiera, przyjmuje płatność","la":"(rodzajnik określony)","cuenta":"rachunek","por favor":"proszę"}}
+{"kind":"phrase","id":"es-srfsrjd","translation":"Przyjmuje pan kartę czy płacę gotówką?","words":{"acepta":"(pan) przyjmuje","tarjeta":"karta","o":"albo","pago":"płacę","en":"w","efectivo":"gotówka"}}
+{"kind":"phrase","id":"es-4spcsev","translation":"Może mi pan przyjąć płatność? I proszę o paragon.","words":{"me":"(dla) mnie","cobra":"(pan) pobiera, przyjmuje płatność","y":"i","deme":"niech mi pan da","el":"(rodzajnik określony)","ticket":"paragon"}}
+{"kind":"phrase","id":"es-unhmaql","translation":"Przepraszam, może mi pan przyjąć płatność? Spieszę się.","words":{"perdone":"przepraszam","me":"(dla) mnie","cobra":"(pan) pobiera, przyjmuje płatność","tengo":"mam","prisa":"pośpiech"}}
+{"kind":"phrase","id":"es-4anz7u2","translation":"Przyjmuje pan zbliżeniowo?","words":{"acepta":"(pan) przyjmuje","contactless":"zbliżeniowo"}}
+{"kind":"phrase","id":"es-ubsh643","translation":"Ile płacę? I proszę zatrzymać resztę.","words":{"cuánto":"ile","es":"jest","y":"i","quédese":"niech pan zatrzyma","con":"z","el":"(rodzajnik określony)","cambio":"reszta"}}
+{"kind":"phrase","id":"es-jcr6gba","translation":"Zaprasza mnie pan? To płacimy razem.","words":{"me":"(dla) mnie","invita":"(pan) zaprasza, płaci za","usted":"pan","entonces":"to, w takim razie","pagamos":"płacimy","juntos":"razem"}}
+{"kind":"set","id":"set-es-a1-cafe-counter-2","subtitle":"Zamów coś zimnego albo przekąskę w kawiarni i zapytaj, gdzie co jest."}
+{"kind":"phrase","id":"es-cqjyc6y","translation":"Czy jest coś zimnego z lodem?","words":{"hay":"jest","algo":"coś","frío":"zimny","con hielo":"z lodem"}}
+{"kind":"phrase","id":"es-cxu36gk","translation":"Czy jest miejsce na tarasie?","words":{"hay":"jest","sitio":"miejsce","en":"na","la":"(rodzajnik określony)","terraza":"taras"}}
+{"kind":"phrase","id":"es-gmxiswh","translation":"Czy jest jakaś ciepła kanapka?","words":{"hay":"jest","algún":"jakiś","bocadillo":"kanapka","caliente":"ciepły"}}
+{"kind":"phrase","id":"es-rr52gmb","translation":"Podaje nam dwie mrożone herbaty?","words":{"nos":"nam","pone":"podaje (usted)","dos":"dwa","té":"herbata","con hielo":"z lodem"}}
+{"kind":"phrase","id":"es-n7kdwor","translation":"Podaje mi zimną kanapkę, proszę?","words":{"me":"mi","pone":"podaje (usted)","un":"(rodzajnik nieokreślony)","bocadillo":"kanapka","frío":"zimny","por favor":"proszę"}}
+{"kind":"phrase","id":"es-uhajdf5","translation":"Dla mnie kanapka, nic więcej.","words":{"para mí":"dla mnie","un":"(rodzajnik nieokreślony)","bocadillo":"kanapka","nada más":"nic więcej"}}
+{"kind":"phrase","id":"es-lv7hi4p","translation":"Czy jest miejsce w środku?","words":{"hay":"jest","sitio":"miejsce","dentro":"w środku"}}
+{"kind":"phrase","id":"es-muwamzx","translation":"Przepraszam, gdzie jest toaleta?","words":{"perdone":"przepraszam (usted)","dónde":"gdzie","está":"jest","el":"(rodzajnik określony)","baño":"toaleta"}}
+{"kind":"phrase","id":"es-6fvb6so","translation":"Przyniesie mi pan serwetkę, proszę?","words":{"me":"mi","trae":"przynosi (usted)","una":"(rodzajnik nieokreślony)","servilleta":"serwetka","por favor":"proszę"}}
+{"kind":"phrase","id":"es-fn2df75","translation":"Czy mają państwo wifi?","words":{"tienen":"mają (ustedes)","wifi":"wifi"}}
+{"kind":"phrase","id":"es-ve7jwlx","translation":"Przepraszam, przyniesie mi pan serwetkę?","words":{"perdone":"przepraszam (usted)","me":"mi","trae":"przynosi (usted)","una":"(rodzajnik nieokreślony)","servilleta":"serwetka"}}
+{"kind":"phrase","id":"es-kuxoeld","translation":"Czy mają państwo coś ciepłego?","words":{"tienen":"mają (ustedes)","algo":"coś","caliente":"ciepły"}}

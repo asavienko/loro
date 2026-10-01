@@ -1,0 +1,44 @@
+{
+  "runId": "spike-es-a1-cafe-counter-2",
+  "at": "2026-10-01T21:58:44.468Z",
+  "stage": "phrases",
+  "course": "es-ES",
+  "levels": [
+    "A1"
+  ],
+  "topics": [
+    "eating-out"
+  ],
+  "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+  "pricing": "assumed on 2026-10-02, not verified against the providers' price lists; the run summary's dollar figure is an estimate until this file is checked",
+  "spend": {
+    "calls": 1,
+    "cached": 0,
+    "usd": 0.001912,
+    "inputTokens": 2012,
+    "outputTokens": 2516
+  },
+  "outcomes": [
+    {
+      "setId": "set-es-a1-cafe-counter",
+      "status": "skipped"
+    },
+    {
+      "setId": "set-es-a1-cafe-counter-2",
+      "status": "written",
+      "phrases": 12,
+      "coverage": 0.9166666666666666,
+      "calls": 1,
+      "rejected": [
+        {
+          "target": "¿Me pone un té con hielo, por favor?",
+          "reason": "8 words, the limit at A1 is 7"
+        },
+        {
+          "target": "¿Me pone un vaso de agua, por favor?",
+          "reason": "8 words, the limit at A1 is 7"
+        }
+      ]
+    }
+  ]
+}
