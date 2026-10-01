@@ -32,6 +32,7 @@ import type { LearnerState, Phase } from '@shared/state/types';
 import { endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel, queueTitle } from '@shared/ui/phase';
 import { recentLoopRating } from '@shared/ui/rating';
 import { playerArtSize } from '@shared/ui/room';
+import { PassCard } from '../nav/PassNotice';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon, IconName } from '../ui/Icon';
@@ -132,6 +133,12 @@ export function NowPlayingScreen() {
             <PhraseBlock phrase={phrase} revealed={revealed} />
             <ActionRow phrase={phrase} onNotes={() => setNotesOpen(true)} />
           </View>
+          {/* The end of a pass, over the top of the picture: clear of the grades and the controls. */}
+          {!endedOnce && (
+            <View style={[styles.notice, { left: side, right: side }]} pointerEvents="box-none">
+              <PassCard />
+            </View>
+          )}
           {/* What room is left goes here: the loop sits over the controls, as a music player's progress does. */}
           <View style={styles.spring} />
           {!endedOnce && (
@@ -482,6 +489,7 @@ const styles = StyleSheet.create({
   stageContent: { flexGrow: 1, paddingHorizontal: GUTTER, paddingTop: 4, paddingBottom: 12, width: '100%', maxWidth: MAX_WIDTH, alignSelf: 'center' },
   spring: { flexGrow: 1, minHeight: 12 },
   compactGutter: { paddingHorizontal: COMPACT_GUTTER },
+  notice: { position: 'absolute', top: 4 },
   cover: { alignItems: 'center' },
   gone: { display: 'none' },
   about: { gap: 4 },
