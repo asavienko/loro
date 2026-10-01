@@ -32,7 +32,7 @@ describe('the lock screen: the phrase loop', () => {
     assert.equal(shown.id, phrase.id);
     assert.equal(shown.title, prompt.text);
     assert.notEqual(shown.title, phrase.target);
-    assert.equal(shown.artist, 'Listen in English');
+    assert.equal(shown.artist, 'English', 'the step in a word, as the bar says it');
     assert.equal(shown.playing, true);
     assert.equal(shown.album, getSet('set-cafe').title);
     assert.equal(shown.hasSilences, true);
@@ -43,7 +43,7 @@ describe('the lock screen: the phrase loop', () => {
     const turn = done(s, T0 + 2000);
     assert.equal(turn.player.phase, 'pause');
     assert.equal(phraseNowPlaying(turn, c, T0 + 2000)?.title, prompt.text);
-    assert.match(phraseNowPlaying(turn, c, T0 + 2000)?.artist ?? '', /^Your turn/);
+    assert.equal(phraseNowPlaying(turn, c, T0 + 2000)?.artist, 'Your turn');
 
     // Heard: the target, with the prompt under it.
     const heard = done(turn, T0 + 6000);
