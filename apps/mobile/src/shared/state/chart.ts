@@ -8,6 +8,7 @@ export type PlayerEventType =
   | 'LOAD'
   | 'PLAY'
   | 'PAUSE'
+  | 'CLOSE'
   | 'PHASE_DONE'
   | 'NEXT'
   | 'PREV'
@@ -43,7 +44,7 @@ const QUEUE_EDITS: PlayerEventType[] = ['TOGGLE_SHUFFLE', 'REORDER_UP_NEXT', 'RE
 export const PLAYER_CHART: Record<PlayerStatus, readonly PlayerEventType[]> = {
   idle: ['LOAD', 'ENQUEUE'],
   playing: ['LOAD', 'PAUSE', 'PHASE_DONE', 'NEXT', 'PREV', 'JUMP', 'RATE', 'UNRATE', ...QUEUE_EDITS],
-  paused: ['LOAD', 'PLAY', 'NEXT', 'PREV', 'JUMP', 'RATE', 'UNRATE', ...QUEUE_EDITS],
+  paused: ['LOAD', 'PLAY', 'CLOSE', 'NEXT', 'PREV', 'JUMP', 'RATE', 'UNRATE', ...QUEUE_EDITS],
 };
 
 /** Where each status goes on the events that change it. */
@@ -54,6 +55,7 @@ export const STATUS_EDGES: { from: PlayerStatus; event: string; to: PlayerStatus
   { from: 'playing', event: 'PHASE_DONE (end of queue, or audio failed)', to: 'paused' },
   { from: 'playing', event: 'NEXT (past the end of a one-pass queue)', to: 'paused' },
   { from: 'paused', event: 'PLAY', to: 'playing' },
+  { from: 'paused', event: 'CLOSE', to: 'idle' },
   { from: 'paused', event: 'LOAD', to: 'playing' },
   { from: 'paused', event: 'JUMP (play now)', to: 'playing' },
 ];

@@ -21,7 +21,7 @@ const STEPS_PER_REPETITION = 4;
 /**
  * The docked player for the phrase loop (the web's src/ui/MiniPlayer.tsx), on the shared bar
  * (MiniBar): tap to open, swipe for the next or previous phrase; its grades float above it
- * (PhraseBarGrades). The target stays hidden here, as everywhere, until it has been heard.
+ * (PhraseBarGrades); paused, it closes (its button, or dragged down). The target stays hidden here, as everywhere, until it has been heard.
  */
 export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
   const c = useCopy();
@@ -63,6 +63,7 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
         playing={playing}
         onToggle={playing ? actions.pause : actions.play}
         next={{ label: c.player.next, onPress: actions.next }}
+        onClose={actions.close}
         progress={look.progress}
       />
     );
@@ -131,6 +132,8 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
         else actions.jump(index - 1);
         return true;
       }}
+      // Paused, the bar closes: the queue goes, its ratings stay.
+      onClose={playing ? undefined : actions.close}
     />
   );
 }

@@ -3,7 +3,7 @@
 // previous item comes in beside it; let go far enough (or flung) and that one takes its place, less and
 // the card springs back. Any other change of item (Next, the loop moving on) slides the new card in
 // from the side it came from. Its grades float above it, apart (BarGrades), and move with the card
-// (barShift).
+// (barShift). Paused, the bar can be closed: its close button, or dragged down far enough (or flung).
 import { ReactNode, useEffect, useState } from 'react';
 import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -50,6 +50,11 @@ const SLIDE_MS = 220;
 const SPRING = { damping: 26, stiffness: 300 };
 /** A swipe whose item hasn't changed this long after it said it would comes back. */
 const LANDING_MS = 1500;
+/** Dragged down this far, or flung down this fast, a paused bar closes; less springs back. */
+const CLOSE_DISTANCE = 48;
+const CLOSE_VELOCITY = 600;
+/** How far the bar travels down as it goes. */
+const CLOSE_TRAVEL = 120;
 
 interface Strip {
   /** The item the bar shows, where it is in its queue, and which queue. */
@@ -73,6 +78,7 @@ export function MiniCarousel({
   can,
   neighbour,
   onSwipe,
+  onClose,
 }: {
   item: MiniItem;
   /** Where the item is in its queue, and which queue: a change says which way the bar moved. */
@@ -84,6 +90,8 @@ export function MiniCarousel({
   neighbour: (side: Side) => MiniItem | null;
   /** Moves to the neighbour; false when it couldn't (a song that didn't load). */
   onSwipe: (side: Side) => boolean | Promise<boolean>;
+  /** Closes the bar (only while paused); dragged down, the bar goes. Undefined, it can't be closed. */
+  onClose?: () => void;
 }) {
   const reduce = useReducedMotion();
   const [width, setWidth] = useState(0);
@@ -154,6 +162,49 @@ export function MiniCarousel({
     });
   };
 
+  // Down and away: the bar follows the finger downwards only, and closes once let go far enough.
+  const drop = useSharedValue(0);
+  const closable = onClose !== undefined;
+  const close = () => {
+    onClose?.();
+    drop.set(0);
+  };
+  const down = Gesture.Pan()
+    .enabled(closable && !busy)
+    .activeOffsetY(12)
+    .failOffsetY(-12)
+    .failOffsetX([-12, 12])
+    .onStart(() => {
+      past.set(false);
+      runOnJS(holdClicks)();
+    })
+    .onUpdate((e) => {
+      drop.set(Math.max(0, e.translationY));
+      const far = e.translationY > CLOSE_DISTANCE;
+      if (far !== past.get()) {
+        past.set(far);
+        runOnJS(thresholdHaptic)();
+      }
+    })
+    .onEnd((e) => {
+      if (e.translationY > CLOSE_DISTANCE || (e.translationY > FLING_MIN_DISTANCE && e.velocityY > CLOSE_VELOCITY)) {
+        drop.set(
+          withTiming(CLOSE_TRAVEL, { duration: reduce ? 0 : SLIDE_MS }, (finished) => {
+            if (finished) runOnJS(close)();
+          }),
+        );
+      } else {
+        drop.set(withSpring(0, SPRING));
+      }
+    })
+    .onFinalize(() => {
+      runOnJS(releaseClicks)();
+    });
+  const dropped = useAnimatedStyle(() => ({
+    opacity: interpolate(drop.get(), [0, CLOSE_TRAVEL], [1, 0], Extrapolation.CLAMP),
+    transform: [{ translateY: drop.get() }],
+  }));
+
   const pan = Gesture.Pan()
     .enabled(width > 0 && !busy)
     .activeOffsetX([-12, 12])
@@ -216,15 +267,15 @@ export function MiniCarousel({
   if (previous && previousKey) add({ key: previousKey, at: -span - rest, live: false, frozen: false, node: previous.card });
 
   return (
-    <GestureDetector gesture={pan}>
-      <View onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}>
+    <GestureDetector gesture={Gesture.Race(pan, down)}>
+      <Animated.View style={dropped} onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}>
         {/* The item's own card last, over the others. */}
         {[...slots.slice(1), slots[0]].map((slot) => (
           <Slide key={slot.key} drag={drag} at={slot.at} span={span} live={slot.live} frozen={slot.frozen} shift={shift}>
             {slot.node}
           </Slide>
         ))}
-      </View>
+      </Animated.View>
     </GestureDetector>
   );
 }
@@ -276,7 +327,7 @@ function Slide({
   );
 }
 
-/** One item's card: its cover and words open the player; play or pause; next; how far it has played. */
+/** One item's card: its cover and words open the player; play or pause; next; close, while paused; how far it has played. */
 export function MiniCard({
   cover,
   badge,
@@ -286,6 +337,7 @@ export function MiniCard({
   playing,
   onToggle,
   next,
+  onClose,
   progress,
 }: {
   cover: ReactNode;
@@ -297,6 +349,8 @@ export function MiniCard({
   playing: boolean;
   onToggle?: () => void;
   next: { label: string; onPress?: () => void; disabled?: boolean };
+  /** Closes the bar; shown while paused. */
+  onClose?: () => void;
   /** Along the bottom: how far the item has played. */
   progress: ReactNode;
 }) {
@@ -338,6 +392,11 @@ export function MiniCard({
         >
           <Icon name="skip_next" fill size="lg" color="inverseOnSurface" />
         </Press>
+        {!playing && onClose && (
+          <Press accessibilityRole="button" accessibilityLabel={c.player.close} onPress={onClose} style={({ pressed }) => [styles.next, pressed && { opacity: 0.7 }]}>
+            <Icon name="close" size="lg" color="inverseOnSurface" />
+          </Press>
+        )}
       </View>
       <View style={styles.track} accessible={false}>
         {progress}
