@@ -43,12 +43,12 @@ export function SetCover({
   style,
   badges = true,
 }: {
-  set: Pick<SetView, 'topicId' | 'coverIcon'> & { id?: string };
+  set: Pick<SetView, 'topicId' | 'coverIcon'> & { id?: string; phraseIds?: string[] };
   /** The square's side; under 96 px the glyph stands alone, larger. */
   px: number;
   rounded?: number;
   style?: ViewStyle;
-  /** The phrase icon (and the song icon when songs are sung from it) in its corner (plan 107). */
+  /** The phrase icon when it has phrases and the song icon when songs are sung from it, in its corner (plan 107). */
   badges?: boolean;
 }) {
   const served = findSet(set.id);
@@ -56,12 +56,14 @@ export function SetCover({
   const drawn = <DrawnCover set={set} px={px} rounded={rounded} style={style} />;
   // A learner's set may have a drawn cover of its own (plan 106); otherwise the topic's.
   const cover = coverUrl ? <RemoteCover url={coverUrl} px={px} rounded={rounded} style={style} fallback={drawn} /> : drawn;
-  if (!badges || px < 40) return cover;
+  const phrases = (set.phraseIds ?? served?.phraseIds ?? []).length > 0;
+  const songs = (served?.songCount ?? 0) > 0;
+  if (!badges || px < 40 || (!phrases && !songs)) return cover;
   // The cover keeps its own style (its shadow needs its background); the frame only holds the badges.
   return (
     <View style={{ width: px, height: px }}>
       {cover}
-      <ContentBadges phrases songs={(served?.songCount ?? 0) > 0} px={px} />
+      <ContentBadges phrases={phrases} songs={songs} px={px} />
     </View>
   );
 }

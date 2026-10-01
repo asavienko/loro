@@ -30,6 +30,7 @@ import {
 } from '@shared/state/selectors';
 import type { Grade, Phase } from '@shared/state/types';
 import { backIn, endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel, queueTitle } from '@shared/ui/phase';
+import { playerCoverSize } from '@shared/ui/room';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon, IconName } from '../ui/Icon';
@@ -40,17 +41,17 @@ import { Sheet } from '../ui/Sheet';
 import { ToastOffsetContext, useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
 import { colors, ColorName, radius, shadow, TARGET } from '../ui/theme';
+import { useRoom } from '../ui/useRoom';
 import { GRADES } from './grades';
 import { useRate } from './useRate';
 
 const STEPS: Exclude<Phase, 'rate'>[] = ['native', 'pause', 'target'];
-const COVER = 200;
-
 
 export function NowPlayingScreen() {
   const c = useCopy();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const room = useRoom();
   const { state } = useStore();
   const [notesOpen, setNotesOpen] = useState(false);
   const [shownAnyway, setShownAnyway] = useState<string | null>(null);
@@ -76,6 +77,9 @@ export function NowPlayingScreen() {
   const coverSet = findSetView(state.learner, phrase.setId) ?? queueSet;
   const tone = (coverSet?.topicId && getTopic(coverSet.topicId)?.tone) || 'secondary';
   const endedOnce = state.player.ended && playsOnce(state.player);
+  // The picture gives way first when the screen is narrow or short, or the text is large.
+  const cover = playerCoverSize(room.width, room.height, room.fontScale);
+  const gutter = room.compact ? styles.compactGutter : null;
 
   return (
     <ToastOffsetContext.Provider value={16}>
@@ -93,9 +97,9 @@ export function NowPlayingScreen() {
           <HeaderButton label={c.player.openQueue} icon="queue_music" onPress={() => router.push('/queue')} />
         </View>
 
-        <ScrollView style={styles.stage} contentContainerStyle={styles.stageContent}>
+        <ScrollView style={styles.stage} contentContainerStyle={[styles.stageContent, gutter]}>
           <View style={styles.cover}>
-            <PhraseImage icons={phrase.image} tone={tone} width={COVER} height={COVER} rounded={24} style={shadow.cover} />
+            <PhraseImage icons={phrase.image} tone={tone} width={cover} height={cover} rounded={24} style={shadow.cover} />
           </View>
           <PhraseBlock phrase={phrase} revealed={revealed} />
           <ActionRow phrase={phrase} onNotes={() => setNotesOpen(true)} />
@@ -121,10 +125,9 @@ export function NowPlayingScreen() {
           )}
         </ScrollView>
 
-        <View style={[styles.dock, !endedOnce && styles.dockLine]}>
+        <View style={[styles.dock, gutter, !endedOnce && styles.dockLine]}>
           {endedOnce ? <EndPanel onClose={close} /> : <Rating phrase={phrase} />}
           {!endedOnce && <Transport />}
-          {!endedOnce && <SpeedRow />}
         </View>
 
         <Sheet open={notesOpen} title={c.phrase.notesTitle} onClose={() => setNotesOpen(false)}>
@@ -171,7 +174,7 @@ function PhraseBlock({ phrase, revealed }: { phrase: Phrase; revealed: boolean }
   );
 }
 
-/** Like, add to set and notes, on the right. */
+/** The speed on the left; like, add to set and notes on the right. */
 function ActionRow({ phrase, onNotes }: { phrase: Phrase; onNotes: () => void }) {
   const c = useCopy();
   const nav = useNav();
@@ -179,6 +182,7 @@ function ActionRow({ phrase, onNotes }: { phrase: Phrase; onNotes: () => void })
   const liked = isLiked(state.learner, 'phrase', phrase.id);
   return (
     <View style={styles.actions}>
+      <SpeedButton />
       <View style={styles.flex} />
       <Pressable accessibilityRole="togglebutton" accessibilityLabel={c.phrase.likeLabel} accessibilityState={{ checked: liked }} onPress={() => actions.toggleLike('phrase', phrase.id)} style={styles.iconButton}>
         <Icon name="favorite" fill={liked} size={24} color={liked ? 'primaryContainer' : 'secondary'} />
@@ -193,7 +197,10 @@ function ActionRow({ phrase, onNotes }: { phrase: Phrase; onNotes: () => void })
   );
 }
 
-/** The three steps: the current one filled while it plays; the learner's turn fills over its real length. */
+/**
+ * The three steps: the current one filled while it plays, and named; the learner's turn fills over its
+ * real length. The others are their icons, so the names never squeeze on a narrow screen.
+ */
 function Steps({ phrase, promptLang }: { phrase: Phrase; promptLang: Phrase['targetLang'] }) {
   const c = useCopy();
   const { state } = useStore();
@@ -206,13 +213,16 @@ function Steps({ phrase, promptLang }: { phrase: Phrase; promptLang: Phrase['tar
         const done = phase === 'rate' || STEPS.indexOf(p) < STEPS.indexOf(phase as Exclude<Phase, 'rate'>);
         const look = current && playing ? styles.stepPlaying : current ? styles.stepCurrent : done ? styles.stepDone : styles.stepIdle;
         const ink: ColorName = current && playing ? 'onPrimary' : current || done ? 'onPrimaryFixed' : 'secondary';
+        const label = phaseStepLabel(c, p, promptLang, phrase.targetLang);
         return (
-          <View key={p} accessibilityState={{ selected: current }} style={[styles.step, look]}>
+          <View key={p} accessible accessibilityLabel={label} accessibilityState={{ selected: current }} style={[styles.step, current ? styles.stepNamed : null, look]}>
             {current && p === 'pause' && <PhaseFill style={{ backgroundColor: colors.primary, height: '100%' }} />}
             <Icon name={current && !playing ? 'pause' : PHASE_ICONS[p]} size="sm" color={ink} />
-            <Txt variant="label" weight={600} color={ink} numberOfLines={1}>
-              {phaseStepLabel(c, p, promptLang, phrase.targetLang)}
-            </Txt>
+            {current && (
+              <Txt variant="label" weight={600} color={ink} numberOfLines={1} style={styles.stepLabel}>
+                {label}
+              </Txt>
+            )}
           </View>
         );
       })}
@@ -252,6 +262,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
   const { state, actions } = useStore();
   const now = useNow(1000);
   const rate = useRate();
+  const { compact } = useRoom();
   const pending = pendingFor(state, phrase.id);
   const left = pending ? Math.min(RATING_WINDOW_MS, windowLeft(pending, Math.max(now, pending.at))) : 0;
   const active = pending && left > 0 ? pending : undefined;
@@ -260,7 +271,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
   const hold = state.player.phase === 'rate' && state.player.status === 'playing';
   const beforeTurn = state.player.repetition === 1 && (state.player.phase === 'native' || state.player.phase === 'pause');
   return (
-    <View style={[styles.rating, hold && styles.ratingHold]}>
+    <View style={[styles.rating, compact && styles.ratingCompact, hold && styles.ratingHold]}>
       <View style={styles.ratingLine}>
         {active ? (
           <>
@@ -276,7 +287,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
           </Txt>
         )}
       </View>
-      <View style={styles.grades}>
+      <View style={[styles.grades, compact && styles.gradesCompact]}>
         {GRADES.map(({ grade, icon, bg, ink }) => {
           const selected = active?.grade === grade;
           return (
@@ -287,13 +298,14 @@ function Rating({ phrase }: { phrase: Phrase }) {
               onPress={() => rate(grade)}
               style={({ pressed }) => [styles.grade, { backgroundColor: bg }, selected && styles.gradeSelected, pressed && { opacity: 0.8 }]}
             >
-              <View style={styles.row}>
-                <Icon name={selected ? 'task_alt' : icon} size="sm" color={ink} />
-                <Txt weight={selected ? 700 : 600} color={ink}>
+              {/* A compact screen keeps the words whole and lets the colours tell the grades apart. */}
+              <View style={[styles.row, compact && styles.tight]}>
+                {(!compact || selected) && <Icon name={selected ? 'task_alt' : icon} size="sm" color={ink} />}
+                <Txt weight={selected ? 700 : 600} color={ink} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={styles.shrink}>
                   {c.common.grade[grade]}
                 </Txt>
               </View>
-              <Txt variant="caption" color={ink}>
+              <Txt variant="caption" color={ink} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
                 {backIn(c, dueOf(grade), from)}
               </Txt>
             </Pressable>
@@ -425,21 +437,23 @@ function SettingButton({ label, caption, onPress, children }: { label: string; c
   );
 }
 
-/** Speed: the only speed control in the app. */
-function SpeedRow() {
+/** Speed, the only speed control in the app: one button that says the speed and steps to the next. */
+function SpeedButton() {
   const c = useCopy();
   const { state, actions } = useStore();
+  const speed = state.prefs.speed;
+  const next = SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length];
   return (
-    <View accessibilityRole="radiogroup" accessibilityLabel={c.player.speed} style={styles.speeds}>
-      {SPEEDS.map((s) => {
-        const on = state.prefs.speed === s;
-        return (
-          <Pressable key={s} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => actions.setPrefs({ speed: s })} style={[styles.speed, on && styles.speedOn]}>
-            <Txt weight={on ? 700 : 500} color={on ? 'onSurface' : 'secondary'}>{`${s}×`}</Txt>
-          </Pressable>
-        );
-      })}
-    </View>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={c.player.speedIs(speed)}
+      onPress={() => actions.setPrefs({ speed: next })}
+      style={({ pressed }) => [styles.speedTarget, pressed && { opacity: 0.7 }]}
+    >
+      <View style={[styles.speed, speed !== 1 && styles.speedChanged]}>
+        <Txt variant="body" weight={700} color={speed !== 1 ? 'inverseOnSurface' : 'onSurface'}>{`${speed}×`}</Txt>
+      </View>
+    </Pressable>
   );
 }
 
@@ -457,20 +471,27 @@ const styles = StyleSheet.create({
   iconButton: { width: TARGET, height: TARGET, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   loop: { gap: 6 },
   steps: { flexDirection: 'row', gap: 6 },
-  step: { flex: 1, minHeight: TARGET, paddingHorizontal: 4, borderRadius: radius.xl, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, overflow: 'hidden' },
+  step: { flex: 1, minHeight: TARGET, paddingHorizontal: 8, borderRadius: radius.xl, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, overflow: 'hidden' },
+  stepNamed: { flex: 3 },
+  stepLabel: { flexShrink: 1 },
   stepPlaying: { backgroundColor: colors.primaryContainer, borderColor: colors.primaryContainer },
   stepCurrent: { backgroundColor: colors.primaryFixed, borderColor: colors.primaryContainer, borderStyle: 'dashed' },
   stepDone: { backgroundColor: 'rgba(255,219,207,0.5)', borderColor: 'transparent' },
   stepIdle: { backgroundColor: colors.surfaceContainerLow, borderColor: colors.hairline },
   error: { borderRadius: radius.xl, backgroundColor: 'rgba(255,218,214,0.6)', padding: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  tight: { gap: 4 },
+  shrink: { flexShrink: 1 },
   flex: { flex: 1, minWidth: 0 },
   dock: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8, gap: 8, width: '100%', maxWidth: 512, alignSelf: 'center' },
+  compactGutter: { paddingHorizontal: 12 },
   dockLine: { borderTopWidth: 1, borderTopColor: colors.hairline },
   rating: { borderRadius: radius['3xl'], paddingHorizontal: 6, paddingBottom: 10, borderWidth: 2, borderColor: 'transparent' },
+  ratingCompact: { paddingHorizontal: 2 },
   ratingHold: { backgroundColor: 'rgba(255,219,207,0.4)', borderColor: colors.primaryContainer },
   ratingLine: { minHeight: TARGET, flexDirection: 'row', alignItems: 'center', gap: 8 },
   grades: { flexDirection: 'row', gap: 8 },
+  gradesCompact: { gap: 6 },
   grade: { flex: 1, minHeight: 56, borderRadius: radius['2xl'], alignItems: 'center', justifyContent: 'center', paddingVertical: 4 },
   gradeSelected: { borderWidth: 2, borderColor: colors.onSurface },
   holdTrack: { position: 'absolute', left: 16, right: 16, bottom: 3, height: 4, borderRadius: radius.full, overflow: 'hidden' },
@@ -481,7 +502,7 @@ const styles = StyleSheet.create({
   play: { width: 64, height: 64, borderRadius: radius.full, backgroundColor: colors.primaryContainer, alignItems: 'center', justifyContent: 'center', ...shadow.float },
   setting: { width: 56, height: 56, borderRadius: radius['2xl'], alignItems: 'center', justifyContent: 'center', gap: 2 },
   repeats: { minWidth: 40, height: 26, paddingHorizontal: 6, borderRadius: radius.lg, borderWidth: 2, borderColor: colors.primaryContainer, alignItems: 'center', justifyContent: 'center' },
-  speeds: { flexDirection: 'row', gap: 4, padding: 2, width: '100%', maxWidth: 288, alignSelf: 'center', backgroundColor: colors.surfaceContainerLow, borderRadius: radius.full },
-  speed: { flex: 1, minHeight: TARGET, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
-  speedOn: { backgroundColor: colors.surfaceContainerLowest, ...shadow.card },
+  speedTarget: { minWidth: TARGET, minHeight: TARGET, justifyContent: 'center' },
+  speed: { minHeight: 32, paddingHorizontal: 12, borderRadius: radius.full, borderWidth: 1, borderColor: colors.hairline, backgroundColor: colors.surfaceContainerLow, alignItems: 'center', justifyContent: 'center' },
+  speedChanged: { backgroundColor: colors.inverseSurface, borderColor: colors.inverseSurface },
 });

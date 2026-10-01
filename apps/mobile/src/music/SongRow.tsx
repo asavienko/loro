@@ -1,5 +1,5 @@
-// A song in a list beside phrases (plan 107): the phrase row's shape, its music note before the second
-// line where a phrase has its phrase icon. A tap plays it in the one player (or pauses it).
+// A song in a list beside phrases (plan 107): the phrase row's shape, with a music note before its
+// second line to tell it from them. A tap plays it in the one player (or pauses it).
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { Song } from '@shared/api/library';
 import type { Album } from '@shared/content';

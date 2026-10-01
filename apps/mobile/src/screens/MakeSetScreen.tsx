@@ -24,6 +24,7 @@ import { useCloseMake, useShell } from '../nav/Shell';
 import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
 import { useCopy, useStore } from '../state/store';
+import { Banner } from '../ui/Banner';
 import { Button, Chip } from '../ui/Button';
 import { CharCount, charsLeft } from '../ui/CharCount';
 import { field, placeholderColor } from '../ui/field';
@@ -229,13 +230,9 @@ function MakeSet({ request }: { request: MakeRequest }) {
 
         <ScrollView style={styles.flex} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {!signedIn && (
-            <View style={styles.signIn}>
-              <Icon name="account_circle" size="2xl" color="primaryContainer" />
-              <Txt variant="row" style={styles.flex}>
-                {c.account.needed}
-              </Txt>
-              <Button variant="primarySm" label={c.account.signIn} onPress={nav.openAccount} />
-            </View>
+            <Banner icon="account_circle" action={<Button variant="primarySm" label={c.account.signIn} onPress={nav.openAccount} />} style={styles.signIn}>
+              <Txt variant="row">{c.account.needed}</Txt>
+            </Banner>
           )}
           {signedIn && session.step === 'ask' && (
             <AskStep
@@ -823,7 +820,7 @@ const styles = StyleSheet.create({
   byline: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
   progress: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   tabular: { fontVariant: ['tabular-nums'] },
-  signIn: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.xl, backgroundColor: colors.surfaceContainerLow, padding: 16 },
+  signIn: { borderRadius: radius.xl, backgroundColor: colors.surfaceContainerLow },
   decisions: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', gap: 20, paddingTop: 8 },
   decision: { minWidth: 64, alignItems: 'center', gap: 4, borderRadius: radius['2xl'] },
   decisionDisc: { borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },

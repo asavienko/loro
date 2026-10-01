@@ -10,6 +10,7 @@ import { Icon, IconName } from './Icon';
 import { useToastLayer } from './Toast';
 import { Txt } from './Txt';
 import { colors, radius, shadow, TARGET } from './theme';
+import { useRoom } from './useRoom';
 
 export function Sheet({ open, title, onClose, children, scroll = true }: { open: boolean; title: string; onClose: () => void; children: ReactNode; scroll?: boolean }) {
   const c = useCopy();
@@ -101,17 +102,19 @@ export function SheetOption({
 }
 
 /** A frequent action as a tonal tile; `pressed` makes it a toggle whose icon fills while on. */
+/** A frequent action as a tile, two to a row; on a compact screen its icon goes above its words, so they keep the tile's width. */
 export function SheetAction({ icon, label, onPress, disabled, pressed: on }: { icon: IconName; label: string; onPress: () => void; disabled?: boolean; pressed?: boolean }) {
+  const { compact } = useRoom();
   return (
     <Pressable
       accessibilityRole={on === undefined ? 'button' : 'togglebutton'}
       accessibilityState={on === undefined ? { disabled: Boolean(disabled) } : { checked: on, disabled: Boolean(disabled) }}
       onPress={onPress}
       disabled={disabled}
-      style={({ pressed }) => [styles.action, pressed && { backgroundColor: colors.surfaceContainer }, disabled && styles.disabled]}
+      style={({ pressed }) => [styles.action, compact && styles.actionStacked, pressed && { backgroundColor: colors.surfaceContainer }, disabled && styles.disabled]}
     >
       <Icon name={icon} fill={on} color={on ? 'primaryContainer' : 'secondary'} />
-      <Txt variant="body" weight={600} style={styles.optionText}>
+      <Txt variant="body" weight={600} align={compact ? 'center' : undefined} style={compact ? null : styles.optionText}>
         {label}
       </Txt>
     </Pressable>
@@ -176,6 +179,7 @@ const styles = StyleSheet.create({
     flexBasis: '47%',
     flexGrow: 1,
   },
+  actionStacked: { flexDirection: 'column', justifyContent: 'center', gap: 4, paddingHorizontal: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   section: { marginTop: 12 },
   sectionTitle: { paddingHorizontal: 8, marginBottom: 4 },

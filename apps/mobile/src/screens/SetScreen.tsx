@@ -394,7 +394,6 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
             return (
               <PhraseRow
                 key={phrase.id}
-                kindIcon="forum"
                 phrase={phrase}
                 leading={String(position)}
                 detail={progressLabel(c, p, now)}
@@ -408,7 +407,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
             );
           })
         )}
-        {/* Its songs (plan 107): in the same list, a music note where a phrase has its phrase icon. */}
+        {/* Its songs (plan 107): in the same list, marked by their music note. */}
         {setSongs.songs.map((song, i) => {
           const album = setSongs.albums.find((a) => a.id === song.albumId);
           return album ? <SongRow key={song.id} song={song} album={album} leading={String(sorted.length + i + 1)} /> : null;

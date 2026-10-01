@@ -30,6 +30,7 @@ Requirement IDs touched: `P3-01`, `P2-24`, `F-03`, `F-04`, `AI-06`.
 | Phrase notes and pictures | Every phrase has a picture (one to three Material Symbols on its topic's colour, never a photograph), a memory hint, a grammar rule and its sounds (IPA and a respelling).                                                                                                      |
 | Covers                    | Drawn from content (topic colour and icon, or a sanitized SVG), never photos with invented text.                                                                                                                                                                                |
 | Visual system             | One light palette. Terracotta fill only for play and the primary action; a selected state is ink; flat rows, tonal cards, one hero per screen.                                                                                                                                  |
+| Compact screens           | Under 380 dp of width at 100% text (`shared/ui/room.ts`): a foldable's cover screen, or large text. Words stay whole: a label shrinks or takes its own line rather than breaking, and decoration goes first (a smaller player picture, only the current step or tab named).     |
 
 ## Engineering
 

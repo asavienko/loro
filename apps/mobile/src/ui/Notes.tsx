@@ -7,6 +7,7 @@ import { useCopy, useStore } from '../state/store';
 import { Icon, IconName } from './Icon';
 import { Txt } from './Txt';
 import { colors, radius, shadow, TARGET } from './theme';
+import { useRoom } from './useRoom';
 
 type NoteTab = keyof PhraseNotes;
 const NOTE_TABS: { id: NoteTab; icon: IconName }[] = [
@@ -21,6 +22,8 @@ export function PhraseNotesView({ phrase }: { phrase: Phrase }) {
   const native = state.learner.profile.nativeLang;
   const notes = phrase.notes;
   const [tab, setTab] = useState<NoteTab>('mnemonic');
+  // On a compact screen only the open tab is named; the others are their icons.
+  const { compact } = useRoom();
   const translated = native === 'en-GB' ? undefined : phrase.noteTranslations[tab]?.[native];
   const note = notes[tab];
   const { title, text } = translated ?? note;
@@ -30,11 +33,20 @@ export function PhraseNotesView({ phrase }: { phrase: Phrase }) {
         {NOTE_TABS.map((t) => {
           const on = t.id === tab;
           return (
-            <Pressable key={t.id} accessibilityRole="tab" accessibilityState={{ selected: on }} onPress={() => setTab(t.id)} style={[styles.tab, on && styles.tabOn]}>
+            <Pressable
+              key={t.id}
+              accessibilityRole="tab"
+              accessibilityLabel={c.phrase.notes[t.id]}
+              accessibilityState={{ selected: on }}
+              onPress={() => setTab(t.id)}
+              style={[styles.tab, compact && on && styles.tabWide, on && styles.tabOn]}
+            >
               <Icon name={t.icon} size="sm" color={on ? 'onSurface' : 'secondary'} />
-              <Txt variant="label" weight={on ? 700 : 500} color={on ? 'onSurface' : 'secondary'} numberOfLines={1}>
-                {c.phrase.notes[t.id]}
-              </Txt>
+              {(on || !compact) && (
+                <Txt variant="label" weight={on ? 700 : 500} color={on ? 'onSurface' : 'secondary'} numberOfLines={1} style={styles.label}>
+                  {c.phrase.notes[t.id]}
+                </Txt>
+              )}
             </Pressable>
           );
         })}
@@ -73,7 +85,9 @@ const styles = StyleSheet.create({
   view: { gap: 12 },
   tabs: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: radius['2xl'], backgroundColor: colors.surfaceContainerLow },
   tab: { flex: 1, minHeight: TARGET, borderRadius: radius.xl, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 4 },
+  tabWide: { flex: 3 },
   tabOn: { backgroundColor: colors.surfaceContainerLowest, ...shadow.card },
+  label: { flexShrink: 1 },
   panel: { gap: 6, paddingHorizontal: 4 },
   mono: { fontFamily: 'monospace' },
   text: { lineHeight: 22 },

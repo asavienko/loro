@@ -339,7 +339,6 @@ export function makeEn(n: Plural) {
         repeat: 'At the end, the queue starts again',
         continue: 'At the end, new phrases follow',
       } satisfies Record<PlayMode, string>,
-      speed: 'Speed',
       speedIs: (speed: number) => `Speed: ${speed}×`,
       keys: 'Keys: Space play or pause · ← → previous, next · 1 2 3 rate',
       audioError: (language: string) => `Loro has no ${language} recording of this phrase yet, so it can’t play.`,

@@ -285,25 +285,24 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
         )}
 
         {tiles && <MakeSetButton />}
+        {/* The topics as pills sized to their names: they wrap to another line, never squeeze a word. */}
         {tiles && (
-          <View accessibilityLabel={c.explore.topics} style={styles.tiles}>
+          <View accessibilityLabel={c.explore.topics} style={styles.topics}>
             {courseTopics.map(({ topic: t, count }) => (
               <Pressable
                 key={t.id}
                 accessibilityRole="button"
                 accessibilityLabel={`${t.title[locale]}, ${c.explore.sets(count)}`}
                 onPress={() => update({ topic: t.id })}
-                style={({ pressed }) => [styles.tile, { backgroundColor: TONE[t.tone].bg }, pressed && { opacity: 0.85 }]}
+                style={({ pressed }) => [styles.topic, { backgroundColor: TONE[t.tone].bg }, pressed && { opacity: 0.85 }]}
               >
-                <Txt weight={700} color={TONE[t.tone].ink}>
+                <Icon name={t.icon as IconName} size="md" color={TONE[t.tone].ink} />
+                <Txt weight={700} color={TONE[t.tone].ink} style={styles.topicTitle}>
                   {t.title[locale]}
                 </Txt>
-                <View style={styles.tileFoot}>
-                  <Txt variant="label" color={TONE[t.tone].ink} numberOfLines={1} style={styles.tileCount}>
-                    {c.explore.sets(count)}
-                  </Txt>
-                  <Icon name={t.icon as IconName} size="md" color={TONE[t.tone].ink} style={styles.tileIcon} />
-                </View>
+                <Txt variant="label" weight={600} color={TONE[t.tone].ink} style={styles.topicCount}>
+                  {count}
+                </Txt>
               </Pressable>
             ))}
           </View>
@@ -409,11 +408,10 @@ const styles = StyleSheet.create({
   wrap: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   chipTarget: { minHeight: TARGET, justifyContent: 'center' },
   removable: { minHeight: 36, paddingLeft: 14, paddingRight: 10, borderRadius: radius.full, backgroundColor: colors.inverseSurface, flexDirection: 'row', alignItems: 'center', gap: 4 },
-  tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tile: { flexGrow: 1, flexShrink: 1, flexBasis: 88, minHeight: 80, borderRadius: radius['2xl'], padding: 12, justifyContent: 'space-between', gap: 4 },
-  tileFoot: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 4 },
-  tileCount: { flexShrink: 1, opacity: 0.8 },
-  tileIcon: { opacity: 0.8 },
+  topics: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  topic: { minHeight: 48, maxWidth: '100%', paddingLeft: 12, paddingRight: 14, paddingVertical: 6, borderRadius: radius['2xl'], flexDirection: 'row', alignItems: 'center', gap: 8 },
+  topicTitle: { flexShrink: 1 },
+  topicCount: { opacity: 0.7 },
   bleed: { marginHorizontal: -PAGE_PAD },
   chipRow: { paddingHorizontal: PAGE_PAD, gap: 8, alignItems: 'stretch' },
   chipGroup: { flexDirection: 'row', gap: 8 },

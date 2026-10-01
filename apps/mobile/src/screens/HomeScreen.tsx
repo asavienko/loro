@@ -33,6 +33,7 @@ import { StatChip } from '../ui/StatTile';
 import { TopBar } from '../ui/TopBar';
 import { Txt } from '../ui/Txt';
 import { colors, radius, TARGET } from '../ui/theme';
+import { useRoom } from '../ui/useRoom';
 
 export function HomeScreen() {
   const c = useCopy();
@@ -40,6 +41,7 @@ export function HomeScreen() {
   const { state } = useStore();
   const now = useNow(30_000);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const { compact } = useRoom();
   // Ratings still in their undo window count in every figure here (not in points).
   const learner = displayLearner(state);
   const stats = learnerStats(learner, now);
@@ -76,7 +78,7 @@ export function HomeScreen() {
   return (
     <View style={styles.screen}>
       <TopBar title={greeting(targetLang, name)} titleLang={targetLang} onOpenSettings={nav.openSettings} />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, compact && styles.compactContent]}>
         {newToLoro && <Txt color="secondary">{c.home.firstRun}</Txt>}
 
         {hero === 'demo' && firstPhrase && (
@@ -172,7 +174,8 @@ export function HomeScreen() {
           <View style={styles.figures}>
             {!firstRun && (
               <View style={styles.chips}>
-                <StatChip label={c.home.learned} value={stats.learned} icon="verified" onPress={() => nav.go({ name: 'library', view: 'learned' })} />
+                {/* A zero says nothing: Learned joins Started once there is one. */}
+                {stats.learned > 0 && <StatChip label={c.home.learned} value={stats.learned} icon="verified" onPress={() => nav.go({ name: 'library', view: 'learned' })} />}
                 <StatChip label={c.home.started} value={stats.started} icon="headphones" onPress={() => nav.go({ name: 'library', view: 'learning' })} />
               </View>
             )}
@@ -229,7 +232,8 @@ export function HomeScreen() {
 
 /** The one hero on Home: a wash, no border, and one full-width Play. */
 function Hero({ tone = 'primary', children }: { tone?: 'primary' | 'tertiary'; children: ReactNode }) {
-  return <View style={[styles.hero, { backgroundColor: tone === 'tertiary' ? 'rgba(214,233,193,0.6)' : 'rgba(255,219,207,0.45)' }]}>{children}</View>;
+  const { compact } = useRoom();
+  return <View style={[styles.hero, compact && styles.compactHero, { backgroundColor: tone === 'tertiary' ? 'rgba(214,233,193,0.6)' : 'rgba(255,219,207,0.45)' }]}>{children}</View>;
 }
 
 function PlayButton({ label, detail, onPress }: { label: string; detail: string | null; onPress: () => void }) {
@@ -306,9 +310,11 @@ const styles = StyleSheet.create({
   teaser: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: radius['2xl'], backgroundColor: colors.surface },
   screen: { flex: 1, backgroundColor: colors.surface },
   content: { padding: 16, gap: 28, width: '100%', maxWidth: 672, alignSelf: 'center' },
+  compactContent: { gap: 24 },
   hero: { borderRadius: radius['2xl'], padding: 20, gap: 4 },
+  compactHero: { padding: 16 },
   heroTitle: { marginTop: 2 },
-  heroSet: { marginTop: 4, marginHorizontal: 8 },
+  heroSet: { marginTop: 4 },
   heroButton: { marginTop: 16, borderRadius: radius['3xl'], minHeight: TARGET + 4 },
   figures: { gap: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

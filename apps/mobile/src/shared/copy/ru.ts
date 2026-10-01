@@ -60,7 +60,7 @@ export function makeRu(n: Plural): Copy {
       learned: 'Выучено',
       started: 'Начато',
       today: (heard, rated) =>
-        `Сегодня: ${n(heard, { one: `прослушана ${heard} фраза`, few: `прослушано ${heard} фразы`, many: `прослушано ${heard} фраз`, other: `прослушано ${heard} фразы` })} · оценок: ${rated}`,
+        `Сегодня: ${n(heard, { one: `прослушана ${heard} фраза`, few: `прослушано ${heard} фразы`, many: `прослушано ${heard} фраз`, other: `прослушано ${heard} фразы` })} · оценок:\u00a0${rated}`,
       reviewTitle: 'Повторение',
       reviewBody: (due) => n(due, { one: `Пора повторить ${due} фразу`, few: `Пора повторить ${due} фразы`, many: `Пора повторить ${due} фраз`, other: `Пора повторить ${due} фразы` }),
       reviewCapped: (shown) => `В этом занятии — ${shown} самых давних.`,
@@ -317,7 +317,6 @@ export function makeRu(n: Plural): Copy {
         repeat: 'В конце очередь начнётся заново',
         continue: 'В конце пойдут новые фразы',
       },
-      speed: 'Скорость',
       speedIs: (speed) => `Скорость: ${speed}×`,
       keys: 'Клавиши: пробел — пуск или пауза · ← → назад, вперёд · 1 2 3 — оценка',
       audioError: (language) => `У Loro пока нет записи этой фразы (${language}), поэтому она не звучит.`,
