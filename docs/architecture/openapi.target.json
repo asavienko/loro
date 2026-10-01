@@ -24815,7 +24815,15 @@
                     "acoustic_folk",
                     "modern_pop",
                     "gentle_ballad",
-                    "upbeat_kids"
+                    "upbeat_kids",
+                    "indie_rock",
+                    "hip_hop",
+                    "reggaeton",
+                    "jazz_lounge",
+                    "electronic_dance",
+                    "country",
+                    "lullaby",
+                    "bossa_nova"
                   ]
                 },
                 "status": {
@@ -24907,7 +24915,15 @@
                 "acoustic_folk",
                 "modern_pop",
                 "gentle_ballad",
-                "upbeat_kids"
+                "upbeat_kids",
+                "indie_rock",
+                "hip_hop",
+                "reggaeton",
+                "jazz_lounge",
+                "electronic_dance",
+                "country",
+                "lullaby",
+                "bossa_nova"
               ]
             }
           }
@@ -24933,7 +24949,15 @@
               "acoustic_folk",
               "modern_pop",
               "gentle_ballad",
-              "upbeat_kids"
+              "upbeat_kids",
+              "indie_rock",
+              "hip_hop",
+              "reggaeton",
+              "jazz_lounge",
+              "electronic_dance",
+              "country",
+              "lullaby",
+              "bossa_nova"
             ]
           },
           "sha256": {

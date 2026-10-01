@@ -4,8 +4,9 @@ import type { Album, ContentPack, LanguageCode, LanguageList, PhraseSet, PhraseW
 import type { OwnNotes } from '../state/types';
 import { api, ApiError } from './client';
 
-export type SongStyle = 'acoustic_folk' | 'modern_pop' | 'gentle_ballad' | 'upbeat_kids';
-export const SONG_STYLES: SongStyle[] = ['modern_pop', 'acoustic_folk', 'gentle_ballad', 'upbeat_kids'];
+/** The styles a song can be sung in (plan 113), in the order the sheet offers them. */
+export const SONG_STYLES = ['modern_pop', 'acoustic_folk', 'gentle_ballad', 'upbeat_kids', 'indie_rock', 'hip_hop', 'reggaeton', 'jazz_lounge', 'electronic_dance', 'country', 'lullaby', 'bossa_nova'] as const;
+export type SongStyle = (typeof SONG_STYLES)[number];
 
 export interface SongLine {
   text: string;

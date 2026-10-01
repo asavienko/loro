@@ -27,11 +27,14 @@ describe('the demo instrumental', () => {
   })
 
   it('never outgrows the gateway: at most 4 MiB, in whole lines, a song’s 16 lines or fewer', () => {
-    // A 72 bpm ballad sings fewer lines than the faster styles before reaching the size; the
-    // others sing all of a song's 16 lines (writers.ts MAX_SONG_LINES).
-    expect(demoLineLimit('gentle_ballad')).toBeLessThan(15)
-    for (const style of MUSIC_STYLE_IDS)
-      if (style !== 'gentle_ballad') expect(demoLineLimit(style)).toBeGreaterThanOrEqual(16)
+    // The slow styles (a 72 bpm ballad, a lullaby, hip-hop) sing fewer lines than the faster ones
+    // before reaching the size; the others sing all of a song's 16 lines (writers.ts MAX_SONG_LINES).
+    const slow = new Set(['gentle_ballad', 'lullaby', 'hip_hop'])
+    for (const style of MUSIC_STYLE_IDS) {
+      if (slow.has(style)) expect(demoLineLimit(style)).toBeLessThan(16)
+      else expect(demoLineLimit(style)).toBeGreaterThanOrEqual(16)
+      expect(demoLineLimit(style)).toBeGreaterThanOrEqual(12)
+    }
     // The slowest style cut to its limit, and the slowest that sings all 16, are each within 4 MiB.
     for (const style of ['gentle_ballad', 'acoustic_folk'] as const) {
       const limit = demoLineLimit(style)

@@ -180,12 +180,15 @@ otherwise the server synthesizes a **demo instrumental** (`synth.ts`: chords, ba
 in the style, two bars per lyric line) whose line timings let the lyrics follow the sound. It is
 labelled "Demo sound" everywhere it is heard. A demo is a 22.05 kHz 16-bit mono WAV of at most 4
 MiB, which the HTTPS gateway can carry ([ec2-deployment.md](../process/ec2-deployment.md)): it sings
-as many whole lines as fit (12 in a gentle ballad, 16 to 22 in the other styles) and the song's
-lyrics end where its sound does. When the server has a voice for the song's language, each lyric
-line is also spoken over its bars (raw PCM from the voice, the music ducked under it; distinct lines
-only, counted against the owner's and the server's clip allowances), and the song is labelled
-"Spoken demo". Loro's own album songs are voiced the same way once, in the background, after the
-server starts with a voice (`LIBRARY_VOICE_LORO_SONGS=0` turns it off).
+as many whole lines as fit (12 in a gentle ballad or a lullaby, 15 in hip-hop, 16 to 22 in the other
+styles) and the song's lyrics end where its sound does. There are twelve styles (plan 113:
+`MUSIC_STYLE_IDS` in `packages/core`), each a style pack for ElevenLabs
+(`packages/content/src/style-packs.ts`) and a tempo, chord progression and feel for the demo. When
+the server has a voice for the song's language, each lyric line is also spoken over its bars (raw
+PCM from the voice, the music ducked under it; distinct lines only, counted against the owner's and
+the server's clip allowances), and the song is labelled "Spoken demo". Loro's own album songs are
+voiced the same way once, in the background, after the server starts with a voice
+(`LIBRARY_VOICE_LORO_SONGS=0` turns it off).
 
 A song is saved at once as `rendering` and made in the background; the app polls it. A song that
 fails (or is lost to a restart, after ten minutes) gives the day's song back; its owner can make it
