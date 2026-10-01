@@ -163,6 +163,23 @@ phrase bank answers the same suggestions.
 and is the only code that writes SVG. Path data may hold only commands and numbers. Covers are
 served with `Content-Security-Policy: default-src 'none'`.
 
+**A cover is drawn from the artwork itself.** The artwork of a set, album, song or phrase on its
+page and in the player has a button in its corner (`src/ui/CoverRedraw.tsx`, inside `SetCover`,
+`AlbumCover` and `PhraseImage`). It first says what will happen and how many covers are left today,
+and who draws them here; signed out it offers sign-in. `POST /library/generate/cover` with
+`attachTo` draws for the item's own words (a set's or album's title and description, a song's title
+and album, a phrase and its meaning), never for text the app sends:
+
+| The artwork of                   | The new cover                                                                                                                                                                                                                                       |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The learner's own set or album   | Worn by it in place                                                                                                                                                                                                                                 |
+| One of Loro's sets or albums     | Worn by a copy that is the learner's (Loro's stay read-only): a set lists Loro's phrases by reference, so their progress stays one, with its subtitle in the learner's language as the description; an album takes its ready songs (the same sound) |
+| Any phrase or song they can read | The learner's own (`library_item_covers`, by user and id): in the `covers` of their packs (signed-in, by course), shown wherever the phrase or song is, only to them, on every device; kept across reseeds                                          |
+| Someone else's set or album      | None: it keeps its maker's cover (not found)                                                                                                                                                                                                        |
+
+The answer names a copy (`copy: {kind, id}`), and the app opens it. A copy must fit the kept caps
+before the day's cover is spent, and a cover nothing could wear is given back.
+
 **Allowances** are counted per learner per UTC day in `library_usage` with one atomic upsert, before
 any provider is asked: Claude's phrase decks and notes (`LIMIT_PHRASES_DAILY`, default 30), covers
 (`LIMIT_COVER_DAILY`, 10, drawn patterns too) and songs (`LIMIT_SONG_DAILY`, 5, demos too). One
