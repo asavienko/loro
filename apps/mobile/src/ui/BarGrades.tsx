@@ -2,7 +2,8 @@
 // bar itself. A tap rates at once, with no message: the grade tapped turns into Undo for a few seconds,
 // its ring running down, and then they step aside until the item showing can be rated again
 // (barRating in @shared/ui/rating). The same for a phrase and a song. Swiping the bar takes them with
-// its card, and the next item's come in with its own (barShift).
+// its card, and the next item's come in with its own (barShift). Before them, a way on may show
+// (`lead`): the next set at the end of a pass.
 import { useEffect, useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { Extrapolation, FadeIn, FadeInDown, FadeOut, interpolate, useAnimatedStyle, useReducedMotion, ZoomIn } from 'react-native-reanimated';
@@ -13,7 +14,8 @@ import { BarRating, UNDO_OFFER_MS } from '@shared/ui/rating';
 import { useCopy } from '../state/store';
 import { useBarShift } from './barShift';
 import { GRADES } from './grades';
-import { Icon } from './Icon';
+import { Icon, IconName } from './Icon';
+import { Txt } from './Txt';
 import { colors, TARGET } from './theme';
 
 /** A grade's button: round, a little over a finger's target. */
@@ -23,7 +25,15 @@ const RING = 3;
 /** How high the row stands when it shows, for what sits above it (the snackbar). */
 export const BAR_GRADES_HEIGHT = SIZE;
 
-export function BarGrades({ view, onRate, onUndo }: { view: BarRating; onRate: (grade: Grade) => void; onUndo: () => void }) {
+/** A button before the grades: a short label, what it says in full, and what it does. */
+export interface BarLead {
+  label: string;
+  accessibilityLabel: string;
+  icon: IconName;
+  onPress: () => void;
+}
+
+export function BarGrades({ view, onRate, onUndo, lead }: { view: BarRating; onRate: (grade: Grade) => void; onUndo: () => void; lead?: BarLead | null }) {
   const c = useCopy();
   const reduce = useReducedMotion();
   const typing = useKeyboardShown();
@@ -36,11 +46,26 @@ export function BarGrades({ view, onRate, onUndo }: { view: BarRating; onRate: (
     return { opacity: span > 0 ? interpolate(Math.abs(x), [0, span], [1, 0], Extrapolation.CLAMP) : 1, transform: [{ translateX: x }] };
   });
   // Rating isn't what a learner typing is doing; the buttons would sit over the field.
-  if (view.kind === 'none' || typing) return null;
+  if ((view.kind === 'none' && !lead) || typing) return null;
   return (
     <Animated.View style={withCard} pointerEvents="box-none">
       <Animated.View entering={reduce ? undefined : FadeInDown.duration(200)} exiting={reduce ? undefined : FadeOut.duration(180)} style={styles.row} pointerEvents="box-none">
-        {GRADES.map(({ grade, icon, bg, ink }) => {
+        {lead && (
+          <Animated.View entering={reduce ? undefined : FadeIn.duration(160)} exiting={reduce ? undefined : FadeOut.duration(140)} style={styles.leadSlot}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={lead.accessibilityLabel}
+              onPress={lead.onPress}
+              style={({ pressed }) => [styles.button, styles.lead, pressed && styles.pressed]}
+            >
+              <Icon name={lead.icon} size="base" color="onPrimary" />
+              <Txt variant="label" weight={700} color="onPrimary" numberOfLines={1} style={styles.leadText}>
+                {lead.label}
+              </Txt>
+            </Pressable>
+          </Animated.View>
+        )}
+        {view.kind !== 'none' && GRADES.map(({ grade, icon, bg, ink }) => {
           if (view.kind === 'undo') {
             // The others make way; the one given keeps its place, as Undo.
             if (grade !== view.grade) return <View key={grade} style={styles.slot} pointerEvents="none" />;
@@ -157,4 +182,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   pressed: { transform: [{ scale: 0.94 }] },
+  leadSlot: { flexShrink: 1, minWidth: 0 },
+  lead: { width: 'auto', flexDirection: 'row', gap: 6, paddingLeft: 14, paddingRight: 16, backgroundColor: colors.primaryContainer },
+  leadText: { flexShrink: 1 },
 });
