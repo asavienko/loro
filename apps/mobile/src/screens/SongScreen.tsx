@@ -21,9 +21,9 @@ import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
 import { PullDownWindow, PullHandle } from '../ui/PullDown';
+import { GradeRow, RatedLine, RatingLine } from '../ui/Rating';
 import { Txt } from '../ui/Txt';
 import { colors, radius, shadow, TARGET } from '../ui/theme';
-import { GRADES } from '../ui/grades';
 import { useRoom } from '../ui/useRoom';
 
 export function SongScreen() {
@@ -199,9 +199,10 @@ export function SongScreen() {
 }
 
 /**
- * Missed / Hard / Easy for a song: each reviews every phrase of this learner's course that the song
- * sings and that has no rating of its own waiting, with the same five-minute window and undo as a
- * phrase's rating. What it says (the grade, how many phrases) is read from the ratings the song gave.
+ * Missed / Hard / Easy for a song, as for a phrase (ui/Rating): each reviews every phrase of this
+ * learner's course that the song sings and that has no rating of its own waiting, with the same
+ * five-minute window and undo as a phrase's rating. What it says (the grade, how many phrases) is
+ * read from the ratings the song gave.
  */
 function SongRating({ song }: { song: Song }) {
   const c = useCopy();
@@ -213,42 +214,22 @@ function SongRating({ song }: { song: Song }) {
   const rated = given[0];
   const left = given.length > 0 ? Math.min(RATING_WINDOW_MS, ...given.map((p) => windowLeft(p, Math.max(now, p.at)))) : 0;
   const rate = (grade: Grade) => rateSong(song, rating, grade);
-  const { compact } = useRoom();
   if (count === 0) return null;
   return (
     <View style={styles.rating}>
-      <View style={styles.ratingLine}>
-        {rated ? (
-          <>
-            <Txt style={{ flex: 1 }}>{c.music.songRated(c.common.grade[rated.grade], given.length)}</Txt>
-            <Button variant="text" label={c.player.undoFor(formatElapsed(left))} accessibilityLabel={c.player.undoLabel(formatElapsed(left))} onPress={() => actions.unratePhrases(song.id)} />
-          </>
-        ) : (
-          <Txt color="secondary" align="center" style={{ flex: 1 }}>
+      {rated ? (
+        <RatedLine
+          text={c.music.songRated(c.common.grade[rated.grade], given.length)}
+          undo={{ label: c.player.undoFor(formatElapsed(left)), accessibilityLabel: c.player.undoLabel(formatElapsed(left)), onPress: () => actions.unratePhrases(song.id) }}
+        />
+      ) : (
+        <RatingLine>
+          <Txt variant="label" weight={500} color="secondary" align="center">
             {c.music.rateSong(ratable.length)}
           </Txt>
-        )}
-      </View>
-      <View style={styles.grades}>
-        {GRADES.map(({ grade, icon, bg, ink }) => {
-          const selected = rated?.grade === grade;
-          return (
-            <Pressable
-              key={grade}
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              onPress={() => rate(grade)}
-              style={({ pressed }) => [styles.grade, { backgroundColor: bg }, selected && styles.gradeSelected, pressed && { opacity: 0.8 }]}
-            >
-              {/* As in the phrase player: a compact screen keeps the words whole and lets the colours tell the grades apart. */}
-              {(!compact || selected) && <Icon name={selected ? 'task_alt' : icon} size="sm" color={ink} />}
-              <Txt weight={selected ? 700 : 600} color={ink} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={styles.shrink}>
-                {c.common.grade[grade]}
-              </Txt>
-            </Pressable>
-          );
-        })}
-      </View>
+        </RatingLine>
+      )}
+      <GradeRow selected={rated?.grade ?? null} onRate={rate} />
     </View>
   );
 }
@@ -286,11 +267,6 @@ const styles = StyleSheet.create({
   skip: { width: 48, height: 48, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   play: { width: 64, height: 64, borderRadius: radius.full, backgroundColor: colors.primaryContainer, alignItems: 'center', justifyContent: 'center', ...shadow.float },
   rating: { gap: 6, paddingTop: 8 },
-  ratingLine: { minHeight: TARGET, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  grades: { flexDirection: 'row', gap: 8 },
-  grade: { flex: 1, minHeight: 52, paddingHorizontal: 4, borderRadius: radius['2xl'], alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
-  shrink: { flexShrink: 1 },
-  gradeSelected: { borderWidth: 2, borderColor: colors.onSurface },
   lyricsHead: { flexDirection: 'row', alignItems: 'center', paddingTop: 16 },
   section: { gap: 4, paddingTop: 8 },
   line: { paddingVertical: 6, paddingHorizontal: 10, marginHorizontal: -10, borderRadius: radius.xl },

@@ -1,6 +1,7 @@
 // The player (the web prototype's src/screens/NowPlayingScreen.tsx): the phrase's picture, the
 // prompt (the target stays hidden until it is heard), the loop's three steps, the grades, and the
-// transport. Every figure comes from the state machine; the rating's return comes from the core.
+// transport. Every figure comes from the state machine; when a rated phrase comes back is the core's
+// to decide, and the grades don't show it.
 import { useRouter } from 'expo-router';
 import { ReactNode, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -21,15 +22,14 @@ import {
   pendingFor,
   phraseFullPlayMs,
   playableIds,
-  previewDue,
   sessionSummary,
   setProgress,
   suggestedSetId,
   upNextIds,
   windowLeft,
 } from '@shared/state/selectors';
-import type { Grade, Phase } from '@shared/state/types';
-import { backIn, endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel, queueTitle } from '@shared/ui/phase';
+import type { Phase } from '@shared/state/types';
+import { endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel, queueTitle } from '@shared/ui/phase';
 import { playerCoverSize } from '@shared/ui/room';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
@@ -38,12 +38,12 @@ import { PhraseNotesView } from '../ui/Notes';
 import { PhaseFill } from '../ui/PhaseFill';
 import { PhraseImage } from '../ui/PhraseImage';
 import { PullDownWindow, PullHandle } from '../ui/PullDown';
+import { GradeRow, RatedLine, RatingLine } from '../ui/Rating';
 import { Sheet } from '../ui/Sheet';
 import { ToastOffsetContext, useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
 import { colors, ColorName, radius, shadow, TARGET } from '../ui/theme';
 import { useRoom } from '../ui/useRoom';
-import { GRADES } from '../ui/grades';
 import { useRate } from './useRate';
 
 const STEPS: Exclude<Phase, 'rate'>[] = ['native', 'pause', 'target'];
@@ -261,62 +261,35 @@ function PlayTime({ phrase }: { phrase: Phrase }) {
   );
 }
 
-/** Three grades, never preselected; each says when the phrase comes back. A rating can be undone for five minutes. */
+/**
+ * Three grades, never preselected and without times. Once one is given it stays marked, and the line
+ * over them says what it did, with Undo, for the rating's five-minute window.
+ */
 function Rating({ phrase }: { phrase: Phrase }) {
   const c = useCopy();
   const { state, actions } = useStore();
   const now = useNow(1000);
   const rate = useRate();
-  const { compact } = useRoom();
   const pending = pendingFor(state, phrase.id);
   const left = pending ? Math.min(RATING_WINDOW_MS, windowLeft(pending, Math.max(now, pending.at))) : 0;
   const active = pending && left > 0 ? pending : undefined;
-  const from = active ? Math.max(now, active.at) : now;
-  const dueOf = (grade: Grade) => previewDue(state.learner, phrase.id, grade, active?.at ?? now, active?.day);
   const hold = state.player.phase === 'rate' && state.player.status === 'playing';
   const beforeTurn = state.player.repetition === 1 && (state.player.phase === 'native' || state.player.phase === 'pause');
   return (
-    <View style={[styles.rating, compact && styles.ratingCompact, hold && styles.ratingHold]}>
-      <View style={styles.ratingLine}>
-        {active ? (
-          <>
-            <Txt style={styles.flex}>
-              {c.player.rated(c.common.grade[active.grade], backIn(c, dueOf(active.grade), from))}
-              {upNextIds(state.player).includes(phrase.id) ? ` ${c.player.requeued}` : ''}
-            </Txt>
-            <Button variant="text" label={c.player.undoFor(formatElapsed(left))} accessibilityLabel={c.player.undoLabel(formatElapsed(left))} onPress={() => actions.unrate()} />
-          </>
-        ) : (
-          <Txt weight={hold ? 700 : 400} color={hold ? 'onSurface' : 'secondary'} align="center" style={styles.flex}>
+    <View style={[styles.rating, hold && styles.ratingHold]}>
+      {active ? (
+        <RatedLine
+          text={upNextIds(state.player).includes(phrase.id) ? c.player.backLater : c.player.scheduled}
+          undo={{ label: c.player.undoFor(formatElapsed(left)), accessibilityLabel: c.player.undoLabel(formatElapsed(left)), onPress: () => actions.unrate() }}
+        />
+      ) : (
+        <RatingLine>
+          <Txt variant={hold ? 'body' : 'label'} weight={hold ? 700 : 500} color={hold ? 'onSurface' : 'secondary'} align="center" numberOfLines={2}>
             {beforeTurn ? c.player.rateAfterTurn : c.player.howDidItGo}
           </Txt>
-        )}
-      </View>
-      <View style={[styles.grades, compact && styles.gradesCompact]}>
-        {GRADES.map(({ grade, icon, bg, ink }) => {
-          const selected = active?.grade === grade;
-          return (
-            <Pressable
-              key={grade}
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              onPress={() => rate(grade)}
-              style={({ pressed }) => [styles.grade, { backgroundColor: bg }, selected && styles.gradeSelected, pressed && { opacity: 0.8 }]}
-            >
-              {/* A compact screen keeps the words whole and lets the colours tell the grades apart. */}
-              <View style={[styles.row, compact && styles.tight]}>
-                {(!compact || selected) && <Icon name={selected ? 'task_alt' : icon} size="sm" color={ink} />}
-                <Txt weight={selected ? 700 : 600} color={ink} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={styles.shrink}>
-                  {c.common.grade[grade]}
-                </Txt>
-              </View>
-              <Txt variant="caption" color={ink} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
-                {backIn(c, dueOf(grade), from)}
-              </Txt>
-            </Pressable>
-          );
-        })}
-      </View>
+        </RatingLine>
+      )}
+      <GradeRow selected={active?.grade ?? null} onRate={rate} />
       {hold && (
         <View style={styles.holdTrack}>
           <PhaseFill deplete style={{ backgroundColor: colors.primaryContainer, height: 4, borderRadius: radius.full }} />
@@ -485,20 +458,13 @@ const styles = StyleSheet.create({
   stepIdle: { backgroundColor: colors.surfaceContainerLow, borderColor: colors.hairline },
   error: { borderRadius: radius.xl, backgroundColor: 'rgba(255,218,214,0.6)', padding: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  tight: { gap: 4 },
   shrink: { flexShrink: 1 },
   flex: { flex: 1, minWidth: 0 },
   dock: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8, gap: 8, width: '100%', maxWidth: 512, alignSelf: 'center' },
   compactGutter: { paddingHorizontal: 12 },
   dockLine: { borderTopWidth: 1, borderTopColor: colors.hairline },
-  rating: { borderRadius: radius['3xl'], paddingHorizontal: 6, paddingBottom: 10, borderWidth: 2, borderColor: 'transparent' },
-  ratingCompact: { paddingHorizontal: 2 },
+  rating: { borderRadius: radius['3xl'], paddingHorizontal: 6, paddingBottom: 10, borderWidth: 2, borderColor: 'transparent', marginHorizontal: -8 },
   ratingHold: { backgroundColor: 'rgba(255,219,207,0.4)', borderColor: colors.primaryContainer },
-  ratingLine: { minHeight: TARGET, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  grades: { flexDirection: 'row', gap: 8 },
-  gradesCompact: { gap: 6 },
-  grade: { flex: 1, minHeight: 56, borderRadius: radius['2xl'], alignItems: 'center', justifyContent: 'center', paddingVertical: 4 },
-  gradeSelected: { borderWidth: 2, borderColor: colors.onSurface },
   holdTrack: { position: 'absolute', left: 16, right: 16, bottom: 3, height: 4, borderRadius: radius.full, overflow: 'hidden' },
   end: { borderRadius: radius['3xl'], backgroundColor: colors.surfaceContainerLow, padding: 16, gap: 8, alignItems: 'center' },
   endButton: { alignSelf: 'stretch', borderRadius: radius['3xl'] },
