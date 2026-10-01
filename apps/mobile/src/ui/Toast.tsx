@@ -38,7 +38,18 @@ const TOAST_MS = 4000;
 const TOAST_WITH_ACTION_MS = 6000;
 
 /** How far above the bottom toasts sit: over the tab bar and the mini-player. Screens without them set it lower. */
-export const ToastOffsetContext = createContext(132);
+const OVER_TABS = 132;
+export const ToastOffsetContext = createContext(OVER_TABS);
+
+/** Says how tall the tab bar and mini-player are (above the safe area), or null once they are gone. */
+const ChromeContext = createContext<(height: number | null) => void>(() => {});
+/** Between the snackbar and the bar under it. */
+const OVER_CHROME = 8;
+
+/** For the tab bar and mini-player to say how tall they are, so the snackbar sits just over them. */
+export function useReportChrome(): (height: number | null) => void {
+  return useContext(ChromeContext);
+}
 
 /** The snackbar showing now and the open sheets, topmost last, that can show it. */
 interface Layers {
@@ -57,6 +68,8 @@ const SHEET_OFFSET = 16;
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [item, setItem] = useState<ToastItem | null>(null);
   const [layers, setLayers] = useState<number[]>([]);
+  // The mini-player grows with its grades: the snackbar sits over whatever is there.
+  const [chrome, setChrome] = useState<number | null>(null);
   const nextId = useRef(1);
   const announce = useCallback((text: string) => AccessibilityInfo.announceForAccessibility(text), []);
   const toast = useCallback(
@@ -76,8 +89,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={api}>
       <LayersContext.Provider value={value}>
-        {children}
-        {item && top === null && <ToastView key={item.id} item={item} dismiss={dismiss} />}
+        <ChromeContext.Provider value={setChrome}>{children}</ChromeContext.Provider>
+        {item && top === null && (
+          <ToastOffsetContext.Provider value={chrome !== null ? chrome + OVER_CHROME : OVER_TABS}>
+            <ToastView key={item.id} item={item} dismiss={dismiss} />
+          </ToastOffsetContext.Provider>
+        )}
       </LayersContext.Provider>
     </ToastContext.Provider>
   );

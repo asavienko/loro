@@ -335,7 +335,6 @@ export function makeRu(n: Plural): Copy {
         startSet: (title) => `Начать «${title}»`,
         notNow: 'Не сейчас',
       },
-      miniRate: 'Нажмите, чтобы оценить',
       noClip: 'Записи этой фразы пока нет',
       audioSilent: 'Запись не прозвучала. Проверьте подключение и нажмите «Слушать».',
       silent: 'Не прозвучало — нажмите «Слушать»',

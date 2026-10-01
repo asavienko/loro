@@ -334,7 +334,6 @@ export function makeBg(n: Plural): Copy {
         startSet: (title) => `Започни „${title}“`,
         notNow: 'Не сега',
       },
-      miniRate: 'Докоснете, за да оцените',
       noClip: 'Все още няма запис на тази фраза',
       audioSilent: 'Записът не прозвуча. Проверете връзката и натиснете „Пусни“.',
       silent: 'Не прозвуча — натиснете „Пусни“',
