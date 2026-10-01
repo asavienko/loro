@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Loro landing page on Amplify Hosting, deployed by hand from the repository (F-09)
+# cloudfront.yaml is the cheaper host (a private bucket behind CloudFront, inside the always-free
+# tier) and takes over once AWS Support has verified the account for CloudFront; see
+# docs/process/landing-deployment.md.
+Resources:
+  App:
+    Type: AWS::Amplify::App
+    Properties:
+      Name: !Ref AWS::StackName
+      Platform: WEB
+      # Amplify's HSTS and nosniff; the page's Content-Security-Policy is its own meta tag.
+      CustomHeaders: |
+        customHeaders:
+          - pattern: '**'
+            headers:
+              - key: Strict-Transport-Security
+                value: max-age=31536000; includeSubDomains
+              - key: X-Content-Type-Options
+                value: nosniff
+              - key: X-Frame-Options
+                value: SAMEORIGIN
+              - key: Referrer-Policy
+                value: strict-origin-when-cross-origin
+  Branch:
+    Type: AWS::Amplify::Branch
+    Properties:
+      AppId: !GetAtt App.AppId
+      BranchName: main
+      Stage: PRODUCTION
+      EnableAutoBuild: false
+      EnablePullRequestPreview: false
+Outputs:
+  AppId:
+    Value: !GetAtt App.AppId
+  Url:
+    Value: !Sub 'https://${Branch.BranchName}.${App.DefaultDomain}/'

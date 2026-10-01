@@ -10,7 +10,8 @@
 
 <a id="local"></a>Local setup: [local-development.md](local-development.md). The host:
 [ec2-deployment.md](ec2-deployment.md) and [the runbook](../runbooks/backend-testing.md). There is
-no staging or production environment.
+no staging or production environment. The landing page is a static folder on Amplify Hosting
+([landing-deployment.md](landing-deployment.md)); it reads nothing from the API.
 
 ## Configuration
 

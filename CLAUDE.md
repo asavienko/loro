@@ -170,6 +170,7 @@ pnpm --filter @loro/mobile test       # the app's unit tests (node:test via tsx)
 pnpm --filter @loro/mobile bundle     # proves the iOS bundle compiles
 pnpm --filter @loro/api dev           # :3000; requires PostgreSQL/auth configuration
 pnpm --filter @loro/landing dev       # the landing page on :4173 (builds live from GitHub)
+pnpm landing:deploy                   # the landing page to Amplify Hosting (AWS_PROFILE=loro AWS_REGION=eu-central-1)
 pnpm local:up / pnpm local:down       # SOPS-decrypted API + Expo web containers
 
 # One test file (app tests need the content fixture installed first)
@@ -212,14 +213,21 @@ cd packages/core-rs && cargo test <name>
 [`docs/decisions/open-questions.md`](docs/decisions/open-questions.md) lists unresolved decisions
 with owners and dates: Q-08/Q-12 (pricing, store billing), Q-13 (es-419), Q-15 (voices), Q-21 (eval
 and budget for live AI generation), Q-22 (sharing audio files), Q-23 (native-speaker review), Q-24
-(review retention target), Q-25 (syllabus word lists), Q-26 (en-US written or adapted) and Q-27
-(where the landing page is served).
+(review retention target), Q-25 (syllabus word lists), Q-26 (en-US written or adapted) and Q-27 (the
+landing page's domain, and the switch to CloudFront).
 
 ## EC2 development deployment
 
 `infra/ec2/template.yaml` and `scripts/provision-ec2.sh` provision a restricted development host;
 `scripts/deploy-ec2.sh` builds/transfers the API image and health-gates replacement with rollback.
 Administrative access uses an SSH tunnel. See [`ec2-deployment.md`](docs/process/ec2-deployment.md).
+
+## Landing page deployment
+
+`pnpm landing:deploy` (`scripts/deploy-landing.sh`) deploys `infra/landing/template.yaml`, an
+Amplify Hosting app in the same account, and uploads `apps/landing` to it as one archive; nothing
+deploys on merge. `infra/landing/cloudfront.yaml` is the no-cost S3-behind-CloudFront host, waiting
+on AWS verifying the account. See [`landing-deployment.md`](docs/process/landing-deployment.md).
 
 ## Python
 
