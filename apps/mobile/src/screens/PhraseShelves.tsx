@@ -3,7 +3,7 @@
 // opens like any other; its phrases stay on the device once it is opened, so progress on them keeps.
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, TextInput, View } from 'react-native';
 import { unreachable } from '@shared/api/client';
 import { keepOpenedSet } from '@shared/api/contentCache';
 import { fetchCommunitySets, type CommunitySort } from '@shared/api/library';
@@ -14,6 +14,7 @@ import { useCopy, useStore } from '../state/store';
 import { Button, Chip } from '../ui/Button';
 import { field, placeholderColor } from '../ui/field';
 import { Icon } from '../ui/Icon';
+import { Press } from '../ui/Press';
 import { SetCover } from '../ui/SetCover';
 import { Txt } from '../ui/Txt';
 import { colors, radius, TARGET } from '../ui/theme';
@@ -71,7 +72,7 @@ export function SetLine({ set, onPress }: { set: PhraseSet; onPress: () => void 
   const counts = set.songCount ? `${c.common.phrases(set.phraseIds.length)} · ${c.music.songs(set.songCount)}` : c.common.phrases(set.phraseIds.length);
   const byline = set.savedBy ? `${by} · ${c.community.savedBy(set.savedBy)}` : by;
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`${set.title}, ${counts}, ${byline}`} onPress={onPress} style={({ pressed }) => [styles.line, pressed && styles.pressed]}>
+    <Press accessibilityRole="button" accessibilityLabel={`${set.title}, ${counts}, ${byline}`} onPress={onPress} style={({ pressed }) => [styles.line, pressed && styles.pressed]}>
       <SetCover set={set} px={56} rounded={12} />
       <View style={styles.lineText}>
         <Txt variant="row" weight={600} numberOfLines={1} lang={set.targetLang}>
@@ -87,7 +88,7 @@ export function SetLine({ set, onPress }: { set: PhraseSet; onPress: () => void 
         )}
       </View>
       <Icon name="chevron_right" color="secondary" />
-    </Pressable>
+    </Press>
   );
 }
 

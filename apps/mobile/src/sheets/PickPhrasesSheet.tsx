@@ -3,7 +3,7 @@
 // Explore, each with an Add / Added toggle. A toggle changes the set in the learner's account at once
 // (plan 108); Done closes the sheet.
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { TOPICS, type Phrase } from '@shared/content';
 import { coursePhrases, findSetView, ownSets, promptOf } from '@shared/state/catalog';
 import { matchesWords, queryWords } from '../screens/ExploreScreen';
@@ -13,6 +13,7 @@ import { confirm } from '../ui/confirm';
 import { Button } from '../ui/Button';
 import { field, placeholderColor } from '../ui/field';
 import { Icon } from '../ui/Icon';
+import { Press } from '../ui/Press';
 import { Sheet } from '../ui/Sheet';
 import { Txt } from '../ui/Txt';
 import { colors, radius, TARGET } from '../ui/theme';
@@ -112,8 +113,9 @@ function Picker({ setId, onClose }: { setId: string; onClose: () => void }) {
                         {prompt.text}
                       </Txt>
                     </View>
-                    <Pressable
+                    <Press
                       accessibilityRole="button"
+                      haptic="select"
                       accessibilityLabel={`${added ? c.pickPhrases.added : c.pickPhrases.add} ${p.target}`}
                       accessibilityState={{ selected: added }}
                       aria-pressed={added}
@@ -124,7 +126,7 @@ function Picker({ setId, onClose }: { setId: string; onClose: () => void }) {
                       <Txt weight={600} color={added ? 'inverseOnSurface' : 'onSurface'} numberOfLines={1}>
                         {added ? c.pickPhrases.added : c.pickPhrases.add}
                       </Txt>
-                    </Pressable>
+                    </Press>
                   </View>
                 );
               })}

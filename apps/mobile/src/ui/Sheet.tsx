@@ -6,13 +6,14 @@
 // sight on Android (a sheet's window is drawn edge to edge, so the system doesn't resize it) and iOS.
 import { usePathname } from 'expo-router';
 import { ReactNode, useEffect, useRef } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../state/store';
 import { Icon, IconName } from './Icon';
 import { useKeyboardLift } from './keyboard';
+import { Press } from './Press';
 import { Grabber, usePullDown } from './PullDown';
 import { useToastLayer } from './Toast';
 import { Txt } from './Txt';
@@ -59,7 +60,7 @@ export function Sheet({ open, title, onClose, children, scroll = true }: { open:
         <View style={styles.fill}>
           {/* Pointer-only backdrop: Close and the back button close it for everyone else. */}
           <Animated.View style={[styles.backdrop, backdropShown]}>
-            <Pressable accessible={false} importantForAccessibility="no" style={styles.fill} onPress={onClose} />
+            <Press accessible={false} importantForAccessibility="no" haptic="none" style={styles.fill} onPress={onClose} />
           </Animated.View>
           <Animated.View accessibilityViewIsModal onLayout={pull.onLayout} style={[styles.panel, panelMoved]}>
             <GestureDetector gesture={pull.gesture}>
@@ -69,11 +70,11 @@ export function Sheet({ open, title, onClose, children, scroll = true }: { open:
                   <Txt variant="title" face="serif" weight={600} numberOfLines={1} accessibilityRole="header" style={styles.title}>
                     {title}
                   </Txt>
-                  <Pressable accessibilityRole="button" onPress={onClose} style={({ pressed }) => [styles.close, pressed && styles.pressed]}>
+                  <Press accessibilityRole="button" onPress={onClose} style={({ pressed }) => [styles.close, pressed && styles.pressed]}>
                     <Txt variant="body" weight={600} color="primaryContainer">
                       {c.common.close}
                     </Txt>
-                  </Pressable>
+                  </Press>
                 </View>
               </View>
             </GestureDetector>
@@ -112,7 +113,7 @@ export function SheetOption({
 }) {
   const choice = selected !== undefined;
   return (
-    <Pressable
+    <Press
       accessibilityRole={choice ? 'radio' : 'button'}
       accessibilityState={choice ? { checked: selected, disabled: Boolean(disabled) } : { disabled: Boolean(disabled) }}
       // react-native-web drops a nested accessibilityState; the flat ARIA form reaches the DOM.
@@ -133,7 +134,7 @@ export function SheetOption({
         )}
       </View>
       {selected && <Icon name="check" size="md" color="primaryContainer" />}
-    </Pressable>
+    </Press>
   );
 }
 
@@ -142,7 +143,7 @@ export function SheetOption({
 export function SheetAction({ icon, label, onPress, disabled, pressed: on }: { icon: IconName; label: string; onPress: () => void; disabled?: boolean; pressed?: boolean }) {
   const { compact } = useRoom();
   return (
-    <Pressable
+    <Press
       accessibilityRole={on === undefined ? 'button' : 'togglebutton'}
       accessibilityState={on === undefined ? { disabled: Boolean(disabled) } : { checked: on, disabled: Boolean(disabled) }}
       onPress={onPress}
@@ -153,7 +154,7 @@ export function SheetAction({ icon, label, onPress, disabled, pressed: on }: { i
       <Txt variant="body" weight={600} align={compact ? 'center' : undefined} style={compact ? null : styles.optionText}>
         {label}
       </Txt>
-    </Pressable>
+    </Press>
   );
 }
 

@@ -1,9 +1,10 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Copy } from '@shared/copy';
 import type { Tab } from '@shared/nav/routes';
 import { useCopy } from '../state/store';
 import { Icon, IconName } from './Icon';
+import { Press } from './Press';
 import { Txt } from './Txt';
 import { colors } from './theme';
 
@@ -25,7 +26,7 @@ export function TabBar({ current, onNavigate }: { current: Tab; onNavigate: (tab
         {TABS.map((tab) => {
           const active = tab.id === current;
           return (
-            <Pressable
+            <Press
               key={tab.id}
               accessibilityRole="tab"
               accessibilityState={{ selected: active }}
@@ -46,7 +47,7 @@ export function TabBar({ current, onNavigate }: { current: Tab; onNavigate: (tab
               >
                 {c.tabs[tab.label]}
               </Txt>
-            </Pressable>
+            </Press>
           );
         })}
       </View>

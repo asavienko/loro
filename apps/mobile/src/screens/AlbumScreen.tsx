@@ -3,7 +3,7 @@
 // still being made shows as such and turns playable when it is ready.
 import { useRouter } from 'expo-router';
 import { ReactNode, useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { deleteAlbum, deleteSong, fetchAlbum, retrySong, saveItem, unsaveItem, type AlbumDetail, type Song } from '@shared/api/library';
 import { useNav } from '@shared/nav/NavContext';
@@ -11,6 +11,7 @@ import { AlbumCover } from '../music/AlbumCover';
 import { clockTime, useMusic } from '../music/MusicPlayer';
 import { RenameSheet } from '../sheets/RenameSheet';
 import { ReportSheet } from '../sheets/ReportSheet';
+import { Press } from '../ui/Press';
 import { MoreAlbumsByMaker } from './MoreByMaker';
 import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
@@ -264,7 +265,7 @@ export function AlbumSongRow({
   // The retry and remove buttons sit beside the row's own button, never inside it.
   return (
     <View style={[styles.songRow, current && styles.songCurrent]}>
-      <Pressable
+      <Press
         accessibilityRole="button"
         accessibilityLabel={ready ? c.music.playSong(song.title) : `${song.title}, ${song.status === 'rendering' ? c.music.rendering : c.music.failed}`}
         accessibilityState={{ disabled: !ready, selected: current }}
@@ -297,7 +298,7 @@ export function AlbumSongRow({
           </View>
         </View>
         {ready && <Icon name={playing ? 'pause' : 'play_arrow'} fill color="onSurface" />}
-      </Pressable>
+      </Press>
       {onRetry && <Button variant="icon" icon="refresh" color="onSurface" accessibilityLabel={c.music.retrySong(song.title)} disabled={acting} onPress={onRetry} />}
       {onRemove && <Button variant="icon" icon="delete" color="onSurface" accessibilityLabel={c.music.removeSong} disabled={acting} onPress={onRemove} />}
       {after}

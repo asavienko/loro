@@ -4,7 +4,7 @@
 // back is the core's to decide, and the grades don't show it.
 import { useRouter } from 'expo-router';
 import { ReactNode, useState } from 'react';
-import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { LayoutChangeEvent, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { languageName } from '@shared/copy';
 import { getTopic, Phrase } from '@shared/content';
@@ -39,6 +39,7 @@ import { Icon, IconName } from '../ui/Icon';
 import { PhraseNotesView } from '../ui/Notes';
 import { PhaseFill } from '../ui/PhaseFill';
 import { PhraseImage } from '../ui/PhraseImage';
+import { Press } from '../ui/Press';
 import { PullDownWindow, PullHandle } from '../ui/PullDown';
 import { GradeRow, RatedLine, RatedPanel, RatingLine } from '../ui/Rating';
 import { Sheet } from '../ui/Sheet';
@@ -178,9 +179,9 @@ export function NowPlayingScreen() {
 
 function HeaderButton({ label, icon, onPress }: { label: string; icon: IconName; onPress: () => void }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => [styles.headerButton, pressed && { backgroundColor: colors.surfaceContainer }]}>
+    <Press accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => [styles.headerButton, pressed && { backgroundColor: colors.surfaceContainer }]}>
       <Icon name={icon} size={26} />
-    </Pressable>
+    </Press>
   );
 }
 
@@ -222,15 +223,15 @@ function ActionRow({ phrase, onNotes }: { phrase: Phrase; onNotes: () => void })
     <View style={styles.actions}>
       <SpeedButton />
       <View style={styles.flex} />
-      <Pressable accessibilityRole="togglebutton" accessibilityLabel={c.phrase.likeLabel} accessibilityState={{ checked: liked }} onPress={() => actions.toggleLike('phrase', phrase.id)} style={styles.iconButton}>
+      <Press accessibilityRole="togglebutton" accessibilityLabel={c.phrase.likeLabel} accessibilityState={{ checked: liked }} onPress={() => actions.toggleLike('phrase', phrase.id)} style={styles.iconButton}>
         <Icon name="favorite" fill={liked} size={24} color={liked ? 'primaryContainer' : 'secondary'} />
-      </Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel={c.phrase.addToSet} onPress={() => nav.addToSet([phrase.id])} style={styles.iconButton}>
+      </Press>
+      <Press accessibilityRole="button" accessibilityLabel={c.phrase.addToSet} onPress={() => nav.addToSet([phrase.id])} style={styles.iconButton}>
         <Icon name="playlist_add" size={24} color="secondary" />
-      </Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel={c.phrase.notesTitle} onPress={onNotes} style={styles.iconButton}>
+      </Press>
+      <Press accessibilityRole="button" accessibilityLabel={c.phrase.notesTitle} onPress={onNotes} style={styles.iconButton}>
         <Icon name="lightbulb" size={24} color="secondary" />
-      </Pressable>
+      </Press>
     </View>
   );
 }
@@ -423,20 +424,20 @@ function Transport() {
       >
         <Icon name={mode === 'repeat' ? 'repeat' : 'playlist_play'} size={26} color="primaryContainer" />
       </SettingButton>
-      <Pressable accessibilityRole="button" accessibilityLabel={c.player.previous} onPress={actions.prev} style={styles.skip}>
+      <Press accessibilityRole="button" accessibilityLabel={c.player.previous} onPress={actions.prev} style={styles.skip}>
         <Icon name="skip_previous" fill size={34} />
-      </Pressable>
-      <Pressable
+      </Press>
+      <Press
         accessibilityRole="button"
         accessibilityLabel={playing ? c.common.pause : c.common.play}
         onPress={playing ? actions.pause : actions.play}
         style={({ pressed }) => [styles.play, pressed && { transform: [{ scale: 0.95 }] }]}
       >
         <Icon name={playing ? 'pause' : 'play_arrow'} fill size={40} color="onPrimary" />
-      </Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel={c.player.next} onPress={actions.next} style={styles.skip}>
+      </Press>
+      <Press accessibilityRole="button" accessibilityLabel={c.player.next} onPress={actions.next} style={styles.skip}>
         <Icon name="skip_next" fill size={34} />
-      </Pressable>
+      </Press>
       <SettingButton
         label={setting === 'auto' ? c.player.repeats.auto : setting === 1 ? c.player.repeats.one : c.player.repeats.three}
         caption={c.player.captions.reps}
@@ -457,12 +458,12 @@ function Transport() {
 
 function SettingButton({ label, caption, onPress, children }: { label: string; caption: string; onPress: () => void; children: ReactNode }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => [styles.setting, pressed && { backgroundColor: colors.surfaceContainer }]}>
+    <Press accessibilityRole="button" accessibilityLabel={label} haptic="select" onPress={onPress} style={({ pressed }) => [styles.setting, pressed && { backgroundColor: colors.surfaceContainer }]}>
       {children}
       <Txt variant="caption" weight={600} color="primaryContainer" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
         {caption}
       </Txt>
-    </Pressable>
+    </Press>
   );
 }
 
@@ -473,16 +474,17 @@ function SpeedButton() {
   const speed = state.prefs.speed;
   const next = SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length];
   return (
-    <Pressable
+    <Press
       accessibilityRole="button"
       accessibilityLabel={c.player.speedIs(speed)}
+      haptic="select"
       onPress={() => actions.setPrefs({ speed: next })}
       style={({ pressed }) => [styles.speedTarget, pressed && { opacity: 0.7 }]}
     >
       <View style={[styles.speed, speed !== 1 && styles.speedChanged]}>
         <Txt variant="body" weight={700} color={speed !== 1 ? 'inverseOnSurface' : 'onSurface'}>{`${speed}×`}</Txt>
       </View>
-    </Pressable>
+    </Press>
   );
 }
 

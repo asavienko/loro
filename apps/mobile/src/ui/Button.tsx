@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
-import { Pressable, PressableProps, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { Icon, IconName } from './Icon';
+import { Press, PressProps } from './Press';
 import { Txt } from './Txt';
 import { colors, ColorName, radius, TARGET } from './theme';
 
@@ -15,7 +16,7 @@ const LOOK: Record<ButtonVariant, { box: ViewStyle; pressed: ViewStyle; text: Co
   icon: { box: { width: TARGET, height: TARGET }, pressed: { backgroundColor: colors.surfaceContainer }, text: 'onSurface', weight: 600, variant: 'body' },
 };
 
-interface ButtonProps extends Omit<PressableProps, 'style' | 'children'> {
+interface ButtonProps extends Omit<PressProps, 'style' | 'children'> {
   variant?: ButtonVariant;
   label?: string;
   icon?: IconName;
@@ -34,7 +35,7 @@ export function Button({ variant = 'tonal', label, icon, iconFill, color, style,
   const look = LOOK[variant];
   const tint = color ?? look.text;
   return (
-    <Pressable
+    <Press
       accessibilityRole="button"
       accessibilityState={{ disabled: Boolean(disabled) }}
       disabled={disabled}
@@ -49,7 +50,7 @@ export function Button({ variant = 'tonal', label, icon, iconFill, color, style,
         </Txt>
       )}
       {children}
-    </Pressable>
+    </Press>
   );
 }
 
@@ -76,9 +77,10 @@ export function Chip({
   disabled?: boolean;
 }) {
   return (
-    <Pressable
+    <Press
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
+      haptic={toggle ? 'select' : 'tap'}
       accessibilityState={toggle ? { selected, disabled: Boolean(disabled) } : { disabled: Boolean(disabled) }}
       aria-pressed={toggle ? selected : undefined}
       onPress={onPress}
@@ -90,7 +92,7 @@ export function Chip({
           {label}
         </Txt>
       </View>
-    </Pressable>
+    </Press>
   );
 }
 

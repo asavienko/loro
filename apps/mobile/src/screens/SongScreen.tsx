@@ -5,7 +5,7 @@
 // instrumental, never passed off as a sung recording.
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { LayoutChangeEvent, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Song } from '@shared/api/library';
 import { findSet, songCoverUrl } from '@shared/content';
@@ -20,6 +20,7 @@ import { songRating, useRateSong } from '../music/songRating';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
+import { Press } from '../ui/Press';
 import { PullDownWindow, PullHandle } from '../ui/PullDown';
 import { GradeRow, RatedPanel, RatingLine } from '../ui/Rating';
 import { Txt } from '../ui/Txt';
@@ -97,7 +98,7 @@ export function SongScreen() {
           <Txt variant="displaySm" face="serif" weight={600} accessibilityRole="header" style={{ flex: 1 }}>
             {song.title}
           </Txt>
-          <Pressable
+          <Press
             accessibilityRole="togglebutton"
             accessibilityLabel={c.music.likeSong}
             accessibilityState={{ checked: liked }}
@@ -105,7 +106,7 @@ export function SongScreen() {
             style={styles.heart}
           >
             <Icon name="favorite" fill={liked} size={26} color={liked ? 'primaryContainer' : 'secondary'} />
-          </Pressable>
+          </Press>
         </View>
         <View style={styles.badges}>
           <Badge icon={song.audioBy === 'demo' && !song.voiced ? 'graphic_eq' : 'mic'} label={song.audioBy === 'demo' ? (song.voiced ? c.music.spokenDemo : c.music.demoSound) : c.music.sung} />
@@ -120,7 +121,7 @@ export function SongScreen() {
         )}
 
         {/* Where the song is: tap the bar to move there. */}
-        <Pressable
+        <Press
           accessibilityRole="adjustable"
           accessibilityLabel={`${clockTime(music.position)} / ${clockTime(music.duration)}`}
           onLayout={(e: LayoutChangeEvent) => setBarWidth(e.nativeEvent.layout.width)}
@@ -130,7 +131,7 @@ export function SongScreen() {
           <View style={styles.track}>
             <View style={[styles.fill, { width: `${Math.round(share * 100)}%` }]} />
           </View>
-        </Pressable>
+        </Press>
         <View style={styles.times}>
           <Txt variant="label" color="secondary">
             {clockTime(music.position)}
@@ -141,18 +142,18 @@ export function SongScreen() {
         </View>
 
         <View style={styles.controls}>
-          <Pressable accessibilityRole="button" accessibilityLabel={c.music.previous} onPress={music.previous} style={styles.skip}>
+          <Press accessibilityRole="button" accessibilityLabel={c.music.previous} onPress={music.previous} style={styles.skip}>
             <Icon name="skip_previous" fill size={34} />
-          </Pressable>
-          <Pressable
+          </Press>
+          <Press
             accessibilityRole="button"
             accessibilityLabel={music.playing ? c.common.pause : c.common.play}
             onPress={music.toggle}
             style={({ pressed }) => [styles.play, pressed && { transform: [{ scale: 0.95 }] }]}
           >
             <Icon name={music.playing ? 'pause' : 'play_arrow'} fill size={40} color="onPrimary" />
-          </Pressable>
-          <Pressable
+          </Press>
+          <Press
             accessibilityRole="button"
             accessibilityLabel={c.music.next}
             disabled={music.index + 1 >= music.queue.length}
@@ -160,7 +161,7 @@ export function SongScreen() {
             style={[styles.skip, music.index + 1 >= music.queue.length && { opacity: 0.35 }]}
           >
             <Icon name="skip_next" fill size={34} />
-          </Pressable>
+          </Press>
         </View>
 
         <SongRating song={song} />
@@ -182,9 +183,10 @@ export function SongScreen() {
                 const at = before + l;
                 const on = at === active;
                 return (
-                  <Pressable
+                  <Press
                     key={at}
                     accessibilityRole={line.startMs !== null ? 'button' : 'text'}
+                    haptic={line.startMs !== null ? 'tap' : 'none'}
                     disabled={line.startMs === null}
                     onPress={() => line.startMs !== null && music.seek(line.startMs / 1000)}
                     style={[styles.line, on && styles.lineOn]}
@@ -197,7 +199,7 @@ export function SongScreen() {
                         {line.meaning}
                       </Txt>
                     )}
-                  </Pressable>
+                  </Press>
                 );
               })}
             </View>

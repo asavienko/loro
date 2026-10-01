@@ -63,9 +63,10 @@ off; they never include sound
   - `core/fsrs.ts`: scheduling through the Rust core's `core_call`; there is no JavaScript FSRS;
   - `copy/` (English, Bulgarian, Russian), `generate/` (Make a set), `audio/`, `analytics/`, `nav/`
     and `ui/`.
-- **The platform edge — `src/platform/`.** On iOS and Android, `metro.config.js` swaps seven
+- **The platform edge — `src/platform/`.** On iOS and Android, `metro.config.js` swaps eight
   shared modules by resolved path (its `NATIVE` map): saved progress and the key-value store
   (AsyncStorage), the refresh token (expo-secure-store), phrase clips (expo-audio), cues (haptics),
+  touch feedback on the controls (expo-haptics; `src/ui/Press.tsx` and `Toggle.tsx` give it),
   the Rust core (the `LoroCore` module instead of WASM) and the provider sign-in page (an
   expo-web-browser auth session returning to `loro://account`, or `loro-dev://` in a development
   build, with PKCE from expo-crypto). On the web the originals run. `intl.native.ts` adds the Intl

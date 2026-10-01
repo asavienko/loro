@@ -1,10 +1,11 @@
 // A song in a list beside phrases (plan 107): the phrase row's shape, with a music note before its
 // second line to tell it from them. A tap plays it in the one player (or pauses it).
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { Song } from '@shared/api/library';
 import type { Album } from '@shared/content';
 import { useCopy } from '../state/store';
 import { Icon } from '../ui/Icon';
+import { Press } from '../ui/Press';
 import { Txt } from '../ui/Txt';
 import { colors, radius, TARGET } from '../ui/theme';
 import { clockTime, useMusic } from './MusicPlayer';
@@ -19,7 +20,7 @@ export function SongRow({ song, album, leading }: { song: Song; album: Album; le
     .join(' · ');
   return (
     <View style={[styles.row, current && styles.current]}>
-      <Pressable
+      <Press
         accessibilityRole="button"
         accessibilityLabel={playing ? c.common.pause : c.music.playSong(song.title)}
         accessibilityState={{ selected: current }}
@@ -42,10 +43,10 @@ export function SongRow({ song, album, leading }: { song: Song; album: Album; le
             </Txt>
           </View>
         </View>
-      </Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel={playing ? c.common.pause : c.music.playSong(song.title)} onPress={() => (current ? music.toggle() : music.playAlbum(album, [song], 0))} style={({ pressed }) => [styles.more, pressed && styles.pressed]}>
+      </Press>
+      <Press accessibilityRole="button" accessibilityLabel={playing ? c.common.pause : c.music.playSong(song.title)} onPress={() => (current ? music.toggle() : music.playAlbum(album, [song], 0))} style={({ pressed }) => [styles.more, pressed && styles.pressed]}>
         <Icon name={playing ? 'pause' : 'play_arrow'} fill color="primaryContainer" />
-      </Pressable>
+      </Press>
     </View>
   );
 }
