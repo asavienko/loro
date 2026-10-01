@@ -51,14 +51,61 @@ container. The candidate and the new container must pass readiness **and** serve
 `GET /v1/library/pack?target=es-ES`: the first library request seeds Loro's content into the
 database, so a seed that fails stops the release before cutover. Cutover has brief downtime. The
 previous container is kept as `loro-api-previous` (restored to readiness only, since an older image
-may predate the library); roll back by redeploying its image tag:
+may predate the library); roll back by redeploying its image tag with the same runtime file and
+network (without them the container has no database and fails readiness):
 
 ```bash
-ssh ec2-user@HOST 'sudo bash -s -- loro-api:PREVIOUS_TAG' < scripts/ec2-release.sh
+ssh ec2-user@HOST 'sudo bash -s -- loro-api:PREVIOUS_TAG /opt/loro/runtime/api.env loro-backend' \
+  < scripts/ec2-release.sh
 ssh ec2-user@HOST 'sudo docker logs --tail 100 loro-api'
 ```
 
 Migrations must stay backward compatible: rollback never restores an older database over new writes.
+
+## Runtime settings
+
+`/opt/loro/runtime/api.env` (from `secrets/ec2-api.enc.env`; change it there, install it as above,
+then redeploy, since containers read it when they start) holds the API's configuration. The release
+adds `NODE_ENV=production`, `AI_PROVIDER=stub` (the older `/v1/ai` routes only; the library's writer
+follows `ANTHROPIC_API_KEY` alone) and `TRUST_PROXY=1`. What the library uses
+([environments.md](environments.md), `apps/api/.env.example` for every default):
+
+- `DATABASE_URL`, `AUTH_*`: already set by the durable account release; email codes use
+  `AUTH_MAGIC_DELIVERY_URL=inbox:local` (below).
+- `LIBRARY_URL_SECRET`: set it (32+ random characters). Song audio URLs are signed with it; unset,
+  each process signs with its own random secret and every redeploy invalidates them.
+- `TTS_PROVIDER=elevenlabs`, `TTS_API_KEY`, `TTS_MODEL` (`eleven_multilingual_v2` in
+  `.env.example`), `TTS_OUTPUT_FORMAT` (default `mp3_44100_128`): the server's voices speak phrases
+  as `/library/speech/<id>.mp3`. `stub`, the default, renders nothing and the device voice speaks.
+- `TTS_VOICE_ES_ES` (required with `elevenlabs`), `TTS_VOICE_BG_BG`, `TTS_VOICE_RU_RU`,
+  `TTS_VOICE_EN_GB` (English-speaking learners' prompts): one pinned voice per language (Q-15); a
+  language without one gets no clips.
+- `LIMIT_SPEECH_RENDERS_DAILY` (500 server-wide), `LIMIT_SPEECH_OWNER_DAILY` (100 per learner): new
+  clip renders per UTC day; each clip renders once.
+- `TRUST_PROXY`: set to `1` by `scripts/ec2-release.sh`; leave it out of the file.
+- Optional `ANTHROPIC_API_KEY` (`AI_MODEL_GENERATE`): Claude writes decks, notes, covers and lyrics;
+  mind the gateway's 30 s ceiling below. Without it the labelled fallbacks answer.
+- Optional `MUSIC_PROVIDER=elevenlabs` with `MUSIC_API_KEY`: ElevenLabs Music sings songs (MP3, at
+  most two minutes); otherwise the demo.
+- `LIMIT_*_DAILY`, `LIMIT_*_KEPT`: learners' allowances and caps
+  ([library.md](../architecture/library.md)).
+
+Clips and song audio are kept in PostgreSQL (`library_audio`, content-addressed; `library_speech`
+records each utterance's clip and voice), so they live in the `loro-postgres` volume and a redeploy
+renders nothing again; they are also in each pre-release dump. A new voice or model is a new clip
+URL and renders afresh. `TTS_CACHE_DIR` is only the older `/v1/tts` routes' file cache (by default
+the container's `/tmp`, emptied on restart), which the app does not use.
+
+**Reading an email sign-in code.** With `inbox:local` the API writes the latest code request to
+`/tmp/loro-magic-delivery.json` inside the container (mode 600, `{email, code, expires_in}`). The
+image is distroless, so read it with the image's node:
+
+```bash
+ssh ec2-user@HOST 'sudo docker exec loro-api /nodejs/bin/node -p "require(\"fs\").readFileSync(\"/tmp/loro-magic-delivery.json\",\"utf8\")"'
+```
+
+The file holds one request: a second tester asking for a code replaces the first's, so take turns. A
+code lasts ten minutes and allows five tries; a restart empties `/tmp`.
 
 ## Public HTTPS gateway
 
