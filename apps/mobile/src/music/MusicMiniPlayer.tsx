@@ -1,6 +1,7 @@
 // A song in the one player's bar (plan 107): the same bar as a phrase's (src/ui/MiniBar.tsx), told
 // apart by the song's cover and a music-note badge. Tap to open the player; the button plays or
-// pauses; swipe for the next or previous song of the album. Its grades float above the bar
+// pauses; swipe for the next or previous song of the album; paused, close it (its button, or drag it
+// down) and the song unloads. Its grades float above the bar
 // (SongBarGrades) and rate it, as in the player, for the phrases it sings.
 import { useRouter } from 'expo-router';
 import type { Song } from '@shared/api/library';
@@ -42,6 +43,7 @@ export function MusicMiniPlayer() {
         playing={look.playing}
         onToggle={music.toggle}
         next={{ label: c.music.next, onPress: music.next, disabled: atEnd }}
+        onClose={music.stop}
         progress={<MiniProgress share={look.share} />}
       />
     );
@@ -63,6 +65,7 @@ export function MusicMiniPlayer() {
       can={{ next: !atEnd, previous: index > 0 }}
       neighbour={neighbour}
       onSwipe={(side) => music.skip(side)}
+      onClose={music.playing ? undefined : music.stop}
     />
   );
 }
