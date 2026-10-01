@@ -114,7 +114,9 @@ describePostgres('the library against real PostgreSQL', () => {
     }))
   }
 
-  it('serves Loro’s sets, bank and album to anyone', async () => {
+  // The first pack seeds Loro's content and synthesizes its albums' demos: about 4 s alone, more
+  // beside the other test files, past vitest's default 5 s.
+  it('serves Loro’s sets, bank and album to anyone', { timeout: 30_000 }, async () => {
     const pack = await library.pack(null, 'es-ES')
     expect(pack.sets.map((s) => s.id)).toContain('set-cafe')
     expect(pack.sets.every((s) => s.owner === 'loro')).toBe(true)
