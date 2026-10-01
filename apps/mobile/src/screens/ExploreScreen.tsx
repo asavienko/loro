@@ -3,7 +3,7 @@
 import { useRouter } from 'expo-router';
 import { ReactNode, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
-import { Level, librarySets, Phrase, Tag, TOPICS } from '@shared/content';
+import { Level, librarySets, Phrase, Tag, TOPICS, UiLocale } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
 import type { ExploreFilters } from '@shared/nav/routes';
 import { courseSets, coursePhrases, findSetView, phraseKey, promptOf } from '@shared/state/catalog';
@@ -92,7 +92,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
   const now = useNow(30_000);
   const { width, fontScale } = useWindowDimensions();
   const [measured, setMeasured] = useState<number | null>(null);
-  const locale = c.locale.slice(0, 2) as 'en' | 'bg' | 'ru';
+  const locale = c.locale.slice(0, 2) as UiLocale;
   const learner = displayLearner(state); // ratings in their undo window count in each status
   const [text, setText] = useState(filters.q ?? '');
   // Back and links can change the query; the field follows (derived during render).

@@ -14,6 +14,7 @@ import {
   LanguageCode,
   NATIVE_LANGUAGES,
   RENAMED_PHRASE_IDS,
+  sameLanguage,
   TARGET_LANGUAGES,
 } from '../content';
 import { log, reportError } from '../analytics/telemetry';
@@ -146,7 +147,7 @@ function sanitizeProfile(value: unknown): Profile {
   // update) any language the app handles keeps the learner's own choice rather than resetting it.
   const natives: readonly LanguageCode[] = NATIVE_LANGUAGES.length > 0 ? NATIVE_LANGUAGES : LANGUAGE_CODES;
   const native = natives.find((l) => l === value.nativeLang) ?? fresh.nativeLang;
-  const courses = TARGET_LANGUAGES.length > 0 ? coursesFor(native) : LANGUAGE_CODES.filter((l) => l !== native);
+  const courses = TARGET_LANGUAGES.length > 0 ? coursesFor(native) : LANGUAGE_CODES.filter((l) => !sameLanguage(l, native));
   const target = courses.find((l) => l === value.targetLang) ?? (courses.includes(fresh.targetLang) ? fresh.targetLang : (courses[0] ?? fresh.targetLang));
   return {
     name: str(value.name) ? clip(value.name, LIMITS.name) : '',

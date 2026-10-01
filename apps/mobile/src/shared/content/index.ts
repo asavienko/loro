@@ -9,14 +9,14 @@
 // so a module that imported them sees the new content; `contentRevision` changes with each install,
 // for the store to re-render.
 import { apiUrl } from '../api/client';
-import { LANGUAGE_CODES, UI_LOCALES } from './codes';
+import { LANGUAGE_CODES, sameLanguage, UI_LOCALES } from './codes';
 import metaJson from './meta.json';
 import type { BankTheme, Language, LanguageCode, Localized, Meta, NoteTranslations, PhraseJson, SetJson, Topic, UiLocale } from './schema';
 
 export type { LanguageCode, UiLocale, Topic, Language, Localized, Tag, Level, Register, PhraseNotes, PhraseImage, BankTheme } from './schema';
 export type TopicTone = Topic['tone'];
 
-export { LANGUAGE_CODES } from './codes';
+export { LANGUAGE_CODES, sameLanguage } from './codes';
 
 /**
  * The languages the server teaches and speaks in (GET /library/languages, plan 108), filled in place
@@ -465,9 +465,9 @@ export function uiLocaleOf(native: LanguageCode): UiLocale {
   return (UI_LOCALES as readonly string[]).includes(prefix) ? (prefix as UiLocale) : 'en';
 }
 
-/** Courses a learner with this native language can take. */
+/** Courses a learner with this native language can take: never their own language (en-GB nor en-US for English). */
 export function coursesFor(native: LanguageCode): LanguageCode[] {
-  return TARGET_LANGUAGES.filter((code) => code !== native);
+  return TARGET_LANGUAGES.filter((code) => !sameLanguage(code, native));
 }
 
 export const RENAMED_PHRASE_IDS: Record<string, string> = META.renamedPhraseIds;

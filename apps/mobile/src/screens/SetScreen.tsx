@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { keepOpenedSet } from '@shared/api/contentCache';
 import { deleteSet, fetchSet, saveItem, unsaveItem } from '@shared/api/library';
-import { coursesFor, getTopic, Phrase, TopicTone } from '@shared/content';
+import { coursesFor, getTopic, Phrase, TopicTone, UiLocale } from '@shared/content';
 import { languageName } from '@shared/copy';
 import { useNav } from '@shared/nav/NavContext';
 import { findPhrase, findSetView } from '@shared/state/catalog';
@@ -149,7 +149,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
   const isThisSet = state.player.setId === setId;
   const playing = isThisSet && state.player.status === 'playing';
   const duration = setDurationMs(state, view);
-  const locale = c.locale.slice(0, 2) as 'en' | 'bg' | 'ru';
+  const locale = c.locale.slice(0, 2) as UiLocale;
 
   const rows = view.phraseIds
     .map((id, i) => ({ phrase: findPhrase(state.learner, id), position: i + 1 }))

@@ -1,4 +1,4 @@
-// Every learner-facing string, in English. bg.ts and ru.ts must have the same
+// Every learner-facing string, in English. bg.ts, ru.ts, pl.ts and cs.ts must have the same
 // shape (the Copy type enforces it). Numbers arrive already formatted; plurals
 // go through `n()` so each language can use its own plural rules.
 import type { Grade } from '../core/fsrs';

@@ -58,6 +58,6 @@ describe('plurals', () => {
     const keys = (o: object, prefix = ''): string[] =>
       Object.entries(o).flatMap(([k, v]) => (v && typeof v === 'object' && !Array.isArray(v) ? keys(v, `${prefix}${k}.`) : [`${prefix}${k}`]));
     const en = keys(copyFor('en')).sort();
-    for (const locale of ['bg', 'ru'] as const) assert.deepEqual(keys(copyFor(locale)).sort(), en, locale);
+    for (const locale of ['bg', 'ru', 'pl', 'cs'] as const) assert.deepEqual(keys(copyFor(locale)).sort(), en, locale);
   });
 });

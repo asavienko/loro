@@ -2,12 +2,12 @@
 // the app starts (and in content.test.ts), so a typo in content fails loudly
 // instead of rendering `undefined`.
 import { z } from 'zod';
-import { LANGUAGE_CODES, UI_LOCALES } from './codes';
+import { idLanguage, LANGUAGE_CODES, sameLanguage, UI_LOCALES } from './codes';
 
 export const LANGUAGE_CODE = z.enum(LANGUAGE_CODES);
 export const UI_LOCALE = z.enum(UI_LOCALES);
 
-const localized = z.object({ en: z.string().min(1), bg: z.string().min(1), ru: z.string().min(1) });
+const localized = z.object({ en: z.string().min(1), bg: z.string().min(1), ru: z.string().min(1), pl: z.string().min(1), cs: z.string().min(1) });
 /** Text per native language; the phrase's own target language is never a key. */
 const byLanguage = z.partialRecord(LANGUAGE_CODE, z.string().min(1));
 
@@ -160,12 +160,12 @@ export function bankProblems(bank: BankJson, phrases: PhraseJson[], sets: SetJso
   for (const phrase of bank.phrases) {
     if (!themeIds.includes(phrase.theme)) problems.push(`${phrase.id}: unknown theme ${phrase.theme}`);
     if (!languages.find((l) => l.code === phrase.targetLang)?.canTarget) problems.push(`${phrase.id}: ${phrase.targetLang} is not a course language`);
-    if (!phrase.id.includes(`-${phrase.targetLang.slice(0, 2)}-`)) problems.push(`${phrase.id}: id doesn't name its language ${phrase.targetLang}`);
+    if (!phrase.id.includes(`-${idLanguage(phrase.targetLang)}-`)) problems.push(`${phrase.id}: id doesn't name its language ${phrase.targetLang}`);
     if (!phrase.id.startsWith(`bank-${phrase.theme}-`)) problems.push(`${phrase.id}: id doesn't name its theme ${phrase.theme}`);
     const words = phrase.target.trim().split(/\s+/).length;
     if (words > MAX_PHRASE_WORDS) problems.push(`${phrase.id}: ${words} words, at most ${MAX_PHRASE_WORDS}`);
     for (const native of natives) {
-      if (native === phrase.targetLang) {
+      if (sameLanguage(native, phrase.targetLang)) {
         if (phrase.translations[native]) problems.push(`${phrase.id}: translation into its own language`);
       } else if (!phrase.translations[native]) problems.push(`${phrase.id}: missing ${native} translation`);
     }
@@ -180,7 +180,7 @@ export function bankProblems(bank: BankJson, phrases: PhraseJson[], sets: SetJso
     if (noteTranslations) {
       for (const kind of Object.keys(phrase.notes)) {
         for (const native of natives) {
-          if (native === 'en-GB' || native === phrase.targetLang) continue;
+          if (sameLanguage(native, 'en-GB') || sameLanguage(native, phrase.targetLang)) continue;
           if (!noteTranslations[`${phrase.id}.${kind}`]?.[native]) problems.push(`${phrase.id}.${kind}: missing ${native} note`);
         }
       }
@@ -228,7 +228,7 @@ export function contentProblems(input: {
     const target = sets.find((s) => s.id === setIds[0])?.targetLang;
     if (!target) continue;
     for (const native of natives) {
-      if (native === target) {
+      if (sameLanguage(native, target)) {
         if (phrase.translations[native]) problems.push(`${phrase.id}: translation into its own language`);
         continue;
       }
@@ -252,7 +252,7 @@ export function contentProblems(input: {
         const key = `${phrase.id}.${kind}`;
         kinds.add(key);
         for (const native of natives) {
-          if (native === 'en-GB' || native === target) continue;
+          if (sameLanguage(native, 'en-GB') || (target && sameLanguage(native, target))) continue;
           if (!input.noteTranslations[key]?.[native]) problems.push(`${key}: missing ${native} note`);
         }
       }
