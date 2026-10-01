@@ -2,7 +2,7 @@
 // topic, level and tag. The filters live in the route, so Back and links restore them.
 import { useRouter } from 'expo-router';
 import { ReactNode, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { Level, librarySets, Phrase, Tag, TOPICS } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
 import type { ExploreFilters } from '@shared/nav/routes';
@@ -14,6 +14,7 @@ import { useCopy, useNow, useStore } from '../state/store';
 import { Button, Chip } from '../ui/Button';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
+import { Press } from '../ui/Press';
 import { MakeSetButton, PhraseShelves } from './PhraseShelves';
 import { progressLabel } from '../ui/progressLabel';
 import { SetCard } from '../ui/SetCard';
@@ -289,9 +290,10 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
         {tiles && (
           <View accessibilityLabel={c.explore.topics} style={styles.topics}>
             {courseTopics.map(({ topic: t, count }) => (
-              <Pressable
+              <Press
                 key={t.id}
                 accessibilityRole="button"
+                haptic="select"
                 accessibilityLabel={`${t.title[locale]}, ${c.explore.sets(count)}`}
                 onPress={() => update({ topic: t.id })}
                 style={({ pressed }) => [styles.topic, { backgroundColor: TONE[t.tone].bg }, pressed && { opacity: 0.85 }]}
@@ -303,7 +305,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
                 <Txt variant="label" weight={600} color={TONE[t.tone].ink} style={styles.topicCount}>
                   {count}
                 </Txt>
-              </Pressable>
+              </Press>
             ))}
           </View>
         )}
@@ -337,7 +339,7 @@ function PhraseResult({ phrase, words, detail }: { phrase: Phrase; words: string
   const status = phrase.own ? `${detail} · ${c.phrase.yoursShort}` : detail;
   return (
     <View style={styles.result}>
-      <Pressable
+      <Press
         accessibilityRole="button"
         accessibilityLabel={c.phrase.play(phrase.target)}
         onPress={() => nav.playPhraseInSet(phrase.id)}
@@ -352,10 +354,10 @@ function PhraseResult({ phrase, words, detail }: { phrase: Phrase; words: string
           </Txt>
           <Txt variant="label" color="onSurfaceVariant">{` · ${status}`}</Txt>
         </Txt>
-      </Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel={c.phrase.details(phrase.target)} onPress={() => nav.showDetails(phrase.id)} style={({ pressed }) => [styles.more, pressed && styles.pressed]}>
+      </Press>
+      <Press accessibilityRole="button" accessibilityLabel={c.phrase.details(phrase.target)} onPress={() => nav.showDetails(phrase.id)} style={({ pressed }) => [styles.more, pressed && styles.pressed]}>
         <Icon name="more_vert" color="secondary" />
-      </Pressable>
+      </Press>
     </View>
   );
 }
@@ -363,14 +365,14 @@ function PhraseResult({ phrase, words, detail }: { phrase: Phrase; words: string
 /** A filter that is on, as a chip that removes it. */
 function RemovableChip({ label, accessibilityLabel, onPress }: { label: string; accessibilityLabel: string; onPress: () => void }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} onPress={onPress} style={({ pressed }) => [styles.chipTarget, pressed && { opacity: 0.8 }]}>
+    <Press accessibilityRole="button" accessibilityLabel={accessibilityLabel} haptic="select" onPress={onPress} style={({ pressed }) => [styles.chipTarget, pressed && { opacity: 0.8 }]}>
       <View style={styles.removable}>
         <Txt weight={600} color="inverseOnSurface" numberOfLines={1}>
           {label}
         </Txt>
         <Icon name="close" size="sm" color="inverseOnSurface" />
       </View>
-    </Pressable>
+    </Press>
   );
 }
 

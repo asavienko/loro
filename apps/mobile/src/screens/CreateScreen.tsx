@@ -4,7 +4,7 @@
 // from an item's own artwork, not from here.
 import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { albumsForCourse, librarySets } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
 import { AlbumCover } from '../music/AlbumCover';
@@ -13,6 +13,7 @@ import { useCopy, useStore } from '../state/store';
 import { Banner } from '../ui/Banner';
 import { Button } from '../ui/Button';
 import { Icon, IconName } from '../ui/Icon';
+import { Press } from '../ui/Press';
 import { resetTime } from '../ui/problems';
 import { SetCover } from '../ui/SetCover';
 import { TopBar } from '../ui/TopBar';
@@ -77,7 +78,7 @@ export function CreateScreen() {
               {c.phrasesTab.yourSets}
             </Txt>
             {mySets.map((set) => (
-              <Pressable key={set.id} accessibilityRole="button" onPress={() => nav.openSet(set.id)} style={({ pressed }) => [styles.item, pressed && styles.pressed]}>
+              <Press key={set.id} accessibilityRole="button" onPress={() => nav.openSet(set.id)} style={({ pressed }) => [styles.item, pressed && styles.pressed]}>
                 <SetCover set={set} px={48} rounded={10} />
                 <View style={{ flex: 1 }}>
                   <Txt variant="row" weight={600} numberOfLines={1}>
@@ -88,7 +89,7 @@ export function CreateScreen() {
                   </Txt>
                 </View>
                 <Icon name="chevron_right" color="secondary" />
-              </Pressable>
+              </Press>
             ))}
           </View>
         )}
@@ -98,7 +99,7 @@ export function CreateScreen() {
               {c.music.yours}
             </Txt>
             {myAlbums.map((album) => (
-              <Pressable key={album.id} accessibilityRole="button" onPress={() => nav.openAlbum(album.id)} style={({ pressed }) => [styles.item, pressed && styles.pressed]}>
+              <Press key={album.id} accessibilityRole="button" onPress={() => nav.openAlbum(album.id)} style={({ pressed }) => [styles.item, pressed && styles.pressed]}>
                 <AlbumCover url={album.coverUrl} px={48} rounded={10} />
                 <View style={{ flex: 1 }}>
                   <Txt variant="row" weight={600} numberOfLines={1}>
@@ -109,7 +110,7 @@ export function CreateScreen() {
                   </Txt>
                 </View>
                 <Icon name="chevron_right" color="secondary" />
-              </Pressable>
+              </Press>
             ))}
           </View>
         )}
@@ -125,7 +126,7 @@ export function CreateScreen() {
  */
 function Card({ icon, title, body, meta, tone, onPress }: { icon: IconName; title: string; body: string; meta?: string; tone: 'phrases' | 'music'; onPress: () => void }) {
   return (
-    <Pressable
+    <Press
       accessibilityRole="button"
       accessibilityLabel={[title, body, meta].filter(Boolean).join('. ')}
       onPress={onPress}
@@ -150,7 +151,7 @@ function Card({ icon, title, body, meta, tone, onPress }: { icon: IconName; titl
           </Txt>
         )}
       </View>
-    </Pressable>
+    </Press>
   );
 }
 

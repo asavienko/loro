@@ -3,12 +3,13 @@
 // says what to do. Once a grade is given the grades go for the rating's window: in their place, the
 // grade given, what it did and Undo.
 import { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { Grade } from '@shared/state/types';
 import { useCopy } from '../state/store';
 import { Button } from './Button';
 import { GRADES } from './grades';
 import { Icon } from './Icon';
+import { Press } from './Press';
 import { Txt } from './Txt';
 import { radius, TARGET } from './theme';
 import { useRoom } from './useRoom';
@@ -22,9 +23,10 @@ export function GradeRow({ onRate }: { onRate: (grade: Grade) => void }) {
   return (
     <View style={[styles.grades, compact && styles.gradesCompact]}>
       {GRADES.map(({ grade, icon, bg, ink }) => (
-        <Pressable
+        <Press
           key={grade}
           accessibilityRole="button"
+          haptic="none"
           onPress={() => onRate(grade)}
           style={({ pressed }) => [styles.grade, { backgroundColor: bg }, pressed && { opacity: 0.8 }]}
         >
@@ -33,7 +35,7 @@ export function GradeRow({ onRate }: { onRate: (grade: Grade) => void }) {
           <Txt weight={600} color={ink} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={styles.shrink}>
             {c.common.grade[grade]}
           </Txt>
-        </Pressable>
+        </Press>
       ))}
     </View>
   );

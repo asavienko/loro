@@ -1,7 +1,8 @@
 import { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { SetView } from '@shared/state/catalog';
 import { Icon } from './Icon';
+import { Press } from './Press';
 import { SetCover } from './SetCover';
 import { Txt } from './Txt';
 import { colors, radius } from './theme';
@@ -22,7 +23,7 @@ export function SetRow({
 }) {
   return (
     <View style={styles.row}>
-      <Pressable accessibilityRole="button" onPress={onOpen} disabled={disabled} style={({ pressed }) => [styles.main, pressed && styles.pressed]}>
+      <Press accessibilityRole="button" onPress={onOpen} disabled={disabled} style={({ pressed }) => [styles.main, pressed && styles.pressed]}>
         <SetCover set={set} px={56} rounded={12} />
         <View style={styles.text}>
           <Txt variant="row" face="serif" weight={600} numberOfLines={1} lang={set.targetLang}>
@@ -33,7 +34,7 @@ export function SetRow({
           </Txt>
         </View>
         {!action && !disabled && <Icon name="chevron_right" color="secondary" />}
-      </Pressable>
+      </Press>
       {action && <View style={styles.action}>{action}</View>}
     </View>
   );

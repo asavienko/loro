@@ -2,10 +2,11 @@
 // remembering the phrase), the grammar rule and its sounds, in the learner's language where there is
 // a version in it.
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { Phrase, PhraseNotes } from '@shared/content';
 import { useCopy, useStore } from '../state/store';
 import { Icon, IconName } from './Icon';
+import { Press } from './Press';
 import { Txt } from './Txt';
 import { colors, radius, shadow, TARGET } from './theme';
 import { useRoom } from './useRoom';
@@ -34,7 +35,7 @@ export function PhraseNotesView({ phrase }: { phrase: Phrase }) {
         {NOTE_TABS.map((t) => {
           const on = t.id === tab;
           return (
-            <Pressable
+            <Press
               key={t.id}
               accessibilityRole="tab"
               accessibilityLabel={c.phrase.notes[t.id]}
@@ -48,7 +49,7 @@ export function PhraseNotesView({ phrase }: { phrase: Phrase }) {
                   {c.phrase.notes[t.id]}
                 </Txt>
               )}
-            </Pressable>
+            </Press>
           );
         })}
       </View>

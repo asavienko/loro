@@ -23,6 +23,20 @@ export default tseslint.config(
         { selector: "NewExpression[callee.name='Date']", message: 'Use src/shared/state/clock.ts; it is the only module that builds a Date.' },
         { selector: "CallExpression[callee.object.name='Date'][callee.property.name='now']", message: 'Use clock.now() from src/shared/state/clock.ts.' },
       ],
+      // Controls are pressed through src/ui/Press.tsx and switched through src/ui/Toggle.tsx, which
+      // give the touch feedback.
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'react-native',
+              importNames: ['Pressable', 'Switch', 'TouchableOpacity', 'TouchableHighlight', 'TouchableWithoutFeedback'],
+              message: 'Use Press (src/ui/Press.tsx) or Toggle (src/ui/Toggle.tsx): they give the touch feedback.',
+            },
+          ],
+        },
+      ],
     },
   },
   {

@@ -6,7 +6,7 @@
 // to go on with, they say so for as long as the queue stays ended.
 import { usePathname } from 'expo-router';
 import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleSheet, View, ViewStyle } from 'react-native';
 import Animated, { FadeIn, FadeOut, useReducedMotion } from 'react-native-reanimated';
 import type { Copy } from '@shared/copy';
 import { useLatest } from '@shared/lib/useLatest';
@@ -20,6 +20,7 @@ import { PassNotice, passMark, passNotice, passNoticeHolds } from '@shared/ui/pa
 import { useCopy, useStore } from '../state/store';
 import { Button } from '../ui/Button';
 import { Icon, IconName } from '../ui/Icon';
+import { Press } from '../ui/Press';
 import { useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
 import { colors, radius, shadow, TARGET } from '../ui/theme';
@@ -155,9 +156,9 @@ export function PassCard({ style }: { style?: ViewStyle }) {
             </Txt>
           )}
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel={c.toast.dismiss} onPress={close} style={({ pressed }) => [styles.close, pressed && { backgroundColor: colors.surfaceContainerHigh }]}>
+        <Press accessibilityRole="button" accessibilityLabel={c.toast.dismiss} onPress={close} style={({ pressed }) => [styles.close, pressed && { backgroundColor: colors.surfaceContainerHigh }]}>
           <Icon name="close" size="md" color="secondary" />
-        </Pressable>
+        </Press>
       </View>
       {go ? (
         <Button

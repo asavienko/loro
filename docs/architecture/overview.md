@@ -45,8 +45,8 @@ graph TB
 - **Native replacements** live in `src/platform/`. On iOS and Android `metro.config.js` swaps them
   in for their shared originals by resolved path: progress storage and the key-value store
   (AsyncStorage), the refresh token (Keychain/Keystore), phrase clips (`expo-audio`), cues
-  (haptics), provider sign-in (an auth session) and the Rust core (the `LoroCore` module). On the
-  web the originals run.
+  (haptics), touch feedback on the controls (haptics), provider sign-in (an auth session) and the
+  Rust core (the `LoroCore` module). On the web the originals run.
 - **State.** Learner progress is an append-only log plus a few last-writer-wins fields. Every change
   goes through `transition(state, event)`; the allowed events are in `state/chart.ts`. Numbers on
   screen come from `state/selectors.ts`. Only `state/clock.ts` reads the time (lint-enforced).

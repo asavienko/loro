@@ -5,7 +5,7 @@
 // its card, and the next item's come in with its own (barShift). Before them, a way on may show
 // (`lead`): the next set at the end of a pass.
 import { useEffect, useState } from 'react';
-import { Keyboard, Pressable, StyleSheet, View } from 'react-native';
+import { Keyboard, StyleSheet, View } from 'react-native';
 import Animated, { Extrapolation, FadeIn, FadeInDown, FadeOut, interpolate, useAnimatedStyle, useReducedMotion, ZoomIn } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 import { clock } from '@shared/state/clock';
@@ -15,6 +15,7 @@ import { useCopy } from '../state/store';
 import { useBarShift } from './barShift';
 import { GRADES } from './grades';
 import { Icon, IconName } from './Icon';
+import { Press } from './Press';
 import { Txt } from './Txt';
 import { colors, TARGET } from './theme';
 
@@ -52,7 +53,7 @@ export function BarGrades({ view, onRate, onUndo, lead }: { view: BarRating; onR
       <Animated.View entering={reduce ? undefined : FadeInDown.duration(200)} exiting={reduce ? undefined : FadeOut.duration(180)} style={styles.row} pointerEvents="box-none">
         {lead && (
           <Animated.View entering={reduce ? undefined : FadeIn.duration(160)} exiting={reduce ? undefined : FadeOut.duration(140)} style={styles.leadSlot}>
-            <Pressable
+            <Press
               accessibilityRole="button"
               accessibilityLabel={lead.accessibilityLabel}
               onPress={lead.onPress}
@@ -62,7 +63,7 @@ export function BarGrades({ view, onRate, onUndo, lead }: { view: BarRating; onR
               <Txt variant="label" weight={700} color="onPrimary" numberOfLines={1} style={styles.leadText}>
                 {lead.label}
               </Txt>
-            </Pressable>
+            </Press>
           </Animated.View>
         )}
         {view.kind !== 'none' && GRADES.map(({ grade, icon, bg, ink }) => {
@@ -71,7 +72,7 @@ export function BarGrades({ view, onRate, onUndo, lead }: { view: BarRating; onR
             if (grade !== view.grade) return <View key={grade} style={styles.slot} pointerEvents="none" />;
             return (
               <Animated.View key={`undo:${view.at}`} entering={reduce ? undefined : ZoomIn.duration(160)} exiting={reduce ? undefined : FadeOut.duration(160)}>
-                <Pressable
+                <Press
                   accessibilityRole="button"
                   accessibilityLabel={c.player.undoGrade(c.common.grade[grade])}
                   onPress={onUndo}
@@ -79,20 +80,21 @@ export function BarGrades({ view, onRate, onUndo, lead }: { view: BarRating; onR
                 >
                   <Countdown at={view.at} color={colors[ink]} />
                   <Icon name="undo" size="base" color={ink} />
-                </Pressable>
+                </Press>
               </Animated.View>
             );
           }
           return (
             <Animated.View key={grade} entering={reduce ? undefined : FadeIn.duration(160)} exiting={reduce ? undefined : FadeOut.duration(140)}>
-              <Pressable
+              <Press
                 accessibilityRole="button"
+                haptic="none"
                 accessibilityLabel={c.player.rateAs(c.common.grade[grade])}
                 onPress={() => onRate(grade)}
                 style={({ pressed }) => [styles.button, { backgroundColor: bg }, pressed && styles.pressed]}
               >
                 <Icon name={icon} size="base" color={ink} />
-              </Pressable>
+              </Press>
             </Animated.View>
           );
         })}

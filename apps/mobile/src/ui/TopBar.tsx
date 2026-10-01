@@ -1,11 +1,12 @@
 import { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { languageName } from '@shared/copy';
 import { getLanguage } from '@shared/content';
 import { points as pointsOf } from '@shared/state/selectors';
 import { useCopy, useStore } from '../state/store';
 import { Icon } from './Icon';
+import { Press } from './Press';
 import { Txt } from './Txt';
 import { colors, radius, shadow, TARGET } from './theme';
 import { useRoom } from './useRoom';
@@ -25,11 +26,11 @@ export function TopBar({ title, titleLang, onBack, onOpenSettings, action }: { t
     <View style={[styles.bar, { paddingTop: insets.top }]}>
       <View style={styles.row}>
         {onBack ? (
-          <Pressable accessibilityRole="button" accessibilityLabel={c.common.back} onPress={onBack} style={({ pressed }) => [styles.icon, pressed && styles.pressed]}>
+          <Press accessibilityRole="button" accessibilityLabel={c.common.back} onPress={onBack} style={({ pressed }) => [styles.icon, pressed && styles.pressed]}>
             <Icon name="arrow_back" size="lg" />
-          </Pressable>
+          </Press>
         ) : (
-          <Pressable
+          <Press
             accessibilityRole="button"
             accessibilityLabel={c.nav.settings(name)}
             accessibilityHint={c.nav.learning(languageName(targetLang, c.locale))}
@@ -50,7 +51,7 @@ export function TopBar({ title, titleLang, onBack, onOpenSettings, action }: { t
                 </Txt>
               </View>
             </View>
-          </Pressable>
+          </Press>
         )}
         <View style={styles.title}>
           {title && (
