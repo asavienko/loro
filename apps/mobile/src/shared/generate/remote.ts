@@ -1,8 +1,9 @@
 // The API's phrase and notes writers (plan 106: POST /library/generate/phrases and /notes), the only
 // place suggestions and notes come from (plan 108). The server answers with Claude where it writes,
-// otherwise with its phrase bank (phrases) or its written rules (notes), and says which. A failure
-// is the caller's to show. The app ships without zod, so the reply is checked by hand.
-import { api, apiUrl } from '../api/client';
+// otherwise with its phrase bank (phrases) or its written rules (notes), and says which; a deck
+// Claude is still writing is answered `202 {status: 'writing'}` and asked for again. A failure is
+// the caller's to show. The app ships without zod, so the reply is checked by hand.
+import { api, ApiError, apiUrl } from '../api/client';
 import type { LanguageCode } from '../content';
 import { ICON_NAMES } from '../ui/icons';
 import type { OwnNotes } from '../state/types';
@@ -13,6 +14,13 @@ export const NOTES_URL = apiUrl('/library/generate/notes');
 
 /** Writing a dozen phrases takes a while; a writer that hangs longer than this has failed. */
 const SUGGEST_TIMEOUT_MS = 90_000;
+/**
+ * A deck AI is still writing is answered "writing" within about 20 s (the server's gateway gives up
+ * at 30 s); the app asks again, the same way, this many times before giving up.
+ */
+const WRITING_ROUNDS = 8;
+/** One of those asks: the server answers well inside it. */
+const ROUND_TIMEOUT_MS = 35_000;
 /** What the server accepts as phrases not to write again. */
 const MAX_AVOID = 100;
 const MAX_TEXT = 120;
@@ -105,16 +113,40 @@ export async function writeNotes(
   return { provider: isObject(body) && body.provider === 'rules' ? 'rules' : 'claude', notes, image };
 }
 
-/** Phrases written for the request, none of `avoid`; throws when the server can't be asked or answers nonsense. */
+/** The server's answer while AI is still writing the deck: ask again, the same way, for it. */
+export const stillWriting = (body: unknown): boolean => isObject(body) && body.status === 'writing';
+
+/**
+ * Phrases written for the request, none of `avoid`; throws when the server can't be asked or answers
+ * nonsense. While AI writes, the server answers "writing" and the same request is asked again.
+ */
 export async function writePhrases(request: SuggestRequest, avoid: string[], signal?: AbortSignal): Promise<WrittenPhrases> {
-  const body = await api<unknown>('/library/generate/phrases', {
-    method: 'POST',
-    body: { ...request, avoid: avoid.slice(-MAX_AVOID).map((a) => a.slice(0, MAX_TEXT)) },
-    auth: 'required',
-    timeoutMs: SUGGEST_TIMEOUT_MS,
-    signal,
+  const asked = { ...request, avoid: avoid.slice(-MAX_AVOID).map((a) => a.slice(0, MAX_TEXT)) };
+  for (let round = 1; ; round++) {
+    const body = await api<unknown>('/library/generate/phrases', { method: 'POST', body: asked, auth: 'required', timeoutMs: ROUND_TIMEOUT_MS, signal });
+    if (!stillWriting(body)) {
+      const written = readPhrases(body);
+      if (!written) throw new Error('unreadable reply');
+      return written;
+    }
+    if (round >= WRITING_ROUNDS) throw new ApiError(0, 'TIMEOUT', 'The server took too long');
+    await pause(1_000, signal);
+  }
+}
+
+/** Waits `ms`, or stops at once when `signal` aborts. */
+function pause(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(new ApiError(0, 'CANCELLED', 'Cancelled'));
+    const timer = setTimeout(done, ms);
+    function done() {
+      signal?.removeEventListener('abort', cancel);
+      resolve();
+    }
+    function cancel() {
+      clearTimeout(timer);
+      reject(new ApiError(0, 'CANCELLED', 'Cancelled'));
+    }
+    signal?.addEventListener('abort', cancel, { once: true });
   });
-  const written = readPhrases(body);
-  if (!written) throw new Error('unreadable reply');
-  return written;
 }
