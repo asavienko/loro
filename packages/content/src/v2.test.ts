@@ -10,10 +10,10 @@ describe('the languages the app offers', () => {
   })
 
   it('are spoken by the app where it has an interface in them', () => {
-    expect(V2_NATIVES).toEqual(['en-GB', 'bg-BG', 'ru-RU'])
+    expect(V2_NATIVES).toEqual(['en-GB', 'en-US', 'bg-BG', 'ru-RU', 'pl-PL', 'cs-CZ'])
     for (const language of V2_LANGUAGES) {
       expect(language.flag.length).toBeGreaterThan(0)
-      expect([null, 'en', 'bg', 'ru']).toContain(language.uiLocale)
+      expect([null, 'en', 'bg', 'ru', 'pl', 'cs']).toContain(language.uiLocale)
       if (language.uiLocale) expect(language.code.startsWith(language.uiLocale)).toBe(true)
     }
   })
