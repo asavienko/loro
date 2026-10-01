@@ -434,6 +434,7 @@ export function makeBg(n: Plural): Copy {
     settings: {
       title: 'Настройки',
       switched: (language, queueCleared) => `Курс: ${language}${queueCleared ? '. Опашката е изчистена' : ''}`,
+      courseUnavailable: (language) => `Курсът не можа да се изтегли: ${language}. Проверете връзката и опитайте отново.`,
       profile: 'Профил',
       name: 'Име',
       native: 'Говоря',
@@ -494,6 +495,7 @@ export function makeBg(n: Plural): Copy {
       offlineTitle: 'Loro не може да се свърже със сървъра',
       offlineBody: 'Курсът се изтегля веднъж и после работи без връзка. Проверете връзката и опитайте отново.',
       retry: 'Опитай отново',
+      useCourse: (language) => `Продължи с курса: ${language}`,
     },
     account: {
       title: 'Профил',

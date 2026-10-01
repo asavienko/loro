@@ -298,6 +298,22 @@ export function installExtras(more: ExtraSets): void {
   rebuild();
 }
 
+/**
+ * Keeps only Loro's own sets and albums in every installed pack (after signing out: the packs held
+ * the learner's own and saved ones too) and forgets the sets opened from outside them. Returns the
+ * packs as they are now, to be saved.
+ */
+export function keepOnlyLoros(): ContentPack[] {
+  for (const [lang, pack] of packs) {
+    const sets = pack.sets.filter((s) => s.owner === 'loro');
+    const ids = new Set(sets.map((s) => s.id));
+    packs.set(lang, { ...pack, sets, phrases: pack.phrases.filter((p) => ids.has(p.setId)), albums: pack.albums.filter((a) => a.owner === 'loro') });
+  }
+  extras = { sets: [], phrases: [] };
+  rebuild();
+  return [...packs.values()];
+}
+
 /** Forgets the sets opened from outside the packs. */
 export function forgetExtras(): void {
   extras = { sets: [], phrases: [] };

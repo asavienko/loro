@@ -1,6 +1,7 @@
 // While the course's content is on its way (plan 106): the first launch downloads it, and without a
 // connection the app says so plainly and offers to try again. Once one copy is installed the app
-// opens offline and this never shows.
+// opens offline and this never shows, unless the course changed (on another device) to one this
+// device doesn't have: then it also offers to keep learning the one it has.
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ContentStatus } from '../state/content';
@@ -10,7 +11,7 @@ import { Icon } from '../ui/Icon';
 import { Txt } from '../ui/Txt';
 import { colors } from '../ui/theme';
 
-export function ConnectionScreen({ status, onRetry }: { status: ContentStatus; onRetry: () => void }) {
+export function ConnectionScreen({ status, onRetry, fallback }: { status: ContentStatus; onRetry: () => void; fallback?: { label: string; onPress: () => void } }) {
   const c = useCopy();
   const insets = useSafeAreaInsets();
   return (
@@ -32,6 +33,7 @@ export function ConnectionScreen({ status, onRetry }: { status: ContentStatus; o
             {c.connection.offlineBody}
           </Txt>
           <Button variant="primary" icon="refresh" label={c.connection.retry} onPress={onRetry} />
+          {fallback && <Button variant="text" label={fallback.label} onPress={fallback.onPress} />}
         </View>
       )}
     </View>
