@@ -6,6 +6,7 @@
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Switch, TextInput, useWindowDimensions, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createSet, generateCover, updateSet } from '@shared/api/library';
 import { Playback, speak } from '@shared/audio/speech';
@@ -229,59 +230,62 @@ function MakeSet({ request }: { request: MakeRequest }) {
           </View>
         </PullHandle>
 
-        <ScrollView style={styles.flex} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          {!signedIn && (
-            <Banner icon="account_circle" action={<Button variant="primarySm" label={c.account.signIn} onPress={nav.openAccount} />} style={styles.signIn}>
-              <Txt variant="row">{c.account.needed}</Txt>
-            </Banner>
-          )}
-          {signedIn && session.step === 'ask' && (
-            <AskStep
-              session={session}
-              writer={account.usage?.writers.phrases ?? null}
-              pending={pending}
-              onChange={update}
-              onAsk={askFor}
-              onBackToDeck={keptCount > 0 ? () => update({ step: 'deck' }) : undefined}
-            />
-          )}
-          {signedIn && session.step === 'deck' && session.deck && (
-            <DeckStep
-              session={session}
-              travel={travel}
-              pending={pending !== null}
-              onDecide={(add) => {
-                const card = session.deck && currentCard(session.deck);
-                if (!card) return;
-                setTravel({ direction: add ? 1 : -1, returning: false });
-                setSession((s) => ({ ...s, deck: s.deck && decide(s.deck, add) }));
-                announce(add ? c.make.announceAdded(card.target) : c.make.announceSkipped(card.target));
-              }}
-              onUndo={() => {
-                const last = session.deck && lastDecision(session.deck);
-                if (!last) return;
-                setTravel({ direction: last.added ? 1 : -1, returning: true });
-                setSession((s) => ({ ...s, deck: s.deck && undo(s.deck) }));
-                announce(c.make.undoLabel(last.card.target));
-              }}
-              onEdit={(key, target, native) => setSession((s) => ({ ...s, deck: s.deck && edit(s.deck, key, target, native) }))}
-              onMore={() => session.asked && void ask(session.asked, true)}
-              onAnother={() => update({ step: 'ask', nothingFor: null })}
-              onSave={() => update({ step: 'save' })}
-            />
-          )}
-          {signedIn && session.step === 'save' && session.deck && (
-            <SaveStep
-              session={session}
-              into={into?.title}
-              onTitle={(title) => update({ title })}
-              onRemove={(key) => setSession((s) => ({ ...s, deck: s.deck && unadd(s.deck, key) }))}
-              onBack={() => update({ step: 'deck' })}
-              onSave={(title, withCover) => void saveToAccount(title, withCover)}
-              saving={saving}
-            />
-          )}
-        </ScrollView>
+        {/* A card being corrected sits mid-screen: the keyboard shortens the page instead of covering it. */}
+        <KeyboardAvoidingView behavior="padding" style={styles.flex}>
+          <ScrollView style={styles.flex} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+            {!signedIn && (
+              <Banner icon="account_circle" action={<Button variant="primarySm" label={c.account.signIn} onPress={nav.openAccount} />} style={styles.signIn}>
+                <Txt variant="row">{c.account.needed}</Txt>
+              </Banner>
+            )}
+            {signedIn && session.step === 'ask' && (
+              <AskStep
+                session={session}
+                writer={account.usage?.writers.phrases ?? null}
+                pending={pending}
+                onChange={update}
+                onAsk={askFor}
+                onBackToDeck={keptCount > 0 ? () => update({ step: 'deck' }) : undefined}
+              />
+            )}
+            {signedIn && session.step === 'deck' && session.deck && (
+              <DeckStep
+                session={session}
+                travel={travel}
+                pending={pending !== null}
+                onDecide={(add) => {
+                  const card = session.deck && currentCard(session.deck);
+                  if (!card) return;
+                  setTravel({ direction: add ? 1 : -1, returning: false });
+                  setSession((s) => ({ ...s, deck: s.deck && decide(s.deck, add) }));
+                  announce(add ? c.make.announceAdded(card.target) : c.make.announceSkipped(card.target));
+                }}
+                onUndo={() => {
+                  const last = session.deck && lastDecision(session.deck);
+                  if (!last) return;
+                  setTravel({ direction: last.added ? 1 : -1, returning: true });
+                  setSession((s) => ({ ...s, deck: s.deck && undo(s.deck) }));
+                  announce(c.make.undoLabel(last.card.target));
+                }}
+                onEdit={(key, target, native) => setSession((s) => ({ ...s, deck: s.deck && edit(s.deck, key, target, native) }))}
+                onMore={() => session.asked && void ask(session.asked, true)}
+                onAnother={() => update({ step: 'ask', nothingFor: null })}
+                onSave={() => update({ step: 'save' })}
+              />
+            )}
+            {signedIn && session.step === 'save' && session.deck && (
+              <SaveStep
+                session={session}
+                into={into?.title}
+                onTitle={(title) => update({ title })}
+                onRemove={(key) => setSession((s) => ({ ...s, deck: s.deck && unadd(s.deck, key) }))}
+                onBack={() => update({ step: 'deck' })}
+                onSave={(title, withCover) => void saveToAccount(title, withCover)}
+                saving={saving}
+              />
+            )}
+          </ScrollView>
+        </KeyboardAvoidingView>
       </PullDownWindow>
     </ToastOffsetContext.Provider>
   );
