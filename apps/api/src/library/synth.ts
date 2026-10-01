@@ -62,14 +62,36 @@ function degree(tonic: number, step: number): number {
   return tonic + octave * 12 + (MAJOR[index] ?? 0)
 }
 
-/** Plays one lyric line per two bars in the style; the same seed always gives the same track. */
 /** The synthesizer's sample rate; spoken lines mixed in must be mono 16-bit PCM at this rate. */
 export const DEMO_SAMPLE_RATE = RATE
 
 /**
+ * The largest demo WAV (header included). Song audio reaches the app through the HTTPS gateway,
+ * whose Lambda refuses replies over 6 MB and sends audio base64, a third larger
+ * (docs/process/ec2-deployment.md): 4 MiB is about 5.6 MB on the wire. A slow 72 bpm ballad of 15
+ * lines would be 5 MB.
+ */
+export const MAX_DEMO_WAV_BYTES = 4 * 1024 * 1024
+
+/** Samples in a demo of `lines` lyric lines in the style. */
+function demoSamples(spec: Style, lines: number): number {
+  const bars = INTRO_BARS + lines * BARS_PER_LINE + OUTRO_BARS
+  return Math.ceil((bars * BEATS_PER_BAR * (60 / spec.bpm) + 1.5) * RATE)
+}
+
+/** How many whole lyric lines a demo in the style sings within MAX_DEMO_WAV_BYTES. */
+export function demoLineLimit(style: MusicStyleId): number {
+  const spec = STYLES[style]
+  let lines = 1
+  while (44 + demoSamples(spec, lines + 1) * 2 <= MAX_DEMO_WAV_BYTES) lines++
+  return lines
+}
+
+/**
  * Plays one lyric line per two bars in the style; the same seed always gives the same track. A line
  * with `voices[i]` (mono 16-bit PCM at DEMO_SAMPLE_RATE) is spoken over its bars, the music ducked
- * under it.
+ * under it. It sings at most `demoLineLimit(style)` lines, whole ones: the caller's lyrics stop
+ * where `lines` does.
  */
 export function synthesizeDemo(
   style: MusicStyleId,
@@ -81,9 +103,9 @@ export function synthesizeDemo(
   const rand = random(`${style}:${seed}`)
   const tonic = 55 + Math.floor(rand() * 8) // G3 to D4
   const beat = 60 / spec.bpm
-  const bars = INTRO_BARS + Math.max(1, lineCount) * BARS_PER_LINE + OUTRO_BARS
-  const seconds = bars * BEATS_PER_BAR * beat + 1.5
-  const length = Math.ceil(seconds * RATE)
+  const sung = Math.min(Math.max(1, lineCount), demoLineLimit(style))
+  const bars = INTRO_BARS + sung * BARS_PER_LINE + OUTRO_BARS
+  const length = demoSamples(spec, sung)
   const out = new Float32Array(length)
 
   const add = (start: number, duration: number, voice: (t: number, i: number) => number) => {
@@ -162,7 +184,7 @@ export function synthesizeDemo(
     }
   }
 
-  const lines: LineTiming[] = Array.from({ length: Math.max(1, lineCount) }, (_, line) => {
+  const lines: LineTiming[] = Array.from({ length: sung }, (_, line) => {
     const start = (INTRO_BARS + line * BARS_PER_LINE) * BEATS_PER_BAR * beat
     return {
       startMs: Math.round(start * 1000),

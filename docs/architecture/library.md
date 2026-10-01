@@ -121,7 +121,10 @@ are no clips and the device voice speaks, as before.
 A song's sound comes from ElevenLabs Music with `MUSIC_PROVIDER=elevenlabs` and `MUSIC_API_KEY`;
 otherwise the server synthesizes a **demo instrumental** (`synth.ts`: chords, bass, melody and beat
 in the style, two bars per lyric line) whose line timings let the lyrics follow the sound. It is
-labelled "Demo sound" everywhere it is heard. When the server has a voice for the song's language
+labelled "Demo sound" everywhere it is heard. A demo is 22.05 kHz 16-bit mono WAV of at most 4 MiB,
+which the HTTPS gateway can carry ([ec2-deployment.md](../process/ec2-deployment.md)): it sings as
+many whole lines as fit (12 in a slow ballad, 16 or more in the other styles) and the song's lyrics
+end where its sound does. When the server has a voice for the song's language
 (`TTS_PROVIDER=elevenlabs`), each lyric line is also spoken over its bars (raw PCM from the voice,
 mixed in with the music ducked under it; distinct lines only, counted against the owner's and the
 server's clip allowances), and the song is labelled "Spoken demo". Loro's own album songs are voiced

@@ -17,6 +17,7 @@ import {
 import { LibraryService } from './library.service.js'
 import { ProgressService } from './progress.js'
 import { SpeechService, speechFor, utteranceId } from './speech.js'
+import { MAX_DEMO_WAV_BYTES, demoLineLimit } from './synth.js'
 import { resetWriter } from './writers.js'
 
 const code = async (work: Promise<unknown>) => {
@@ -296,6 +297,43 @@ describePostgres('the library against real PostgreSQL', () => {
         }),
       ),
     ).toBe('NOT_FOUND')
+  })
+
+  it('sings a long set as a demo the gateway can carry, its lyrics ending with its sound', async () => {
+    const { set } = await library.createSet('kim', {
+      title: 'Muchas frases',
+      targetLang: 'es-ES',
+      nativeLang: 'en-GB',
+      phrases: Array.from({ length: 14 }, (_, i) => ({
+        target: `Frase número ${i + 1}`,
+        native: `Phrase number ${i + 1}`,
+        source: 'written' as const,
+      })),
+    })
+    const { song } = await library.generateSong('kim', {
+      setId: set.id,
+      styleId: 'gentle_ballad',
+      nativeLang: 'en-GB',
+    })
+    await vi.waitFor(
+      async () => {
+        expect((await library.song('kim', song.id)).status).toBe('ready')
+      },
+      { timeout: 10_000 },
+    )
+    const ready = await library.song('kim', song.id)
+    const lines = ready.sections.flatMap((s) => s.lines)
+    // Fifteen lines of lyrics; a ballad's demo sings twelve of them in 4 MiB.
+    expect(lines).toHaveLength(demoLineLimit('gentle_ballad'))
+    expect(lines.every((l) => l.startMs !== null && l.endMs !== null)).toBe(true)
+    expect(ready.sections.every((s) => s.lines.length > 0)).toBe(true)
+    const url = new URL(`http://x${ready.audioUrl ?? ''}`)
+    const audio = await library.songAudio('kim', song.id, {
+      exp: url.searchParams.get('exp'),
+      sig: url.searchParams.get('sig'),
+    })
+    expect(audio.bytes.byteLength).toBeLessThanOrEqual(MAX_DEMO_WAV_BYTES)
+    expect(lines.at(-1)?.endMs).toBeLessThan(ready.durationMs ?? 0)
   })
 
   it('keeps a learner’s progress and refuses a write that missed another device’s', async () => {

@@ -80,7 +80,8 @@ What passes through, on library routes:
   audio, ranges (`206`, `Content-Range`, `Accept-Ranges`) and clips arrive byte-exact. The API's
   `Cache-Control`, `ETag`, `Content-Security-Policy` and `Retry-After` pass through; a reply without
   a `Cache-Control` gets `no-store`. Lambda refuses replies over 6 MB, so one that would exceed it
-  is `502 {"error":"response_too_large"}` rather than a cut-off body.
+  is `502 {"error":"response_too_large"}` rather than a cut-off body. Demo songs are at most 4 MiB
+  of WAV (`synth.ts`), 5.6 MB as base64; a player asking for a byte range gets less.
 - **Rates**: the stage allows 50 requests/s with a burst of 100 (Explore loads a cover per set; the
   player checks a clip per phrase). nginx allows the library 50 r/s (burst 100) and account routes
   20 r/s (burst 40) per gateway address.
