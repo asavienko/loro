@@ -9,7 +9,7 @@ import type { SongSection, WrittenPhrase } from './writers.js'
 /** Whose it is, from the reader's side. */
 export type Owner = 'loro' | 'me' | 'other'
 
-type Language = 'en-GB' | 'es-ES' | 'bg-BG' | 'ru-RU'
+type Language = 'en-GB' | 'en-US' | 'es-ES' | 'bg-BG' | 'ru-RU' | 'pl-PL' | 'cs-CZ'
 interface Note {
   title: string
   text: string

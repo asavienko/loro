@@ -33,6 +33,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: как «нравится»`,
         text: 'То, что нравится, — подлежащее: «me gusta» — «мне нравится», а «me gustan» — когда вещей несколько.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: gustar działa na odwrót`,
+        text: 'Podmiotem jest to, co się podoba: «me gusta» to „podoba mi się”, a «me gustan», gdy rzeczy jest więcej.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: gustar funguje obráceně`,
+        text: 'Podmětem je to, co se líbí: «me gusta» je „líbí se mi“, a «me gustan», když je věcí víc.',
+      }),
     },
   },
   {
@@ -50,6 +58,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: прямо сейчас`,
         text: 'Estar с глаголом на -ando или -iendo — то, что происходит прямо сейчас.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: dzieje się teraz`,
+        text: 'Estar z czasownikiem zakończonym na -ando lub -iendo mówi o tym, co dzieje się właśnie teraz.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: děje se to teď`,
+        text: 'Estar se slovesem zakončeným na -ando nebo -iendo říká, co se děje právě teď.',
       }),
     },
   },
@@ -69,6 +85,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: уже случилось`,
         text: 'Haber с причастием прошедшего времени — то, что уже произошло. В Испании так обычно рассказывают о сегодняшнем.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: już się stało`,
+        text: 'Haber z imiesłowem biernym mówi, co już się stało. W Hiszpanii tak zwykle opowiada się o tym, co wydarzyło się dziś.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: už se stalo`,
+        text: 'Haber s příčestím říká, co se už stalo. Ve Španělsku se tak obvykle vypráví o tom, co se stalo dnes.',
+      }),
     },
   },
   {
@@ -86,6 +110,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: должен`,
         text: 'Tener que с инфинитивом значит «должен, нужно». Меняется только tener: tengo que, tienes que, tiene que.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: musieć`,
+        text: 'Tener que z czasownikiem w bezokoliczniku znaczy „musieć”. Zmienia się tylko tener: tengo que, tienes que, tiene que.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: muset`,
+        text: 'Tener que se slovesem v infinitivu znamená „muset“. Mění se jen tener: tengo que, tienes que, tiene que.',
       }),
     },
   },
@@ -105,6 +137,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: нужно`,
         text: 'Hay que с инфинитивом говорит, что нужно сделать, не уточняя кому. Никогда не меняется.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: trzeba`,
+        text: 'Hay que z czasownikiem w bezokoliczniku mówi, co trzeba zrobić, bez wskazywania, kto ma to zrobić. Nigdy się nie zmienia.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: je třeba`,
+        text: 'Hay que se slovesem v infinitivu říká, co je třeba udělat, aniž by řeklo kdo. Nikdy se nemění.',
+      }),
     },
   },
   {
@@ -122,6 +162,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: собираюсь`,
         text: 'Ir a с инфинитивом — обычное будущее: «voy a…» — «я собираюсь…».',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: zamierzać`,
+        text: 'Ir a z czasownikiem w bezokoliczniku to codzienny czas przyszły: «voy a…» to „zamierzam…”, „mam zamiar…”.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: chystat se`,
+        text: 'Ir a se slovesem v infinitivu je každodenní budoucí čas: «voy a…» je „chystám se…“, „budu…“.',
       }),
     },
   },
@@ -141,6 +189,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: просьба`,
         text: '«Quiero» — «я хочу». «Quería» и «quisiera» смягчают до «я бы хотел» — вежливый способ попросить.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: prośba`,
+        text: '«Quiero» to „chcę”. «Quería» i «quisiera» łagodzą to do „chciałbym” — uprzejmy sposób proszenia.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: žádost`,
+        text: '«Quiero» je „chci“. «Quería» a «quisiera» to zmírňují na „chtěl bych“ — zdvořilý způsob, jak o něco požádat.',
+      }),
     },
   },
   {
@@ -158,6 +214,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: мочь`,
         text: 'После poder следующий глагол стоит в инфинитиве. «¿Puede…?» — вежливая просьба, как «не могли бы вы…?».',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: móc`,
+        text: 'Po poder następny czasownik stoi w bezokoliczniku. «¿Puede…?» to uprzejma prośba, jak „czy mógłby pan…?”.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: moci`,
+        text: 'Po poder je další sloveso v infinitivu. «¿Puede…?» je zdvořilá žádost, jako „mohl byste…?“.',
       }),
     },
   },
@@ -177,6 +241,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: меня зовут`,
         text: 'По-испански «я зову себя»: «me llamo…», «¿cómo te llamas?». Маленькое слово перед глаголом меняется по лицам.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: imiona`,
+        text: 'Hiszpański mówi dosłownie „nazywam siebie”: «me llamo…», «¿cómo te llamas?». Małe słowo przed czasownikiem zmienia się wraz z osobą.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: jména`,
+        text: 'Španělština říká doslova „nazývám se“: «me llamo…», «¿cómo te llamas?». Malé slovo před slovesem se mění podle osoby.',
+      }),
     },
   },
   {
@@ -194,6 +266,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: есть, имеется`,
         text: 'Одно слово и для единственного, и для множественного числа: «hay un…», «hay dos…». Это форма глагола haber.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: jest, są`,
+        text: 'Jedno słowo na oba przypadki, cokolwiek po nim stoi: «hay un…», «hay dos…». To forma czasownika haber.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: je, jsou`,
+        text: 'Jedno slovo pro obojí, ať následuje cokoli: «hay un…», «hay dos…». Je to tvar slovesa haber.',
       }),
     },
   },
@@ -214,6 +294,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: вопросительное слово`,
         text: 'Вопросительные слова пишутся с ударением (qué, dónde, cuánto) и стоят первыми; глагол — после них.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: zaimek pytajny`,
+        text: 'Zaimki pytajne mają akcent pisany (qué, dónde, cuánto) i stoją na początku; czasownik idzie po nich.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: tázací slovo`,
+        text: 'Tázací slova se píší s čárkou nad samohláskou (qué, dónde, cuánto) a stojí na prvním místě; sloveso následuje za nimi.',
       }),
     },
   },
@@ -240,6 +328,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
           w +
           '» — от estar.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: estar`,
+        text: `Estar mówi, gdzie coś jest i jakie jest w tej chwili; ser mówi, czym jest. «${w}» to forma estar.`,
+      }),
+      cs: (w) => ({
+        title: `«${w}»: estar`,
+        text: `Estar říká, kde něco je a jaké to je právě teď; ser říká, čím to je. «${w}» je tvar slovesa estar.`,
+      }),
     },
   },
   {
@@ -257,6 +353,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: вежливое «вы»`,
         text: 'Usted требует глагола в третьем лице: «¿usted tiene…?». Ustedes — «вы» для нескольких человек.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: uprzejme „pan”, „pani”`,
+        text: 'Usted łączy się z czasownikiem w trzeciej osobie: «¿usted tiene…?». Ustedes to „wy” w liczbie mnogiej.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: zdvořilé „vy“`,
+        text: 'Usted se pojí se slovesem ve třetí osobě: «¿usted tiene…?». Ustedes je „vy“ pro více lidí.',
       }),
     },
   },
@@ -276,6 +380,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: ser`,
         text: 'Ser говорит, что это такое: кто, что, откуда. Для «где» и «какое сейчас» в испанском есть estar.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: ser`,
+        text: 'Ser mówi, czym coś jest: kim, czym, skąd. Na pytanie „gdzie jest” i „jakie jest teraz” hiszpański używa estar.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: ser`,
+        text: 'Ser říká, čím něco je: kdo, co, odkud. Pro „kde je“ a „jaké je teď“ používá španělština estar.',
+      }),
     },
   },
   {
@@ -293,6 +405,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: чтобы`,
         text: 'Para с инфинитивом говорит, зачем: «para pagar» — «чтобы заплатить».',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: żeby`,
+        text: 'Para z czasownikiem w bezokoliczniku mówi, po co: «para pagar» to „żeby zapłacić”.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: aby`,
+        text: 'Para se slovesem v infinitivu říká, k čemu: «para pagar» je „abych zaplatil“.',
       }),
     },
   },
@@ -312,6 +432,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: a + el, de + el`,
         text: 'A и de сливаются с артиклем el в одно слово: al, del. С la — нет: «a la», «de la».',
       }),
+      pl: (w) => ({
+        title: `«${w}»: a + el, de + el`,
+        text: 'A i de łączą się z rodzajnikiem el w jedno słowo: al, del. Z la się nie łączą: «a la», «de la».',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: a + el, de + el`,
+        text: 'A a de se spojují s členem el v jedno slovo: al, del. S la se nespojují: «a la», «de la».',
+      }),
     },
   },
   {
@@ -329,6 +457,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: no перед глаголом`,
         text: 'No ставится прямо перед глаголом и перед me, te или lo перед ним: «no me gusta».',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: no przed czasownikiem`,
+        text: 'No stoi tuż przed czasownikiem i przed ewentualnym me, te lub lo przed nim: «no me gusta».',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: no před slovesem`,
+        text: 'No stojí těsně před slovesem i před případným me, te nebo lo před ním: «no me gusta».',
       }),
     },
   },
@@ -348,6 +484,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: el или la`,
         text: 'Каждое существительное мужского или женского рода, и артикль согласуется: el, un — мужской, la, una — женский. Большинство слов на -o мужского рода, на -a — женского.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: el czy la`,
+        text: 'Każdy rzeczownik jest rodzaju męskiego lub żeńskiego, a rodzajnik się z nim zgadza: el, un dla męskich, la, una dla żeńskich. Większość rzeczowników na -o jest męska, a na -a żeńska.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: el, nebo la`,
+        text: 'Každé podstatné jméno je mužského nebo ženského rodu a člen se s ním shoduje: el, un pro mužský, la, una pro ženský. Většina jmen na -o je mužského rodu, většina na -a ženského.',
+      }),
     },
   },
   {
@@ -365,6 +509,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `${w}: вопрос`,
         text: 'В испанском вопрос открывается знаком ¿, а не только закрывается. В вопросе «да или нет» порядок слов как в утверждении — только голос повышается в конце.',
+      }),
+      pl: (w) => ({
+        title: `${w}: pytanie`,
+        text: 'Po hiszpańsku pytanie się otwiera znakiem ¿, a nie tylko zamyka. Pytanie na „tak” lub „nie” zachowuje szyk zdania oznajmującego: tylko głos unosi się na końcu.',
+      }),
+      cs: (w) => ({
+        title: `${w}: otázka`,
+        text: 'Španělština otázku znakem ¿ otevírá, nejen uzavírá. Otázka na „ano“ nebo „ne“ zachovává pořadí slov oznamovací věty: jen hlas na konci stoupá.',
       }),
     },
   },
@@ -384,6 +536,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
         title: `${w}: восклицание`,
         text: 'Как и вопрос, восклицание открывается перевёрнутым знаком, чтобы с самого начала было ясно, как его произносить.',
       }),
+      pl: (w) => ({
+        title: `${w}: wykrzyknienie`,
+        text: 'Podobnie jak pytanie, wykrzyknienie otwiera odwrócony znak, żeby od początku było wiadomo, jak je powiedzieć.',
+      }),
+      cs: (w) => ({
+        title: `${w}: zvolání`,
+        text: 'Stejně jako otázka se zvolání otevírá obráceným znakem, takže hned od začátku víte, jak ho říct.',
+      }),
     },
   },
   {
@@ -402,6 +562,14 @@ export const SPANISH_GRAMMAR: GrammarRule[] = [
         title: 'Мужской или женский род',
         text: 'Каждое испанское существительное мужского или женского рода, и слова рядом согласуются: el, un, bueno — с мужским; la, una, buena — с женским.',
       }),
+      pl: () => ({
+        title: 'Rodzaj męski czy żeński',
+        text: 'Każdy hiszpański rzeczownik jest rodzaju męskiego lub żeńskiego, a słowa przy nim się z nim zgadzają: el, un, bueno przy męskim; la, una, buena przy żeńskim.',
+      }),
+      cs: () => ({
+        title: 'Mužský, nebo ženský rod',
+        text: 'Každé španělské podstatné jméno je mužského nebo ženského rodu a slova u něj se shodují: el, un, bueno u mužského; la, una, buena u ženského.',
+      }),
     },
   },
 ]
@@ -419,6 +587,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: сравнение`,
         text: 'По- перед прилагательным или наречием даёт сравнительную степень: по-голям — больше, по-бавно — медленнее. Най- — превосходную.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: bardziej, najbardziej`,
+        text: 'По- przed przymiotnikiem lub przysłówkiem tworzy „bardziej”: по-голям to większy, по-бавно wolniej. Най- tworzy „najbardziej”.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: více, nejvíce`,
+        text: 'По- před přídavným jménem nebo příslovcem tvoří „více“: по-голям je větší, по-бавно pomaleji. Най- tvoří „nejvíce“.',
+      }),
     },
   },
   {
@@ -432,6 +608,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: не буду`,
         text: 'Будущее с отрицанием — няма да и глагол: «не буду, не стану». Не «не ще».',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: nie będę`,
+        text: 'Przyszłość przeczącą tworzy няма да i czasownik: „nie będę”, „nie zrobię”. Nie не ще.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: nebudu`,
+        text: 'Záporná budoucnost je няма да a sloveso: „nebudu“, „neudělám“. Ne не ще.',
       }),
     },
   },
@@ -447,6 +631,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: будущее`,
         text: 'Ще перед глаголом в настоящем времени даёт будущее, и ще не меняется: ще отида — пойду, ще отидем — пойдём.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: czas przyszły`,
+        text: 'Ще przed czasownikiem w czasie teraźniejszym tworzy czas przyszły, a ще nigdy się nie zmienia: ще отида — pójdę, ще отидем — pójdziemy.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: budoucí čas`,
+        text: 'Ще před slovesem v přítomném čase tvoří budoucí čas a ще se nikdy nemění: ще отида — půjdu, ще отидем — půjdeme.',
+      }),
     },
   },
   {
@@ -460,6 +652,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: можно?`,
         text: 'Буквально «можно ли?»: обычная вежливая просьба — с существительным или с да и глаголом.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: czy mogę`,
+        text: 'Dosłownie „czy to możliwe?”: codzienna uprzejma prośba, z rzeczownikiem albo z да i czasownikiem.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: můžu?`,
+        text: 'Doslova „je to možné?“: každodenní zdvořilá žádost, s podstatným jménem nebo s да a slovesem.',
       }),
     },
   },
@@ -475,6 +675,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: бы`,
         text: 'Бих с формой прошедшего времени — вежливое «бы»: бих искал (бих искала) — «я бы хотел(а)».',
       }),
+      pl: (w) => ({
+        title: `«${w}»: bym`,
+        text: 'Бих z formą czasu przeszłego tworzy uprzejmy tryb: бих искал (бих искала) to „chciałbym” („chciałabym”).',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: bych`,
+        text: 'Бих s minulým tvarem tvoří zdvořilý podmiňovací způsob: бих искал (бих искала) je „chtěl bych“ („chtěla bych“).',
+      }),
     },
   },
   {
@@ -488,6 +696,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: нужно`,
         text: 'Трябва не изменяется: трябва да и глагол — «мне нужно», «тебе нужно», «нам нужно».',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: trzeba`,
+        text: 'Трябва nigdy się nie zmienia: трябва да i czasownik znaczy tak samo „muszę”, „musisz”, „musimy”.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: je třeba`,
+        text: 'Трябва se nikdy nemění: трябва да a sloveso znamená stejně „musím“, „musíš“, „musíme“.',
       }),
     },
   },
@@ -503,6 +719,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: да вместо инфинитива`,
         text: 'В болгарском нет инфинитива: после искам, мога, трябва идёт да и глагол в личной форме — искам да отида, «хочу, чтобы я пошёл».',
       }),
+      pl: (w) => ({
+        title: `«${w}»: да zamiast bezokolicznika`,
+        text: 'W bułgarskim nie ma bezokolicznika: po искам, мога lub трябва stoi да i czasownik w formie osobowej — искам да отида, dosłownie „chcę, żebym poszedł”.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: да místo infinitivu`,
+        text: 'Bulharština nemá infinitiv: po искам, мога nebo трябва následuje да a sloveso v osobním tvaru — искам да отида, doslova „chci, abych šel“.',
+      }),
     },
   },
   {
@@ -516,6 +740,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: вопросительное слово`,
         text: 'Вопросительное слово стоит первым, и ли не нужно: къде е…? — где…?',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: zaimek pytajny`,
+        text: 'Zaimek pytajny stoi na początku i nie potrzebuje ли: къде е…? — gdzie jest…?',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: tázací slovo`,
+        text: 'Tázací slovo stojí na začátku a nepotřebuje ли: къде е…? — kde je…?',
       }),
     },
   },
@@ -531,6 +763,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: вопрос «да или нет»`,
         text: 'Частица ли делает вопрос и стоит сразу после слова, о котором спрашивают, обычно после глагола: имате ли…? — у вас есть…?',
       }),
+      pl: (w) => ({
+        title: `«${w}»: pytanie na „tak” lub „nie”`,
+        text: 'Ли tworzy pytanie i stoi tuż po słowie, o które się pyta, zwykle po czasowniku: имате ли…? — czy macie…?',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: otázka na „ano“ nebo „ne“`,
+        text: 'Ли tvoří otázku a stojí hned za slovem, na které se ptáme, obvykle za slovesem: имате ли…? — máte…?',
+      }),
     },
   },
   {
@@ -544,6 +784,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: артикль в конце`,
         text: 'В болгарском есть определённый артикль, и он присоединяется к концу слова: сметка — «счёт», сметката — «этот счёт».',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: rodzajnik na końcu`,
+        text: 'Bułgarski dokleja rodzajnik określony na końcu rzeczownika: сметка (rachunek) staje się сметката (ten rachunek).',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: člen na konci`,
+        text: 'Bulharština připojuje určitý člen na konec podstatného jména: сметка (účet) se stane сметката (ten účet).',
       }),
     },
   },
@@ -559,6 +807,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: иметь`,
         text: 'По-болгарски «я имею»: имам — «у меня есть». Просто има значит и «есть, имеется»: има ли…? — есть ли…?',
       }),
+      pl: (w) => ({
+        title: `«${w}»: mieć, jest`,
+        text: 'Имам to „mam”, a samo има znaczy też „jest, istnieje”: има ли…? — czy jest…?',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: mít, je`,
+        text: 'Имам je „mám“ a samotné има znamená také „je, existuje“: има ли…? — je…?',
+      }),
     },
   },
   {
@@ -572,6 +828,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: нет`,
         text: 'Няма — «нет, не имеется», нямам — «у меня нет»: одно слово, без не.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: nie ma`,
+        text: 'Няма to „nie ma”, нямам to „nie mam”: jedno słowo, bez не.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: není`,
+        text: 'Няма je „není“, нямам je „nemám“: jedno slovo, bez не.',
       }),
     },
   },
@@ -587,6 +851,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: се с глаголом`,
         text: 'Многие глаголы употребляются с се, и оно стоит рядом с глаголом: казвам се — меня зовут, виждаме се — видимся.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: се przy czasowniku`,
+        text: 'Wiele czasowników występuje z се, które stoi tuż przy czasowniku: казвам се — nazywam się, виждаме се — widzimy się.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: се u slovesa`,
+        text: 'Mnoho sloves se pojí se се, které stojí vedle slovesa: казвам се — jmenuji se, виждаме се — vidíme se.',
+      }),
     },
   },
   {
@@ -600,6 +872,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: краткое местоимение`,
         text: 'Краткие местоимения (ме, ми, те, го…) стоят рядом с глаголом и никогда не начинают предложение: «Боли ме» — мне больно.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: krótki zaimek`,
+        text: 'Krótkie zaimki (ме, ми, те, го…) stoją przy czasowniku i nigdy nie zaczynają zdania: «Боли ме» — boli (mnie).',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: krátké zájmeno`,
+        text: 'Krátká zájmena (ме, ми, те, го…) stojí vedle slovesa a nikdy nezačínají větu: «Боли ме» — bolí (mě).',
       }),
     },
   },
@@ -615,6 +895,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: не перед глаголом`,
         text: 'Не ставится прямо перед глаголом и перед кратким местоимением перед ним: не ме боли.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: не przed czasownikiem`,
+        text: 'Не stoi tuż przed czasownikiem i przed krótkim zaimkiem, który go poprzedza: не ме боли.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: не před slovesem`,
+        text: 'Не stojí těsně před slovesem i před krátkým zájmenem před ním: не ме боли.',
+      }),
     },
   },
   {
@@ -628,6 +916,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: быть`,
         text: 'В отличие от русского, «быть» в настоящем не опускается: аз съм, ти си, той е, ние сме, вие сте, те са. Эти формы не начинают предложение.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: być`,
+        text: 'Съм, „być”, ma krótkie formy, które opierają się na poprzednim słowie: аз съм, ти си, той е, ние сме, вие сте, те са. Nigdy nie zaczynają zdania.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: být`,
+        text: 'Съм, „být“, má krátké tvary, které se opírají o předchozí slovo: аз съм, ти си, той е, ние сме, вие сте, те са. Nikdy nezačínají větu.',
       }),
     },
   },
@@ -643,6 +939,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: на вместо падежей`,
         text: 'В болгарском нет падежей: на передаёт и родительный, и дательный — името на… (имя кого-то), дайте на мен (дайте мне).',
       }),
+      pl: (w) => ({
+        title: `«${w}»: на zamiast przypadków`,
+        text: 'Bułgarskie rzeczowniki nie mają przypadków: на oddaje zarówno dopełniacz („czyjś”), jak i celownik („komuś”) — името на… (imię kogoś); дайте на мен (dajcie mi).',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: на místo pádů`,
+        text: 'Bulharská podstatná jména nemají pády: на vyjadřuje jak druhý pád („čí, čeho“), tak třetí pád („komu“) — името на… (jméno někoho); дайте на мен (dejte mi).',
+      }),
     },
   },
   {
@@ -656,6 +960,14 @@ export const BULGARIAN_GRAMMAR: GrammarRule[] = [
       ru: () => ({
         title: 'Без падежей',
         text: 'Болгарские существительные не склоняются по падежам: их роль показывают порядок слов и предлоги на, за, в, с.',
+      }),
+      pl: () => ({
+        title: 'Bez przypadków',
+        text: 'Bułgarskie rzeczowniki nie zmieniają się w zależności od roli w zdaniu: tę pracę wykonują szyk wyrazów i przyimki, takie jak на, за, в i с.',
+      }),
+      cs: () => ({
+        title: 'Bez pádů',
+        text: 'Bulharská podstatná jména se nemění podle role ve větě: tuto práci dělají pořadí slov a předložky jako на, за, в a с.',
       }),
     },
   },
@@ -760,6 +1072,14 @@ export const ENGLISH_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: вежливое «хочу»`,
         text: '«Would like» — вежливый способ сказать, чего вы хотите, как «я бы хотел»: «I’d like a coffee», «I’d like to pay». «Would you like…?» предлагает то же собеседнику, а простое «I want» может прозвучать резко.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: uprzejme „chcę”`,
+        text: '«Would like» to uprzejmy sposób powiedzenia, czego chcesz: «I’d like a coffee», «I’d like to pay». «Would you like…?» proponuje to samo komuś innemu; zwykłe «I want» może zabrzmieć szorstko.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: zdvořilé „chci“`,
+        text: '«Would like» je zdvořilý způsob, jak říct, co chcete: «I’d like a coffee», «I’d like to pay». «Would you like…?» nabízí totéž někomu jinému; prosté «I want» může znít příkře.',
+      }),
     },
   },
   {
@@ -777,6 +1097,14 @@ export const ENGLISH_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: вежливая просьба`,
         text: '«Could I…?», «Can I…?», «May I…?» и «Could you…?» открывают вопрос, часто вежливую просьбу («можно…?», «не могли бы вы…?»). «Could» мягче, чем «can», а «may» — самое официальное. Следующий глагол — без «to»: «Could you repeat that?»',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: uprzejma prośba`,
+        text: '«Could I…?», «Can I…?», «May I…?» i «Could you…?» otwierają pytanie, często uprzejmą prośbę. «Could» jest łagodniejsze niż «can», a «may» najbardziej formalne. Czasownik po nich jest bez „to”: «Could you repeat that?»',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: zdvořilá žádost`,
+        text: '«Could I…?», «Can I…?», «May I…?» a «Could you…?» otevírají otázku, často zdvořilou žádost. «Could» je jemnější než «can» a «may» je nejformálnější. Sloveso po nich je bez „to“: «Could you repeat that?»',
       }),
     },
   },
@@ -796,6 +1124,14 @@ export const ENGLISH_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: уже случилось`,
         text: '«Have» или «has» с причастием говорят о том, что уже случилось и важно сейчас: «I’ve lost my passport» — «я потерял паспорт» (и его до сих пор нет). Такого времени в русском нет. Если время названо и закончилось (вчера, в прошлом году), нужно простое прошедшее: «I lost it yesterday».',
       }),
+      pl: (w) => ({
+        title: `«${w}»: co się stało`,
+        text: '«Have» lub «has» z imiesłowem mówi, co się stało, z łącznością z teraźniejszością: «I’ve lost my passport» (więc go nie mam), «Have you ever been to London?». Gdy czas jest zakończony (yesterday, last year), używa się past simple: «I lost it yesterday».',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: co se stalo`,
+        text: '«Have» nebo «has» s příčestím říká, co se stalo, se vztahem k přítomnosti: «I’ve lost my passport» (takže ho nemám), «Have you ever been to London?». S uzavřenou dobou (yesterday, last year) se používá prostý minulý čas: «I lost it yesterday».',
+      }),
     },
   },
   {
@@ -813,6 +1149,14 @@ export const ENGLISH_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: собираюсь`,
         text: '«Going to» и глагол в начальной форме (без «to») говорят о плане или о том, что вот-вот случится: «I’m going to visit my aunt» — «я собираюсь навестить тётю», «It’s going to rain» — «будет дождь». Меняется только «am, is, are».',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: going to`,
+        text: '«Going to» i czasownik w formie podstawowej mówi, co planujesz zrobić albo co zaraz się stanie: «I’m going to visit my aunt», «It’s going to rain». Zmienia się tylko «am, is, are»; «going to» zostaje.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: going to`,
+        text: '«Going to» a sloveso v základním tvaru říká, co plánujete udělat nebo co se chystá stát: «I’m going to visit my aunt», «It’s going to rain». Mění se jen «am, is, are»; «going to» zůstává.',
       }),
     },
   },
@@ -832,6 +1176,14 @@ export const ENGLISH_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: есть`,
         text: '«There is» и «there are» — «есть, имеется», но глагол меняется по числу: «There is a bank near here» (одна), «There are two banks» (несколько). «There» здесь не значит «там»: «Is there a bank?» — «Есть ли банк?».',
       }),
+      pl: (w) => ({
+        title: `«${w}»: jest, są`,
+        text: '«There is» mówi, że jedna rzecz istnieje lub gdzieś jest, «there are» — o kilku: «There is a bank near here», «Are there any rooms?». «There» nie znaczy tu „tam”, a czasownik zgadza się z rzeczą, która po nim następuje.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: je, jsou`,
+        text: '«There is» říká, že jedna věc existuje nebo někde je, «there are» to říká o několika: «There is a bank near here», «Are there any rooms?». «There» tu neznamená „tam“ a sloveso se shoduje s věcí, která následuje.',
+      }),
     },
   },
   {
@@ -849,6 +1201,14 @@ export const ENGLISH_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: сколько`,
         text: 'Для «сколько» в английском две формы: «how many» для того, что можно посчитать, с множественным числом: «How many people?», и «how much» для того, что не считают, и для цены: «How much is it?»',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: ile`,
+        text: '«How many» łączy się z rzeczami policzalnymi, w liczbie mnogiej: «How many people?». «How much» łączy się z niepoliczalnymi i pyta o cenę: «How much is it?»',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: kolik`,
+        text: '«How many» se pojí s počitatelnými věcmi v množném čísle: «How many people?». «How much» se pojí s nepočitatelnými a ptá se na cenu: «How much is it?»',
       }),
     },
   },
@@ -868,6 +1228,14 @@ export const ENGLISH_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: давайте`,
         text: '«Let’s» — «давайте», предложение сделать что-то вместе. Дальше идёт глагол в начальной форме, без «to»: «Let’s eat» — «давайте поедим», «Let’s not wait» — «не будем ждать».',
       }),
+      pl: (w) => ({
+        title: `«${w}»: let’s`,
+        text: '«Let’s» to „let us” i proponuje zrobienie czegoś razem. Po nim idzie czasownik w formie podstawowej, bez «to»: «Let’s eat», «Let’s not wait».',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: let’s`,
+        text: '«Let’s» je „let us“ a navrhuje, abyste něco udělali společně. Následuje sloveso v základním tvaru, bez «to»: «Let’s eat», «Let’s not wait».',
+      }),
     },
   },
   {
@@ -885,6 +1253,14 @@ export const ENGLISH_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: как «не так ли?»`,
         text: 'Короткий вопрос в конце, вроде «isn’t it?» или «don’t you?», просит собеседника согласиться, как «правда?» или «не так ли?». Но это не одно слово: он повторяет вспомогательный глагол предложения, обычно в противоположной форме: «It’s cold, isn’t it?», «You like tea, don’t you?»',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: pytanie rozłączne`,
+        text: 'Krótkie pytanie na końcu, jak «isn’t it?» lub «don’t you?», prosi słuchacza o zgodę, jak polskie „prawda?”. Powtarza czasownik pomocniczy zdania, zwykle w przeciwnej formie: «It’s cold, isn’t it?», «You like tea, don’t you?»',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: dovětek`,
+        text: 'Krátká otázka na konci, jako «isn’t it?» nebo «don’t you?», žádá posluchače o souhlas, jako české „že ano?“. Opakuje pomocné sloveso věty, obvykle v opačném tvaru: «It’s cold, isn’t it?», «You like tea, don’t you?»',
       }),
     },
   },
@@ -904,6 +1280,14 @@ export const ENGLISH_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: чьё это`,
         text: '«’s» у владельца показывает, чьё это: «my sister’s book» — «книга моей сестры». Сначала владелец с «’s», потом вещь; предлога и падежа нет.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: czyje to jest`,
+        text: '«’s» przy właścicielu pokazuje, czyje coś jest: «my sister’s book» to „książka mojej siostry”. Najpierw właściciel z «’s», potem rzecz, bez «of».',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: čí to je`,
+        text: '«’s» u vlastníka ukazuje, čí něco je: «my sister’s book» je „kniha mé sestry“. Nejdřív vlastník s «’s», pak věc, bez «of».',
+      }),
     },
   },
   {
@@ -921,6 +1305,14 @@ export const ENGLISH_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: do, does, did`,
         text: 'С большинством глаголов вопрос и отрицание требуют «do», «does» или «did» (в русском хватает интонации): «Do you speak English?», «I don’t understand». Оно показывает лицо («does» для he, she, it) и время («did» — прошедшее), поэтому основной глагол остаётся в начальной форме.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: do, does, did`,
+        text: 'Z większością czasowników pytania i przeczenia wymagają «do», «does» lub «did»: «Do you speak English?», «I don’t understand». Pokazuje ono osobę («does» dla he, she, it) i czas («did» dla przeszłego), więc czasownik główny zostaje w formie podstawowej.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: do, does, did`,
+        text: 'Se většinou sloves vyžadují otázky a záporné věty «do», «does» nebo «did»: «Do you speak English?», «I don’t understand». Ukazuje osobu («does» pro he, she, it) a čas («did» pro minulý), takže významové sloveso zůstává v základním tvaru.',
       }),
     },
   },
@@ -943,6 +1335,14 @@ export const ENGLISH_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: вопросительное слово`,
         text: 'Вопросительное слово стоит первым, а глагол или его помощник — перед подлежащим: «Where is the bank?», «Where do you live?». Если вопросительное слово само подлежащее, ничего не добавляется: «Who lives here?»',
       }),
+      pl: (w) => ({
+        title: `«${w}»: zaimek pytajny`,
+        text: 'Zaimek pytajny stoi na początku, a czasownik lub jego pomocnik — przed podmiotem: «Where is the bank?», «Where do you live?». Gdy zaimek pytajny sam jest podmiotem, nic się nie dodaje: «Who lives here?»',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: tázací slovo`,
+        text: 'Tázací slovo stojí na začátku a sloveso nebo jeho pomocné sloveso před podmětem: «Where is the bank?», «Where do you live?». Když je tázací slovo samo podmětem, nic se nepřidává: «Who lives here?»',
+      }),
     },
   },
   {
@@ -960,6 +1360,14 @@ export const ENGLISH_GRAMMAR: GrammarRule[] = [
       ru: (w) => ({
         title: `«${w}»: some или any`,
         text: '«Some» — для утверждений, предложений и просьб: «I’d like some water». «Any» — для отрицаний и большинства вопросов: «I don’t have any money», «Do you have any rooms?». Английский не удваивает отрицание, как русский («у меня нет никаких денег»): после «don’t» ставится «any», а не «no».',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: some czy any`,
+        text: '«Some» jest do zdań oznajmujących, propozycji i próśb: «I’d like some water», «Would you like some tea?». «Any» — do przeczeń i większości pytań: «I don’t have any money», «Do you have any rooms?». Angielski nie podwaja przeczenia: «I don’t have any», nie «I don’t have no».',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: some, nebo any`,
+        text: '«Some» je pro oznamovací věty, nabídky a žádosti: «I’d like some water», «Would you like some tea?». «Any» je pro zápor a většinu otázek: «I don’t have any money», «Do you have any rooms?». Na rozdíl od češtiny angličtina zápor neopakuje: «I don’t have any», ne «I don’t have no».',
       }),
     },
   },
@@ -979,6 +1387,14 @@ export const ENGLISH_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: a, an или the`,
         text: '«A» или «an» значит «один, любой»: «a table»; «an» ставится перед гласным звуком («an apple», «an hour»). «The» — тот, что известен обоим: «the table». В русском артиклей нет, а в английском перед исчисляемым существительным в единственном числе обычно нужен a, an, the или «my», «this».',
       }),
+      pl: (w) => ({
+        title: `«${w}»: a, an czy the`,
+        text: '«A» lub «an» znaczy „jeden, jakiś”: «a table»; «an» stoi przed samogłoską w wymowie («an apple», «an hour»). «The» to ten, który znacie oboje: «the table by the window». Policzalny rzeczownik w liczbie pojedynczej zwykle ma przy sobie jedno z nich albo «my», «this».',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: a, an, nebo the`,
+        text: '«A» nebo «an» znamená „jeden, jakýkoli“: «a table»; «an» stojí před samohláskovým zvukem («an apple», «an hour»). «The» je ten, který znáte oba: «the table by the window». Počitatelné jméno v jednotném čísle má obvykle před sebou jedno z nich nebo «my», «this».',
+      }),
     },
   },
   {
@@ -996,6 +1412,14 @@ export const ENGLISH_GRAMMAR: GrammarRule[] = [
       ru: () => ({
         title: 'Порядок слов',
         text: 'В английском слова почти не меняются, поэтому порядок слов показывает, кто что делает: «Anna sees Tom» — не то же, что «Tom sees Anna». В утверждении подлежащее стоит первым, перед глаголом, и его нельзя пропускать, даже когда оно ничего не значит: «It’s cold» («Холодно»).',
+      }),
+      pl: () => ({
+        title: 'Szyk robi robotę',
+        text: 'Angielskie słowa prawie się nie zmieniają, więc ich kolejność pokazuje, kto co robi: «Anna sees Tom» to nie to samo co «Tom sees Anna». W zdaniu oznajmującym podmiot stoi pierwszy, przed czasownikiem, i trzeba go zawsze powiedzieć, nawet gdy nic nie znaczy: «It’s cold».',
+      }),
+      cs: () => ({
+        title: 'Pořadí dělá práci',
+        text: 'Anglická slova se téměř nemění, proto pořadí slov ukazuje, kdo co dělá: «Anna sees Tom» není totéž co «Tom sees Anna». V oznamovací větě stojí podmět první, před slovesem, a vždy se říká, i když nic neznamená: «It’s cold».',
       }),
     },
   },
@@ -1170,6 +1594,14 @@ export const RUSSIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: казвам се`,
         text: 'Руският казва „наричат ме“, а не „казвам се“: «меня зовут Анна». Лицето е в друга форма («я» → «меня», «ты» → «тебя», «вы» → «вас», «он» → «его», «она» → «её»), а името не се променя.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: jak się przedstawić`,
+        text: 'Rosyjski mówi „nazywają mnie”, a nie „nazywam się”: «меня зовут Анна». Osoba przyjmuje zmienioną formę («я» → «меня», «ты» → «тебя», «вы» → «вас», «он» → «его», «она» → «её»), a imię zostaje bez zmian.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: říct své jméno`,
+        text: 'Ruština říká „jmenují mě“, ne „jmenuji se“: «меня зовут Анна». Osoba přijímá změněný tvar («я» → «меня», «ты» → «тебя», «вы» → «вас», «он» → «его», «она» → «её») a jméno zůstává beze změny.',
+      }),
     },
   },
   {
@@ -1183,6 +1615,14 @@ export const RUSSIAN_GRAMMAR: GrammarRule[] = [
       bg: (w) => ({
         title: `«${w}»: цената`,
         text: '«Сколько стоит…?» е „колко струва…?“ за едно нещо, а «сколько стоят…?» е „колко струват…?“ за няколко: глаголът се съгласува със стоката, както в български — «сколько стоит билет?», «сколько стоят билеты?».',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: pytanie o cenę`,
+        text: '«Сколько стоит…?» pyta o cenę jednej rzeczy, a «сколько стоят…?» kilku: czasownik zgadza się z tym, co się kupuje, jak w «сколько стоит билет?» i «сколько стоят билеты?».',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: ptaní se na cenu`,
+        text: '«Сколько стоит…?» se ptá na cenu jedné věci a «сколько стоят…?» několika: sloveso se shoduje s tím, co se kupuje, jako v «сколько стоит билет?» a «сколько стоят билеты?».',
       }),
     },
   },
@@ -1198,6 +1638,14 @@ export const RUSSIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: двойно отрицание`,
         text: 'Руският пази «не» (или «нет») заедно с отрицателната дума, точно както българският: «я ничего не знаю» е „нищо не знам“. Без «не» изречението е грешно.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: dwa przeczenia`,
+        text: 'Rosyjski trzyma «не» (lub «нет») razem z wyrazem przeczącym, tak jak polski: «я ничего не знаю» to „niczego nie wiem”. Pominięcie «не» jest błędem.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: dvě záporky`,
+        text: 'Ruština drží «не» (nebo «нет») spolu se záporným slovem, stejně jako čeština: «я ничего не знаю» je „nic nevím“. Vynechat «не» je chyba.',
+      }),
     },
   },
   {
@@ -1211,6 +1659,14 @@ export const RUSSIAN_GRAMMAR: GrammarRule[] = [
       bg: (w) => ({
         title: `«${w}»: каквото липсва`,
         text: 'След «нет» („няма“) липсващото нещо получава променено окончание, родителен падеж: «нет сахара», «нет времени», «у меня нет денег». Повечето съществителни се променят, «кофе» и «такси» — не. В български „няма захар“ остава без промяна.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: czego brakuje`,
+        text: 'Po «нет» („nie ma”) to, czego brakuje, przyjmuje zmienioną końcówkę, dopełniacz: «нет сахара», «нет времени», «у меня нет денег». Większość rzeczowników się zmienia; «кофе» i «такси» nie.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: co chybí`,
+        text: 'Po «нет» („není“) dostává to, co chybí, změněnou koncovku, druhý pád: «нет сахара», «нет времени», «у меня нет денег». Většina podstatných jmen se mění; «кофе» a «такси» ne.',
       }),
     },
   },
@@ -1226,6 +1682,14 @@ export const RUSSIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: къде, накъде, откъде`,
         text: 'Руският разграничава местоположение и посока: «где» е „къде е“, «куда» е „накъде“ („къде отиваш“), «откуда» е „откъде“. Глагол за „е“ не се добавя: «Где метро?» е „Къде е метрото?“.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: trzy razy „gdzie”`,
+        text: 'Rosyjski ma trzy słowa na „gdzie”: «где» pyta, gdzie coś jest, «куда» — dokąd idzie, «откуда» — skąd pochodzi: «Где метро?», «Куда вы идёте?», «Откуда вы?».',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: třikrát „kde“`,
+        text: 'Ruština má tři slova pro „kde“: «где» se ptá, kde něco je, «куда» kam to jde, «откуда» odkud to je: «Где метро?», «Куда вы идёте?», «Откуда вы?».',
+      }),
     },
   },
   {
@@ -1240,6 +1704,14 @@ export const RUSSIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: имам`,
         text: 'Руският няма всекидневно „имам“. Казва „при мен“ и „има“: «у меня есть…» е „имам…“, «у вас есть…?» е „имате ли…?“. «Есть» може да се пропусне, когато нещото се описва: «у меня новая машина».',
       }),
+      pl: (w) => ({
+        title: `«${w}»: mieć`,
+        text: 'Rosyjski nie ma codziennego „mam”. Mówi „u mnie” i „jest”: «у меня есть…», «у вас есть…?». «Есть» można pominąć, gdy rzecz jest opisana: «у меня новая машина».',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: mít`,
+        text: 'Ruština nemá každodenní „mám“. Říká „u mě“ a „je“: «у меня есть…», «у вас есть…?». «Есть» lze vynechat, když je věc popsána: «у меня новая машина».',
+      }),
     },
   },
   {
@@ -1253,6 +1725,14 @@ export const RUSSIAN_GRAMMAR: GrammarRule[] = [
       bg: (w) => ({
         title: `«${w}»: искам`,
         text: 'Глаголът «хотеть» е „искам“: «хочу», «хочешь», «хочет», «хотим», «хотите», «хотят». След него идва съществително или глагол в инфинитив, без „да“: «хочу пить» е „искам да пия“. «Хотел бы» и «хотела бы» (казва ги мъж или жена) е учтивото „бих искал(а)“.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: chcieć`,
+        text: '«Хотеть», „chcieć”: «хочу», «хочешь», «хочет», «хотим», «хотите», «хотят». Po nim idzie rzeczownik albo czasownik w bezokoliczniku: «хочу кофе», «хочу пить». «Хотел бы», «хотела бы» (mówi mężczyzna, kobieta) to uprzejme „chciałbym, chciałabym”.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: chtít`,
+        text: '«Хотеть», „chtít“: «хочу», «хочешь», «хочет», «хотим», «хотите», «хотят». Následuje podstatné jméno nebo sloveso v infinitivu: «хочу кофе», «хочу пить». «Хотел бы», «хотела бы» (říká muž, žena) je zdvořilé „chtěl bych, chtěla bych“.',
       }),
     },
   },
@@ -1270,6 +1750,14 @@ export const RUSSIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: трябва, може`,
         text: '«Надо» и «нужно» са „трябва“, «можно» — „може“, «нельзя» — „не бива“; не се променят. Лицето е в друга форма («я» → «мне»), а глаголът след тях е в инфинитив, без „да“: «мне надо идти» е „трябва да вървя“. «Нужен», «нужна», «нужны» се съгласуват с нужното: «мне нужен билет».',
       }),
+      pl: (w) => ({
+        title: `«${w}»: trzeba, wolno`,
+        text: '«Надо», «нужно» („trzeba”), «можно» („wolno”) i «нельзя» („nie wolno”) nigdy się nie zmieniają. Osoba przyjmuje zmienioną formę («я» → «мне»), a czasownik po nich zostaje w bezokoliczniku: «мне надо идти». «Нужен», «нужна», «нужны» zgadzają się z potrzebną rzeczą: «мне нужен билет».',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: je třeba, smí se`,
+        text: '«Надо», «нужно» („je třeba“), «можно» („smí se“) a «нельзя» („nesmí se“) se nikdy nemění. Osoba přijímá změněný tvar («я» → «мне») a sloveso po nich zůstává v infinitivu: «мне надо идти». «Нужен», «нужна», «нужны» se shodují s potřebnou věcí: «мне нужен билет».',
+      }),
     },
   },
   {
@@ -1283,6 +1771,14 @@ export const RUSSIAN_GRAMMAR: GrammarRule[] = [
       bg: (w) => ({
         title: `«${w}»: повелително наклонение`,
         text: 'Към приятел повелителната форма е кратка («скажи», «покажи»); към „вие“ или към повече хора се добавя -те: «скажите», «покажите» — както „кажи“ и „кажете“. «Давай», а към „вие“ «давайте», пред глагол значи „хайде да…“: «давайте пойдём» е „хайде да отидем“.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: rozkazy`,
+        text: 'Rozkaz do kolegi czy przyjaciela to forma krótka («скажи», «покажи»); do kogoś, do kogo mówisz «вы», lub do kilku osób, kończy się na -те: «скажите», «покажите». «Давай», lub «давайте» do «вы», przed czasownikiem znaczy „zróbmy”: «давайте пойдём».',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: rozkazy`,
+        text: 'Rozkaz kamarádovi je krátký tvar («скажи», «покажи»); někomu, komu říkáte «вы», nebo několika lidem, končí na -те: «скажите», «покажите». «Давай», nebo «давайте» pro «вы», před slovesem znamená „pojďme“: «давайте пойдём».',
       }),
     },
   },
@@ -1298,6 +1794,14 @@ export const RUSSIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: след два, три, четири`,
         text: 'След «два», «три» и «четыре» съществителното е в родителен падеж, единствено число: «два билета», «три часа». «Два» става «две» пред съществително от женски род: «две минуты». От пет до двадесет е родителен падеж, множествено число: «пять билетов».',
       }),
+      pl: (w) => ({
+        title: `«${w}»: po dwa, trzy, cztery`,
+        text: 'Po «два», «три» i «четыре» rzeczownik przyjmuje formę dopełniacza liczby pojedynczej: «два билета», «три часа». «Два» zmienia się w «две» przed rzeczownikiem rodzaju żeńskiego: «две минуты». Od pięciu do dwudziestu jest to dopełniacz liczby mnogiej: «пять билетов».',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: po dvě, tři, čtyři`,
+        text: 'Po «два», «три» a «четыре» bere podstatné jméno tvar druhého pádu jednotného čísla: «два билета», «три часа». «Два» se před podstatným jménem ženského rodu mění na «две»: «две минуты». Od pěti do dvaceti je to druhý pád množného čísla: «пять билетов».',
+      }),
     },
   },
   {
@@ -1311,6 +1815,14 @@ export const RUSSIAN_GRAMMAR: GrammarRule[] = [
       bg: (w) => ({
         title: `«${w}»: учтивото „вие“`,
         text: '«Вы» е „вие“ за повече хора и учтивото „вие“ за един човек, като в български, и глаголът е винаги в множествено число: «вы говорите». На приятел, дете или близък се казва «ты» („ти“). Другите форми са «вас», «вам», «вами».',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: uprzejme „pan”, „pani”`,
+        text: '«Вы» to „wy” do kilku osób i uprzejme „pan”, „pani” do jednej, a jego czasownik jest zawsze w liczbie mnogiej: «вы говорите». Do kolegi, dziecka lub rodziny mówi się «ты». Inne formy to «вас», «вам», «вами».',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: zdvořilé „vy“`,
+        text: '«Вы» je „vy“ pro více lidí a zdvořilé „vy“ pro jednoho a jeho sloveso je vždy v množném čísle: «вы говорите». Kamarádovi, dítěti nebo rodině se říká «ты». Další tvary jsou «вас», «вам», «вами».',
       }),
     },
   },
@@ -1326,6 +1838,14 @@ export const RUSSIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: без „съм, си, е“`,
         text: 'За разлика от български, руският пропуска „съм, си, е“ в сегашно време: «я студент» е „аз съм студент“, «мы дома» — „ние сме вкъщи“, «я из Болгарии» — „аз съм от България“. Между двете части няма нищо.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: bez „jestem, jest”`,
+        text: 'W czasie teraźniejszym rosyjski pomija „jestem, jest, są”: «я студент» to „jestem studentem”, «мы дома» „jesteśmy w domu”, «я из Болгарии» „jestem z Bułgarii”. Nie ma nic, co należałoby wstawić między dwie części.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: bez „jsem, je, jsou“`,
+        text: 'V přítomném čase ruština vynechává „jsem, je, jsou“: «я студент» je „jsem student“, «мы дома» „jsme doma“, «я из Болгарии» „jsem z Bulharska“. Mezi obě části se nic nevkládá.',
+      }),
     },
   },
   {
@@ -1340,6 +1860,14 @@ export const RUSSIAN_GRAMMAR: GrammarRule[] = [
         title: `«${w}»: къде е нещо`,
         text: 'След «в» и «на» окончанието показва въпроса. „Къде?“ е предложен падеж, обикновено на -е: «в школе», «на улице», «в Москве». „Накъде?“ е винителен: «иду в школу». В български формата е една и съща: „в училище“.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: gdzie coś jest`,
+        text: 'Po «в» i «на» końcówka rzeczownika pokazuje, o co chodzi w pytaniu. Gdzie? bierze formę przyimkową, zwykle -е: «в школе», «на улице», «в Москве». Dokąd? bierze biernik: «иду в школу».',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: kde něco je`,
+        text: 'Po «в» a «на» ukazuje koncovka podstatného jména otázku. Kde? bere předložkový tvar, obvykle -е: «в школе», «на улице», «в Москве». Kam? bere čtvrtý pád: «иду в школу».',
+      }),
     },
   },
   {
@@ -1353,6 +1881,14 @@ export const RUSSIAN_GRAMMAR: GrammarRule[] = [
       bg: () => ({
         title: 'Окончания, които се менят',
         text: 'Руските съществителни, прилагателни и местоимения променят окончанията си според ролята в изречението (шест падежа): «книга» е книгата, «читаю книгу» — прочетеното, «нет книги» — липсващото. В български падежи има почти само при личните местоимения („аз — мен“).',
+      }),
+      pl: () => ({
+        title: 'Końcówki zmieniają się wraz z rolą',
+        text: 'Rosyjskie rzeczowniki, przymiotniki i zaimki zmieniają końcówki zależnie od roli w zdaniu (sześć przypadków): «книга» to książka, «читаю книгу» rzecz czytana, «нет книги» rzecz, której brakuje. Polski ma podobny system, ale końcówki są inne.',
+      }),
+      cs: () => ({
+        title: 'Koncovky se mění podle role',
+        text: 'Ruská podstatná jména, přídavná jména a zájmena mění koncovky podle role ve větě (šest pádů): «книга» je kniha, «читаю книгу» věc, která se čte, «нет книги» věc, která chybí. Čeština má podobný systém, ale koncovky jsou jiné.',
       }),
     },
   },

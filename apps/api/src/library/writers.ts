@@ -45,9 +45,12 @@ export interface SongSection {
 
 const LANGUAGE_NAMES: Record<V2Language, string> = {
   'en-GB': 'British English',
+  'en-US': 'American English',
   'es-ES': 'Spanish as spoken in Spain',
   'bg-BG': 'Bulgarian',
   'ru-RU': 'Russian',
+  'pl-PL': 'Polish',
+  'cs-CZ': 'Czech',
 }
 const MAX_WORDS = 12
 const MAX_TEXT = 120

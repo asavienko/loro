@@ -125,7 +125,9 @@ describe('notes worked out by the rules', () => {
 
   it('give every phrase, as any learner could type it, a picture and all three notes', () => {
     for (const phrase of LORO) {
-      for (const nativeLang of V2_NATIVES.filter((l) => l !== phrase.targetLang)) {
+      for (const nativeLang of V2_NATIVES.filter(
+        (l) => l.slice(0, 2) !== phrase.targetLang.slice(0, 2),
+      )) {
         const native = phrase.translations[nativeLang] ?? phrase.translations['en-GB'] ?? ''
         const made = deviceNotes({
           target: phrase.target,
@@ -138,7 +140,10 @@ describe('notes worked out by the rules', () => {
         for (const kind of ['mnemonic', 'grammar', 'pronunciation'] as const) {
           const versions = made.noteTranslations[kind] ?? {}
           expect(phrase.targetLang in versions, 'never in the phrase’s own language').toBe(false)
-          for (const code of V2_NATIVES.filter((l) => l !== 'en-GB' && l !== phrase.targetLang)) {
+          // English speakers (en-GB, en-US) read the English original.
+          for (const code of V2_NATIVES.filter(
+            (l) => !l.startsWith('en-') && l !== phrase.targetLang,
+          )) {
             expect(
               Boolean(versions[code]?.title && versions[code].text),
               `${phrase.id} ${kind} in ${code}`,
@@ -308,14 +313,23 @@ describe('notes by spelling (English, Russian)', () => {
       targetLang: 'ru-RU',
       nativeLang: 'en-GB',
     })
-    expect(Object.keys(made.noteTranslations.grammar ?? {})).toEqual(['bg-BG'])
+    expect(Object.keys(made.noteTranslations.grammar ?? {}).sort()).toEqual([
+      'bg-BG',
+      'cs-CZ',
+      'pl-PL',
+    ])
     const english = deviceNotes({
       target: 'How much is it?',
       native: 'Колко струва?',
       targetLang: 'en-GB',
       nativeLang: 'bg-BG',
     })
-    expect(Object.keys(english.noteTranslations.grammar ?? {}).sort()).toEqual(['bg-BG', 'ru-RU'])
+    expect(Object.keys(english.noteTranslations.grammar ?? {}).sort()).toEqual([
+      'bg-BG',
+      'cs-CZ',
+      'pl-PL',
+      'ru-RU',
+    ])
   })
 
   it('choose the grammar rule and the sound from the words, or one true of any phrase', () => {

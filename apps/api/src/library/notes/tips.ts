@@ -93,6 +93,14 @@ export const ENGLISH_SOUND_TIPS: SoundTip[] = [
         title: `«${w}»: звук th`,
         text: `В «${w}» th — не «с», «т» и не «ф»: кончик языка слегка между зубами, воздух выдувается, без голоса. Такого звука нет ни в русском, ни в болгарском.`,
       }),
+      pl: (w) => ({
+        title: `«${w}»: dźwięk th`,
+        text: `W «${w}» th to nie s, t ani f: przyłóż koniuszek języka lekko między zęby i wydmuchnij powietrze, bez głosu. W polskim nie ma takiego dźwięku.`,
+      }),
+      cs: (w) => ({
+        title: `«${w}»: hláska th`,
+        text: `V «${w}» th není s, t ani f: přiložte špičku jazyka lehce mezi zuby a vydechněte vzduch bez hlasu. V češtině taková hláska není.`,
+      }),
     },
   },
   {
@@ -110,6 +118,14 @@ export const ENGLISH_SOUND_TIPS: SoundTip[] = [
       ru: (w) => ({
         title: `«${w}»: окончание «шн»`,
         text: `Окончание в «${w}» читается как «шн» — быстрое «ш» и слабый гласный звук, — а не «ти-он» и не «ция», как в русском «-ция».`,
+      }),
+      pl: (w) => ({
+        title: `«${w}»: końcówka „szyn”`,
+        text: `Końcówkę «${w}» czyta się «shun»: szybkie sh i słaba samogłoska, a nie «ti-on» ani «cja», jak w polskim „-cja”.`,
+      }),
+      cs: (w) => ({
+        title: `«${w}»: koncovka „šn“`,
+        text: `Koncovka v «${w}» se čte «shun»: rychlé „š“ a slabá samohláska, ne «ti-on» a ne «cia», jako v české „-ce“.`,
       }),
     },
   },
@@ -129,6 +145,14 @@ export const ENGLISH_SOUND_TIPS: SoundTip[] = [
         title: `«${w}»: буква, которую не читают`,
         text: `В «${w}» «${silentLetter(w)}» пишется, но не произносится. В английской орфографии много таких букв, поэтому запоминайте, как звучит слово, а не только как оно пишется.`,
       }),
+      pl: (w) => ({
+        title: `«${w}»: litera, której się nie wymawia`,
+        text: `W «${w}» «${silentLetter(w)}» się pisze, ale nie wymawia. Angielska pisownia zachowuje wiele takich liter, więc ucz się, jak słowo brzmi, a nie tylko jak się je pisze.`,
+      }),
+      cs: (w) => ({
+        title: `«${w}»: písmeno, které se nečte`,
+        text: `V «${w}» se «${silentLetter(w)}» píše, ale nečte. Anglický pravopis zachovává mnoho takových písmen, proto se učte, jak slovo zní, a ne jen jak se píše.`,
+      }),
     },
   },
   {
@@ -146,6 +170,14 @@ export const ENGLISH_SOUND_TIPS: SoundTip[] = [
       ru: (w) => ({
         title: `«${w}»: w, а не «в»`,
         text: `В «${w}» w — не «в»: округлите губы, как для «у», и не касайтесь нижней губой верхних зубов. «West» — не «vest».`,
+      }),
+      pl: (w) => ({
+        title: `«${w}»: w, a nie „w”`,
+        text: `W «${w}» w to nie polskie „w”: zaokrąglij wargi jak do „ł”, a dolna warga nie dotyka górnych zębów. «West» to nie «vest».`,
+      }),
+      cs: (w) => ({
+        title: `«${w}»: w, ne „v“`,
+        text: `V «${w}» není w české „v“: zakulaťte rty jako pro „u“ a spodní ret se nedotýká horních zubů. «West» není «vest».`,
       }),
     },
   },
@@ -165,6 +197,14 @@ export const ENGLISH_SOUND_TIPS: SoundTip[] = [
         title: `«${w}»: мягкое h`,
         text: `В «${w}» h — лёгкий выдох из горла, как когда дышат на зеркало, а не жёсткое русское «х». Не пропускайте его.`,
       }),
+      pl: (w) => ({
+        title: `«${w}»: miękkie h`,
+        text: `W «${w}» h to lekki wydech z gardła, jak gdy chuchasz na lustro, a nie twarde polskie „ch”. Nie pomijaj go.`,
+      }),
+      cs: (w) => ({
+        title: `«${w}»: měkké h`,
+        text: `V «${w}» je h lehký výdech z hrdla, jako když dýcháte na zrcadlo, ne drsné české „ch“. Nevynechávejte ho.`,
+      }),
     },
   },
   {
@@ -182,6 +222,14 @@ export const ENGLISH_SOUND_TIPS: SoundTip[] = [
       ru: (w) => ({
         title: `«${w}»: звук ng`,
         text: `В «${w}» ng — один звук, он образуется задней частью языка у мягкого нёба. Не добавляйте «г» после него и не заменяйте его на «н».`,
+      }),
+      pl: (w) => ({
+        title: `«${w}»: dźwięk ng`,
+        text: `W «${w}» ng to jeden dźwięk, tworzony tylnią częścią języka przy podniebieniu miękkim. Nie dodawaj po nim twardego „g” i nie zamieniaj go na „n”.`,
+      }),
+      cs: (w) => ({
+        title: `«${w}»: hláska ng`,
+        text: `V «${w}» je ng jedna hláska, tvořená zadní částí jazyka u měkkého patra. Nepřidávejte za ni tvrdé „g“ a nezkracujte ji na „n“.`,
       }),
     },
   },
@@ -219,6 +267,26 @@ export const ENGLISH_SOUND_TIPS: SoundTip[] = [
               title: `«${w}»: r после гласной`,
               text: `В британском английском «r» после гласной и перед согласной не произносится. Русское и болгарское «р» всегда произносятся и раскатываются, поэтому в «${w}» сдержите его.`,
             },
+      pl: (w) =>
+        /^r[aeiou]/i.test(w)
+          ? {
+              title: `«${w}»: angielskie r`,
+              text: `W «${w}» r nie jest drżące: cofnij język i zostaw jego czubek swobodnie, bez dotykania podniebienia. Polskie „r” jest drżące, angielskie r — nie.`,
+            }
+          : {
+              title: `«${w}»: r po samogłosce`,
+              text: `W brytyjskim angielskim «r» po samogłosce i przed spółgłoską się nie wymawia. Polskie „r” zawsze się wymawia i drży, więc w «${w}» je wstrzymaj.`,
+            },
+      cs: (w) =>
+        /^r[aeiou]/i.test(w)
+          ? {
+              title: `«${w}»: anglické r`,
+              text: `V «${w}» se r nevibruje: stáhněte jazyk dozadu a nechte jeho špičku volně, bez doteku s patrem. České „r“ je vibrující, anglické r ne.`,
+            }
+          : {
+              title: `«${w}»: r po samohlásce`,
+              text: `V britské angličtině se «r» po samohlásce a před souhláskou nevyslovuje. České „r“ se vyslovuje vždy a vibruje, proto ho v «${w}» zadržte.`,
+            },
     },
   },
   {
@@ -236,6 +304,14 @@ export const ENGLISH_SOUND_TIPS: SoundTip[] = [
       ru: (w) => ({
         title: `«${w}»: окончание -ed`,
         text: `Окончание -ed в «${w}» произносится тремя способами, по звуку перед ним: быстрое «т» после k, p, s, sh, ch или f (walked), быстрое «д» после остальных звуков (played) и отдельный слог «ид» только после t или d (wanted).`,
+      }),
+      pl: (w) => ({
+        title: `«${w}»: końcówka -ed`,
+        text: `Końcówkę -ed w «${w}» wymawia się na trzy sposoby, zależnie od dźwięku przed nią: szybkie «t» po k, p, s, sh, ch lub f (walked), szybkie «d» po innych dźwiękach (played) i osobna sylaba «id» tylko po t lub d (wanted).`,
+      }),
+      cs: (w) => ({
+        title: `«${w}»: koncovka -ed`,
+        text: `Koncovka -ed ve «${w}» se vyslovuje třemi způsoby podle hlásky před ní: rychlé «t» po k, p, s, sh, ch nebo f (walked), rychlé «d» po jiných hláskách (played) a samostatná slabika «id» jen po t nebo d (wanted).`,
       }),
     },
   },
@@ -255,6 +331,14 @@ export const ENGLISH_SOUND_TIPS: SoundTip[] = [
         title: `«${w}»: звонкий конец`,
         text: `В конце «${w}» последний звук остаётся звонким: в русском и болгарском конечные «б», «д», «г» оглушаются до «п», «т», «к», а «bag» — не «back», «bed» — не «bet». Сохраняйте голос и удлиняйте гласную перед ним.`,
       }),
+      pl: (w) => ({
+        title: `«${w}»: dźwięczny koniec`,
+        text: `Na końcu «${w}» ostatni dźwięk pozostaje dźwięczny: w polskim końcowe „b”, „d”, „g” ogłuszają się do „p”, „t”, „k”, ale «bag» to nie «back», a «bed» to nie «bet». Zachowaj głos i wydłuż samogłoskę przed nim.`,
+      }),
+      cs: (w) => ({
+        title: `«${w}»: znělý konec`,
+        text: `Na konci «${w}» zůstává poslední hláska znělá: v češtině se koncové „b“, „d“, „g“ ztrácejí v „p“, „t“, „k“, ale «bag» není «back» a «bed» není «bet». Udržte hlas a prodlužte samohlásku před ní.`,
+      }),
     },
   },
   {
@@ -272,6 +356,14 @@ export const ENGLISH_SOUND_TIPS: SoundTip[] = [
       ru: (w) => ({
         title: `«${w}»: звонкое th`,
         text: `В «${w}» кончик языка слегка между зубами, а голос звучит, пока проходит воздух. Это не «з», не «д» и не «в».`,
+      }),
+      pl: (w) => ({
+        title: `«${w}»: dźwięczne th`,
+        text: `W «${w}» przyłóż koniuszek języka lekko między zęby i pozwól głosowi brzmieć, gdy przepływa powietrze. To nie „z”, „d” ani „w”.`,
+      }),
+      cs: (w) => ({
+        title: `«${w}»: znělé th`,
+        text: `V «${w}» přiložte špičku jazyka lehce mezi zuby a nechte hlas znít, zatímco proudí vzduch. Není to „z“, „d“ ani „v“.`,
       }),
     },
   },
@@ -291,6 +383,14 @@ export const ENGLISH_SOUND_TIPS: SoundTip[] = [
         title: `«${w}»: can’t, а не can`,
         text: `В «${w}» гласная долгая и сильная, как протяжное «а», в стандартном британском английском. Простое «can» в утверждении слабое и короткое, поэтому именно гласная отличает «I can swim» от «I can’t swim».`,
       }),
+      pl: (w) => ({
+        title: `«${w}»: can’t, a nie can`,
+        text: `W «${w}» samogłoska jest długa i mocna, jak przeciągłe „a”, w standardowym brytyjskim angielskim. Zwykłe «can» w zdaniu twierdzącym jest słabe i krótkie, więc to samogłoska odróżnia «I can swim» od «I can’t swim».`,
+      }),
+      cs: (w) => ({
+        title: `«${w}»: can’t, ne can`,
+        text: `V «${w}» je samohláska dlouhá a silná, jako protažené „á“, ve standardní britské angličtině. Obyčejné «can» v oznamovací větě je slabé a krátké, proto právě samohláska odlišuje «I can swim» od «I can’t swim».`,
+      }),
     },
   },
   {
@@ -308,6 +408,14 @@ export const ENGLISH_SOUND_TIPS: SoundTip[] = [
       ru: () => ({
         title: 'Ритм и маленькие слова',
         text: 'В английском сильный ритм: важные слова долгие и чёткие, а маленькие — «a», «the», «to», «of», «for», «can» — сжимаются до короткого слабого звука вроде неясного «э». Главные слова произносите чётко, малые — быстро.',
+      }),
+      pl: () => ({
+        title: 'Rytm i małe słowa',
+        text: 'Angielski ma mocny rytm: ważne słowa są długie i wyraźne, a małe — «a», «the», «to», «of», «for», «can» — ściskają się do krótkiego, słabego „e”. Ważne słowa mów wyraźnie, a małe niech prześlizgują się szybko.',
+      }),
+      cs: () => ({
+        title: 'Rytmus a malá slova',
+        text: 'Angličtina má silný rytmus: důležitá slova jsou dlouhá a zřetelná, kdežto malá — «a», «the», «to», «of», «for», «can» — se stlačí do krátkého slabého „e“. Důležitá slova říkejte zřetelně a malá nechte proklouznout.',
       }),
     },
   },
@@ -339,6 +447,14 @@ export const RUSSIAN_SOUND_TIPS: SoundTip[] = [
         title: `«${w}»: щ`,
         text: 'Руското «щ» не е „шт“ като в българския, а един дълъг, мек звук като „ш“, с език, вдигнат по-близо до небцето.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: щ`,
+        text: 'Щ to jeden długi, miękki dźwięk, jak polskie „szcz” wymówione razem, z językiem uniesionym bliżej podniebienia.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: щ`,
+        text: 'Щ je jedna dlouhá, měkká hláska, jako české „šč“ vyslovené dohromady, s jazykem zdviženým blíž k patru.',
+      }),
     },
   },
   {
@@ -352,6 +468,14 @@ export const RUSSIAN_SOUND_TIPS: SoundTip[] = [
       bg: (w) => ({
         title: `«${w}»: ы`,
         text: 'Ы е отделна гласна, каквато българският няма: кажете „и“, но с издърпан назад език и отпуснати устни. Не я заменяйте с „и“ или „ъ“. Съгласната пред нея е винаги твърда.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: ы`,
+        text: 'Ы to polskie „y” (jak w „syn”): osobna samogłoska z językiem cofniętym i rozluźnionymi wargami. Nie zamieniaj jej na „i”. Spółgłoska przed nią jest zawsze twarda.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: ы`,
+        text: 'Ы je samostatná samohláska, kterou čeština nemá (české „y“ se čte jako „i“): řekněte „i“, ale s jazykem stáhnutým dozadu a uvolněnými rty. Nezaměňujte ji za „i“. Souhláska před ní je vždy tvrdá.',
       }),
     },
   },
@@ -367,6 +491,14 @@ export const RUSSIAN_SOUND_TIPS: SoundTip[] = [
         title: `«${w}»: ё`,
         text: '«Ё» е „йо“ („ьо“ след съгласна, като в „синьо“), а след «ж» или «ш» — просто „о“. Тя винаги е ударена, затова показва къде е ударението.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: ё`,
+        text: '«Ё» to „jo” („io” po spółgłosce, jak w „niosę”), a po «ж» lub «ш» zwykłe „o”. Zawsze jest akcentowana, więc pokazuje, gdzie pada akcent.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: ё`,
+        text: '«Ё» je „jo“ (změkčující předchozí souhlásku), a po «ж» nebo «ш» obyčejné „o“. Je vždy přízvučné, takže ukazuje, kam padá přízvuk.',
+      }),
     },
   },
   {
@@ -380,6 +512,14 @@ export const RUSSIAN_SOUND_TIPS: SoundTip[] = [
       bg: (w) => ({
         title: `«${w}»: -ться, -тся`,
         text: 'В края -ться и -тся «т» и «с» се сливат в едно дълго «ц»: «учиться» се чете „учицца“. «-ся» е руското „се“, залепено за края на глагола.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: -ться, -тся`,
+        text: 'W końcówkach -ться i -тся «т» i «с» zlewają się w jedno długie «ц»: «учиться» czyta się «учицца». «-ся» to rosyjskie „się”, doklejone do końca czasownika.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: -ться, -тся`,
+        text: 'V koncovkách -ться a -тся se «т» a «с» slévají v jedno dlouhé «ц»: «учиться» se čte «учицца». «-ся» je ruské „se“, přilepené na konec slovesa.',
       }),
     },
   },
@@ -395,6 +535,14 @@ export const RUSSIAN_SOUND_TIPS: SoundTip[] = [
         title: `«${w}»: меката буква ь`,
         text: 'Ь няма свой звук. Смекчава съгласната пред себе си — като „я“ и „ю“ в „ня“ и „ню“, но без гласна след нея.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: miękki znak ь`,
+        text: 'Ь nie ma własnego dźwięku. Zmiękcza spółgłoskę przed sobą, jak „ń” w „koń” albo „i” w „nie”, ale bez samogłoski po niej.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: měkký znak ь`,
+        text: 'Ь nemá vlastní hlásku. Změkčuje souhlásku před sebou, jako „ď“ v „děd“ nebo „ň“ v „kůň“, ale bez samohlásky po ní.',
+      }),
     },
   },
   {
@@ -408,6 +556,14 @@ export const RUSSIAN_SOUND_TIPS: SoundTip[] = [
       bg: (w) => ({
         title: `«${w}»: и след ж, ш, ц`,
         text: 'След ж, ш и ц буквата и се чете като «ы»: «жи», «ши» и «ци» звучат като «жы», «шы» и «цы». В български „жи“ и „ши“ остават с „и“.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: и po ж, ш, ц`,
+        text: 'Po ж, ш i ц litera и czytana jest jak «ы»: «жи», «ши» i «ци» brzmią jak «жы», «шы» i «цы» — podobnie jak polskie „szy”, „cy”.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: и po ж, ш, ц`,
+        text: 'Po ж, ш a ц se písmeno и čte jako «ы»: «жи», «ши» a «ци» zní jako «жы», «шы» a «цы». V češtině se „ži“, „ši“ čtou s „i“.',
       }),
     },
   },
@@ -423,6 +579,14 @@ export const RUSSIAN_SOUND_TIPS: SoundTip[] = [
         title: `«${w}»: г се чете като в`,
         text: 'В окончанията -ого и -его буквата г се чете като «в»: «его» звучи като «ево», «ничего» — като «ничево».',
       }),
+      pl: (w) => ({
+        title: `«${w}»: г czytane jak в`,
+        text: 'W końcówkach -ого i -его litera г czytana jest jak «в»: «его» brzmi jak «ево», «ничего» jak «ничево».',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: г čtené jako в`,
+        text: 'V koncovkách -ого a -его se písmeno г čte jako «в»: «его» zní jako «ево», «ничего» jako «ничево».',
+      }),
     },
   },
   {
@@ -436,6 +600,14 @@ export const RUSSIAN_SOUND_TIPS: SoundTip[] = [
       bg: (w) => ({
         title: `«${w}»: х`,
         text: 'Като българското «х»: груб звук от задната част на гърлото; не го отслабвайте до тихо издишване.',
+      }),
+      pl: (w) => ({
+        title: `«${w}»: х`,
+        text: 'Jak polskie „ch”: szorstki dźwięk z tyłu gardła; nie osłabiaj go do cichego wydechu.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: х`,
+        text: 'Jako české „ch“: drsná hláska vzadu v krku; neoslabujte ji na tichý výdech.',
       }),
     },
   },
@@ -451,6 +623,14 @@ export const RUSSIAN_SOUND_TIPS: SoundTip[] = [
         title: `«${w}»: последната съгласна`,
         text: 'Както в български, в края на думата б, в, г, д, ж и з стават беззвучни — п, ф, к, т, ш и с: «хлеб» се чете «хлеп». Ако следващата дума започва с б, г, д, ж или з, звучността може да се запази.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: ostatnia spółgłoska`,
+        text: 'Tak jak w polskim, na końcu wyrazu б, в, г, д, ж i з tracą dźwięczność: czyta się je jak п, ф, к, т, ш i с, więc «хлеб» czyta się «хлеп». Przed dźwięczną spółgłoską następnego wyrazu dźwięczność może zostać.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: poslední souhláska`,
+        text: 'Stejně jako v češtině se na konci slova б, в, г, д, ж a з vyslovují neznělě: jako п, ф, к, т, ш a с, takže «хлеб» se čte «хлеп». Před znělou souhláskou dalšího slova může znělost zůstat.',
+      }),
     },
   },
   {
@@ -465,6 +645,14 @@ export const RUSSIAN_SOUND_TIPS: SoundTip[] = [
         title: `«${w}»: трептящо р`,
         text: 'Като в български, «р» е трептящо: върхът на езика се удря във венеца зад горните зъби. Казва се и в края на думата.',
       }),
+      pl: (w) => ({
+        title: `«${w}»: drżące р`,
+        text: 'Tak jak w polskim, «р» jest drżące: czubek języka uderza o wałek dziąsłowy za górnymi zębami. Wymawia się je także na końcu wyrazu.',
+      }),
+      cs: (w) => ({
+        title: `«${w}»: vibrující р`,
+        text: 'Stejně jako v češtině je «р» vibrující: špička jazyka se chvěje o dásně za horními zuby. Vyslovuje se i na konci slova.',
+      }),
     },
   },
   {
@@ -478,6 +666,14 @@ export const RUSSIAN_SOUND_TIPS: SoundTip[] = [
       bg: () => ({
         title: 'Ударение и слаби гласни',
         text: 'Ударението в руския не се отбелязва в правописа, може да падне на всяка сричка и да се мести между формите на една дума. Без ударение «о» се чете като «а» («молоко» → „малако“), а «е» и «я» отслабват към „и“.',
+      }),
+      pl: () => ({
+        title: 'Akcent i słabe samogłoski',
+        text: 'W rosyjskim akcent nie jest zaznaczany w pisowni, może paść na każdą sylabę i przesuwać się między formami jednego wyrazu. Bez akcentu «о» czyta się jak «а» («молоко» brzmi jak «малако»), a «е» i «я» słabną w stronę „i”.',
+      }),
+      cs: () => ({
+        title: 'Přízvuk a slabé samohlásky',
+        text: 'V ruštině se přízvuk v pravopisu neznačí, může padnout na kteroukoli slabiku a posouvat se mezi tvary jednoho slova. Bez přízvuku se «о» čte jako «а» («молоко» zní jako «малако») a «е» a «я» slábnou k „i“.',
       }),
     },
   },

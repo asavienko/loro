@@ -6,6 +6,7 @@
 import type { V2Note } from '@loro/content/v2'
 import type { LanguageCode, PhraseNotes } from './content.js'
 import { transcribeBulgarian } from './bg.js'
+import { CZECH_GRAMMAR, CZECH_SOUND_TIPS } from './cs.js'
 import { transcribeSpanish } from './es.js'
 import {
   BULGARIAN_GRAMMAR,
@@ -18,6 +19,7 @@ import { learnedPronunciation } from './learned.js'
 import { NOTE_LANGUAGES, type NoteLocale, type NoteText } from './locale.js'
 import { memoryNote, memoryNoteBySpelling } from './memory.js'
 import { pictureFor } from './picture.js'
+import { POLISH_GRAMMAR, POLISH_SOUND_TIPS } from './pl.js'
 import { pronunciationNote } from './pronunciation.js'
 import { ENGLISH_SOUND_TIPS, RUSSIAN_SOUND_TIPS } from './tips.js'
 
@@ -45,14 +47,24 @@ export const DEVICE_NOTE_LANGUAGES: readonly LanguageCode[] = ['es-ES', 'bg-BG']
 /**
  * The course languages whose notes are chosen from the spelling alone, their sounds taken from
  * Loro's own phrases (learned.ts): English spelling doesn't give its sounds, and Russian hides its
- * stress.
+ * stress. Polish and Czech spelling does give the sounds, but Loro has no transcriber for them yet,
+ * so they take the same safe path: a word Loro hasn't transcribed is named, never guessed.
  */
-export const SPELLING_NOTE_LANGUAGES: readonly LanguageCode[] = ['en-GB', 'ru-RU']
+export const SPELLING_NOTE_LANGUAGES: readonly LanguageCode[] = [
+  'en-GB',
+  'en-US',
+  'ru-RU',
+  'pl-PL',
+  'cs-CZ',
+]
 
 const BY_SPELLING: Partial<
   Record<LanguageCode, { grammar: GrammarRule[]; tips: typeof ENGLISH_SOUND_TIPS }>
 > = {
   'en-GB': { grammar: ENGLISH_GRAMMAR, tips: ENGLISH_SOUND_TIPS },
+  'en-US': { grammar: ENGLISH_GRAMMAR, tips: ENGLISH_SOUND_TIPS },
+  'pl-PL': { grammar: POLISH_GRAMMAR, tips: POLISH_SOUND_TIPS },
+  'cs-CZ': { grammar: CZECH_GRAMMAR, tips: CZECH_SOUND_TIPS },
   'ru-RU': { grammar: RUSSIAN_GRAMMAR, tips: RUSSIAN_SOUND_TIPS },
 }
 
@@ -147,7 +159,9 @@ function compose(input: DeviceNotesInput): DeviceNotes {
     noteTranslations[kind] = Object.fromEntries(
       NOTE_LANGUAGES.flatMap((l) => {
         const note = byKind[kind][l.locale]
-        return l.locale !== 'en' && l.code !== input.targetLang && note ? [[l.code, note]] : []
+        return l.locale !== 'en' && l.code.slice(0, 2) !== input.targetLang.slice(0, 2) && note
+          ? [[l.code, note]]
+          : []
       }),
     )
   }

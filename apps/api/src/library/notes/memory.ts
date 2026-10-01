@@ -50,6 +50,14 @@ function cognate(input: Words): Say | null {
       title: `«${t}» и «${n}»`,
       text: `«${t}» звучит как «${n}» из вашего перевода — пусть одно напоминает о другом.`,
     },
+    pl: {
+      title: `«${t}» i «${n}»`,
+      text: `«${t}» brzmi jak «${n}» w Twoim tłumaczeniu — niech jedno przypomina o drugim.`,
+    },
+    cs: {
+      title: `«${t}» a «${n}»`,
+      text: `«${t}» zní jako «${n}» ve vašem překladu — ať jedno připomíná druhé.`,
+    },
   }
 }
 
@@ -81,6 +89,14 @@ function link(input: Words): Say | null {
       ru: {
         title: `Снова «${w}»`,
         text: `«${w}» есть и во фразе «${o}» — «${meaning}». Привяжите новую фразу к этой.`,
+      },
+      pl: {
+        title: `Znowu «${w}»`,
+        text: `«${w}» jest też we frazie «${o}» — „${meaning}”. Powiąż nową frazę z tamtą.`,
+      },
+      cs: {
+        title: `Zase «${w}»`,
+        text: `«${w}» je i ve frázi «${o}» — „${meaning}“. Navažte novou frázi na tu.`,
       },
     }
   }
@@ -120,6 +136,14 @@ function chunks(input: Words): Say | null {
       title: 'По частям',
       text: `Учите её по частям: ${joined}. Скажите каждую дважды, затем соедините.`,
     },
+    pl: {
+      title: `W ${parts.length} częściach`,
+      text: `Ucz się jej częściami: ${joined}. Powiedz każdą dwa razy, potem połącz je.`,
+    },
+    cs: {
+      title: `Ve ${parts.length} částech`,
+      text: `Učte se ji po částech: ${joined}. Řekněte každou dvakrát, potom je spojte.`,
+    },
   }
 }
 
@@ -147,6 +171,14 @@ function beats(input: MemoryInput): Say {
         title: `По слогам: «${w}»`,
         text: `Скажите её медленно, по слогам — ${shown}, — затем в полном темпе.`,
       },
+      pl: {
+        title: `Sylaba po sylabie: «${w}»`,
+        text: `Powiedz to wolno, sylaba po sylabie — ${shown} — a potem w pełnym tempie.`,
+      },
+      cs: {
+        title: `Slabika po slabice: «${w}»`,
+        text: `Řekněte to pomalu, slabika po slabice — ${shown} — a pak v plné rychlosti.`,
+      },
     }
   }
   const strong = syllables[word.stress] ?? ''
@@ -163,6 +195,14 @@ function beats(input: MemoryInput): Say {
     ru: {
       title: `Отстучите «${w}»`,
       text: `${shown}: по удару на слог, ударный — «${strong}». Отстукивайте ритм, пока произносите.`,
+    },
+    pl: {
+      title: `Wystukaj «${w}»`,
+      text: `${shown}: jedno stuknięcie na sylabę, mocna to «${strong}». Wystukuj rytm, mówiąc.`,
+    },
+    cs: {
+      title: `Vyklepejte «${w}»`,
+      text: `${shown}: jedno klepnutí na slabiku, silná je «${strong}». Klepejte rytmus, když to říkáte.`,
     },
   }
 }
@@ -186,6 +226,14 @@ function echo(input: Words): Say {
     ru: {
       title: 'Повторяйте за записью',
       text: `Включите запись и скажите «${t}» сразу после неё, в том же ритме: три раза с записью, затем один раз без неё.`,
+    },
+    pl: {
+      title: 'Powtarzaj za nagraniem',
+      text: `Włącz nagranie i powiedz «${t}» zaraz po nim, w tym samym rytmie: trzy razy z nagraniem, potem raz bez.`,
+    },
+    cs: {
+      title: 'Opakujte po nahrávce',
+      text: `Pusťte nahrávku a řekněte «${t}» hned po ní, ve stejném rytmu: třikrát s nahrávkou, pak jednou bez ní.`,
     },
   }
 }

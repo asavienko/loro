@@ -165,6 +165,9 @@ export const config = {
     TTS_VOICE_BG_BG: process.env['TTS_VOICE_BG_BG'],
     TTS_VOICE_RU_RU: process.env['TTS_VOICE_RU_RU'],
     TTS_VOICE_EN_GB: process.env['TTS_VOICE_EN_GB'],
+    TTS_VOICE_EN_US: process.env['TTS_VOICE_EN_US'],
+    TTS_VOICE_PL_PL: process.env['TTS_VOICE_PL_PL'],
+    TTS_VOICE_CS_CZ: process.env['TTS_VOICE_CS_CZ'],
     TTS_STUB_RENDER: process.env['TTS_STUB_RENDER'],
   }),
 

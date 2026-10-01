@@ -90,6 +90,8 @@ const UNTRANSCRIBED: Record<NoteLocale, string> = {
   en: ' The … stands for words Loro hasn’t transcribed yet: listen to the clip.',
   bg: ' Многоточието замества думи без транскрипция в Loro засега: чуйте записа.',
   ru: ' Многоточие стоит вместо слов без транскрипции в Loro: послушайте запись.',
+  pl: ' Wielokropek zastępuje słowa, których Loro jeszcze nie transkrybowało: posłuchaj nagrania.',
+  cs: ' Tři tečky nahrazují slova, která Loro ještě nepřepsalo: poslechněte si nahrávku.',
 }
 
 export interface LearnedSounds {
