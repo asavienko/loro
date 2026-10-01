@@ -11,7 +11,7 @@ import { findPhrase, findSetView, promptOf } from '@shared/state/catalog';
 import { playsOnce } from '@shared/state/machine';
 import { currentPhraseId, pendingFor, sessionSummary, windowLeft } from '@shared/state/selectors';
 import type { AppState, Grade } from '@shared/state/types';
-import { endTitle, isTargetRevealed, phaseInstruction, queueTitle } from '@shared/ui/phase';
+import { endTitle, isTargetRevealed, phaseStepLabel, queueTitle } from '@shared/ui/phase';
 import type { NowPlaying, NowPlayingGrade } from './media';
 
 /** In the app's order (src/ui/grades.ts). */
@@ -50,7 +50,10 @@ export function phraseNowPlaying(state: AppState, c: Copy, now: number): NowPlay
       ? endTitle(c, player.source, summary ? summary.ratings.missed + summary.ratings.hard + summary.ratings.easy : 0)
       : !playing
         ? c.player.paused
-        : phaseInstruction(c, player.phase, prompt.lang, phrase.targetLang);
+        : // The step in a word, as the bar says it: the language, or "Your turn".
+          player.phase === 'rate'
+          ? c.player.howDidItGo
+          : phaseStepLabel(c, player.phase, prompt.lang, phrase.targetLang);
 
   // Rated, the grades go until the rating's window closes, as they do in the app.
   const pending = pendingFor(state, phrase.id);

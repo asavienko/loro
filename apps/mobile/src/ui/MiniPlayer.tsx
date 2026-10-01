@@ -5,7 +5,7 @@ import { findPhrase, findSetView, promptOf } from '@shared/state/catalog';
 import { clock } from '@shared/state/clock';
 import { playsOnce } from '@shared/state/machine';
 import { continuation, currentPhraseId, displayLearner, pendingFor, sessionSummary, windowLeft } from '@shared/state/selectors';
-import { endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction } from '@shared/ui/phase';
+import { endTitle, isTargetRevealed, PHASE_ICONS, phaseStepLabel } from '@shared/ui/phase';
 import { barRating, recentLoopRating } from '@shared/ui/rating';
 import { useRate } from '../screens/useRate';
 import { useCopy, useNow, useStore } from '../state/store';
@@ -84,7 +84,8 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
         ? c.player.paused
         : phase === 'rate'
           ? c.player.howDidItGo
-          : phaseInstruction(c, phase, prompt.lang, phrase.targetLang);
+          : // The step in a word, as the player's steps name it: the language, or "Your turn".
+            phaseStepLabel(c, phase, prompt.lang, phrase.targetLang);
   const own = card(phrase, {
     revealed: isTargetRevealed(player),
     status,
@@ -110,7 +111,7 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
       key: `${at.index}:${p.id}`,
       card: card(p, {
         revealed: false,
-        status: playing ? phaseInstruction(c, 'native', pPrompt.lang, p.targetLang) : c.player.paused,
+        status: playing ? phaseStepLabel(c, 'native', pPrompt.lang, p.targetLang) : c.player.paused,
         badge: playing ? PHASE_ICONS.native : null,
         progress: <MiniProgress share={0} />,
       }),
