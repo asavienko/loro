@@ -7,7 +7,7 @@ language you're learning, then rate how it went. iOS, Android and the web from o
 **Status:** every screen and sheet of the v2.0 web prototype is ported, and the app is connected
 (plan [106](../../plans/106-connected-app.md)): its content, accounts, progress, sharing and AI
 generation come from the API ([library.md](../../docs/architecture/library.md)), and so does every
-sound: phrases play the clips of the server's voices (plan [108](../../plans/108-backend-only.md)).
+sound: phrases play the clips of the server's voices (plan [108](../../plans/archive/2026-10-01/108-backend-only.md)).
 Four tabs: Home, Explore, Create and Library; songs live in their sets and play in the one player,
 albums are in Library. The prototype stays in Git history (`design/design-v2.0/rapid-ui-prototype`,
 removed after commit `52a0e3b`) as the reference for its behaviour.
