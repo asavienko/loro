@@ -291,6 +291,13 @@ export class LibraryWriteController {
     return this.library.generateNotes(request.principal.userId, body)
   }
 
+  /** Another mnemonic or grammar note for a phrase, unlike the ones the learner already read. */
+  @Post('generate/note')
+  @HttpCode(200)
+  rewriteNote(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    return this.library.rewriteNote(request.principal.userId, body)
+  }
+
   @Post('generate/cover')
   @HttpCode(201)
   generateCover(@Req() request: AuthenticatedRequest, @Body() body: unknown) {

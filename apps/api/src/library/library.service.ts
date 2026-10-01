@@ -33,6 +33,8 @@ import {
   ProfileSchema,
   ReportSchema,
   RetrySongSchema,
+  RewriteNoteSchema,
+  type RewriteNoteRequest,
   SaveSchema,
   ShareCodeSchema,
   UpdateAlbumSchema,
@@ -82,6 +84,7 @@ import {
   aiCover,
   aiLyrics,
   aiNotes,
+  aiRewrittenNote,
   ruleNotes,
   aiPhrases,
   artist,
@@ -1795,6 +1798,30 @@ export class LibraryService {
       }
     }
     return { provider: 'rules', ...ruleNotes(request) }
+  }
+
+  /**
+   * Another mnemonic or grammar note the learner asked for, written by the model from the
+   * allowance. Loro's rules have only one note per phrase, so without a model there is none.
+   */
+  async rewriteNote(
+    userId: string,
+    body: unknown,
+  ): Promise<{ kind: RewriteNoteRequest['kind']; note: { title: string; text: string } }> {
+    const request = parseContract(RewriteNoteSchema, body)
+    const ai = writer()
+    if (!ai) throw new LoroError('PROVIDER_UNAVAILABLE', 'No writer for another note')
+    await this.spend(userId, 'phrases')
+    try {
+      const signal = AbortSignal.timeout(NOTES_WAIT_MS)
+      return { kind: request.kind, note: await aiRewrittenNote(ai, request, signal) }
+    } catch (error) {
+      this.logger.warn(
+        `note rewriter failed: ${error instanceof Error ? error.message : 'unknown'}`,
+      )
+      await this.refund(userId, 'phrases')
+      throw new LoroError('PROVIDER_UNAVAILABLE', 'Another note could not be written')
+    }
   }
 
   /**

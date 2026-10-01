@@ -145,12 +145,13 @@ next phrase's clips in the two languages the learner hears.
 
 ## Generation and limits
 
-| Route                          | A model (`ai`, [ADR-0015](adr/0015-open-model-providers.md)) | Without one (labelled)                           |
-| ------------------------------ | ------------------------------------------------------------ | ------------------------------------------------ |
-| `POST /library/decks`          | Phrases with pictures and all three notes, in the background | The phrase bank, best theme first (`bank`)       |
-| `POST /library/generate/notes` | Notes and a picture for a typed phrase                       | Notes and a picture by Loro's rules (`rules`)    |
-| `POST /library/generate/cover` | An illustration (Muse Image), else a shape spec, background  | A pattern drawn from the title (`pattern`)       |
-| `POST /library/generate/song`  | Lyrics that sing every phrase                                | The set's phrases arranged as a song (`phrases`) |
+| Route                          | A model (`ai`, [ADR-0015](adr/0015-open-model-providers.md)) | Without one (labelled)                            |
+| ------------------------------ | ------------------------------------------------------------ | ------------------------------------------------- |
+| `POST /library/decks`          | Phrases with pictures and all three notes, in the background | The phrase bank, best theme first (`bank`)        |
+| `POST /library/generate/notes` | Notes and a picture for a typed phrase                       | Notes and a picture by Loro's rules (`rules`)     |
+| `POST /library/generate/note`  | Another mnemonic or grammar note, unlike the ones sent       | None: `PROVIDER_UNAVAILABLE` (the rules have one) |
+| `POST /library/generate/cover` | An illustration (Muse Image), else a shape spec, background  | A pattern drawn from the title (`pattern`)        |
+| `POST /library/generate/song`  | Lyrics that sing every phrase                                | The set's phrases arranged as a song (`phrases`)  |
 
 Text comes from DeepSeek V4.1 Flash on Fireworks (`FIREWORKS_API_KEY`), and from the same model
 through OpenRouter (`OPENROUTER_API_KEY`) when Fireworks fails, with reasoning off; covers are drawn

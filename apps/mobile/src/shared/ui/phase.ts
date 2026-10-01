@@ -11,6 +11,8 @@ export const PHASE_ICONS: Record<Exclude<Phase, 'rate'>, IconName> = {
   // A person speaking: the learner says it. Not a microphone: nothing is recorded.
   pause: 'record_voice_over',
   target: 'volume_up',
+  // Again: the learner says it once more, as they just heard it.
+  echo: 'replay',
 };
 
 /**
@@ -20,7 +22,7 @@ export const PHASE_ICONS: Record<Exclude<Phase, 'rate'>, IconName> = {
  * that has ended shows it only if it was heard: Next can end one before that.
  */
 export function isTargetRevealed(player: Pick<PlayerState, 'phase' | 'ended' | 'targetHeard' | 'repetition' | 'audioError'>): boolean {
-  return !player.audioError && (player.phase === 'target' || player.phase === 'rate' || (player.ended && player.targetHeard));
+  return !player.audioError && (player.phase === 'target' || player.phase === 'echo' || player.phase === 'rate' || (player.ended && player.targetHeard));
 }
 
 /**
@@ -70,6 +72,8 @@ export function phaseInstruction(c: Copy, phase: Phase, promptLang: LanguageCode
       return c.player.instruction.pause(languageName(targetLang, c.locale));
     case 'target':
       return c.player.instruction.target(languageName(targetLang, c.locale));
+    case 'echo':
+      return c.player.instruction.echo(languageName(targetLang, c.locale));
     case 'rate':
       return c.player.instruction.rate;
   }
@@ -83,5 +87,7 @@ export function phaseStepLabel(c: Copy, phase: Exclude<Phase, 'rate'>, promptLan
       return c.player.yourTurn;
     case 'target':
       return languageLabel(targetLang, c.locale);
+    case 'echo':
+      return c.player.again;
   }
 }

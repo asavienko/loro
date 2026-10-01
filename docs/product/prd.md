@@ -18,13 +18,13 @@ remain in Git history at `e36cc758`. Delivery status lives in
 
 ## Listening and rating
 
-| ID    | Requirement                                                                                          |
-| ----- | ---------------------------------------------------------------------------------------------------- |
-| P3-01 | Continuous hands-free playback: native prompt → a measured pause to say it → target, repeated.       |
-| P3-11 | Background audio with lock-screen / notification transport controls.                                 |
-| P3-31 | Grades Missed / Hard / Easy, which show no intervals: the real FSRS model in core-rs schedules them. |
-| P2-24 | How well a phrase is known sets its repetitions (3 while new or shaky, 1 under review; overridable). |
-| AS-01 | Native-quality TTS for every phrase, cached on the device (voice choice: Q-15).                      |
+| ID    | Requirement                                                                                                                   |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------- |
+| P3-01 | Continuous hands-free playback: native prompt → a measured pause to say it → target → a short echo to say it again, repeated. |
+| P3-11 | Background audio with lock-screen / notification transport controls.                                                          |
+| P3-31 | Grades Missed / Hard / Easy, which show no intervals: the real FSRS model in core-rs schedules them.                          |
+| P2-24 | How well a phrase is known sets its repetitions (3 while new or shaky, 1 under review; overridable).                          |
+| AS-01 | Native-quality TTS for every phrase, cached on the device (voice choice: Q-15).                                               |
 
 ## Making and finding phrases
 

@@ -261,6 +261,29 @@ export const GenerateNotesSchema = z
     path: ['nativeLang'],
   })
 
+/** The notes a learner can ask to have written again: the hook and the rule, never the sounds. */
+export const REWRITABLE_NOTES = ['mnemonic', 'grammar'] as const
+/** How many of the notes a learner already read are sent, newest last. */
+export const MAX_PREVIOUS_NOTES = 10
+
+/**
+ * Another note for a phrase: the learner read `previous` (the phrase's own note first,
+ * then each one written since) and asked for a different one, in `nativeLang`.
+ */
+export const RewriteNoteSchema = z
+  .strictObject({
+    kind: z.enum(REWRITABLE_NOTES),
+    target: z.string().trim().min(1).max(LIBRARY_TEXT.phrase),
+    native: z.string().trim().min(1).max(LIBRARY_TEXT.phrase),
+    targetLang: LibraryCourseSchema,
+    nativeLang: LibraryLanguageSchema,
+    previous: z.array(NoteSchema).min(1).max(MAX_PREVIOUS_NOTES),
+  })
+  .refine((r) => !sameLanguage(r.targetLang, r.nativeLang), {
+    message: 'A course is never in the learner’s own language',
+    path: ['nativeLang'],
+  })
+
 /** What a cover is for: a set or album wears it; a phrase's or song's is the learner's own. */
 export const COVER_KINDS = ['set', 'album', 'song', 'phrase'] as const
 
@@ -330,4 +353,5 @@ export type GeneratePhrasesRequest = z.infer<typeof GeneratePhrasesSchema>
 export type GenerateCoverRequest = z.infer<typeof GenerateCoverSchema>
 export type WearCoverRequest = z.infer<typeof WearCoverSchema>
 export type GenerateNotesRequest = z.infer<typeof GenerateNotesSchema>
+export type RewriteNoteRequest = z.infer<typeof RewriteNoteSchema>
 export type GenerateSongRequest = z.infer<typeof GenerateSongSchema>

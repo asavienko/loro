@@ -162,6 +162,12 @@ export function makeEn(n: Plural) {
       notes: { mnemonic: 'Mnemonic', grammar: 'Grammar', pronunciation: 'Sounds' },
       notesTitle: 'Notes',
       notesInEnglish: 'Notes are in English for now.',
+      /** Asks for another note of that kind, unlike the ones already read. */
+      noteAgain: { mnemonic: 'New mnemonic', grammar: 'Explain another way' },
+      /** While another note is written, naming the language it is written in. */
+      noteWriting: (language: string) => `Writing a new one in ${language}…`,
+      noteEarlier: (count: number) => `Earlier ones (${count})`,
+      noteHideEarlier: 'Hide earlier ones',
       words: 'Tap a word for its meaning.',
       glossHint: 'Shows its meaning',
       edit: 'Edit phrase',
@@ -299,10 +305,12 @@ export function makeEn(n: Plural) {
       hidden: (language: string) => `${language} hidden until you hear it`,
       steps: 'Steps',
       yourTurn: 'Your turn',
+      again: 'Again',
       instruction: {
         native: (language: string) => `Listen in ${language}`,
         pause: (language: string) => `Your turn — say it out loud in ${language}`,
         target: (language: string) => `Hear it in ${language}`,
+        echo: (language: string) => `Say it again in ${language}, just as you heard it`,
         rate: 'Rate it, or wait to go on',
       },
       paused: 'Paused',

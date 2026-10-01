@@ -8,7 +8,7 @@ Guidance for Claude Code working in this repository.
 American English, Russian, Polish and Czech by the phrase, in an English, Bulgarian, Russian, Polish
 or Czech interface (never a course in the learner's own language; en-GB and en-US count as one): a
 listening-first player (hear a phrase in your language, say it in the pause, hear it in the target
-language, rate it; FSRS schedules the next time).
+language, say it again, rate it; FSRS schedules the next time).
 
 **The app is `apps/mobile`: the v2.0 design as an Expo app** (plan
 [104](plans/104-prototype-react-native.md)). It replaced the v1.1-based app on 2026-09-30. That app,
