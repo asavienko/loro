@@ -16,7 +16,7 @@
 - **Owner request, 2026-09-30:** "I want to make all the functionality work with the existing
   backend, so all the sound phrase generation should work with the backend. All the data should come
   from the backend."
-- **Depends on:** plan [106](106-connected-app.md) (the library module, packs, speech clips).
+- **Depends on:** plan [106](../../106-connected-app.md) (the library module, packs, speech clips).
 
 ## Where it started
 

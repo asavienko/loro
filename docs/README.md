@@ -35,6 +35,9 @@ history at `e36cc758`.
 - [Local APK](process/local-apk.md) — Android testing builds
 - [EC2 deployment](process/ec2-deployment.md) and
   [EC2 backups and recovery](runbooks/backend-testing.md)
+- [The public repository](process/public-repository.md) — what is public, the GitHub settings it
+  relies on, what must never be committed; with [`CONTRIBUTING.md`](../CONTRIBUTING.md),
+  [`SECURITY.md`](../SECURITY.md) and [`LICENSE`](../LICENSE) at the root
 
 ## Decisions
 
@@ -44,9 +47,10 @@ history at `e36cc758`.
 
 - [`apps/mobile`](../apps/mobile/README.md) and its
   [`LoroCore` module](../apps/mobile/modules/loro-core/README.md)
-- [`apps/api`](../apps/api/README.md), its [authentication](../apps/api/src/auth/README.md), and the
-  [Anthropic](../apps/api/src/integrations/anthropic/README.md) and
-  [ElevenLabs](../apps/api/src/integrations/elevenlabs/README.md) integrations
+- [`apps/api`](../apps/api/README.md), its [authentication](../apps/api/src/auth/README.md), the
+  [ElevenLabs](../apps/api/src/integrations/elevenlabs/README.md) integration and the text-model
+  transports in `apps/api/src/integrations/`
+  ([ADR-0015](architecture/adr/0015-open-model-providers.md))
 - [`packages/core`](../packages/core/README.md),
   [`packages/core-rs`](../packages/core-rs/README.md),
   [`packages/content`](../packages/content/README.md) and its

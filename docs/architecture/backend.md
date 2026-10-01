@@ -74,10 +74,10 @@ worker tier: songs are made in the background inside the API process, and the ap
 | `MUSIC_PROVIDER=elevenlabs` and `MUSIC_API_KEY`      | A synthesized "Demo sound" instrumental                              |
 | `TTS_PROVIDER=elevenlabs`, its key, model and voices | No phrase clips: the app can't play a phrase and says so             |
 
-The transports are in `integrations/`
-([Anthropic](../../apps/api/src/integrations/anthropic/README.md),
-[ElevenLabs](../../apps/api/src/integrations/elevenlabs/README.md)). Generation and its limits:
-[library.md](library.md#generation-and-limits).
+The transports are in `integrations/` (`openai-compatible/` and `openrouter/` for the text and image
+models of [ADR-0015](adr/0015-open-model-providers.md),
+[ElevenLabs](../../apps/api/src/integrations/elevenlabs/README.md) for voices and music). Generation
+and its limits: [library.md](library.md#generation-and-limits).
 
 ## Sync
 
