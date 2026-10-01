@@ -2,14 +2,17 @@
 
 - **Requirement IDs:** `AI-05` (guarded generation with labelled fallbacks), `LIB-04` (covers)
 - **Milestone:** Main app
-- **Status:** 🟡 Started 2026-10-01 at the owner's request. **Left:** everything below. **Blocked
-  by:** nothing; live runs need `FIREWORKS_API_KEY` and `OPENROUTER_API_KEY`.
+- **Status:** 🟡 Started 2026-10-01 at the owner's request; scope 1–6 landed the same day, and the
+  keys are in both encrypted environments. **Left:** scope 7's EC2 deploy (API, then the gateway
+  stack), a tester APK, and a live Muse Image cover on a device. **Blocked by:** OpenRouter credit
+  for images (`402 Insufficient credits`; text works and covers fall back to shapes meanwhile).
 - **Owner request, 2026-10-01:** "I want to use openrouter as a fallback and text model
   deepseek/deepseek-v4.1-flash and for image generation meta/muse-image. And as a main provider use
   https://app.fireworks.ai/ deepseek/deepseek-v4.1-flash"
 - **Owner decisions, 2026-10-01:** covers become AI illustrations with no text (LIB-04 changes);
   OpenRouter calls carry `provider.data_collection: "deny"`; the Anthropic integration is removed;
-  the wire says `ai` where it said `claude`, and the app accepts both.
+  the wire says `ai` where it said `claude`, and the app accepts both; after the first live run, a
+  deck is a background job too, since no provider writes one inside the gateway's 30 s.
 - **Depends on:** plan [106](106-connected-app.md) (the library's generators and their fallbacks).
 
 ## Outcome
@@ -68,3 +71,15 @@ the server draws a pattern. Nothing a learner sees claims Claude wrote it.
   measured live before the EC2 key goes in, and lowered if Fireworks plus a fallback can't fit.
 - Muse Image is served by Meta only and may be slow or refuse; a refusal costs nothing on OpenRouter
   and falls back to the shape cover.
+
+## Measured, 2026-10-01
+
+- Fireworks lists the model as `accounts/fireworks/models/deepseek-v4p1-flash`.
+- A 12-phrase deck: Fireworks 111 s with DeepSeek's default reasoning (7,217 reasoning tokens),
+  31–36 s with `reasoning_effort: none`; OpenRouter (`reasoning.effort: none`) 12 s or 65 s by the
+  provider it routed to. Two parallel half-decks repeat each other, so they don't help.
+- Notes for one phrase: 2–6 s. A Muse Image cover: 13 s, a 250 KB WebP at 1600×1600, flat and
+  wordless as asked.
+- End to end on a local API: a deck's request answered in 0.05 s (202) and the deck was ready 41 s
+  later with clips; a cover's request answered at once and, with images refused for credit, the text
+  model's shape cover was ready in 16 s.

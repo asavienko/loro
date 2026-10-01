@@ -20,7 +20,7 @@ and untracked `plans/` files before allocating.
 | ------------------------------------ | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | [104](104-prototype-react-native.md) | The v2.0 player as the Expo app in `apps/mobile`, shared logic in `src/shared`         | 🟡 Scope 5 left: full verification, gestures on a device, iOS (Xcode) |
 | [106](106-connected-app.md)          | The connected app: sign-in, limits, AI phrases/covers/songs, a server catalog, sharing | 🟡 Item 15 left: iOS, live provider runs, a live Apple sign-in        |
-| [111](111-open-model-providers.md)   | DeepSeek on Fireworks (OpenRouter fallback) writes; Muse Image draws covers            | 🟡 Started 2026-10-01; all scope left                                 |
+| [111](111-open-model-providers.md)   | DeepSeek on Fireworks (OpenRouter fallback) writes; Muse Image draws covers            | 🟡 EC2 deploy, APK, a live Muse cover left; OpenRouter image credit   |
 
 ## Working rules
 
