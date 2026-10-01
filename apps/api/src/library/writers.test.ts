@@ -183,6 +183,45 @@ describe('Claude’s notes for a phrase the learner wrote', () => {
     expect(written.notes.pronunciation.ipa).toBe('[ˈo.la]')
   })
 
+  it('asks for a mnemonic in the learner’s language that invents nothing', async () => {
+    let body: { system: string; output_config: { format: { schema: unknown } } } | undefined
+    const ai = new AnthropicMessages(
+      {
+        apiKey: 'test',
+        model: 'test',
+        timeoutMs: 1000,
+        maxTokens: 100,
+        maxRequestBytes: 100_000,
+        maxResponseBytes: 100_000,
+        maxConcurrentRequests: 1,
+      },
+      (_url, init) => {
+        body = JSON.parse(init?.body as string) as typeof body
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              stop_reason: 'end_turn',
+              content: [{ type: 'text', text: JSON.stringify({ image: ['key'], notes }) }],
+              usage: { input_tokens: 1, output_tokens: 1 },
+            }),
+          ),
+        )
+      },
+    )
+    await claudeNotes(ai, {
+      target: 'Един билет, моля',
+      native: 'Один билет, пожалуйста',
+      targetLang: 'bg-BG',
+      nativeLang: 'ru-RU',
+    })
+    expect(body?.system).toContain('`mnemonic`: a mnemonic')
+    expect(body?.system).toContain('a Russian word it sounds like')
+    expect(body?.system).toContain('Never invent an etymology')
+    expect(JSON.stringify(body?.output_config.format.schema)).toContain(
+      'A mnemonic for remembering this phrase',
+    )
+  })
+
   it('refuses notes that are not whole', async () => {
     await expect(
       claudeNotes(answering({ image: ['key'], notes: { mnemonic: notes.mnemonic } }), {
