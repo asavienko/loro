@@ -8,7 +8,7 @@ import { useFonts } from 'expo-font';
 import { Stack, usePathname, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -100,8 +100,23 @@ function Gate({ onboarded }: { onboarded: boolean }) {
   useEffect(() => {
     if (onboarded && pending) router.replace(pending as never);
   }, [onboarded, pending, router]);
+  // The demo phrase's player opens once the screens below are mounted: pushed from onboarding,
+  // there is no navigator to take it, and the whole app remounts without the finished onboarding.
+  const demo = useRef(false);
+  useEffect(() => {
+    if (!onboarded || !demo.current) return;
+    demo.current = false;
+    router.push('/player');
+  }, [onboarded, router]);
   if (status !== 'ready') return <ConnectionScreen status={status} onRetry={() => void refresh()} />;
-  if (!onboarded) return <Onboarding />;
+  if (!onboarded)
+    return (
+      <Onboarding
+        onDemo={() => {
+          demo.current = true;
+        }}
+      />
+    );
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.surface } }}>
       <Stack.Screen name="(tabs)" />

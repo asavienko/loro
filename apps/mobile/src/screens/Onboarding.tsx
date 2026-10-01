@@ -23,7 +23,8 @@ type Step = 'native' | 'name' | 'course' | 'voices' | 'account' | 'loop';
 const STEPS: Step[] = ['native', 'name', 'course', 'voices', 'account', 'loop'];
 const LOOP_ICONS: IconName[] = ['hearing', 'record_voice_over', 'volume_up', 'task_alt'];
 
-export function Onboarding() {
+/** `onDemo` opens the player on the demo phrase once the app's screens exist (the root's Gate). */
+export function Onboarding({ onDemo }: { onDemo: () => void }) {
   const c = useCopy();
   const nav = useNav();
   const insets = useSafeAreaInsets();
@@ -46,7 +47,7 @@ export function Onboarding() {
     const first = courseSets(state.learner)[0]?.phraseIds[0];
     if (demo && first) {
       nav.playList([first], 0, { kind: 'demo' });
-      nav.openPlayer();
+      onDemo();
     }
   };
 
