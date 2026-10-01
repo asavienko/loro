@@ -80,10 +80,12 @@ Resources:
           const libraryRoutes = [
             [['GET', 'HEAD'], ['(pack|community|languages|usage|profile|progress)',
               `sets/${ID}(/(songs|more))?`, `albums/${ID}(/more)?`, 'shared/[a-z0-9]{10}',
-              `songs/${ID}(/audio)?`, `covers/${ID}\\.(svg|json)`, `decks/${ID}`, 'speech/[a-f0-9]{32}\\.mp3']],
+              `songs/${ID}(/audio)?`, `covers/${ID}\\.(svg|json)`, `covers/(set|album|song|phrase)/${ID}`,
+              `decks/${ID}`, 'speech/[a-f0-9]{32}\\.mp3']],
             [['POST'], ['(profile|progress|sets|phrases|albums|saves|reports|decks)',
               'me/(delete|delete-account)', 'generate/(phrases|notes|cover|song)',
-              `sets/${ID}`, `sets/${ID}/phrases/${ID}`, `albums/${ID}`, `songs/${ID}/retry`]],
+              `sets/${ID}`, `sets/${ID}/phrases/${ID}`, `albums/${ID}`, `songs/${ID}/retry`,
+              `covers/${ID}/wear`]],
             [['DELETE'], [`(sets|phrases|albums|songs)/${ID}`, `saves/(set|album)/${ID}`]]
           ].map(([methods, paths]) => [methods, new RegExp(`^/v1/library/(${paths.join('|')})$`)]);
           const libraryMethods = (path) =>

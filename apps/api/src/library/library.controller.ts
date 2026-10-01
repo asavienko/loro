@@ -304,6 +304,24 @@ export class LibraryWriteController {
     return this.library.generateCover(request.principal.userId, body)
   }
 
+  /** The covers the learner drew for an item, and the one it wears, to choose from again. */
+  @Get('covers/:kind/:id')
+  @Header('Cache-Control', 'no-store')
+  coverHistory(
+    @Req() request: AuthenticatedRequest,
+    @Param('kind') kind: string,
+    @Param('id') id: string,
+  ) {
+    return this.library.coverHistory(request.principal.userId, kind, id)
+  }
+
+  /** An earlier cover put back on the item it was drawn for, without drawing. */
+  @Post('covers/:id/wear')
+  @HttpCode(200)
+  wearCover(@Req() request: AuthenticatedRequest, @Param('id') id: string, @Body() body: unknown) {
+    return this.library.wearCover(request.principal.userId, id, body)
+  }
+
   @Post('generate/song')
   @HttpCode(202)
   generateSong(@Req() request: AuthenticatedRequest, @Body() body: unknown) {

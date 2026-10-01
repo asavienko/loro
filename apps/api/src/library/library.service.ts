@@ -18,6 +18,7 @@ import {
 } from '@loro/content/v2'
 import {
   AddPhraseSchema,
+  COVER_KINDS,
   CreateAlbumSchema,
   CreateSetSchema,
   EditPhraseSchema,
@@ -38,6 +39,7 @@ import {
   ShareCodeSchema,
   UpdateAlbumSchema,
   UpdateSetSchema,
+  WearCoverSchema,
   type GeneratePhrasesRequest,
   type LibraryNotes,
   type SetItem,
@@ -54,6 +56,7 @@ import type {
   AlbumWire,
   BankPhraseWire,
   BankThemeWire,
+  CoverHistory,
   CoverState,
   DeckJobWire,
   DeckWire,
@@ -175,10 +178,11 @@ interface SongRow {
   created_at: string | number
 }
 
-/** What a new cover goes on, and the words it is drawn for. */
+/** What a new cover goes on, and the words it is drawn for: the learner's own (`prompt`), if any. */
 interface CoverSubject {
   title: string
   description?: string | undefined
+  prompt?: string | undefined
 }
 type CoverTarget =
   | { kind: 'set'; row: SetRow; copy: boolean; subject: CoverSubject }
@@ -196,6 +200,11 @@ const num = (value: string | number | null | undefined) => Number(value ?? 0)
 /** An empty description is no description. */
 const blankToNull = (text: string | null | undefined): string | null =>
   text === undefined || text === null || text === '' ? null : text
+/** How many of the covers drawn for one item are offered again. */
+const COVER_HISTORY_LIMIT = 24
+/** A new pattern each time the learner asks again: the seed includes their words and the moment. */
+const patternSeed = (subject: CoverSubject, now: number) =>
+  `${subject.title}:${subject.prompt ?? ''}:${now}`
 const coverPath = (id: string | null) => (id ? `/library/covers/${id}.svg` : null)
 const newId = (prefix: string) => `${prefix}-${randomBytes(8).toString('hex').slice(0, 12)}`
 const newShareCode = () => {
@@ -1832,6 +1841,7 @@ export class LibraryService {
     const subject = {
       kind: request.kind,
       ...(target?.subject ?? { title: request.title ?? '', description: request.description }),
+      prompt: request.prompt,
     }
     await this.spend(userId, 'cover')
     const id = newId('cover')
@@ -1840,22 +1850,25 @@ export class LibraryService {
     let place: CoverPlace | undefined
     try {
       place = await this.db.transaction(async (tx) => {
-        if (drawNow) {
-          // A new pattern each time the learner asks again: the seed includes the moment.
-          const svg = renderCover(patternCover(`${subject.title}:${now}`))
-          await tx.query(
-            `INSERT INTO library_covers(id, owner_id, provider, svg, status, created_at) VALUES ($1,$2,'pattern',$3,'ready',$4)`,
-            [id, userId, svg, now],
-          )
-        } else {
-          await tx.query(
-            `INSERT INTO library_covers(id, owner_id, provider, svg, status, created_at) VALUES ($1,$2,'ai',NULL,'rendering',$3)`,
-            [id, userId, now],
-          )
-        }
         const placed = target
           ? await this.coverPlace(tx, userId, target, request.nativeLang)
           : undefined
+        // Filed under what will wear it (a copy of Loro's, not Loro's), so it can be chosen again.
+        const item = [placed?.kind ?? null, placed?.id ?? null, request.prompt ?? null]
+        if (drawNow) {
+          const svg = renderCover(patternCover(patternSeed(subject, now)))
+          await tx.query(
+            `INSERT INTO library_covers(id, owner_id, provider, svg, status, created_at, item_kind, item_id, prompt)
+             VALUES ($1,$2,'pattern',$3,'ready',$4,$5,$6,$7)`,
+            [id, userId, svg, now, ...item],
+          )
+        } else {
+          await tx.query(
+            `INSERT INTO library_covers(id, owner_id, provider, svg, status, created_at, item_kind, item_id, prompt)
+             VALUES ($1,$2,'ai',NULL,'rendering',$3,$4,$5,$6)`,
+            [id, userId, now, ...item],
+          )
+        }
         if (drawNow && placed) await this.wear(tx, userId, placed, id)
         return placed
       })
@@ -1912,8 +1925,7 @@ export class LibraryService {
         }
       }
       if (!svg) {
-        // A new pattern each time the learner asks again: the seed includes the moment.
-        svg = renderCover(patternCover(`${subject.title}:${this.clock.now()}`))
+        svg = renderCover(patternCover(patternSeed(subject, this.clock.now())))
         provider = 'pattern'
       }
       const done = svg
@@ -1932,6 +1944,103 @@ export class LibraryService {
           [id],
         )
         .catch(() => undefined)
+    }
+  }
+
+  /**
+   * The covers the learner drew for one item, newest first, and which of them it wears now
+   * (`current`, null when it wears none of theirs), so one drawn before can be put back without
+   * drawing again. Only their own covers, of an item that is theirs to change.
+   */
+  async coverHistory(userId: string, kind: unknown, id: unknown): Promise<CoverHistory> {
+    await this.ready()
+    const itemKind = parseContract(z.enum(COVER_KINDS), kind)
+    const itemId = parseContract(LibraryIdSchema, id)
+    const rows = (
+      await this.db.query<{
+        id: string
+        provider: string
+        prompt: string | null
+        created_at: string | number
+      }>(
+        `SELECT id, provider, prompt, created_at FROM library_covers
+         WHERE owner_id = $1 AND item_kind = $2 AND item_id = $3 AND status = 'ready'
+         ORDER BY created_at DESC, id LIMIT $4`,
+        [userId, itemKind, itemId, COVER_HISTORY_LIMIT],
+      )
+    ).rows
+    return {
+      covers: rows.map((row) => ({
+        id: row.id,
+        url: `/library/covers/${row.id}.svg`,
+        provider: row.provider === 'pattern' ? 'pattern' : 'ai',
+        prompt: row.prompt,
+        createdAt: num(row.created_at),
+      })),
+      current: await this.wornCover(userId, itemKind, itemId),
+    }
+  }
+
+  /** The cover an item wears for the learner: their set's or album's own, or their phrase's or song's. */
+  private async wornCover(userId: string, kind: CoverKind, id: string): Promise<string | null> {
+    if (kind === 'set' || kind === 'album') {
+      const table = kind === 'set' ? 'library_sets' : 'library_albums'
+      const row = (
+        await this.db.query<{ cover_id: string | null }>(
+          `SELECT cover_id FROM ${table} WHERE id = $1 AND owner_id = $2`,
+          [id, userId],
+        )
+      ).rows[0]
+      return row?.cover_id ?? null
+    }
+    const row = (
+      await this.db.query<{ cover_id: string }>(
+        'SELECT cover_id FROM library_item_covers WHERE user_id = $1 AND kind = $2 AND item_id = $3',
+        [userId, kind, id],
+      )
+    ).rows[0]
+    return row?.cover_id ?? null
+  }
+
+  /**
+   * One of the learner's earlier covers put back on the item it was drawn for: nothing is drawn and
+   * nothing is spent from the day's allowance. A cover still being drawn takes its item's place when
+   * it is ready, as it would have.
+   */
+  async wearCover(userId: string, coverId: unknown, body: unknown): Promise<CoverState> {
+    await this.ready()
+    const id = parseContract(LibraryIdSchema, coverId)
+    const request = parseContract(WearCoverSchema, body)
+    const cover = (
+      await this.db.query<{
+        owner_id: string | null
+        provider: string
+        status: string
+        item_kind: string | null
+        item_id: string | null
+      }>(
+        'SELECT owner_id, provider, status, item_kind, item_id FROM library_covers WHERE id = $1',
+        [id],
+      )
+    ).rows[0]
+    if (
+      cover?.owner_id !== userId ||
+      cover.status !== 'ready' ||
+      cover.item_kind !== request.kind ||
+      cover.item_id !== request.attachTo
+    )
+      throw new LoroError('NOT_FOUND')
+    // Still theirs to change: an item they lost, or one no longer theirs, is not found.
+    const target = await this.coverTarget(userId, request.kind, request.attachTo)
+    if ((target.kind === 'set' || target.kind === 'album') && target.copy)
+      throw new LoroError('NOT_FOUND')
+    const place: CoverPlace = { kind: target.kind, id: request.attachTo, copied: false }
+    await this.db.transaction((tx) => this.wear(tx, userId, place, id))
+    return {
+      id,
+      status: 'ready',
+      url: `/library/covers/${id}.svg`,
+      provider: cover.provider === 'pattern' ? 'pattern' : 'ai',
     }
   }
 

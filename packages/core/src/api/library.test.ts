@@ -4,6 +4,7 @@ import {
   GenerateCoverSchema,
   ProfileSchema,
   UpdateSetSchema,
+  WearCoverSchema,
 } from './library.js'
 
 describe('text other learners read', () => {
@@ -42,5 +43,22 @@ describe('a cover request', () => {
     expect(ok({ kind: 'set' })).toBe(false)
     expect(ok({ kind: 'song', title: 'A song' })).toBe(false)
     expect(ok({ kind: 'word', attachTo: 'cafe-01' })).toBe(false)
+  })
+
+  it('may say, in the learner’s words, what to picture', () => {
+    const ok = (body: unknown) => GenerateCoverSchema.safeParse(body).success
+    expect(ok({ kind: 'set', attachTo: 'set-u-1a2b3c', prompt: 'A red bicycle by the sea' })).toBe(
+      true,
+    )
+    expect(ok({ kind: 'set', attachTo: 'set-u-1a2b3c', prompt: '   ' })).toBe(false)
+    expect(ok({ kind: 'set', attachTo: 'set-u-1a2b3c', prompt: 'x'.repeat(201) })).toBe(false)
+    expect(ok({ kind: 'set', attachTo: 'set-u-1a2b3c', prompt: 'see www.cheap-deals' })).toBe(false)
+  })
+
+  it('puts an earlier cover back on an item', () => {
+    const ok = (body: unknown) => WearCoverSchema.safeParse(body).success
+    expect(ok({ kind: 'phrase', attachTo: 'cafe-01' })).toBe(true)
+    expect(ok({ kind: 'phrase' })).toBe(false)
+    expect(ok({ kind: 'set', attachTo: 'set-u-1a2b3c', prompt: 'more' })).toBe(false)
   })
 })
