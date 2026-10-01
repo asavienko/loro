@@ -283,10 +283,12 @@ export function makeBg(n: Plural): Copy {
       hidden: (language) => `Текстът на ${language} е скрит, докато не го чуете`,
       steps: 'Стъпки',
       yourTurn: 'Ваш ред',
+      again: 'Отново',
       instruction: {
         native: (language) => `Слушайте на ${language}`,
         pause: (language) => `Ваш ред — кажете го на глас на ${language}`,
         target: (language) => `Чуйте го на ${language}`,
+        echo: (language) => `Кажете го отново на ${language}, както го чухте`,
         rate: 'Оценете или изчакайте',
       },
       paused: 'Пауза',

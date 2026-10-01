@@ -291,10 +291,12 @@ export function makePl(n: Plural): Copy {
       hidden: () => 'Fraza jest ukryta, dopóki jej nie usłyszysz',
       steps: 'Kroki',
       yourTurn: 'Twoja kolej',
+      again: 'Jeszcze raz',
       instruction: {
         native: (language) => `Posłuchaj: ${language}`,
         pause: (language) => `Twoja kolej — powiedz na głos ${adverb(language)}`,
         target: (language) => `Posłuchaj: ${language}`,
+        echo: (language) => `Powtórz ${adverb(language)}, tak jak brzmiała fraza`,
         rate: 'Oceń albo poczekaj',
       },
       paused: 'Pauza',

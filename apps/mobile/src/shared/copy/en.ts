@@ -305,10 +305,12 @@ export function makeEn(n: Plural) {
       hidden: (language: string) => `${language} hidden until you hear it`,
       steps: 'Steps',
       yourTurn: 'Your turn',
+      again: 'Again',
       instruction: {
         native: (language: string) => `Listen in ${language}`,
         pause: (language: string) => `Your turn — say it out loud in ${language}`,
         target: (language: string) => `Hear it in ${language}`,
+        echo: (language: string) => `Say it again in ${language}, just as you heard it`,
         rate: 'Rate it, or wait to go on',
       },
       paused: 'Paused',
