@@ -416,14 +416,19 @@ export class LibraryService {
       { lang: 'bg-BG', title: 'Песни на Лоро' },
       { lang: 'en-GB', title: 'Loro’s Songs' },
       { lang: 'ru-RU', title: 'Песни Лоро' },
+      { lang: 'en-US', title: 'Loro’s Songs' },
+      { lang: 'pl-PL', title: 'Piosenki Loro' },
+      { lang: 'cs-CZ', title: 'Písničky Lora' },
     ]
     await tx.query(
       "DELETE FROM library_songs WHERE album_id IN (SELECT id FROM library_albums WHERE origin = 'loro')",
     )
     for (const [position, album] of albums.entries()) {
-      const id = `album-loro-${album.lang.slice(0, 2)}`
+      // American English is "us": "en" is already British English's.
+      const short = album.lang === 'en-US' ? 'us' : album.lang.slice(0, 2)
+      const id = `album-loro-${short}`
       // Covers are served as immutable: a redrawn one (a new seed revision) needs a new address.
-      const coverId = `cover-loro-${album.lang.slice(0, 2)}-r${SEED_REVISION}`
+      const coverId = `cover-loro-${short}-r${SEED_REVISION}`
       await tx.query(
         `INSERT INTO library_covers(id, owner_id, provider, svg, created_at) VALUES ($1, NULL, 'pattern', $2, $3)
          ON CONFLICT (id) DO UPDATE SET svg = EXCLUDED.svg`,
@@ -2638,7 +2643,7 @@ function noteTranslationsOf(
 
 /** Notes written in the learner's language also stand as that language's version. */
 function writtenIn(nativeLang: Language, notes: LibraryNotes): NoteTranslations {
-  if (nativeLang === 'en-GB') return {}
+  if (nativeLang.startsWith('en-')) return {}
   return Object.fromEntries(
     (['mnemonic', 'grammar', 'pronunciation'] as const).map((kind) => [
       kind,

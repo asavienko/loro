@@ -15,11 +15,13 @@ import metaJson from '../v2/meta.json' with { type: 'json' }
 import iconsJson from '../v2/icons.json' with { type: 'json' }
 import languagesJson from '../v2/languages.json' with { type: 'json' }
 
-export type V2Language = 'en-GB' | 'es-ES' | 'bg-BG' | 'ru-RU'
+export type V2Language = 'en-GB' | 'en-US' | 'es-ES' | 'bg-BG' | 'ru-RU' | 'pl-PL' | 'cs-CZ'
 export interface V2Localized {
   en: string
   bg: string
   ru: string
+  pl: string
+  cs: string
 }
 export interface V2Note {
   title: string
@@ -102,7 +104,7 @@ export interface V2LanguageInfo {
   code: V2Language
   flag: string
   /** The app's interface language for a learner who speaks it; null when the app can't speak it. */
-  uiLocale: 'en' | 'bg' | 'ru' | null
+  uiLocale: 'en' | 'bg' | 'ru' | 'pl' | 'cs' | null
   /** Whether a course teaches it. */
   canTarget: boolean
 }

@@ -10,9 +10,29 @@ import { MUSIC_STYLE_IDS } from '../domain/lyric-plan.js'
  * The languages and courses the library accepts: those of `packages/content/v2/languages.json`,
  * which `GET /v1/library/languages` serves (literal here for zod; content's v2 test keeps them equal).
  */
-export const LIBRARY_LANGUAGES = ['en-GB', 'es-ES', 'bg-BG', 'ru-RU'] as const
-export const LIBRARY_COURSES = ['en-GB', 'es-ES', 'bg-BG', 'ru-RU'] as const
+export const LIBRARY_LANGUAGES = [
+  'en-GB',
+  'en-US',
+  'es-ES',
+  'bg-BG',
+  'ru-RU',
+  'pl-PL',
+  'cs-CZ',
+] as const
+export const LIBRARY_COURSES = [
+  'en-GB',
+  'en-US',
+  'es-ES',
+  'bg-BG',
+  'ru-RU',
+  'pl-PL',
+  'cs-CZ',
+] as const
 export const LibraryLanguageSchema = z.enum(LIBRARY_LANGUAGES)
+/** Two codes of one language (en-GB and en-US): a course is never in either of the learner's. */
+export function sameLanguage(a: string, b: string): boolean {
+  return a.split('-')[0] === b.split('-')[0]
+}
 export const LibraryCourseSchema = z.enum(LIBRARY_COURSES)
 /** `private`: only its owner. `link`: anyone holding its share code. `public`: listed in Community. */
 export const VisibilitySchema = z.enum(['private', 'link', 'public'])
@@ -126,7 +146,7 @@ export const CreateSetSchema = z
     /** May be empty: a new set is filled afterwards. */
     phrases: z.array(SetItemSchema).max(MAX_SET_PHRASES),
   })
-  .refine((set) => set.targetLang !== set.nativeLang, {
+  .refine((set) => !sameLanguage(set.targetLang, set.nativeLang), {
     message: 'A course is never in the learner’s own language',
     path: ['nativeLang'],
   })
@@ -165,7 +185,7 @@ export const AddPhraseSchema = z
     setId: LibraryIdSchema.optional(),
     inboxTitle: shownText(LIBRARY_TEXT.title, 1),
   })
-  .refine((r) => r.targetLang !== r.nativeLang, {
+  .refine((r) => !sameLanguage(r.targetLang, r.nativeLang), {
     message: 'A course is never in the learner’s own language',
     path: ['nativeLang'],
   })
@@ -221,7 +241,7 @@ export const GeneratePhrasesSchema = z
     message: 'Input too long',
     path: ['input'],
   })
-  .refine((r) => r.targetLang !== r.nativeLang, {
+  .refine((r) => !sameLanguage(r.targetLang, r.nativeLang), {
     message: 'A course is never in the learner’s own language',
     path: ['nativeLang'],
   })
@@ -234,7 +254,7 @@ export const GenerateNotesSchema = z
     targetLang: LibraryCourseSchema,
     nativeLang: LibraryLanguageSchema,
   })
-  .refine((r) => r.targetLang !== r.nativeLang, {
+  .refine((r) => !sameLanguage(r.targetLang, r.nativeLang), {
     message: 'A course is never in the learner’s own language',
     path: ['nativeLang'],
   })

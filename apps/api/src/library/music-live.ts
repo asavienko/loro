@@ -12,6 +12,9 @@ const LANGUAGE_NAMES: Record<string, string> = {
   'es-ES': 'Spanish (Spain)',
   'bg-BG': 'Bulgarian',
   'ru-RU': 'Russian',
+  'en-US': 'American English',
+  'pl-PL': 'Polish',
+  'cs-CZ': 'Czech',
 }
 const MAX_AUDIO_BYTES = 12 * 1024 * 1024
 
