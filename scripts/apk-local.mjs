@@ -20,7 +20,7 @@ const upload = args.includes('--upload')
 const publish = args.includes('--publish')
 if (args.includes('--help')) {
   console.log(
-    'Usage: pnpm apk:local [--upload] [--publish]\nBuilds the clean committed checkout. --upload creates a draft GitHub prerelease; --publish also publishes it.\nOptional EXPO_PUBLIC_API_URL must be an HTTPS URL ending in /v1. Requires Node 22, JDK 17, Android SDK/NDK, Rust with cargo-ndk and Android targets, and gh for uploads.',
+    'Usage: pnpm apk:local [--upload] [--publish]\nBuilds the clean committed checkout. --upload creates a draft GitHub prerelease; --publish also publishes it.\nEXPO_PUBLIC_API_URL (required with --upload) must be an HTTPS URL ending in /v1. Requires Node 22, JDK 17, Android SDK/NDK, Rust with cargo-ndk and Android targets, and gh for uploads.',
   )
   process.exit(0)
 }
@@ -47,6 +47,11 @@ if (api) {
     )
   }
 }
+// Without a server the app can't load a course, so an APK meant for others must name one.
+if (!api && upload)
+  throw new Error(
+    'EXPO_PUBLIC_API_URL is required with --upload: without it the APK looks for http://localhost:3000/v1 and never loads a course.',
+  )
 if (!api)
   console.warn(
     'EXPO_PUBLIC_API_URL is not set: the APK will look for http://localhost:3000/v1, which a release build cannot reach. Set an HTTPS URL ending in /v1.',
