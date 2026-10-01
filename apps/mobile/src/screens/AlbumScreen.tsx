@@ -199,7 +199,7 @@ export function AlbumScreen({ id }: { id: string }) {
         <Button variant="primary" icon="play_arrow" iconFill label={c.music.playAlbum} disabled={ready.length === 0} onPress={() => music.playAlbum(album, ready, 0)} />
         {mine ? (
           <>
-            <Button variant="icon" icon="share" color="onSurface" accessibilityLabel={c.share.share} onPress={() => nav.share({ kind: 'album', ...album })} />
+            <Button variant="icon" icon="share" color="onSurface" accessibilityLabel={c.share.share} onPress={() => nav.share({ kind: 'album', ...album }, () => void load())} />
             <Button variant="icon" icon="edit" color="onSurface" accessibilityLabel={c.createSet.editTitle} onPress={() => setRenaming(true)} />
             <Button variant="icon" icon="palette" color="onSurface" accessibilityLabel={c.share.cover} disabled={drawing} onPress={() => void drawCover()} />
             <Button variant="icon" icon="delete" color="onSurface" accessibilityLabel={c.share.delete} onPress={() => void remove()} />
@@ -216,7 +216,7 @@ export function AlbumScreen({ id }: { id: string }) {
                 onPress={() => void toggleSaved()}
               />
             )}
-            {album.shareCode && <Button variant="icon" icon="share" color="onSurface" accessibilityLabel={c.share.share} onPress={() => nav.share({ kind: 'album', ...album })} />}
+            {album.shareCode && <Button variant="icon" icon="share" color="onSurface" accessibilityLabel={c.share.share} onPress={() => nav.share({ kind: 'album', ...album }, () => void load())} />}
             {album.owner === 'other' && <Button variant="icon" icon="info" color="onSurface" accessibilityLabel={c.share.report} onPress={() => setReporting(true)} />}
           </>
         )}

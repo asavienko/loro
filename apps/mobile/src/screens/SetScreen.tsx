@@ -1,7 +1,6 @@
 // A set's page (the web prototype's src/screens/SetScreen.tsx): its cover and title on its topic's
 // colour, the real summary and length, Like / More / Shuffle / Play, the play order that is also the
 // sort, and its phrases. Your own set grows from here.
-import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
@@ -16,6 +15,7 @@ import { currentPhraseId, displayLearner, isLiked, phraseProgress, PhraseProgres
 import type { SortKey } from '@shared/state/types';
 import { isTargetRevealed } from '@shared/ui/phase';
 import { hrefOf, useShell } from '../nav/Shell';
+import { pageUrl } from '../sheets/ShareSheet';
 import { SongRow } from '../music/SongRow';
 import { useSetSongs } from '../music/useSetSongs';
 import { MoreSetsByMaker } from './MoreByMaker';
@@ -242,7 +242,7 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
 
   // The system share sheet; a browser without one copies the link instead.
   const share = async () => {
-    const url = Linking.createURL(hrefOf({ name: 'set', id: setId, from: 'explore' }));
+    const url = pageUrl(hrefOf({ name: 'set', id: setId, from: 'explore' }));
     try {
       if (Platform.OS === 'web' && typeof navigator !== 'undefined' && !navigator.share) {
         await navigator.clipboard.writeText(url);

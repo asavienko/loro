@@ -43,8 +43,8 @@ export interface Navigation {
   openAlbum: (albumId: string) => void;
   /** Make a song from a set (plan 106), optionally for one set or into one album. */
   makeSong: (options?: { setId?: string; albumId?: string }) => void;
-  /** Who can see a set or album of the learner's, and its link (plan 106). */
-  share: (item: Shareable) => void;
+  /** Who can see a set or album of the learner's, and its link (plan 106); `onChanged` after a change. */
+  share: (item: Shareable, onChanged?: () => void) => void;
   /** Signing in, or the account when signed in (plan 106). */
   openAccount: () => void;
   openSettings: () => void;
