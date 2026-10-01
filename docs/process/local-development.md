@@ -45,5 +45,5 @@ pnpm env:encrypt    # encrypt the current apps/api/.env
 
 To add a machine, add its public recipient to `.sops.yaml` and run
 `sops updatekeys secrets/api.enc.env`; commit both. Never commit a private key or plaintext `.env`.
-Without `ANTHROPIC_API_KEY` or a music provider, the API uses labelled fallbacks (see
-[environments.md](environments.md)).
+Without `FIREWORKS_API_KEY`/`OPENROUTER_API_KEY` or a music provider, the API uses labelled
+fallbacks (see [environments.md](environments.md)).

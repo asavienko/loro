@@ -73,9 +73,9 @@ Migrations must stay backward compatible: rollback never restores an older datab
 
 `/opt/loro/runtime/api.env` (from `secrets/ec2-api.enc.env`; change it there, install it as above,
 then redeploy, since containers read it when they start) holds the API's configuration. The release
-adds `NODE_ENV=production`, `AI_PROVIDER=stub` (the older `/v1/ai` routes only; the library's writer
-follows `ANTHROPIC_API_KEY` alone) and `TRUST_PROXY=1`. What the library uses
-([environments.md](environments.md), `apps/api/.env.example` for every default):
+adds `NODE_ENV=production`, `AI_PROVIDER=stub` (the older `/v1/ai` routes only; the library's
+writers follow `FIREWORKS_API_KEY` and `OPENROUTER_API_KEY`) and `TRUST_PROXY=1`. What the library
+uses ([environments.md](environments.md), `apps/api/.env.example` for every default):
 
 - `DATABASE_URL`, `AUTH_*`: already set by the durable account release; email codes use
   `AUTH_MAGIC_DELIVERY_URL=inbox:local` (below).
@@ -90,8 +90,10 @@ follows `ANTHROPIC_API_KEY` alone) and `TRUST_PROXY=1`. What the library uses
 - `LIMIT_SPEECH_RENDERS_DAILY` (500 server-wide), `LIMIT_SPEECH_OWNER_DAILY` (100 per learner): new
   clip renders per UTC day; each clip renders once.
 - `TRUST_PROXY`: set to `1` by `scripts/ec2-release.sh`; leave it out of the file.
-- Optional `ANTHROPIC_API_KEY` (`AI_MODEL_GENERATE`): Claude writes decks, notes, covers and lyrics;
-  mind the gateway's 30 s ceiling below. Without it the labelled fallbacks answer.
+- Optional `FIREWORKS_API_KEY` and `OPENROUTER_API_KEY`
+  ([ADR-0015](../architecture/adr/0015-open-model-providers.md)): DeepSeek writes decks, notes,
+  lyrics and cover shapes (Fireworks first, OpenRouter when it fails), and Muse Image draws covers
+  through OpenRouter's key. Without them the labelled fallbacks answer.
 - Optional `MUSIC_PROVIDER=elevenlabs` with `MUSIC_API_KEY`: ElevenLabs Music sings songs (MP3, at
   most two minutes); otherwise the demo.
 - `LIMIT_*_DAILY`, `LIMIT_*_KEPT`: learners' allowances and caps
@@ -146,12 +148,10 @@ What passes through, on library routes:
   player checks a clip per phrase). nginx allows the library 50 r/s (burst 100) and account routes
   20 r/s (burst 40) per gateway address.
 - **Time**: an HTTP API integration has at most **30 s**. The Lambda gives up on the API at 28 s
-  (its own timeout is 29 s) and nginx at 28 s. Without `ANTHROPIC_API_KEY` every library route
-  answers in well under a second. With live Claude on this host, phrase decks, notes and covers are
-  written while the request waits (the writer allows itself 90 s): one that takes longer than 30 s
-  reaches the app as a gateway `503` although the server finishes it and counts the allowance. Keep
-  live Claude off this gateway until generation answers inside that ceiling or moves to a job the
-  app polls, as songs already do.
+  (its own timeout is 29 s) and nginx at 28 s. So everything slow is a job the app polls: a deck
+  (`POST /library/decks`, 30–40 s measured on Fireworks), a cover (15 s or so) and a song. Notes for
+  one phrase answer in the request (2–6 s). The older `POST /library/generate/phrases` waits for the
+  deck and reaches the app as a gateway `503` past 30 s; only older app builds call it.
 
 Roll out a change to the gateway or nginx in this order: the API (above), then nginx, then the
 stack. `aws cloudformation deploy` keeps every parameter it isn't given at the stack's current value

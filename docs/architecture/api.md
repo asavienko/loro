@@ -29,6 +29,8 @@ A spent allowance or a full account is `429 LIMIT_REACHED` (`resets_at` is null 
 | POST     | `/library/saves`, DELETE `/library/saves/:kind/:id`         | 200/204     | Save or unsave another's readable item                       |
 | POST     | `/library/reports`                                          | 200         | Report another's shared item                                 |
 | POST     | `/library/generate/{phrases,notes,cover,song}`              | 200/201/202 | Generate within the day's allowance                          |
+| POST     | `/library/decks`                                            | 202         | A deck written in the background (plan 111)                  |
+| GET      | `/library/decks/:id`, `/library/covers/:id.json`            | 200         | Where a deck or a cover being made stands; polled by the app |
 | GET/POST | `/library/progress`                                         | 200         | The learner's progress; a stale revision is 409              |
 | GET      | `/library/{sets,albums}/{id}/more`                          | 200         | The maker's other public sets or albums in the course        |
 | POST     | `/library/songs/{id}/retry`                                 | 202         | Make a failed song again (another of the day's songs)        |

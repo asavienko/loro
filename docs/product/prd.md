@@ -43,7 +43,7 @@ dropped on 2026-09-30 and remain in Git history at `52a0e3b`. Delivery status li
 | LIB-01 | Everything a learner makes is private, shared by link, or public in Community; Loro's content is public and read-only. |
 | LIB-02 | Generation (phrase decks, covers, songs) has per-user daily limits, shown before the learner asks.                     |
 | LIB-03 | Songs sung from a set's phrases live in that set and play in the one player; albums are in Library.                    |
-| LIB-04 | Covers are drawn (topic colour and icons, or sanitized SVG), never photos with invented text.                          |
+| LIB-04 | Covers are drawn: topic colour and icons, sanitized SVG shapes, or an AI illustration asked to carry no text.          |
 
 ## Principles
 

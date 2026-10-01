@@ -122,12 +122,20 @@ are no clips and the device voice speaks, as before.
 
 ## Generation and limits
 
-| Route                            | Claude (`ANTHROPIC_API_KEY`)              | Without it (labelled)                            |
-| -------------------------------- | ----------------------------------------- | ------------------------------------------------ |
-| `POST /library/generate/phrases` | Phrases with pictures and all three notes | The phrase bank, best theme first (`bank`)       |
-| `POST /library/generate/notes`   | Notes and a picture for a typed phrase    | Notes and a picture by Loro's rules (`rules`)    |
-| `POST /library/generate/cover`   | A shape spec designed for the title       | A pattern drawn from the title (`pattern`)       |
-| `POST /library/generate/song`    | Lyrics that sing every phrase             | The set's phrases arranged as a song (`phrases`) |
+| Route                          | A model (`ai`, [ADR-0015](adr/0015-open-model-providers.md)) | Without one (labelled)                           |
+| ------------------------------ | ------------------------------------------------------------ | ------------------------------------------------ |
+| `POST /library/decks`          | Phrases with pictures and all three notes, in the background | The phrase bank, best theme first (`bank`)       |
+| `POST /library/generate/notes` | Notes and a picture for a typed phrase                       | Notes and a picture by Loro's rules (`rules`)    |
+| `POST /library/generate/cover` | An illustration (Muse Image), else a shape spec, background  | A pattern drawn from the title (`pattern`)       |
+| `POST /library/generate/song`  | Lyrics that sing every phrase                                | The set's phrases arranged as a song (`phrases`) |
+
+Text comes from DeepSeek V4.1 Flash on Fireworks (`FIREWORKS_API_KEY`), and from the same model
+through OpenRouter (`OPENROUTER_API_KEY`) when Fireworks fails, with reasoning off; covers are drawn
+by Muse Image through OpenRouter. A deck takes 30–40 s and a cover 15 s or so, longer than the EC2
+gateway waits, so both are written in the background: `POST /library/decks` (202) and the cover
+request return at once and the app polls `GET /library/decks/{id}` (the learner's own) and
+`GET /library/covers/{id}.json`. A set or album keeps its old cover until the new one is ready. The
+older `POST /library/generate/phrases` answers the same deck synchronously, for older app builds.
 
 A song's sound comes from ElevenLabs Music with `MUSIC_PROVIDER=elevenlabs` and `MUSIC_API_KEY`;
 otherwise the server synthesizes a **demo instrumental** (`synth.ts`: chords, bass, melody and beat
@@ -146,18 +154,19 @@ the day's song back; its owner can make it again (`POST /library/songs/{id}/retr
 day's songs) or remove it (`DELETE /library/songs/{id}`). `GET /library/usage` says which writer
 each kind uses here.
 
-The phrase bank and the rules' notes are free: only Claude's decks and notes spend the day's phrases
-allowance, and a Claude answer that fails gives it back while the bank or the rules answer instead.
-The app asks the server's phrase writer only when it is Claude; otherwise the device's copy of the
-phrase bank answers the same suggestions.
+The phrase bank and the rules' notes are free: only a model's decks and notes spend the day's
+phrases allowance, and a model's answer that fails gives it back while the bank or the rules answer
+instead.
 
-**Covers are never markup from a model.** Claude (or the pattern drawer) produces a spec of at most
-24 circles, rectangles and paths with `#RRGGBB` colours and numeric ranges; `covers.ts` validates it
-and is the only code that writes SVG. Path data may hold only commands and numbers. Covers are
-served with `Content-Security-Policy: default-src 'none'`.
+**Covers are never markup from a model.** An illustration is accepted only as PNG, JPEG or WebP by
+its bytes' signature (at most 2.5 MB) and carried inside the SVG as a base64 `data:` image. A shape
+cover is a spec of at most 24 circles, rectangles and paths with `#RRGGBB` colours and numeric
+ranges, from the text model or the pattern drawer. `covers.ts` validates both and is the only code
+that writes SVG; path data may hold only commands and numbers. Covers are served with
+`Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:`.
 
 **Allowances** are counted per learner per UTC day in `library_usage` with one atomic upsert, before
-any provider is asked: Claude's phrase decks and notes (`LIMIT_PHRASES_DAILY`, default 30), covers
+any provider is asked: a model's phrase decks and notes (`LIMIT_PHRASES_DAILY`, default 30), covers
 (`LIMIT_COVER_DAILY`, 10, drawn patterns too) and songs (`LIMIT_SONG_DAILY`, 5, demos too). One
 account keeps at most `LIMIT_SETS_KEPT` (100) sets, `LIMIT_ALBUMS_KEPT` (30) albums and
 `LIMIT_SONGS_KEPT` (120) songs; a course's "My phrases" set, made by the first phrase added on its

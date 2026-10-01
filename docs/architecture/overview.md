@@ -20,7 +20,7 @@ graph TB
     PG[("PostgreSQL")]
   end
 
-  AI["Anthropic (optional)"]
+  AI["Fireworks / OpenRouter (optional)"]
   VOICE["ElevenLabs TTS / Music (optional)"]
 
   UI --> STATE --> STORE
@@ -61,8 +61,9 @@ graph TB
 NestJS on Node 22 with PostgreSQL through `pg` and handwritten SQL; see [backend.md](backend.md).
 The `library` module is what the current app uses: packs, sets and albums, sharing, reports,
 generation within daily limits, phrase clips, songs and progress. Auth (email code, Google, Apple)
-issues the sessions it relies on. Without `ANTHROPIC_API_KEY` or a music provider, generation uses
-labelled fallbacks.
+issues the sessions it relies on. Without a model key (`FIREWORKS_API_KEY`, `OPENROUTER_API_KEY`;
+[ADR-0015](adr/0015-open-model-providers.md)) or a music provider, generation uses labelled
+fallbacks.
 
 The API is deployed to a restricted EC2 development host
 ([ec2-deployment.md](../process/ec2-deployment.md)).
