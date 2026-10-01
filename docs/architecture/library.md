@@ -114,7 +114,7 @@ are no clips and the device voice speaks, as before.
 | Route                            | Claude (`ANTHROPIC_API_KEY`)              | Without it (labelled)                            |
 | -------------------------------- | ----------------------------------------- | ------------------------------------------------ |
 | `POST /library/generate/phrases` | Phrases with pictures and all three notes | The phrase bank, best theme first (`bank`)       |
-| `POST /library/generate/notes`   | Notes and a picture for a typed phrase    | `503`; the app keeps its own rules' notes        |
+| `POST /library/generate/notes`   | Notes and a picture for a typed phrase    | Notes and a picture by Loro's rules (`rules`)    |
 | `POST /library/generate/cover`   | A shape spec designed for the title       | A pattern drawn from the title (`pattern`)       |
 | `POST /library/generate/song`    | Lyrics that sing every phrase             | The set's phrases arranged as a song (`phrases`) |
 
@@ -135,8 +135,10 @@ the day's song back; its owner can make it again (`POST /library/songs/{id}/retr
 day's songs) or remove it (`DELETE /library/songs/{id}`). `GET /library/usage` says which writer
 each kind uses here.
 
+The phrase bank and the rules' notes are free: only Claude's decks and notes spend the day's phrases
+allowance, and a Claude answer that fails gives it back while the bank or the rules answer instead.
 The app asks the server's phrase writer only when it is Claude; otherwise the device's copy of the
-phrase bank answers the same suggestions without spending the allowance.
+phrase bank answers the same suggestions.
 
 **Covers are never markup from a model.** Claude (or the pattern drawer) produces a spec of at most
 24 circles, rectangles and paths with `#RRGGBB` colours and numeric ranges; `covers.ts` validates it
@@ -144,11 +146,11 @@ and is the only code that writes SVG. Path data may hold only commands and numbe
 served with `Content-Security-Policy: default-src 'none'`.
 
 **Allowances** are counted per learner per UTC day in `library_usage` with one atomic upsert, before
-any provider is asked: phrase decks and notes (`LIMIT_PHRASES_DAILY`, default 30), covers
-(`LIMIT_COVER_DAILY`, 10) and songs (`LIMIT_SONG_DAILY`, 5). One account keeps at most
-`LIMIT_SETS_KEPT` (100) sets, `LIMIT_ALBUMS_KEPT` (30) albums and `LIMIT_SONGS_KEPT` (120) songs. A
-spent allowance is `429 LIMIT_REACHED` with `resets_at`; the app shows what is left before the
-learner asks. Generation needs an account; reading does not.
+any provider is asked: Claude's phrase decks and notes (`LIMIT_PHRASES_DAILY`, default 30), covers
+(`LIMIT_COVER_DAILY`, 10, drawn patterns too) and songs (`LIMIT_SONG_DAILY`, 5, demos too). One
+account keeps at most `LIMIT_SETS_KEPT` (100) sets, `LIMIT_ALBUMS_KEPT` (30) albums and
+`LIMIT_SONGS_KEPT` (120) songs. A spent allowance is `429 LIMIT_REACHED` with `resets_at`; the app
+shows what is left before the learner asks. Generation needs an account; reading does not.
 
 ## Running it locally
 
