@@ -4,16 +4,16 @@ Decisions that are still open for the app (`apps/mobile`) and the API. IDs are n
 first app's questions (Refrain, Run, trips, chat, home rails) were dropped and remain in Git history
 at `e36cc758`.
 
-| #             | Question                                                                | Status   | Owner             | Blocks                              |
-| ------------- | ----------------------------------------------------------------------- | -------- | ----------------- | ----------------------------------- |
-| [Q-08](#q-08) | Pricing, tiers and the paywall                                          | open     | Product           | Launch                              |
-| [Q-12](#q-12) | Store billing: RevenueCat or direct StoreKit 2 / Play Billing?          | open     | Backend           | Purchases                           |
-| [Q-13](#q-13) | Is `es-419` a later target variant?                                     | deferred | Product           | Nothing yet                         |
-| [Q-15](#q-15) | Which licensed voice and source produce production audio?               | leaning  | Product           | Pronunciation review; live audio    |
-| [Q-21](#q-21) | Under what eval and budget may live AI phrase generation run?           | leaning  | Product + privacy | Calling AI phrases reviewed content |
-| [Q-22](#q-22) | May licensed neural TTS audio be shared off-device as a file?           | open     | Privacy + content | Any export of neural audio          |
-| [Q-23](#q-23) | Who reviews the Spanish, Bulgarian, English and Russian text, and when? | open     | Product + content | Calling any course content reviewed |
-| [Q-24](#q-24) | Which desired retention schedules reviews: the core's 50% or 90%?       | open     | Product           | The review-date policy              |
+| #             | Question                                                          | Status   | Owner             | Blocks                              |
+| ------------- | ----------------------------------------------------------------- | -------- | ----------------- | ----------------------------------- |
+| [Q-08](#q-08) | Pricing, tiers and the paywall                                    | open     | Product           | Launch                              |
+| [Q-12](#q-12) | Store billing: RevenueCat or direct StoreKit 2 / Play Billing?    | open     | Backend           | Purchases                           |
+| [Q-13](#q-13) | Is `es-419` a later target variant?                               | deferred | Product           | Nothing yet                         |
+| [Q-15](#q-15) | Which licensed voice and source produce production audio?         | leaning  | Product           | Pronunciation review; live audio    |
+| [Q-21](#q-21) | Under what eval and budget may live AI phrase generation run?     | leaning  | Product + privacy | Calling AI phrases reviewed content |
+| [Q-22](#q-22) | May licensed neural TTS audio be shared off-device as a file?     | open     | Privacy + content | Any export of neural audio          |
+| [Q-23](#q-23) | Who reviews the course text in each language, and when?           | open     | Product + content | Calling any course content reviewed |
+| [Q-24](#q-24) | Which desired retention schedules reviews: the core's 50% or 90%? | open     | Product           | The review-date policy              |
 
 <a id="q-08"></a>
 
@@ -57,7 +57,9 @@ targets alike. The server's phrase clips use the voices set in `TTS_VOICE_*`;
 
 The `en-GB` voice (ElevenLabs' premade "Alice", British) was set in `TTS_VOICE_EN_GB` on 2026-10-01
 so English prompts have a clip now that the app has no device voice (plan 108); it awaits the
-owner's listen. Two listening-class voices per language are also pinned in
+owner's listen. American English, Polish and Czech (2026-10-02) read `TTS_VOICE_EN_US`,
+`TTS_VOICE_PL_PL` and `TTS_VOICE_CS_CZ`; none is chosen yet, so those courses and prompts are silent
+until the owner pins a voice for each. Two listening-class voices per language are also pinned in
 `LISTENING_VOICE_DECISION` for the API's `/v1/tts` routes, which the app does not call.
 
 Local runs may stay on `TTS_PROVIDER=stub` and spend no credits, but then nothing can be heard: the
@@ -95,10 +97,13 @@ is written to a shareable file (`LISTENING_SHARE_ENABLED` stays `false`).
 ## Q-23 · Who reviews the course text, and when?
 
 The phrases, notes, glosses and UI copy in `packages/content/v2/` and `apps/mobile/src/shared/copy/`
-for Spanish, Bulgarian, English and Russian have not had a native-speaker review. The British
-English and Russian courses, their bank phrases and the API's English and Russian grammar rules and
-sound tips (`apps/api/src/library/notes/`) were written by AI (Claude Sonnet 5.5) on 2026-10-01 and
-need it most. Needs a reviewer per language and a rule for which content may be shown as reviewed.
+for Spanish, Bulgarian, English, Russian, Polish and Czech have not had a native-speaker review. The
+British English and Russian courses, their bank phrases and the API's English and Russian grammar
+rules and sound tips (`apps/api/src/library/notes/`) were written by AI (Claude Sonnet 5.5) on
+2026-10-01 and need it most, as do the American English, Polish and Czech courses, the Polish and
+Czech translations of everything else, the Polish and Czech UI copy and the API's Polish and Czech
+rules, all written by AI (Claude Sonnet 5.5) on 2026-10-02. Needs a reviewer per language and a rule
+for which content may be shown as reviewed.
 
 <a id="q-24"></a>
 
