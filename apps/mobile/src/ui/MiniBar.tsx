@@ -2,12 +2,25 @@
 // the player, plays or pauses and skips. Dragged sideways, the card follows the finger and the next or
 // previous item comes in beside it; let go far enough (or flung) and that one takes its place, less and
 // the card springs back. Any other change of item (Next, the loop moving on) slides the new card in
-// from the side it came from. Its grades float above it, apart (BarGrades).
+// from the side it came from. Its grades float above it, apart (BarGrades), and move with the card
+// (barShift).
 import { ReactNode, useEffect, useState } from 'react';
 import { LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { Extrapolation, interpolate, runOnJS, SharedValue, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  runOnJS,
+  SharedValue,
+  useAnimatedReaction,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { useCopy } from '../state/store';
+import { BarShift, useBarShift } from './barShift';
 import { Icon, IconName } from './Icon';
 import { holdClicks, releaseClicks } from './swallowClick';
 import { Txt } from './Txt';
@@ -75,6 +88,12 @@ export function MiniCarousel({
   const drag = useSharedValue(0);
   const [dragging, setDragging] = useState(false);
   const [strip, setStrip] = useState<Strip>({ key: item.key, position, queue, rest: 0, leaving: [], swiped: null, move: null });
+  // The grades above follow the card; with the bar gone, they rest.
+  const shift = useBarShift();
+  useEffect(() => {
+    shift?.span.set(span);
+  }, [shift, span]);
+  useEffect(() => () => shift?.x.set(0), [shift]);
 
   // The item changed: the cards are placed for the move here, while rendering, so the new card is
   // never drawn in the middle before it slides in.
@@ -190,7 +209,7 @@ export function MiniCarousel({
       <View onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}>
         {/* The item's own card last, over the others. */}
         {[...slots.slice(1), slots[0]].map((slot) => (
-          <Slide key={slot.key} drag={drag} at={slot.at} span={span} live={slot.live} frozen={slot.frozen}>
+          <Slide key={slot.key} drag={drag} at={slot.at} span={span} live={slot.live} frozen={slot.frozen} shift={shift}>
             {slot.node}
           </Slide>
         ))}
@@ -199,9 +218,35 @@ export function MiniCarousel({
   );
 }
 
-/** A card on the strip: placed once, at `at`, and moved with it; fading as it leaves the middle. */
-function Slide({ drag, at, span, live, frozen, children }: { drag: SharedValue<number>; at: number; span: number; live: boolean; frozen: boolean; children: ReactNode }) {
+/**
+ * A card on the strip: placed once, at `at`, and moved with it; fading as it leaves the middle. The
+ * item's own card says where it is, for its grades (`shift`).
+ */
+function Slide({
+  drag,
+  at,
+  span,
+  live,
+  frozen,
+  shift,
+  children,
+}: {
+  drag: SharedValue<number>;
+  at: number;
+  span: number;
+  live: boolean;
+  frozen: boolean;
+  shift: BarShift | null;
+  children: ReactNode;
+}) {
   const [base] = useState(at);
+  useAnimatedReaction(
+    () => base + drag.get(),
+    (x) => {
+      if (live && shift) shift.x.set(x);
+    },
+    [live, shift, base],
+  );
   // The card as it last was, kept while it leaves.
   const [last, setLast] = useState(children);
   if (!frozen && last !== children) setLast(children);

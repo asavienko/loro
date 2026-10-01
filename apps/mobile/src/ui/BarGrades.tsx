@@ -1,15 +1,17 @@
 // The grades above the bar (plan 107): three round icon buttons floating over the page, apart from the
 // bar itself. A tap rates at once, with no message: the grade tapped turns into Undo for a few seconds,
 // its ring running down, and then they step aside until the item showing can be rated again
-// (barRating in @shared/ui/rating). The same for a phrase and a song.
+// (barRating in @shared/ui/rating). The same for a phrase and a song. Swiping the bar takes them with
+// its card, and the next item's come in with its own (barShift).
 import { useEffect, useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOut, useReducedMotion, ZoomIn } from 'react-native-reanimated';
+import Animated, { Extrapolation, FadeIn, FadeInDown, FadeOut, interpolate, useAnimatedStyle, useReducedMotion, ZoomIn } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 import { clock } from '@shared/state/clock';
 import type { Grade } from '@shared/state/types';
 import { BarRating, UNDO_OFFER_MS } from '@shared/ui/rating';
 import { useCopy } from '../state/store';
+import { useBarShift } from './barShift';
 import { GRADES } from './grades';
 import { Icon } from './Icon';
 import { colors, TARGET } from './theme';
@@ -25,41 +27,51 @@ export function BarGrades({ view, onRate, onUndo }: { view: BarRating; onRate: (
   const c = useCopy();
   const reduce = useReducedMotion();
   const typing = useKeyboardShown();
+  const shift = useBarShift();
+  // Where the bar's card is: the grades go with it, fading as it does.
+  const withCard = useAnimatedStyle(() => {
+    if (!shift) return {};
+    const x = shift.x.get();
+    const span = shift.span.get();
+    return { opacity: span > 0 ? interpolate(Math.abs(x), [0, span], [1, 0], Extrapolation.CLAMP) : 1, transform: [{ translateX: x }] };
+  });
   // Rating isn't what a learner typing is doing; the buttons would sit over the field.
   if (view.kind === 'none' || typing) return null;
   return (
-    <Animated.View entering={reduce ? undefined : FadeInDown.duration(200)} exiting={reduce ? undefined : FadeOut.duration(180)} style={styles.row} pointerEvents="box-none">
-      {GRADES.map(({ grade, icon, bg, ink }) => {
-        if (view.kind === 'undo') {
-          // The others make way; the one given keeps its place, as Undo.
-          if (grade !== view.grade) return <View key={grade} style={styles.slot} pointerEvents="none" />;
+    <Animated.View style={withCard} pointerEvents="box-none">
+      <Animated.View entering={reduce ? undefined : FadeInDown.duration(200)} exiting={reduce ? undefined : FadeOut.duration(180)} style={styles.row} pointerEvents="box-none">
+        {GRADES.map(({ grade, icon, bg, ink }) => {
+          if (view.kind === 'undo') {
+            // The others make way; the one given keeps its place, as Undo.
+            if (grade !== view.grade) return <View key={grade} style={styles.slot} pointerEvents="none" />;
+            return (
+              <Animated.View key={`undo:${view.at}`} entering={reduce ? undefined : ZoomIn.duration(160)} exiting={reduce ? undefined : FadeOut.duration(160)}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={c.player.undoGrade(c.common.grade[grade])}
+                  onPress={onUndo}
+                  style={({ pressed }) => [styles.button, { backgroundColor: bg }, pressed && styles.pressed]}
+                >
+                  <Countdown at={view.at} color={colors[ink]} />
+                  <Icon name="undo" size="base" color={ink} />
+                </Pressable>
+              </Animated.View>
+            );
+          }
           return (
-            <Animated.View key={`undo:${view.at}`} entering={reduce ? undefined : ZoomIn.duration(160)} exiting={reduce ? undefined : FadeOut.duration(160)}>
+            <Animated.View key={grade} entering={reduce ? undefined : FadeIn.duration(160)} exiting={reduce ? undefined : FadeOut.duration(140)}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={c.player.undoGrade(c.common.grade[grade])}
-                onPress={onUndo}
+                accessibilityLabel={c.player.rateAs(c.common.grade[grade])}
+                onPress={() => onRate(grade)}
                 style={({ pressed }) => [styles.button, { backgroundColor: bg }, pressed && styles.pressed]}
               >
-                <Countdown at={view.at} color={colors[ink]} />
-                <Icon name="undo" size="base" color={ink} />
+                <Icon name={icon} size="base" color={ink} />
               </Pressable>
             </Animated.View>
           );
-        }
-        return (
-          <Animated.View key={grade} entering={reduce ? undefined : FadeIn.duration(160)} exiting={reduce ? undefined : FadeOut.duration(140)}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={c.player.rateAs(c.common.grade[grade])}
-              onPress={() => onRate(grade)}
-              style={({ pressed }) => [styles.button, { backgroundColor: bg }, pressed && styles.pressed]}
-            >
-              <Icon name={icon} size="base" color={ink} />
-            </Pressable>
-          </Animated.View>
-        );
-      })}
+        })}
+      </Animated.View>
     </Animated.View>
   );
 }
