@@ -364,6 +364,10 @@ export function makePl(n: Plural): Copy {
       noClip: 'Nie ma jeszcze nagrania tej frazy',
       audioSilent: 'Nagranie się nie odtworzyło. Sprawdź połączenie i naciśnij „Słuchaj”.',
       silent: 'Nie zagrało — naciśnij „Słuchaj”',
+      makingAudio: (language) => `Przygotowuję nagranie tej frazy (${language}). Zabrzmi, gdy tylko będzie gotowe.`,
+      making: 'Przygotowuję nagranie…',
+      audioUnmade: (language) => `Nie udało się teraz przygotować nagrania tej frazy (${language}). Spróbuj ponownie za chwilę.`,
+      unmade: 'Nagrania nie udało się jeszcze przygotować',
     },
     toast: {
       updateReady: 'Nowa wersja Loro jest gotowa',

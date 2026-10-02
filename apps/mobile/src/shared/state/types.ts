@@ -194,8 +194,8 @@ export interface Prefs {
 
 export interface AudioFailure {
   lang: LanguageCode;
-  /** No clip from the server for it, or its clip didn't load or play. */
-  reason: 'no-clip' | 'silent';
+  /** No clip from the server for it, the server couldn’t make it (P3-01), or it didn’t load or play. */
+  reason: 'no-clip' | 'unmade' | 'silent';
 }
 
 /** The steps of one repetition: prompt, the learner's turn, target, the learner's echo; then a rating hold. */

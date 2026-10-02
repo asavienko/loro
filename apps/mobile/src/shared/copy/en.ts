@@ -389,6 +389,11 @@ export function makeEn(n: Plural) {
       noClip: 'No recording of this phrase yet',
       audioSilent: 'The recording didn’t play. Check the connection, then press Play.',
       silent: 'Didn’t play — press Play',
+      /** P3-01: a recording the server is making while the player waits for it. */
+      makingAudio: (language: string) => `Making the ${language} recording of this phrase. It plays as soon as it’s ready.`,
+      making: 'Making the recording…',
+      audioUnmade: (language: string) => `The ${language} recording of this phrase couldn’t be made just now. Try again in a little while.`,
+      unmade: 'The recording couldn’t be made yet',
     },
     toast: {
       updateReady: 'A new version of Loro is ready',

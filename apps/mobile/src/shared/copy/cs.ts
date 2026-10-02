@@ -366,6 +366,10 @@ export function makeCs(n: Plural): Copy {
       noClip: 'Nahrávka této fráze zatím není',
       audioSilent: 'Nahrávka nezazněla. Zkontrolujte připojení a stiskněte „Poslouchat“.',
       silent: 'Nezazněla — stiskněte „Poslouchat“',
+      makingAudio: (language) => `Připravujeme nahrávku této fráze (${language}). Zazní, jakmile bude hotová.`,
+      making: 'Připravujeme nahrávku…',
+      audioUnmade: (language) => `Nahrávku této fráze (${language}) se teď nepodařilo připravit. Zkuste to za chvíli znovu.`,
+      unmade: 'Nahrávku se zatím nepodařilo připravit',
     },
     toast: {
       updateReady: 'Je připravená nová verze Loro',
