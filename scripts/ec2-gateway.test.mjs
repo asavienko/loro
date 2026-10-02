@@ -417,6 +417,8 @@ test('every library route the app calls is open, by its own methods only', async
       'covers/phrase/cafe-01',
       // Plan 111: a deck written in the background.
       'decks/deck-1a2b3c4d5e6f',
+      // Plan 113: lyrics written first, polled while they are written.
+      'lyrics/lyrics-1a2b3c4d5e6f',
       'speech/0123456789abcdef0123456789abcdef.mp3',
     ].flatMap((p) => [
       ['GET', p],
@@ -435,11 +437,15 @@ test('every library route the app calls is open, by its own methods only', async
       'reports',
       'generate/phrases',
       'generate/notes',
+      'generate/note',
       'generate/cover',
       'generate/song',
       'decks',
       'songs/song-1a2b3c/retry',
       'covers/cover-1a2b3c4d5e6f/wear',
+      'lyrics',
+      'lyrics/lyrics-1a2b3c4d5e6f/rewrite',
+      'push-tokens',
       'me/delete',
       'me/delete-account',
     ].map((p) => ['POST', p]),
@@ -450,6 +456,8 @@ test('every library route the app calls is open, by its own methods only', async
       'songs/song-1a2b3c',
       `saves/set/${id}`,
       'saves/album/album-u-1a2b3c',
+      'push-tokens/ExponentPushToken%5Babcdefgh12345678%5D',
+      'push-tokens/ExpoPushToken[abcdefgh12345678]',
     ].map((p) => ['DELETE', p]),
     ['OPTIONS', 'progress'],
   ]
@@ -485,6 +493,11 @@ test('an unknown library path or method still gets 404 without reaching the API'
     ['DELETE', '/v1/library/saves/song/song-1a2b3c'],
     ['POST', '/v1/library/covers/cover-1a2b3c.svg'],
     ['POST', '/v1/library/generate/everything'],
+    ['DELETE', '/v1/library/lyrics/lyrics-1a2b3c'],
+    ['GET', '/v1/library/lyrics/lyrics-1a2b3c/rewrite'],
+    ['GET', '/v1/library/push-tokens'],
+    ['DELETE', '/v1/library/push-tokens/ExponentPushToken%5B..%2F..%5D'],
+    ['DELETE', '/v1/library/push-tokens/abcdefgh12345678'],
     ['OPTIONS', '/v1/library/unknown'],
     ['GET', '/v1/libraryx/pack'],
   ])
