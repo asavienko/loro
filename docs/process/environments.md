@@ -35,8 +35,11 @@ nothing.
 `EXPO_PUBLIC_*` values are public and baked into a build: never put secrets there, and rebuild after
 changing one. Expo reads them from the environment or `apps/mobile/.env`; the APK runner ignores
 dotenv files and validates the URLs ([local-apk.md](local-apk.md#api-url)). `LORO_LOCAL_APK` and
-`LORO_ANDROID_DEV_CLIENT` choose the Android identity in `apps/mobile/app.config.ts`; the build
-scripts set them.
+`LORO_ANDROID_DEV_CLIENT` choose the Android identity in `apps/mobile/app.config.ts`, and
+`LORO_LOCAL_IPA`, `LORO_IOS_BUNDLE_ID` and `LORO_IOS_BUILD_NUMBER` the iOS one; the build scripts
+set them. The iOS runner also reads `APPLE_TEAM_ID` and an optional App Store Connect API key
+([local-ipa.md](local-ipa.md#prerequisites)). Without `EAS_PROJECT_ID` an iOS build carries no push
+entitlement ([local-ipa.md](local-ipa.md#push-notifications)).
 
 ### API: core
 

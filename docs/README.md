@@ -33,6 +33,8 @@ history at `e36cc758`.
 - [Local development](process/local-development.md) — on the host or in containers, SOPS and age
 - [Environments](process/environments.md) — configuration variables
 - [Local APK](process/local-apk.md) — Android testing builds
+- [Local iOS builds](process/local-ipa.md) — iPhone testing builds, and installing without the App
+  Store
 - [Landing page deployment](process/landing-deployment.md) — `pnpm landing:deploy` to Amplify
   Hosting, and the CloudFront stack waiting on account verification
 - [The landing page's video](process/promo-video.md) — `apps/promo`: Remotion, synthesized sound,
