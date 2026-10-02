@@ -67,6 +67,40 @@ The same PostHog project also receives what the app needs to be operated, under 
   ids, share codes and query strings replaced (`/library/sets/:id/songs`); a segment that is not one
   of the API's route words is treated as an id.
 
+### Who the person is (amended 2026-10-02)
+
+Events alone left every person in PostHog a bare id with a country, so the persons list could not be
+searched and a replay could not be read next to how far its learner was. The app now describes the
+person, anonymous or signed in, as **person properties** (`src/shared/analytics/person.ts`, sent by
+`src/analytics/posthog.ts`):
+
+- **The account**, on sign-in and whenever its details change: `user_id`, `email`, `provider` and
+  `display_name` (the name shown beside what they share). Signing out starts a new anonymous person
+  that carries the learner properties again, never the account's.
+- **The learner**, a few seconds after their data last changed: `name` (what they asked to be
+  called), `course`, `ui_lang`, `onboarded`, and the figures the screens show from the same
+  selectors — `points`, `phrases_started`, `phrases_rated`, `phrases_learned`, `phrases_due`,
+  `average_recall`, `active_days` with `first_active_day` and `last_active_day`, `own_sets`,
+  `own_phrases` and `likes`. Never a phrase's text or anything they wrote beyond their name.
+- The same opt-out stops them with everything else.
+
+Rejected: putting the figures on every event (the state's selectors run hundreds of times a session
+for numbers that change a few times); a server-side export of accounts into PostHog (the server
+doesn't know what the device knows, and the anonymous majority would stay blank).
+
+### The landing page (amended 2026-10-02)
+
+`apps/landing` sends page views, autocaptured clicks, web vitals and **session replay** of each
+visit to the same PostHog project (`apps/landing/src/analytics.js`), plus what the page itself does:
+`download_clicked` (which build, from the hero, ticket, list or footer), `build_picked`,
+`checksum_copied`, `builds_unavailable` (GitHub couldn't be read), `film_played`, `film_finished`,
+`demo_paused`/`demo_resumed` and `course_picked`. Nobody signs in there, so visits are anonymous
+events (`person_profiles: 'identified_only'`) and no person is kept. The project key is public by
+design but, like the app's, is not in the tree: the deploy writes it into the served copy's
+`<meta name="posthog-key">` from `apps/mobile/.env` and refuses to deploy without one; the page in
+Git sends nothing. The Content-Security-Policy names PostHog's two US hosts and nothing else new.
+There is no consent banner: replay of EU visitors needs the same lawful basis as the app's.
+
 Rejected: Sentry or another crash reporter beside PostHog (a second processor to declare, and
 replay, logs and errors would not share a person and session); a separate metrics backend
 (OpenTelemetry collector, Prometheus pushgateway) for a handful of client timings that PostHog

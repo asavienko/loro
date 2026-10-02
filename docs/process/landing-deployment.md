@@ -28,10 +28,14 @@ pnpm landing:deploy                      # STACK_NAME defaults to loro-landing; 
 ```
 
 The script lints, type-checks and tests the folder, deploys the stack (a no-op when the template has
-not changed), then zips `index.html` and `src/` without the test file and uploads the archive as one
-Amplify deployment, and waits for it to finish. Amplify serves the new files everywhere as soon as
-the job succeeds; there is nothing to invalidate. Each deployment is a numbered job in the Amplify
-console, and an earlier one can be redeployed from there.
+not changed), then zips `index.html` and `src/` without the test file, writes PostHog's project key
+and host into the copy's `<meta name="posthog-key">` and `posthog-host` tags
+(`apps/landing/scripts/analytics-key.mjs`, from `EXPO_PUBLIC_POSTHOG_KEY`/`_HOST` in the shell or
+`apps/mobile/.env`; **no key, no deploy**, so the page never goes out silent by mistake —
+[ADR-0011](../architecture/adr/0011-analytics-and-privacy.md#the-landing-page-amended-2026-10-02)),
+uploads the archive as one Amplify deployment, and waits for it to finish. Amplify serves the new
+files everywhere as soon as the job succeeds; there is nothing to invalidate. Each deployment is a
+numbered job in the Amplify console, and an earlier one can be redeployed from there.
 
 Only the browser's files go up: not the README, `package.json`, `tsconfig.json`, the local server or
 `src/releases.test.js`.
