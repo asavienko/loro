@@ -160,6 +160,14 @@ format, drift, app bundle, API image, benchmarks); `pnpm check` is the fast gate
 required; `apps/mobile/android` is generated, never a source checkout. See
 `docs/process/local-apk.md`.
 
+## Local iOS builds
+
+`pnpm ipa:local` builds "Loro Preview" (`app.loro.ios.preview`) on a Mac with Expo prebuild,
+CocoaPods and `xcodebuild`, signed automatically for your own phone (`--install --device ID`; a free
+Apple ID works for 7 days) or ad hoc (`--export ad-hoc`); `pnpm ipa:testflight` uploads the store
+app to TestFlight, and `pnpm ipa:simulator` needs no Apple account. An iPhone installs no app
+outside these and the App Store. See `docs/process/local-ipa.md`.
+
 ## Running and testing
 
 **Use Node 22** (`nvm use 22` first, every time — `pnpm` exists only under it). `cargo` lives in

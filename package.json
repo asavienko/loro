@@ -11,7 +11,7 @@
   },
   "scripts": {
     "bootstrap": "./scripts/bootstrap.sh",
-    "check": "pnpm check:plan-index && pnpm test:android-config && pnpm test:deploy && pnpm test:ci-local && pnpm test:native:evidence && pnpm test:dsp:spike && pnpm test:core-rs-build && pnpm contracts:check && pnpm --filter @loro/core-rs check:browser && pnpm --filter @loro/core-rs check:uniffi && turbo run lint typecheck test content:validate",
+    "check": "pnpm check:plan-index && pnpm test:android-config && pnpm test:ios-config && pnpm test:deploy && pnpm test:ci-local && pnpm test:native:evidence && pnpm test:dsp:spike && pnpm test:core-rs-build && pnpm contracts:check && pnpm --filter @loro/core-rs check:browser && pnpm --filter @loro/core-rs check:uniffi && turbo run lint typecheck test content:validate",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint -- --fix",
@@ -45,6 +45,9 @@
     "native:evidence": "node scripts/native-device-evidence.mjs",
     "apk:local": "node scripts/apk-local.mjs",
     "apk:github": "node scripts/apk-local.mjs --upload",
+    "ipa:local": "node scripts/ipa-local.mjs",
+    "ipa:simulator": "node scripts/ipa-local.mjs --simulator",
+    "ipa:testflight": "node scripts/ipa-local.mjs --export testflight",
     "landing:deploy": "bash scripts/deploy-landing.sh",
     "promo:upload": "bash scripts/upload-promo.sh",
     "check:plan-index": "node --test scripts/check-plan-index.test.mjs && node scripts/check-plan-index.mjs",
@@ -53,6 +56,7 @@
     "test:dsp:spike": "node --test scripts/dsp-spike-evidence.test.mjs",
     "test:core-rs-build": "node --test scripts/core-rs-build.test.mjs",
     "test:android-config": "node --test scripts/android-development.test.mjs scripts/apk-environment.test.mjs",
+    "test:ios-config": "node --test scripts/ipa-environment.test.mjs",
     "test:ci-local": "node --test scripts/ci-local.test.mjs"
   },
   "devDependencies": {

@@ -25,6 +25,10 @@ pnpm --filter @loro/mobile typecheck  # tsc
 pnpm --filter @loro/mobile bundle     # proves the iOS bundle compiles
 ```
 
+Standalone testing builds come from the root: `pnpm apk:local` for Android
+([local-apk.md](../../docs/process/local-apk.md)), `pnpm ipa:local`, `pnpm ipa:testflight` or
+`pnpm ipa:simulator` for iOS ([local-ipa.md](../../docs/process/local-ipa.md)).
+
 One test file, from `apps/mobile` (the tests need the content fixture installed first):
 
 ```bash

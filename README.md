@@ -91,3 +91,5 @@ locally, propose changes here; no reuse elsewhere. Security reports go through
   [`docs/decisions/open-questions.md`](docs/decisions/open-questions.md).
 - Android testing APKs: `pnpm apk:local`, or `pnpm apk:github` for a draft GitHub prerelease
   ([local APK](docs/process/local-apk.md)).
+- iOS testing builds on a Mac: `pnpm ipa:local` (your phone, or ad hoc), `pnpm ipa:testflight` or
+  `pnpm ipa:simulator` ([local iOS builds](docs/process/local-ipa.md)).
