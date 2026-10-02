@@ -16,7 +16,7 @@ at `e36cc758`.
 | [Q-24](#q-24) | Which desired retention schedules reviews: the core's 50% or 90%? | open     | Product           | The review-date policy              |
 | [Q-25](#q-25) | May the frequency and CEFR lists behind the syllabus be used?     | open     | Product + content | The syllabus vocabulary bands       |
 | [Q-26](#q-26) | Is the American English course written, or adapted from British?  | open     | Product           | Plan 112 batches for en-US          |
-| [Q-27](#q-27) | Which domain serves the landing page, and when does CloudFront?   | open     | Product           | A memorable address for the page    |
+| [Q-27](#q-27) | When does the landing page move to CloudFront?                    | open     | Product           | A memorable address for the page    |
 
 <a id="q-08"></a>
 
@@ -164,15 +164,11 @@ adapter is lazy. The owner decides before the first en-US batch; until then en-U
 
 <a id="q-27"></a>
 
-## Q-27 · Which domain serves the landing page, and when does CloudFront?
+## Q-27 · When does the landing page move to CloudFront?
 
-`apps/landing` is served from AWS Amplify Hosting at its default `amplifyapp.com` address
-([landing-deployment.md](../process/landing-deployment.md), decided 2026-10-02). Still open: a
-domain of Loro's own (none is registered; the API's token issuer only defaults to `api.loro.app`),
-and the switch to the no-cost S3-behind-CloudFront stack in `infra/landing/cloudfront.yaml`, which
-waits on AWS Support verifying the account for CloudFront. A custom domain on Amplify or CloudFront
-needs a certificate in `us-east-1` and a hosted zone, about $0.50 a month in Route 53 or none at
-another registrar; decide the domain before the switch so it is set up once. The owner's
-`savienko.com` (registered 2026-10-02) already sends email sign-in codes from `loro.savienko.com`
-([ADR-0021](../architecture/adr/0021-email-codes-through-amazon-ses.md)); a subdomain of it is a
-candidate for the page.
+`apps/landing` is served from AWS Amplify Hosting at `loro.savienko.com`
+([landing-deployment.md](../process/landing-deployment.md); the domain was decided 2026-10-02 and is
+recorded there). Still open: the switch to the no-cost S3-behind-CloudFront stack in
+`infra/landing/cloudfront.yaml`, which waits on AWS Support verifying the account for CloudFront.
+The switch then needs the domain moved to the distribution, with a `us-east-1` certificate validated
+at GoDaddy.
