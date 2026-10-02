@@ -432,7 +432,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.inverseSurface,
   },
-  text: { flex: 1, minWidth: 0 },
+  // Room before the play button, so a title cut off mid-word (before it glides) isn't read as under it.
+  text: { flex: 1, minWidth: 0, marginRight: 6 },
   play: { width: TARGET, height: TARGET, borderRadius: radius.full, backgroundColor: colors.primaryFixed, alignItems: 'center', justifyContent: 'center' },
   next: { width: TARGET, height: TARGET, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   track: { position: 'absolute', left: 8, right: 8, bottom: 0, height: 4, borderRadius: radius.full, backgroundColor: 'rgba(243,240,235,0.2)', overflow: 'hidden' },

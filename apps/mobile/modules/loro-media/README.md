@@ -30,10 +30,13 @@ lets iOS suspend the app before the next clip.
   mirrors what the app sends. media3's `DefaultMediaNotificationProvider` builds the notification;
   from Android 13 the system builds its controls from the session.
 - The system's media controls have five slots. While the item can be rated they hold play or pause,
-  then Missed, Hard, Easy (the app's icons, `res/drawable/loro_media_grade_*`, traced from the
+  the three grades and Next (the app's icons, `res/drawable/loro_media_grade_*`, traced from the
   Material Symbols glyphs in `assets/fonts/MaterialSymbols.ttf`; a grade sent `selected` would show
-  `task_alt`, though the app sends none) and Next. "Previous" gives way to the grades, as on the bar
-  above the tabs; headset previous and next still work. Without grades (a queue that has ended, a song
+  `task_alt`, though the app sends none). Hard takes the slot before play or pause and Easy the one
+  after it, so the lock screen's compact controls read Hard, pause, Easy. Missed takes the first
+  extra slot, which Samsung One UI's shade draws first (Missed, Hard, pause, Easy) and stock Android
+  16 after Easy (Hard, Easy, Missed, Next). "Previous" gives way to the grades, as on the bar above
+  the tabs; headset previous and next still work. Without grades (a queue that has ended, a song
   that sings none of the course's phrases, an item rated within its five-minute window) the standard
   previous, play or pause and next show.
 - `Playback` holds, while the player plays: the audio focus for the whole session (expo-audio is set

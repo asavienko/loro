@@ -27,10 +27,14 @@ import com.google.common.util.concurrent.ListenableFuture
  * locked. media3 builds the notification (and, from Android 13, the system builds its controls from
  * the session); this service only says what to show and passes every press back to the app.
  *
- * The grades take the slots beside play or pause, in the app's order (Missed, Hard, Easy), then
- * Next: the system's controls have five slots, so while the grades show, "previous" gives way to
- * them (the bar above the tabs has no previous button either) and Next becomes a button of ours.
- * Headset and Bluetooth next and previous still work: the player keeps both commands.
+ * The grades take the slots beside play or pause: Hard before it and Easy after it, so the lock
+ * screen's compact controls read Hard, play or pause, Easy. Missed goes to the first extra slot.
+ * Samsung One UI's shade draws that slot first (Missed, Hard, play or pause, Easy); stock Android
+ * 16 draws it after Easy (Hard, Easy, Missed, Next, play or pause apart). The system's controls
+ * have five slots, so while the grades show,
+ * "previous" gives way to them (the bar above the tabs has no previous button either) and Next
+ * becomes a button of ours. Headset and Bluetooth next and previous still work: the player keeps
+ * both commands.
  */
 @OptIn(UnstableApi::class)
 class LoroMediaService : MediaSessionService() {
@@ -91,9 +95,9 @@ class LoroMediaService : MediaSessionService() {
   private fun buttons(nowPlaying: NowPlaying): List<CommandButton> {
     val grades = nowPlaying.grades ?: return emptyList()
     val slots = mapOf(
-      Grade.MISSED to intArrayOf(CommandButton.SLOT_BACK, CommandButton.SLOT_OVERFLOW),
-      Grade.HARD to intArrayOf(CommandButton.SLOT_FORWARD, CommandButton.SLOT_OVERFLOW),
-      Grade.EASY to intArrayOf(CommandButton.SLOT_OVERFLOW),
+      Grade.MISSED to intArrayOf(CommandButton.SLOT_OVERFLOW),
+      Grade.HARD to intArrayOf(CommandButton.SLOT_BACK, CommandButton.SLOT_OVERFLOW),
+      Grade.EASY to intArrayOf(CommandButton.SLOT_FORWARD, CommandButton.SLOT_OVERFLOW),
     )
     val icons = mapOf(
       Grade.MISSED to R.drawable.loro_media_grade_missed,
