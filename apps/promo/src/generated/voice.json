@@ -1,0 +1,1053 @@
+{
+  "v01": {
+    "kind": "line",
+    "text": "This is Loro. It teaches you a language the way you’ll actually use it: one phrase at a time.",
+    "file": "voice/v01.mp3",
+    "duration": 5.758549,
+    "words": [
+      {
+        "text": "This",
+        "start": 0,
+        "end": 0.232
+      },
+      {
+        "text": "is",
+        "start": 0.29,
+        "end": 0.372
+      },
+      {
+        "text": "Loro.",
+        "start": 0.441,
+        "end": 0.975
+      },
+      {
+        "text": "It",
+        "start": 1.091,
+        "end": 1.231
+      },
+      {
+        "text": "teaches",
+        "start": 1.265,
+        "end": 1.556
+      },
+      {
+        "text": "you",
+        "start": 1.602,
+        "end": 1.683
+      },
+      {
+        "text": "a",
+        "start": 1.753,
+        "end": 1.776
+      },
+      {
+        "text": "language",
+        "start": 1.846,
+        "end": 2.229
+      },
+      {
+        "text": "the",
+        "start": 2.264,
+        "end": 2.334
+      },
+      {
+        "text": "way",
+        "start": 2.38,
+        "end": 2.496
+      },
+      {
+        "text": "you’ll",
+        "start": 2.543,
+        "end": 2.717
+      },
+      {
+        "text": "actually",
+        "start": 2.763,
+        "end": 3.135
+      },
+      {
+        "text": "use",
+        "start": 3.204,
+        "end": 3.448
+      },
+      {
+        "text": "it:",
+        "start": 3.506,
+        "end": 3.762
+      },
+      {
+        "text": "one",
+        "start": 4.214,
+        "end": 4.435
+      },
+      {
+        "text": "phrase",
+        "start": 4.47,
+        "end": 4.783
+      },
+      {
+        "text": "at",
+        "start": 4.818,
+        "end": 4.888
+      },
+      {
+        "text": "a",
+        "start": 4.934,
+        "end": 4.969
+      },
+      {
+        "text": "time.",
+        "start": 5.027,
+        "end": 5.759
+      }
+    ],
+    "hash": "7842668ab8120cef"
+  },
+  "v02": {
+    "kind": "line",
+    "text": "First, you hear the phrase in your own language.",
+    "file": "voice/v02.mp3",
+    "duration": 2.832834,
+    "words": [
+      {
+        "text": "First,",
+        "start": 0,
+        "end": 0.522
+      },
+      {
+        "text": "you",
+        "start": 0.592,
+        "end": 0.685
+      },
+      {
+        "text": "hear",
+        "start": 0.755,
+        "end": 0.894
+      },
+      {
+        "text": "the",
+        "start": 0.94,
+        "end": 1.01
+      },
+      {
+        "text": "phrase",
+        "start": 1.057,
+        "end": 1.382
+      },
+      {
+        "text": "in",
+        "start": 1.416,
+        "end": 1.474
+      },
+      {
+        "text": "your",
+        "start": 1.521,
+        "end": 1.649
+      },
+      {
+        "text": "own",
+        "start": 1.707,
+        "end": 1.892
+      },
+      {
+        "text": "language.",
+        "start": 1.962,
+        "end": 2.833
+      }
+    ],
+    "hash": "be73152049f0c1dd"
+  },
+  "v03": {
+    "kind": "line",
+    "text": "Then it goes quiet. That’s your turn: say it out loud, in Spanish.",
+    "file": "voice/v03.mp3",
+    "duration": 4.690431,
+    "words": [
+      {
+        "text": "Then",
+        "start": 0,
+        "end": 0.209
+      },
+      {
+        "text": "it",
+        "start": 0.255,
+        "end": 0.302
+      },
+      {
+        "text": "goes",
+        "start": 0.348,
+        "end": 0.522
+      },
+      {
+        "text": "quiet.",
+        "start": 0.58,
+        "end": 1.115
+      },
+      {
+        "text": "That’s",
+        "start": 1.637,
+        "end": 1.916
+      },
+      {
+        "text": "your",
+        "start": 1.962,
+        "end": 2.125
+      },
+      {
+        "text": "turn:",
+        "start": 2.183,
+        "end": 2.635
+      },
+      {
+        "text": "say",
+        "start": 2.879,
+        "end": 3.053
+      },
+      {
+        "text": "it",
+        "start": 3.1,
+        "end": 3.158
+      },
+      {
+        "text": "out",
+        "start": 3.204,
+        "end": 3.32
+      },
+      {
+        "text": "loud,",
+        "start": 3.379,
+        "end": 3.692
+      },
+      {
+        "text": "in",
+        "start": 3.727,
+        "end": 3.808
+      },
+      {
+        "text": "Spanish.",
+        "start": 3.866,
+        "end": 4.69
+      }
+    ],
+    "hash": "76c4eb5382984130"
+  },
+  "v04": {
+    "kind": "line",
+    "text": "Now hear how it’s really said.",
+    "file": "voice/v04.mp3",
+    "duration": 1.950476,
+    "words": [
+      {
+        "text": "Now",
+        "start": 0,
+        "end": 0.221
+      },
+      {
+        "text": "hear",
+        "start": 0.313,
+        "end": 0.569
+      },
+      {
+        "text": "how",
+        "start": 0.639,
+        "end": 0.755
+      },
+      {
+        "text": "it’s",
+        "start": 0.801,
+        "end": 0.94
+      },
+      {
+        "text": "really",
+        "start": 0.987,
+        "end": 1.231
+      },
+      {
+        "text": "said.",
+        "start": 1.289,
+        "end": 1.95
+      }
+    ],
+    "hash": "cb0f1a06da32d6ce"
+  },
+  "v05": {
+    "kind": "line",
+    "text": "Say it once more, just as you heard it. Then rate how it went.",
+    "file": "voice/v05.mp3",
+    "duration": 3.854512,
+    "words": [
+      {
+        "text": "Say",
+        "start": 0,
+        "end": 0.244
+      },
+      {
+        "text": "it",
+        "start": 0.279,
+        "end": 0.348
+      },
+      {
+        "text": "once",
+        "start": 0.406,
+        "end": 0.615
+      },
+      {
+        "text": "more,",
+        "start": 0.662,
+        "end": 0.998
+      },
+      {
+        "text": "just",
+        "start": 1.149,
+        "end": 1.347
+      },
+      {
+        "text": "as",
+        "start": 1.393,
+        "end": 1.463
+      },
+      {
+        "text": "you",
+        "start": 1.509,
+        "end": 1.591
+      },
+      {
+        "text": "heard",
+        "start": 1.672,
+        "end": 1.881
+      },
+      {
+        "text": "it.",
+        "start": 1.939,
+        "end": 2.171
+      },
+      {
+        "text": "Then",
+        "start": 2.38,
+        "end": 2.589
+      },
+      {
+        "text": "rate",
+        "start": 2.67,
+        "end": 2.891
+      },
+      {
+        "text": "how",
+        "start": 2.926,
+        "end": 3.03
+      },
+      {
+        "text": "it",
+        "start": 3.077,
+        "end": 3.158
+      },
+      {
+        "text": "went.",
+        "start": 3.204,
+        "end": 3.855
+      }
+    ],
+    "hash": "b68216cc0a655304"
+  },
+  "v06": {
+    "kind": "line",
+    "text": "A real memory model decides when it comes back, so you review it just before you’d forget.",
+    "file": "voice/v06.mp3",
+    "duration": 5.24771,
+    "words": [
+      {
+        "text": "A",
+        "start": 0,
+        "end": 0.093
+      },
+      {
+        "text": "real",
+        "start": 0.186,
+        "end": 0.395
+      },
+      {
+        "text": "memory",
+        "start": 0.476,
+        "end": 0.766
+      },
+      {
+        "text": "model",
+        "start": 0.824,
+        "end": 1.08
+      },
+      {
+        "text": "decides",
+        "start": 1.149,
+        "end": 1.614
+      },
+      {
+        "text": "when",
+        "start": 1.649,
+        "end": 1.8
+      },
+      {
+        "text": "it",
+        "start": 1.834,
+        "end": 1.904
+      },
+      {
+        "text": "comes",
+        "start": 1.95,
+        "end": 2.171
+      },
+      {
+        "text": "back,",
+        "start": 2.229,
+        "end": 2.659
+      },
+      {
+        "text": "so",
+        "start": 2.902,
+        "end": 3.019
+      },
+      {
+        "text": "you",
+        "start": 3.088,
+        "end": 3.17
+      },
+      {
+        "text": "review",
+        "start": 3.262,
+        "end": 3.518
+      },
+      {
+        "text": "it",
+        "start": 3.564,
+        "end": 3.646
+      },
+      {
+        "text": "just",
+        "start": 3.704,
+        "end": 3.878
+      },
+      {
+        "text": "before",
+        "start": 3.913,
+        "end": 4.203
+      },
+      {
+        "text": "you’d",
+        "start": 4.238,
+        "end": 4.4
+      },
+      {
+        "text": "forget.",
+        "start": 4.447,
+        "end": 5.248
+      }
+    ],
+    "hash": "5b2f6228b1260129"
+  },
+  "v07": {
+    "kind": "line",
+    "text": "It runs hands-free, like a playlist. On a walk, on the bus, while the coffee brews.",
+    "file": "voice/v07.mp3",
+    "duration": 5.572789,
+    "words": [
+      {
+        "text": "It",
+        "start": 0,
+        "end": 0.151
+      },
+      {
+        "text": "runs",
+        "start": 0.197,
+        "end": 0.453
+      },
+      {
+        "text": "hands-free,",
+        "start": 0.522,
+        "end": 1.254
+      },
+      {
+        "text": "like",
+        "start": 1.335,
+        "end": 1.498
+      },
+      {
+        "text": "a",
+        "start": 1.521,
+        "end": 1.544
+      },
+      {
+        "text": "playlist.",
+        "start": 1.591,
+        "end": 2.241
+      },
+      {
+        "text": "On",
+        "start": 2.694,
+        "end": 2.833
+      },
+      {
+        "text": "a",
+        "start": 2.868,
+        "end": 2.891
+      },
+      {
+        "text": "walk,",
+        "start": 2.949,
+        "end": 3.367
+      },
+      {
+        "text": "on",
+        "start": 3.402,
+        "end": 3.529
+      },
+      {
+        "text": "the",
+        "start": 3.564,
+        "end": 3.634
+      },
+      {
+        "text": "bus,",
+        "start": 3.68,
+        "end": 4.087
+      },
+      {
+        "text": "while",
+        "start": 4.122,
+        "end": 4.354
+      },
+      {
+        "text": "the",
+        "start": 4.377,
+        "end": 4.447
+      },
+      {
+        "text": "coffee",
+        "start": 4.493,
+        "end": 4.76
+      },
+      {
+        "text": "brews.",
+        "start": 4.807,
+        "end": 5.573
+      }
+    ],
+    "hash": "abf6bf553e536335"
+  },
+  "v08": {
+    "kind": "line",
+    "text": "Spanish, Bulgarian, Russian, Polish, Czech and English.",
+    "file": "voice/v08.mp3",
+    "duration": 3.668753,
+    "words": [
+      {
+        "text": "Spanish,",
+        "start": 0,
+        "end": 0.546
+      },
+      {
+        "text": "Bulgarian,",
+        "start": 0.592,
+        "end": 1.335
+      },
+      {
+        "text": "Russian,",
+        "start": 1.463,
+        "end": 1.904
+      },
+      {
+        "text": "Polish,",
+        "start": 1.974,
+        "end": 2.415
+      },
+      {
+        "text": "Czech",
+        "start": 2.461,
+        "end": 2.752
+      },
+      {
+        "text": "and",
+        "start": 2.798,
+        "end": 2.902
+      },
+      {
+        "text": "English.",
+        "start": 2.961,
+        "end": 3.669
+      }
+    ],
+    "hash": "c9ff71b3270a538e"
+  },
+  "v09": {
+    "kind": "line",
+    "text": "Make sets of your own with AI, for any moment you want to be ready for. Loro even turns your phrases into songs.",
+    "file": "voice/v09.mp3",
+    "duration": 7.058866,
+    "words": [
+      {
+        "text": "Make",
+        "start": 0,
+        "end": 0.313
+      },
+      {
+        "text": "sets",
+        "start": 0.36,
+        "end": 0.639
+      },
+      {
+        "text": "of",
+        "start": 0.685,
+        "end": 0.743
+      },
+      {
+        "text": "your",
+        "start": 0.801,
+        "end": 0.929
+      },
+      {
+        "text": "own",
+        "start": 0.998,
+        "end": 1.231
+      },
+      {
+        "text": "with",
+        "start": 1.277,
+        "end": 1.405
+      },
+      {
+        "text": "AI,",
+        "start": 1.463,
+        "end": 1.916
+      },
+      {
+        "text": "for",
+        "start": 1.95,
+        "end": 2.067
+      },
+      {
+        "text": "any",
+        "start": 2.113,
+        "end": 2.287
+      },
+      {
+        "text": "moment",
+        "start": 2.357,
+        "end": 2.635
+      },
+      {
+        "text": "you",
+        "start": 2.682,
+        "end": 2.752
+      },
+      {
+        "text": "want",
+        "start": 2.81,
+        "end": 2.961
+      },
+      {
+        "text": "to",
+        "start": 2.995,
+        "end": 3.042
+      },
+      {
+        "text": "be",
+        "start": 3.088,
+        "end": 3.158
+      },
+      {
+        "text": "ready",
+        "start": 3.204,
+        "end": 3.413
+      },
+      {
+        "text": "for.",
+        "start": 3.471,
+        "end": 3.843
+      },
+      {
+        "text": "Loro",
+        "start": 4.365,
+        "end": 4.76
+      },
+      {
+        "text": "even",
+        "start": 4.841,
+        "end": 5.062
+      },
+      {
+        "text": "turns",
+        "start": 5.108,
+        "end": 5.375
+      },
+      {
+        "text": "your",
+        "start": 5.422,
+        "end": 5.55
+      },
+      {
+        "text": "phrases",
+        "start": 5.596,
+        "end": 6.014
+      },
+      {
+        "text": "into",
+        "start": 6.06,
+        "end": 6.235
+      },
+      {
+        "text": "songs.",
+        "start": 6.304,
+        "end": 7.059
+      }
+    ],
+    "hash": "25dcdc29ab0eebbe"
+  },
+  "v10": {
+    "kind": "line",
+    "text": "Your voice never leaves your phone: nothing is recorded. And no screen ever shames a missed day.",
+    "file": "voice/v10.mp3",
+    "duration": 5.944308,
+    "words": [
+      {
+        "text": "Your",
+        "start": 0,
+        "end": 0.232
+      },
+      {
+        "text": "voice",
+        "start": 0.29,
+        "end": 0.546
+      },
+      {
+        "text": "never",
+        "start": 0.58,
+        "end": 0.778
+      },
+      {
+        "text": "leaves",
+        "start": 0.824,
+        "end": 1.033
+      },
+      {
+        "text": "your",
+        "start": 1.068,
+        "end": 1.196
+      },
+      {
+        "text": "phone:",
+        "start": 1.254,
+        "end": 1.741
+      },
+      {
+        "text": "nothing",
+        "start": 2.194,
+        "end": 2.485
+      },
+      {
+        "text": "is",
+        "start": 2.531,
+        "end": 2.612
+      },
+      {
+        "text": "recorded.",
+        "start": 2.682,
+        "end": 3.274
+      },
+      {
+        "text": "And",
+        "start": 3.448,
+        "end": 3.587
+      },
+      {
+        "text": "no",
+        "start": 3.646,
+        "end": 3.75
+      },
+      {
+        "text": "screen",
+        "start": 3.82,
+        "end": 4.156
+      },
+      {
+        "text": "ever",
+        "start": 4.226,
+        "end": 4.423
+      },
+      {
+        "text": "shames",
+        "start": 4.47,
+        "end": 4.783
+      },
+      {
+        "text": "a",
+        "start": 4.83,
+        "end": 4.853
+      },
+      {
+        "text": "missed",
+        "start": 4.911,
+        "end": 5.166
+      },
+      {
+        "text": "day.",
+        "start": 5.213,
+        "end": 5.944
+      }
+    ],
+    "hash": "0c30fbee3ab417a8"
+  },
+  "v11": {
+    "kind": "line",
+    "text": "Loro is Spanish for parrot. Say it until it’s yours.",
+    "file": "voice/v11.mp3",
+    "duration": 3.668753,
+    "words": [
+      {
+        "text": "Loro",
+        "start": 0,
+        "end": 0.395
+      },
+      {
+        "text": "is",
+        "start": 0.476,
+        "end": 0.557
+      },
+      {
+        "text": "Spanish",
+        "start": 0.592,
+        "end": 0.987
+      },
+      {
+        "text": "for",
+        "start": 1.033,
+        "end": 1.138
+      },
+      {
+        "text": "parrot.",
+        "start": 1.184,
+        "end": 1.683
+      },
+      {
+        "text": "Say",
+        "start": 2.02,
+        "end": 2.241
+      },
+      {
+        "text": "it",
+        "start": 2.287,
+        "end": 2.357
+      },
+      {
+        "text": "until",
+        "start": 2.415,
+        "end": 2.624
+      },
+      {
+        "text": "it’s",
+        "start": 2.67,
+        "end": 2.81
+      },
+      {
+        "text": "yours.",
+        "start": 2.856,
+        "end": 3.669
+      }
+    ],
+    "hash": "8c3d255cc4d673c5"
+  },
+  "c_en_bill": {
+    "kind": "clip",
+    "text": "The bill, please.",
+    "file": "voice/c_en_bill.mp3",
+    "duration": 1.160998,
+    "words": [
+      {
+        "text": "The",
+        "start": 0,
+        "end": 0.163
+      },
+      {
+        "text": "bill,",
+        "start": 0.197,
+        "end": 0.43
+      },
+      {
+        "text": "please.",
+        "start": 0.453,
+        "end": 1.161
+      }
+    ],
+    "hash": "1139714d066fdb88"
+  },
+  "c_es_bill": {
+    "kind": "clip",
+    "text": "La cuenta, por favor.",
+    "file": "voice/c_es_bill.mp3",
+    "duration": 1.300317,
+    "words": [
+      {
+        "text": "La",
+        "start": 0,
+        "end": 0.151
+      },
+      {
+        "text": "cuenta,",
+        "start": 0.186,
+        "end": 0.511
+      },
+      {
+        "text": "por",
+        "start": 0.534,
+        "end": 0.639
+      },
+      {
+        "text": "favor.",
+        "start": 0.697,
+        "end": 1.3
+      }
+    ],
+    "hash": "62b1e4e56826fb6d"
+  },
+  "c_es_station": {
+    "kind": "clip",
+    "text": "¿Dónde está la estación?",
+    "file": "voice/c_es_station.mp3",
+    "duration": 1.393197,
+    "words": [
+      {
+        "text": "¿Dónde",
+        "start": 0,
+        "end": 0.302
+      },
+      {
+        "text": "está",
+        "start": 0.325,
+        "end": 0.476
+      },
+      {
+        "text": "la",
+        "start": 0.534,
+        "end": 0.592
+      },
+      {
+        "text": "estación?",
+        "start": 0.615,
+        "end": 1.393
+      }
+    ],
+    "hash": "9a91b4ca080a952d"
+  },
+  "c_bg_station": {
+    "kind": "clip",
+    "text": "Къде е гарата?",
+    "file": "voice/c_bg_station.mp3",
+    "duration": 1.300317,
+    "words": [
+      {
+        "text": "Къде",
+        "start": 0,
+        "end": 0.372
+      },
+      {
+        "text": "е",
+        "start": 0.395,
+        "end": 0.43
+      },
+      {
+        "text": "гарата?",
+        "start": 0.499,
+        "end": 1.3
+      }
+    ],
+    "hash": "b61753dbcf1593ea"
+  },
+  "c_ru_station": {
+    "kind": "clip",
+    "text": "Где вокзал?",
+    "file": "voice/c_ru_station.mp3",
+    "duration": 1.114558,
+    "words": [
+      {
+        "text": "Где",
+        "start": 0,
+        "end": 0.302
+      },
+      {
+        "text": "вокзал?",
+        "start": 0.337,
+        "end": 1.115
+      }
+    ],
+    "hash": "4b8c9f230ba67842"
+  },
+  "c_pl_station": {
+    "kind": "clip",
+    "text": "Gdzie jest dworzec?",
+    "file": "voice/c_pl_station.mp3",
+    "duration": 1.393197,
+    "words": [
+      {
+        "text": "Gdzie",
+        "start": 0,
+        "end": 0.302
+      },
+      {
+        "text": "jest",
+        "start": 0.337,
+        "end": 0.476
+      },
+      {
+        "text": "dworzec?",
+        "start": 0.511,
+        "end": 1.393
+      }
+    ],
+    "hash": "fa1c9424221631b9"
+  },
+  "c_cs_station": {
+    "kind": "clip",
+    "text": "Kde je nádraží?",
+    "file": "voice/c_cs_station.mp3",
+    "duration": 1.393197,
+    "words": [
+      {
+        "text": "Kde",
+        "start": 0,
+        "end": 0.313
+      },
+      {
+        "text": "je",
+        "start": 0.36,
+        "end": 0.418
+      },
+      {
+        "text": "nádraží?",
+        "start": 0.464,
+        "end": 1.393
+      }
+    ],
+    "hash": "cc95bc9637230165"
+  },
+  "c_en_station": {
+    "kind": "clip",
+    "text": "Where’s the station?",
+    "file": "voice/c_en_station.mp3",
+    "duration": 1.486077,
+    "words": [
+      {
+        "text": "Where’s",
+        "start": 0,
+        "end": 0.36
+      },
+      {
+        "text": "the",
+        "start": 0.406,
+        "end": 0.488
+      },
+      {
+        "text": "station?",
+        "start": 0.534,
+        "end": 1.486
+      }
+    ],
+    "hash": "0f6583a0d095d05d"
+  }
+}
