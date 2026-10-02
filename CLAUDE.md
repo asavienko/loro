@@ -81,6 +81,9 @@ A change that violates one of these is reverted, not discussed.
 ## Conventions
 
 - **`master` means `main`.** Interpret it as `main` for branch operations without asking.
+- **One task, one worktree, one PR.** Starting a task, create a new Git worktree on a new branch
+  from an up-to-date `main` and work only there (never in the main checkout, which other sessions
+  share). Finishing it, push the branch and open a PR against `main`.
 - **The repository is public and source-available**
   ([ADR-0018](docs/architecture/adr/0018-public-source-available-repository.md),
   [public-repository.md](docs/process/public-repository.md)): everything committed, and its history,
