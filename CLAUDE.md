@@ -221,7 +221,7 @@ cd packages/core-rs && cargo test <name>
 with owners and dates: Q-08/Q-12 (pricing, store billing), Q-13 (es-419), Q-15 (voices), Q-21 (eval
 and budget for live AI generation), Q-22 (sharing audio files), Q-23 (native-speaker review), Q-24
 (review retention target), Q-25 (syllabus word lists), Q-26 (en-US written or adapted) and Q-27 (the
-landing page's domain, and the switch to CloudFront).
+landing page's switch to CloudFront).
 
 ## EC2 development deployment
 

@@ -30,8 +30,24 @@ Resources:
       Stage: PRODUCTION
       EnableAutoBuild: false
       EnablePullRequestPreview: false
+  # loro.savienko.com, with a certificate Amplify issues and renews. The domain's DNS is at GoDaddy,
+  # so its two CNAME records (the certificate's and the page's) are added there by hand; see
+  # docs/process/landing-deployment.md. Only the `loro` prefix: the root domain stays as it is.
+  Domain:
+    Type: AWS::Amplify::Domain
+    Properties:
+      AppId: !GetAtt App.AppId
+      DomainName: savienko.com
+      EnableAutoSubDomain: false
+      # No CertificateSettings: the default is Amplify's managed certificate, and CloudFormation
+      # rejects `CertificateType: AMPLIFY_MANAGED` as if it were a custom one without an ARN.
+      SubDomainSettings:
+        - Prefix: loro
+          BranchName: !GetAtt Branch.BranchName
 Outputs:
   AppId:
     Value: !GetAtt App.AppId
   Url:
+    Value: https://loro.savienko.com/
+  DefaultUrl:
     Value: !Sub 'https://${Branch.BranchName}.${App.DefaultDomain}/'

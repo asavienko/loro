@@ -6,8 +6,9 @@ as the [EC2 development host](ec2-deployment.md) (profile `loro`, region `eu-cen
 
 ## Current deployment
 
-- **URL:** <https://main.d8avifn92wmt4.amplifyapp.com/> (the stack's `Url` output). There is no
-  custom domain yet ([Q-27](../decisions/open-questions.md#q-27)).
+- **URL:** <https://loro.savienko.com/> (the stack's `Url` output), with Amplify's default
+  <https://main.d8avifn92wmt4.amplifyapp.com/> still answering (`DefaultUrl`). See
+  [the custom domain](#the-custom-domain).
 - **Stack `loro-landing`:** one Amplify app with one branch, `main`, with automatic builds and pull
   request previews off. Nothing is connected to GitHub: the branch only receives the archives
   `scripts/deploy-landing.sh` uploads, so merging to `main` changes nothing until someone deploys.
@@ -39,6 +40,31 @@ numbered job in the Amplify console, and an earlier one can be redeployed from t
 
 Only the browser's files go up: not the README, `package.json`, `tsconfig.json`, the local server or
 `src/releases.test.js`.
+
+## The custom domain
+
+The stack's `Domain` resource attaches `loro.savienko.com` to the `main` branch, with a certificate
+Amplify issues and renews (no `CertificateSettings`: CloudFormation rejects
+`CertificateType: AMPLIFY_MANAGED` as a custom certificate without an ARN). Only the `loro` prefix
+is attached; the root `savienko.com` is left alone. The domain is registered at GoDaddy and its DNS
+is there, so the two records Amplify asks for are added by hand in GoDaddy's DNS page:
+
+| Type  | Name (GoDaddy)                      | Value                                                              |
+| ----- | ----------------------------------- | ------------------------------------------------------------------ |
+| CNAME | `_833ed1f6b3ecb1d5fa36aa807fc84e03` | `_999eec30456965b691e7aa72c399862f.wzccmgtwzk.acm-validations.aws` |
+| CNAME | `loro`                              | `d2jent0k7is1yl.cloudfront.net`                                    |
+
+The first proves the domain to the certificate authority and must stay for renewals; the second
+serves the page. The same name also carries the SES records for email sign-in codes
+(`_domainkey.loro`, `mail.loro`, [ec2-deployment.md](ec2-deployment.md#email-sign-in-codes)); they
+are different names and do not conflict. Check the association with:
+
+```bash
+aws amplify get-domain-association --app-id d8avifn92wmt4 --domain-name savienko.com \
+  --query 'domainAssociation.[domainStatus,subDomains[0].verified]'
+```
+
+`AVAILABLE` and `true` mean the page is served on the domain over HTTPS.
 
 ## The video's files: the media bucket
 
@@ -101,8 +127,9 @@ aws s3 sync apps/landing "s3://$bucket" --delete --exclude '*' --include 'index.
 
 Then point `scripts/deploy-landing.sh` at it (one `s3 sync` per content type, so each object carries
 its charset, and a `/*` invalidation at the end; the first version of the script in Git history did
-exactly this), delete the `loro-landing` stack, and update this page and
-[Q-27](../decisions/open-questions.md#q-27).
+exactly this), move `loro.savienko.com` to the distribution (an alias and a `us-east-1` ACM
+certificate validated at GoDaddy, then the `loro` CNAME pointed at the distribution), delete the
+`loro-landing` stack, and update this page and [Q-27](../decisions/open-questions.md#q-27).
 
 The film can move behind the same distribution: add the media bucket as a second origin for
 `promo/*` (an origin access control instead of the public policy), point the page at the
@@ -119,6 +146,12 @@ distribution's URLs, then close the bucket with `BlockPublicPolicy`.
   CloudFront inside AWS's own account, so the restriction does not apply, it gives HTTPS at a
   default domain, and a manual deployment is one archive upload with no build. It costs cents rather
   than nothing, which is why it is the interim and not the destination.
+- **The page's address is `loro.savienko.com`** (2026-10-02), a subdomain of the owner's domain, the
+  same name SES sends sign-in codes from
+  ([ADR-0021](../architecture/adr/0021-email-codes-through-amazon-ses.md)). Set aside: the root
+  `savienko.com` (the owner's own name, kept free for other uses) and a domain of Loro's own (none
+  is registered; the owner registered `savienko.com` for this). DNS stays at GoDaddy, the registrar:
+  a Route 53 hosted zone would cost $0.50 a month for two records.
 - **The stack is CloudFormation and the deployment is a script**, like the EC2 host: the repository
   says what exists, and the console is for looking.
 - **Deploying is a person's command, not a merge.** The CI policy ([ci-cd.md](ci-cd.md)) runs

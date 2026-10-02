@@ -98,8 +98,7 @@ What each variable does is in [environments.md](environments.md). On this host:
 
 - `DATABASE_URL` and `AUTH_*` come from the durable account release. Email codes go through Amazon
   SES with `AUTH_MAGIC_DELIVERY_URL=ses`, `AUTH_EMAIL_FROM` and `AWS_REGION`
-  ([below](#email-sign-in-codes)); until SES is set up, `inbox:local`
-  ([below](#reading-an-email-sign-in-code)) and no learner receives a code.
+  ([below](#email-sign-in-codes)).
 - `LIBRARY_URL_SECRET` is set (32+ random characters). Without it every redeploy would invalidate
   the signed song links learners hold.
 - `TTS_PROVIDER=elevenlabs` with its key, model, format and the `TTS_VOICE_*` voices: the server's
@@ -173,8 +172,8 @@ part (the release sets it to `stub` for the older `/v1/ai` routes); the library 
 The API sends codes through Amazon SES itself
 ([ADR-0021](../architecture/adr/0021-email-codes-through-amazon-ses.md)). The stack gives the
 instance a role that may only call `ses:SendEmail`, and a metadata hop limit of 2 so the container
-reaches its credentials; `scripts/provision-ec2.sh` applies both in place. SES itself is set up
-once, by hand, in the host's region:
+reaches its credentials; `scripts/provision-ec2.sh` applies both in place. SES itself was set up
+once, by hand, in the host's region; the host has sent codes this way since 2026-10-02:
 
 1. **Verify the sending domain.** Codes come from `codes@loro.savienko.com`. The SES identity is
    `loro.savienko.com` (Easy DKIM, RSA 2048) with the custom MAIL FROM domain
@@ -183,8 +182,10 @@ once, by hand, in the host's region:
    `mail.loro.savienko.com` pointing at `feedback-smtp.eu-central-1.amazonses.com` (priority 10),
    and a TXT record `v=spf1 include:amazonses.com ~all` on the same name. DMARC comes from the
    registrar's default record on `savienko.com`.
-2. **Request production access** in the SES console. Until it is granted the account is in the
-   sandbox: it sends only to verified addresses, 200 a day.
+2. **Request production access** (requested 2026-10-02, under review). Until it is granted the
+   account is in the sandbox: it sends only to verified addresses, 200 a day. Check with
+   `aws sesv2 get-account --query ProductionAccessEnabled`; while it is `false`, add a tester with
+   `aws sesv2 create-email-identity --email-identity ADDRESS` and have them click AWS's link.
 3. **Switch the host** in `secrets/ec2-api.enc.env`: `AUTH_MAGIC_DELIVERY_URL=ses`,
    `AUTH_EMAIL_FROM=Loro <codes@loro.savienko.com>` and `AWS_REGION=eu-central-1`;
    `AUTH_MAGIC_DELIVERY_TOKEN` may stay. Then redeploy.
@@ -199,7 +200,7 @@ ssh ec2-user@$HOST 'sudo docker logs --since 10m loro-api 2>&1 | grep "email cod
 
 ### Reading an email sign-in code
 
-Before SES is set up, with `inbox:local` the API writes the latest code request to
+On a host set to `inbox:local` (the EC2 host before SES), the API writes the latest code request to
 `/tmp/loro-magic-delivery.json` inside the container (mode 600, `{email, code, expires_in}`). The
 image is distroless, so read it with the image's own node:
 
