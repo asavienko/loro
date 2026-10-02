@@ -96,8 +96,10 @@ writes.
 
 What each variable does is in [environments.md](environments.md). On this host:
 
-- `DATABASE_URL` and `AUTH_*` come from the durable account release. Email codes use
-  `AUTH_MAGIC_DELIVERY_URL=inbox:local` ([below](#reading-an-email-sign-in-code)).
+- `DATABASE_URL` and `AUTH_*` come from the durable account release. Email codes go through Amazon
+  SES with `AUTH_MAGIC_DELIVERY_URL=ses`, `AUTH_EMAIL_FROM` and `AWS_REGION`
+  ([below](#email-sign-in-codes)); until SES is set up, `inbox:local`
+  ([below](#reading-an-email-sign-in-code)) and no learner receives a code.
 - `LIBRARY_URL_SECRET` is set (32+ random characters). Without it every redeploy would invalidate
   the signed song links learners hold.
 - `TTS_PROVIDER=elevenlabs` with its key, model, format and the `TTS_VOICE_*` voices: the server's
@@ -166,11 +168,36 @@ part (the release sets it to `stub` for the older `/v1/ai` routes); the library 
    ssh ec2-user@$HOST 'sudo docker logs --since 10m loro-api 2>&1 | grep -E "writer failed|cover .*failed|song .* failed"'
    ```
 
+### Email sign-in codes
+
+The API sends codes through Amazon SES itself
+([ADR-0021](../architecture/adr/0021-email-codes-through-amazon-ses.md)). The stack gives the
+instance a role that may only call `ses:SendEmail`, and a metadata hop limit of 2 so the container
+reaches its credentials; `scripts/provision-ec2.sh` applies both in place. SES itself is set up
+once, by hand, in the host's region:
+
+1. **Verify the sending domain** (it waits on [Q-27](../decisions/open-questions.md#q-27)): create
+   the domain identity in SES and add its three DKIM CNAME records, plus SPF and DMARC records, at
+   the domain's DNS.
+2. **Request production access** in the SES console. Until it is granted the account is in the
+   sandbox: it sends only to verified addresses, 200 a day.
+3. **Switch the host** in `secrets/ec2-api.enc.env`: `AUTH_MAGIC_DELIVERY_URL=ses`,
+   `AUTH_EMAIL_FROM=Loro <codes@DOMAIN>` and `AWS_REGION=eu-central-1`; `AUTH_MAGIC_DELIVERY_TOKEN`
+   may stay. Then redeploy.
+
+A refused send answers `PROVIDER_UNAVAILABLE` and logs only the error's name:
+
+```bash
+ssh ec2-user@$HOST 'sudo docker logs --since 10m loro-api 2>&1 | grep "email code delivery failed"'
+```
+
+`MessageRejected` means the sender's domain is not verified or, in the sandbox, the recipient isn't.
+
 ### Reading an email sign-in code
 
-With `inbox:local` the API writes the latest code request to `/tmp/loro-magic-delivery.json` inside
-the container (mode 600, `{email, code, expires_in}`). The image is distroless, so read it with the
-image's own node:
+Before SES is set up, with `inbox:local` the API writes the latest code request to
+`/tmp/loro-magic-delivery.json` inside the container (mode 600, `{email, code, expires_in}`). The
+image is distroless, so read it with the image's own node:
 
 ```bash
 ssh ec2-user@HOST 'sudo docker exec loro-api /nodejs/bin/node -p "require(\"fs\").readFileSync(\"/tmp/loro-magic-delivery.json\",\"utf8\")"'

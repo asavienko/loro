@@ -172,4 +172,7 @@ domain of Loro's own (none is registered; the API's token issuer only defaults t
 and the switch to the no-cost S3-behind-CloudFront stack in `infra/landing/cloudfront.yaml`, which
 waits on AWS Support verifying the account for CloudFront. A custom domain on Amplify or CloudFront
 needs a certificate in `us-east-1` and a hosted zone, about $0.50 a month in Route 53 or none at
-another registrar; decide the domain before the switch so it is set up once.
+another registrar; decide the domain before the switch so it is set up once. Email sign-in waits on
+it too: SES sends codes only from a verified domain
+([ADR-0021](../architecture/adr/0021-email-codes-through-amazon-ses.md)), so until there is one no
+learner receives a code.
