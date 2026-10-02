@@ -4,7 +4,8 @@
 // back is the core's to decide, and the grades don't show it.
 import { useRouter } from 'expo-router';
 import { ReactNode, useState } from 'react';
-import { ActivityIndicator, LayoutChangeEvent, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { languageName } from '@shared/copy';
 import { getTopic, Phrase } from '@shared/content';
@@ -72,8 +73,10 @@ export function NowPlayingScreen() {
   const [notesOpen, setNotesOpen] = useState(false);
   const [shownAnyway, setShownAnyway] = useState<string | null>(null);
   const art = useArtExpansion();
-  // The page's height between the header and the dock.
+  const { scroller } = art;
+  // The page's height between the header and the dock, and its width (less any scrollbar).
   const [stage, setStage] = useState<number | null>(null);
+  const [pageWidth, setPageWidth] = useState<number | null>(null);
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
   const phrase = findPhrase(state.learner, currentPhraseId(state.player));
@@ -103,12 +106,11 @@ export function NowPlayingScreen() {
   // The picture runs edge to edge under the header, as tall as the room above the words allows: up
   // to square, less on a short screen or with large text.
   const side = room.compact ? COMPACT_GUTTER : GUTTER;
-  const width = Math.min(room.width, MAX_WIDTH);
+  const width = Math.min(pageWidth ?? room.width, MAX_WIDTH);
   const height = stage ?? room.height - insets.top - insets.bottom - HEADER - DOCK;
   const coaching = coaches(state.learner, now);
   const cover = playerArtSize(width, height, room.fontScale, coaching ? COACH : 0);
-  // Shown whole, the picture is square: as wide as the page, or as tall as the stage when that is less.
-  const whole = Math.round(Math.min(width, height));
+  // Shown whole, the picture is square and as wide as the page.
   const gutter = room.compact ? styles.compactGutter : null;
 
   return (
@@ -129,15 +131,18 @@ export function NowPlayingScreen() {
           </View>
         </PullHandle>
 
-        <ScrollView
+        <Animated.ScrollView
+          ref={scroller}
           style={styles.stage}
-          contentContainerStyle={[styles.stageContent, gutter]}
+          // Opened, the picture's extra room is all scrollable, so scrolling takes it back to its band.
+          contentContainerStyle={[styles.stageContent, gutter, art.open && stage !== null && { minHeight: stage + width - cover }]}
           onLayout={(e: LayoutChangeEvent) => setStage(Math.round(e.nativeEvent.layout.height))}
-          scrollEventThrottle={64}
+          onContentSizeChange={(w) => setPageWidth(Math.round(w))}
+          scrollEventThrottle={16}
           onScroll={art.onScroll}
         >
           <View style={[styles.cover, { marginHorizontal: -side }, cover === 0 && styles.gone]}>
-            <ExpandArt open={art.open} onOpenChange={art.setOpen} small={{ width, height: cover }} large={{ width: whole, height: whole }}>
+            <ExpandArt art={art} small={{ width, height: cover }} large={{ width, height: width }}>
               {(size) => <PhraseImage icons={phrase.image} tone={tone} width={size.width} height={size.height} rounded={0} phrase={phrase} redraw />}
             </ExpandArt>
           </View>
@@ -184,7 +189,7 @@ export function NowPlayingScreen() {
               <PlayTime phrase={phrase} />
             </View>
           )}
-        </ScrollView>
+        </Animated.ScrollView>
 
         <View style={[styles.dock, gutter, !endedOnce && styles.dockLine]}>
           {endedOnce ? <EndPanel onClose={close} /> : <Rating phrase={phrase} />}

@@ -3,7 +3,8 @@
 // sort, and its phrases. Your own set grows from here.
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, Share, StyleSheet, View } from 'react-native';
+import Animated, { runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 import { keepOpenedSet } from '@shared/api/contentCache';
 import { deleteSet, fetchSet, saveItem, unsaveItem } from '@shared/api/library';
 import { coursesFor, getTopic, Phrase, TopicTone, UiLocale } from '@shared/content';
@@ -26,7 +27,7 @@ import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
-import { ExpandArt, useArtExpansion, wholeSide } from '../ui/ExpandArt';
+import { ExpandArt, useArtExpansion, type ArtExpansion } from '../ui/ExpandArt';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
 import { Press } from '../ui/Press';
@@ -80,6 +81,14 @@ export function SetScreen({ setId }: { setId: string }) {
   const { state } = useStore();
   const [past, setPast] = useState(false);
   const art = useArtExpansion();
+  const { scroller } = art;
+  // Scrolled past the head: the bar takes the title.
+  useAnimatedReaction(
+    () => art.scrollY.get() > TITLE_SCROLL_PX,
+    (now, before) => {
+      if (now !== before) runOnJS(setPast)(now);
+    },
+  );
   const view = findSetView(state.learner, setId);
   const back = () => (router.canGoBack() ? router.back() : router.navigate(hrefOf({ name: tab }) as never));
   // A set not installed here (a link, Community): fetched and kept, so its phrases play (plan 106).
@@ -98,23 +107,17 @@ export function SetScreen({ setId }: { setId: string }) {
   return (
     <View style={styles.screen}>
       <TopBar title={past ? view?.title : undefined} onBack={back} onOpenSettings={nav.openSettings} />
-      <ScrollView
-        scrollEventThrottle={64}
-        onScroll={(e) => {
-          const now = e.nativeEvent.contentOffset.y > TITLE_SCROLL_PX;
-          if (now !== past) setPast(now);
-          art.onScroll(e);
-        }}
-      >
+      <Animated.ScrollView ref={scroller} scrollEventThrottle={16} onScroll={art.onScroll}>
         {fetching ? <ActivityIndicator color={colors.primaryContainer} style={styles.message} /> : <SetPage setId={setId} onDeleted={back} art={art} />}
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }
 
-function SetPage({ setId, onDeleted, art }: { setId: string; onDeleted: () => void; art: ReturnType<typeof useArtExpansion> }) {
+function SetPage({ setId, onDeleted, art }: { setId: string; onDeleted: () => void; art: ArtExpansion }) {
   const c = useCopy();
   const room = useRoom();
+  const [headWidth, setHeadWidth] = useState<number | null>(null);
   const nav = useNav();
   const { toast } = useToast();
   const { state, actions } = useStore();
@@ -251,19 +254,19 @@ function SetPage({ setId, onDeleted, art }: { setId: string; onDeleted: () => vo
   };
 
   const tone = (view.topicId && topic?.tone) || 'secondary';
-  // Shown whole, the cover takes the head's width and the title goes under it.
-  const whole = wholeSide(Math.min(room.width, HEAD_MAX) - 2 * HEAD_SIDE, room.height);
+  // Shown whole, the cover runs across the head, over its sides, and the title goes under it.
+  const whole = Math.round(headWidth ?? Math.min(room.width, HEAD_MAX));
 
   return (
     <>
       {/* The page takes its cover's colour, edge to edge. */}
       <View style={{ backgroundColor: TONE_WASH[tone] }}>
-        <View style={styles.head}>
+        <View style={styles.head} onLayout={(e) => setHeadWidth(e.nativeEvent.layout.width)}>
           {/* Cover and title side by side, whatever the title's length, so sibling sets share one
               layout; only very large text puts the title under the cover. */}
           <View style={styles.headRow}>
-            <ExpandArt open={art.open} onOpenChange={art.setOpen} small={{ width: COVER, height: COVER }} large={{ width: whole, height: whole }}>
-              {(size) => <SetCover set={view} px={size.width} rounded={radius['2xl']} style={shadow.cover} redraw />}
+            <ExpandArt art={art} small={{ width: COVER, height: COVER }} large={{ width: whole, height: whole }} bleed={HEAD_SIDE} align="start">
+              {(size) => (size.width > COVER ? <SetCover set={view} px={size.width} rounded={0} redraw /> : <SetCover set={view} px={size.width} rounded={radius['2xl']} style={shadow.cover} redraw />)}
             </ExpandArt>
             <View style={styles.headText}>
               <View style={styles.kicker}>

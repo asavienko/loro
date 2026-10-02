@@ -3,7 +3,8 @@
 // still being made shows as such and turns playable when it is ready.
 import { useRouter } from 'expo-router';
 import { ReactNode, useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { deleteAlbum, deleteSong, fetchAlbum, retrySong, saveItem, unsaveItem, type AlbumDetail, type Song } from '@shared/api/library';
 import { useNav } from '@shared/nav/NavContext';
@@ -17,7 +18,7 @@ import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
 import { useCopy, useStore } from '../state/store';
 import { Button } from '../ui/Button';
-import { ExpandArt, useArtExpansion, wholeSide } from '../ui/ExpandArt';
+import { ExpandArt, useArtExpansion } from '../ui/ExpandArt';
 import { Icon } from '../ui/Icon';
 import { confirm } from '../ui/confirm';
 import { problemText } from '../ui/problems';
@@ -28,7 +29,7 @@ import { useRoom } from '../ui/useRoom';
 
 /** How often a song still being made is asked about. */
 const POLL_MS = 2500;
-/** The cover's side, and the page's width and the hero's sides (styles.content, styles.hero). */
+/** The cover's side, the page's width and the hero's sides (styles.content, styles.hero). */
 const COVER = 200;
 const PAGE_MAX = 720;
 const HERO_SIDE = 24;
@@ -48,6 +49,9 @@ export function AlbumScreen({ id }: { id: string }) {
   const [renaming, setRenaming] = useState(false);
   const room = useRoom();
   const art = useArtExpansion();
+  const { scroller } = art;
+  // The hero's width, measured (less any scrollbar): the cover shown whole runs across all of it.
+  const [heroWidth, setHeroWidth] = useState<number | null>(null);
   const { state } = useStore();
   // The song whose retry or removal is on its way: its buttons wait, so a second tap sends nothing.
   const [acting, setActing] = useState<string | null>(null);
@@ -165,16 +169,15 @@ export function AlbumScreen({ id }: { id: string }) {
     }
   };
 
-  // Shown whole, the cover takes the page's width, less its sides (styles.hero).
-  const whole = wholeSide(Math.min(room.width, PAGE_MAX) - 2 * HERO_SIDE, room.height);
+  const whole = Math.round(heroWidth ?? Math.min(room.width, PAGE_MAX));
 
   return (
-    <ScrollView style={styles.page} contentContainerStyle={[styles.content, { paddingTop: insets.top + 4 }]} scrollEventThrottle={64} onScroll={art.onScroll}>
+    <Animated.ScrollView ref={scroller} style={styles.page} contentContainerStyle={[styles.content, { paddingTop: insets.top + 4 }]} scrollEventThrottle={16} onScroll={art.onScroll}>
       <View style={styles.top}>
         <Button variant="icon" icon="arrow_back" color="onSurface" accessibilityLabel={c.common.back} onPress={back} />
       </View>
-      <View style={styles.hero}>
-        <ExpandArt open={art.open} onOpenChange={art.setOpen} small={{ width: COVER, height: COVER }} large={{ width: whole, height: whole }}>
+      <View style={styles.hero} onLayout={(e) => setHeroWidth(e.nativeEvent.layout.width)}>
+        <ExpandArt art={art} small={{ width: COVER, height: COVER }} large={{ width: whole, height: whole }} bleed={HERO_SIDE}>
           {(size) => <AlbumCover url={album.coverUrl} px={size.width} rounded={16} redraw={{ kind: 'album', album, onDrawn: () => void load() }} />}
         </ExpandArt>
         <Txt variant="label" weight={700} color="primaryContainer" style={styles.kicker}>
@@ -259,7 +262,7 @@ export function AlbumScreen({ id }: { id: string }) {
         {mine && <Button variant="tonal" icon="add" label={c.music.makeSong} onPress={() => nav.makeSong({ albumId: album.id })} style={styles.add} />}
       </View>
       {album.owner === 'other' && <MoreAlbumsByMaker key={album.id} albumId={album.id} author={album.author} />}
-    </ScrollView>
+    </Animated.ScrollView>
   );
 }
 
