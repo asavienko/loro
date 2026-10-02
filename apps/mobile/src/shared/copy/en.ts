@@ -25,6 +25,8 @@ export function makeEn(n: Plural) {
       pause: 'Pause',
       delete: 'Delete',
       moreOptions: 'More options',
+      showWholePicture: 'Show the whole picture',
+      showSmallerPicture: 'Make the picture smaller',
       phrases: (count: number) => n(count, { one: `${count} phrase`, other: `${count} phrases` }),
       sets: (count: number) => n(count, { one: `${count} set`, other: `${count} sets` }),
       points: (count: number) => n(count, { one: `${count} point`, other: `${count} points` }),

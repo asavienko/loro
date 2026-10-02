@@ -17,15 +17,21 @@ import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
 import { useCopy, useStore } from '../state/store';
 import { Button } from '../ui/Button';
+import { ExpandArt, useArtExpansion, wholeSide } from '../ui/ExpandArt';
 import { Icon } from '../ui/Icon';
 import { confirm } from '../ui/confirm';
 import { problemText } from '../ui/problems';
 import { useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
 import { colors, radius, TARGET } from '../ui/theme';
+import { useRoom } from '../ui/useRoom';
 
 /** How often a song still being made is asked about. */
 const POLL_MS = 2500;
+/** The cover's side, and the page's width and the hero's sides (styles.content, styles.hero). */
+const COVER = 200;
+const PAGE_MAX = 720;
+const HERO_SIDE = 24;
 
 export function AlbumScreen({ id }: { id: string }) {
   const c = useCopy();
@@ -40,6 +46,8 @@ export function AlbumScreen({ id }: { id: string }) {
   const [failed, setFailed] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [renaming, setRenaming] = useState(false);
+  const room = useRoom();
+  const art = useArtExpansion();
   const { state } = useStore();
   // The song whose retry or removal is on its way: its buttons wait, so a second tap sends nothing.
   const [acting, setActing] = useState<string | null>(null);
@@ -157,13 +165,18 @@ export function AlbumScreen({ id }: { id: string }) {
     }
   };
 
+  // Shown whole, the cover takes the page's width, less its sides (styles.hero).
+  const whole = wholeSide(Math.min(room.width, PAGE_MAX) - 2 * HERO_SIDE, room.height);
+
   return (
-    <ScrollView style={styles.page} contentContainerStyle={[styles.content, { paddingTop: insets.top + 4 }]}>
+    <ScrollView style={styles.page} contentContainerStyle={[styles.content, { paddingTop: insets.top + 4 }]} scrollEventThrottle={64} onScroll={art.onScroll}>
       <View style={styles.top}>
         <Button variant="icon" icon="arrow_back" color="onSurface" accessibilityLabel={c.common.back} onPress={back} />
       </View>
       <View style={styles.hero}>
-        <AlbumCover url={album.coverUrl} px={200} rounded={16} redraw={{ kind: 'album', album, onDrawn: () => void load() }} />
+        <ExpandArt open={art.open} onOpenChange={art.setOpen} small={{ width: COVER, height: COVER }} large={{ width: whole, height: whole }}>
+          {(size) => <AlbumCover url={album.coverUrl} px={size.width} rounded={16} redraw={{ kind: 'album', album, onDrawn: () => void load() }} />}
+        </ExpandArt>
         <Txt variant="label" weight={700} color="primaryContainer" style={styles.kicker}>
           {c.music.album.toLocaleUpperCase(c.locale)}
         </Txt>
@@ -324,9 +337,9 @@ export function AlbumSongRow({
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.surface },
   center: { alignItems: 'center', justifyContent: 'center', gap: 12 },
-  content: { paddingBottom: 48, width: '100%', maxWidth: 720, alignSelf: 'center' },
+  content: { paddingBottom: 48, width: '100%', maxWidth: PAGE_MAX, alignSelf: 'center' },
   top: { flexDirection: 'row', paddingHorizontal: 8 },
-  hero: { alignItems: 'center', gap: 6, paddingHorizontal: 24 },
+  hero: { alignItems: 'center', gap: 6, paddingHorizontal: HERO_SIDE },
   kicker: { marginTop: 12, letterSpacing: 1 },
   actions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingTop: 16, paddingHorizontal: 16 },
   // With large system text the label wraps rather than pushing the row past the screen's edges.

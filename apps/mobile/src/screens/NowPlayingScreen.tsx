@@ -36,6 +36,7 @@ import { useClipMaking } from '../audio/clipMaking';
 import { PassCard } from '../nav/PassNotice';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
+import { ExpandArt, useArtExpansion } from '../ui/ExpandArt';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseNotesView } from '../ui/Notes';
 import { PhaseFill } from '../ui/PhaseFill';
@@ -70,6 +71,7 @@ export function NowPlayingScreen() {
   const now = useNow(60_000);
   const [notesOpen, setNotesOpen] = useState(false);
   const [shownAnyway, setShownAnyway] = useState<string | null>(null);
+  const art = useArtExpansion();
   // The page's height between the header and the dock.
   const [stage, setStage] = useState<number | null>(null);
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -105,6 +107,8 @@ export function NowPlayingScreen() {
   const height = stage ?? room.height - insets.top - insets.bottom - HEADER - DOCK;
   const coaching = coaches(state.learner, now);
   const cover = playerArtSize(width, height, room.fontScale, coaching ? COACH : 0);
+  // Shown whole, the picture is square: as wide as the page, or as tall as the stage when that is less.
+  const whole = Math.round(Math.min(width, height));
   const gutter = room.compact ? styles.compactGutter : null;
 
   return (
@@ -129,9 +133,13 @@ export function NowPlayingScreen() {
           style={styles.stage}
           contentContainerStyle={[styles.stageContent, gutter]}
           onLayout={(e: LayoutChangeEvent) => setStage(Math.round(e.nativeEvent.layout.height))}
+          scrollEventThrottle={64}
+          onScroll={art.onScroll}
         >
           <View style={[styles.cover, { marginHorizontal: -side }, cover === 0 && styles.gone]}>
-            <PhraseImage icons={phrase.image} tone={tone} width={width} height={cover} rounded={0} phrase={phrase} redraw />
+            <ExpandArt open={art.open} onOpenChange={art.setOpen} small={{ width, height: cover }} large={{ width: whole, height: whole }}>
+              {(size) => <PhraseImage icons={phrase.image} tone={tone} width={size.width} height={size.height} rounded={0} phrase={phrase} redraw />}
+            </ExpandArt>
           </View>
           <View style={[styles.about, cover > 0 && styles.underCover]}>
             <PhraseBlock phrase={phrase} revealed={revealed} />

@@ -24,6 +24,8 @@ export function makePl(n: Plural): Copy {
       pause: 'Pauza',
       delete: 'Usuń',
       moreOptions: 'Więcej',
+      showWholePicture: 'Pokaż cały obrazek',
+      showSmallerPicture: 'Zmniejsz obrazek',
       phrases,
       sets,
       points,

@@ -26,6 +26,8 @@ export function makeCs(n: Plural): Copy {
       pause: 'Pauza',
       delete: 'Smazat',
       moreOptions: 'Další možnosti',
+      showWholePicture: 'Zobrazit celý obrázek',
+      showSmallerPicture: 'Zmenšit obrázek',
       phrases,
       sets,
       points,

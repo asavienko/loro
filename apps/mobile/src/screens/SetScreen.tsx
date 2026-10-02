@@ -26,6 +26,7 @@ import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
+import { ExpandArt, useArtExpansion, wholeSide } from '../ui/ExpandArt';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
 import { Press } from '../ui/Press';
@@ -38,6 +39,7 @@ import { useToast } from '../ui/Toast';
 import { TopBar } from '../ui/TopBar';
 import { Txt } from '../ui/Txt';
 import { colors, radius, shadow, TARGET } from '../ui/theme';
+import { useRoom } from '../ui/useRoom';
 
 const SORTS: { id: SortKey; icon: IconName }[] = [
   { id: 'set', icon: 'format_list_numbered' },
@@ -57,6 +59,10 @@ const TONE_WASH: Record<TopicTone, string> = {
 
 /** Past this much scroll the page's own title is gone, and the top bar says it. */
 const TITLE_SCROLL_PX = 120;
+/** The cover's side, and the head's width and sides (styles.head). */
+const COVER = 96;
+const HEAD_MAX = 768;
+const HEAD_SIDE = 16;
 
 /**
  * What a set page last put in the queue, per set: the whole set or its due-and-new phrases, and in
@@ -73,6 +79,7 @@ export function SetScreen({ setId }: { setId: string }) {
   const { tab } = useShell();
   const { state } = useStore();
   const [past, setPast] = useState(false);
+  const art = useArtExpansion();
   const view = findSetView(state.learner, setId);
   const back = () => (router.canGoBack() ? router.back() : router.navigate(hrefOf({ name: tab }) as never));
   // A set not installed here (a link, Community): fetched and kept, so its phrases play (plan 106).
@@ -96,16 +103,18 @@ export function SetScreen({ setId }: { setId: string }) {
         onScroll={(e) => {
           const now = e.nativeEvent.contentOffset.y > TITLE_SCROLL_PX;
           if (now !== past) setPast(now);
+          art.onScroll(e);
         }}
       >
-        {fetching ? <ActivityIndicator color={colors.primaryContainer} style={styles.message} /> : <SetPage setId={setId} onDeleted={back} />}
+        {fetching ? <ActivityIndicator color={colors.primaryContainer} style={styles.message} /> : <SetPage setId={setId} onDeleted={back} art={art} />}
       </ScrollView>
     </View>
   );
 }
 
-function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void }) {
+function SetPage({ setId, onDeleted, art }: { setId: string; onDeleted: () => void; art: ReturnType<typeof useArtExpansion> }) {
   const c = useCopy();
+  const room = useRoom();
   const nav = useNav();
   const { toast } = useToast();
   const { state, actions } = useStore();
@@ -242,6 +251,8 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
   };
 
   const tone = (view.topicId && topic?.tone) || 'secondary';
+  // Shown whole, the cover takes the head's width and the title goes under it.
+  const whole = wholeSide(Math.min(room.width, HEAD_MAX) - 2 * HEAD_SIDE, room.height);
 
   return (
     <>
@@ -251,7 +262,9 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
           {/* Cover and title side by side, whatever the title's length, so sibling sets share one
               layout; only very large text puts the title under the cover. */}
           <View style={styles.headRow}>
-            <SetCover set={view} px={96} rounded={radius['2xl']} style={shadow.cover} redraw />
+            <ExpandArt open={art.open} onOpenChange={art.setOpen} small={{ width: COVER, height: COVER }} large={{ width: whole, height: whole }}>
+              {(size) => <SetCover set={view} px={size.width} rounded={radius['2xl']} style={shadow.cover} redraw />}
+            </ExpandArt>
             <View style={styles.headText}>
               <View style={styles.kicker}>
                 {mine ? (
@@ -539,7 +552,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
   message: { width: '100%', maxWidth: 768, alignSelf: 'center', paddingHorizontal: 16, paddingTop: 32 },
   otherCourse: { alignItems: 'flex-start', gap: 12 },
-  head: { width: '100%', maxWidth: 768, alignSelf: 'center', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 },
+  head: { width: '100%', maxWidth: HEAD_MAX, alignSelf: 'center', paddingHorizontal: HEAD_SIDE, paddingTop: 16, paddingBottom: 4 },
   headRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', gap: 16 },
   headText: { flexGrow: 1, flexShrink: 1, flexBasis: 160, minWidth: 0 },
   kicker: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4 },

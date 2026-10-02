@@ -21,6 +21,7 @@ import { clockTime, useMusic } from '../music/MusicPlayer';
 import { songRating, useRateSong } from '../music/songRating';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
+import { ExpandArt, useArtExpansion } from '../ui/ExpandArt';
 import { Icon } from '../ui/Icon';
 import { Press } from '../ui/Press';
 import { PullDownWindow, PullHandle } from '../ui/PullDown';
@@ -42,6 +43,9 @@ export function SongScreen() {
   const [pageWidth, setPageWidth] = useState<number | null>(null);
   const coverWidth = Math.min(pageWidth ?? roomWidth, CONTENT_WIDTH);
   const coverHeight = Math.min(coverWidth, Math.round(roomHeight * 0.36));
+  // Shown whole, the cover is square: as wide as the page, short of most of the window's height.
+  const whole = Math.min(coverWidth, Math.round(roomHeight * 0.6));
+  const art = useArtExpansion();
   const music = useMusic();
   const { state, actions } = useStore();
   const [meanings, setMeanings] = useState(true);
@@ -93,10 +97,16 @@ export function SongScreen() {
       </PullHandle>
       <ScrollView
         onContentSizeChange={(w) => setPageWidth(Math.round(w))}
+        scrollEventThrottle={64}
+        onScroll={art.onScroll}
         contentContainerStyle={[styles.content, compact && styles.compactContent, { paddingBottom: insets.bottom + 32 }]}
       >
         <View style={[styles.cover, { marginHorizontal: compact ? -16 : -24 }]}>
-          <AlbumCover url={songCoverUrl(song.id) ?? music.album?.coverUrl ?? null} px={coverWidth} height={coverHeight} rounded={0} redraw={{ kind: 'song', song }} liked={music.album?.id === LIKED_ID} />
+          <ExpandArt open={art.open} onOpenChange={art.setOpen} small={{ width: coverWidth, height: coverHeight }} large={{ width: whole, height: whole }}>
+            {(size) => (
+              <AlbumCover url={songCoverUrl(song.id) ?? music.album?.coverUrl ?? null} px={size.width} height={size.height} rounded={0} redraw={{ kind: 'song', song }} liked={music.album?.id === LIKED_ID} />
+            )}
+          </ExpandArt>
         </View>
         <View style={styles.titleRow}>
           <Txt variant="displaySm" face="serif" weight={600} accessibilityRole="header" style={{ flex: 1 }}>

@@ -18,6 +18,8 @@ export function makeRu(n: Plural): Copy {
       pause: 'Пауза',
       delete: 'Удалить',
       moreOptions: 'Ещё',
+      showWholePicture: 'Показать картинку целиком',
+      showSmallerPicture: 'Уменьшить картинку',
       phrases,
       sets: (c) => n(c, { one: `${c} набор`, few: `${c} набора`, many: `${c} наборов`, other: `${c} набора` }),
       points: (c) => n(c, { one: `${c} очко`, few: `${c} очка`, many: `${c} очков`, other: `${c} очка` }),
