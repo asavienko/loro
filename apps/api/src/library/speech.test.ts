@@ -1,7 +1,7 @@
 /** P3-01: a phrase's clip made on demand, asked about while it renders. */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { SqlConnection, SqlDatabase, SqlResult } from '../database/database.js'
-import { SpeechService, utteranceId } from './speech.js'
+import { SpeechService, silentLanguages, utteranceId } from './speech.js'
 
 interface Row {
   id: string
@@ -230,5 +230,21 @@ describe('a clip made on demand', () => {
       expect(await speech.clipState(state)).toEqual({ status: 'failed' })
     })
     expect(voice.waiting).toHaveLength(0)
+  })
+})
+
+describe('silentLanguages', () => {
+  it('names every language Loro offers that has no voice, so a deploy shows it', () => {
+    expect(silentLanguages(runtime)).toEqual(['en-GB', 'en-US', 'bg-BG', 'ru-RU', 'pl-PL', 'cs-CZ'])
+    const voices = Object.fromEntries(
+      ['en-GB', 'en-US', 'es-ES', 'bg-BG', 'ru-RU', 'pl-PL', 'cs-CZ'].map((l) => [l, `v-${l}`]),
+    )
+    expect(silentLanguages({ ...runtime, voices })).toEqual([])
+    expect(silentLanguages({ ...runtime, voices: { ...voices, 'pl-PL': ' ' } })).toEqual(['pl-PL'])
+  })
+
+  it('says nothing without a provider: then no language has clips by design', () => {
+    expect(silentLanguages(null)).toEqual([])
+    expect(silentLanguages({ ...runtime, provider: 'stub' } as never)).toEqual([])
   })
 })

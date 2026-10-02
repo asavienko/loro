@@ -57,12 +57,21 @@ targets alike. The server's phrase clips use the voices set in `TTS_VOICE_*`;
 | `bg-BG` | `406EiNlYvqFqcz3vsnOm` | Peter K    |
 | `ru-RU` | `1qd9R09Ljlx9V1Ok0t5S` | Ivan       |
 | `en-GB` | `Xb7hH8MSUJpSbSDYk0k2` | Alice      |
+| `en-US` | `XrExE9yKIg1WjnnlVkGX` | Matilda    |
+| `pl-PL` | `H5xTcsAIeS5RAykjz57a` | Alex       |
+| `cs-CZ` | `KIDKfqJyZ6ASuyzsKfh5` | Jan        |
 
 The `en-GB` voice (ElevenLabs' premade "Alice", British) was set in `TTS_VOICE_EN_GB` on 2026-10-01
 so English prompts have a clip now that the app has no device voice (plan 108); it awaits the
-owner's listen. American English, Polish and Czech (2026-10-02) read `TTS_VOICE_EN_US`,
-`TTS_VOICE_PL_PL` and `TTS_VOICE_CS_CZ`; none is chosen yet, so those courses and prompts are silent
-until the owner pins a voice for each. Two listening-class voices per language are also pinned in
+owner's listen. American English, Polish and Czech read `TTS_VOICE_EN_US`, `TTS_VOICE_PL_PL` and
+`TTS_VOICE_CS_CZ`. Left empty when those courses arrived, they made the courses silent: a Polish
+phrase had no clip at all, so the player said "No recording of this phrase yet" instead of making
+one. They were pinned on 2026-10-02, chosen as the first three were: for `pl-PL` and `cs-CZ`, the
+Voice Library's most-used native voice for informative or narrative use with a standard accent and
+no live moderation ("Alex – Warm Storyteller", "Jan – Kind Educator"; using one through the API adds
+it to the account's voices); for `en-US`, ElevenLabs' premade American educator ("Matilda"),
+matching "Alice". All three await the owner's listen; changing one later makes new clips, as the
+voice is in the clip's URL. Two listening-class voices per language are also pinned in
 `LISTENING_VOICE_DECISION` for the API's `/v1/tts` routes, which the app does not call.
 
 Local runs may stay on `TTS_PROVIDER=stub` and spend no credits, but then nothing can be heard: the

@@ -142,13 +142,13 @@ one.
 
 With `TTS_PROVIDER=elevenlabs`, each phrase in a pack (and each suggestion) carries a clip URL for
 every one of its languages that has a pinned voice (`TTS_VOICE_ES_ES`, `TTS_VOICE_BG_BG`,
-`TTS_VOICE_RU_RU`, and `TTS_VOICE_EN_GB` for English prompts):
-`/library/speech/<utterance>.mp3?v=<voice>`. Only text the library holds can be spoken: storing a
-phrase registers its utterances (a hash of language and text), and the route renders nothing else. A
-clip renders once, on its first request, is kept with the songs' audio and is served as immutable.
-New renders are capped per day for the server (`LIMIT_SPEECH_RENDERS_DAILY`, default 500) and per
-learner whose phrases they are (`LIMIT_SPEECH_OWNER_DAILY`, default 100); a render the provider
-refuses isn't tried again for six hours.
+`TTS_VOICE_RU_RU`, `TTS_VOICE_EN_GB`, `TTS_VOICE_EN_US`, `TTS_VOICE_PL_PL` and `TTS_VOICE_CS_CZ`;
+Q-15 names them): `/library/speech/<utterance>.mp3?v=<voice>`. Only text the library holds can be
+spoken: storing a phrase registers its utterances (a hash of language and text), and the route
+renders nothing else. A clip renders once, on its first request, is kept with the songs' audio and
+is served as immutable. New renders are capped per day for the server (`LIMIT_SPEECH_RENDERS_DAILY`,
+default 500) and per learner whose phrases they are (`LIMIT_SPEECH_OWNER_DAILY`, default 100); a
+render the provider refuses isn't tried again for six hours.
 
 A clip not rendered yet is made on demand (P3-01). `GET /library/speech/<utterance>.json` (no
 bearer, `no-store`, through the gateway like the clip) answers
