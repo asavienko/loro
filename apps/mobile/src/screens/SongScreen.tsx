@@ -7,7 +7,8 @@
 // off as a sung recording.
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { LayoutChangeEvent, ScrollView, StyleSheet, View } from 'react-native';
+import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Song } from '@shared/api/library';
 import { findSet, songCoverUrl } from '@shared/content';
@@ -21,6 +22,7 @@ import { clockTime, useMusic } from '../music/MusicPlayer';
 import { songRating, useRateSong } from '../music/songRating';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
+import { ExpandArt, useArtExpansion } from '../ui/ExpandArt';
 import { Icon } from '../ui/Icon';
 import { Press } from '../ui/Press';
 import { PullDownWindow, PullHandle } from '../ui/PullDown';
@@ -42,6 +44,9 @@ export function SongScreen() {
   const [pageWidth, setPageWidth] = useState<number | null>(null);
   const coverWidth = Math.min(pageWidth ?? roomWidth, CONTENT_WIDTH);
   const coverHeight = Math.min(coverWidth, Math.round(roomHeight * 0.36));
+  // Shown whole, the cover is square and as wide as the page.
+  const art = useArtExpansion();
+  const { scroller } = art;
   const music = useMusic();
   const { state, actions } = useStore();
   const [meanings, setMeanings] = useState(true);
@@ -91,12 +96,19 @@ export function SongScreen() {
           <View style={{ width: TARGET }} />
         </View>
       </PullHandle>
-      <ScrollView
+      <Animated.ScrollView
+        ref={scroller}
         onContentSizeChange={(w) => setPageWidth(Math.round(w))}
+        scrollEventThrottle={16}
+        onScroll={art.onScroll}
         contentContainerStyle={[styles.content, compact && styles.compactContent, { paddingBottom: insets.bottom + 32 }]}
       >
         <View style={[styles.cover, { marginHorizontal: compact ? -16 : -24 }]}>
-          <AlbumCover url={songCoverUrl(song.id) ?? music.album?.coverUrl ?? null} px={coverWidth} height={coverHeight} rounded={0} redraw={{ kind: 'song', song }} liked={music.album?.id === LIKED_ID} />
+          <ExpandArt art={art} small={{ width: coverWidth, height: coverHeight }} large={{ width: coverWidth, height: coverWidth }}>
+            {(size) => (
+              <AlbumCover url={songCoverUrl(song.id) ?? music.album?.coverUrl ?? null} px={size.width} height={size.height} rounded={0} redraw={{ kind: 'song', song }} liked={music.album?.id === LIKED_ID} />
+            )}
+          </ExpandArt>
         </View>
         <View style={styles.titleRow}>
           <Txt variant="displaySm" face="serif" weight={600} accessibilityRole="header" style={{ flex: 1 }}>
@@ -238,7 +250,7 @@ export function SongScreen() {
           );
         })}
         {set && <Button variant="tonal" icon="menu_book" label={c.music.fromSet(set.title)} onPress={() => nav.openSet(set.id)} style={styles.setLink} />}
-      </ScrollView>
+      </Animated.ScrollView>
     </PullDownWindow>
   );
 }

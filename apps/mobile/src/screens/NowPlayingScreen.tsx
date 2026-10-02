@@ -4,7 +4,8 @@
 // back is the core's to decide, and the grades don't show it.
 import { useRouter } from 'expo-router';
 import { ReactNode, useState } from 'react';
-import { ActivityIndicator, LayoutChangeEvent, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { languageName } from '@shared/copy';
 import { getTopic, Phrase } from '@shared/content';
@@ -36,6 +37,7 @@ import { useClipMaking } from '../audio/clipMaking';
 import { PassCard } from '../nav/PassNotice';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
+import { ExpandArt, useArtExpansion } from '../ui/ExpandArt';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseNotesView } from '../ui/Notes';
 import { PhaseFill } from '../ui/PhaseFill';
@@ -70,8 +72,11 @@ export function NowPlayingScreen() {
   const now = useNow(60_000);
   const [notesOpen, setNotesOpen] = useState(false);
   const [shownAnyway, setShownAnyway] = useState<string | null>(null);
-  // The page's height between the header and the dock.
+  const art = useArtExpansion();
+  const { scroller } = art;
+  // The page's height between the header and the dock, and its width (less any scrollbar).
   const [stage, setStage] = useState<number | null>(null);
+  const [pageWidth, setPageWidth] = useState<number | null>(null);
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
   const phrase = findPhrase(state.learner, currentPhraseId(state.player));
@@ -101,10 +106,11 @@ export function NowPlayingScreen() {
   // The picture runs edge to edge under the header, as tall as the room above the words allows: up
   // to square, less on a short screen or with large text.
   const side = room.compact ? COMPACT_GUTTER : GUTTER;
-  const width = Math.min(room.width, MAX_WIDTH);
+  const width = Math.min(pageWidth ?? room.width, MAX_WIDTH);
   const height = stage ?? room.height - insets.top - insets.bottom - HEADER - DOCK;
   const coaching = coaches(state.learner, now);
   const cover = playerArtSize(width, height, room.fontScale, coaching ? COACH : 0);
+  // Shown whole, the picture is square and as wide as the page.
   const gutter = room.compact ? styles.compactGutter : null;
 
   return (
@@ -125,13 +131,20 @@ export function NowPlayingScreen() {
           </View>
         </PullHandle>
 
-        <ScrollView
+        <Animated.ScrollView
+          ref={scroller}
           style={styles.stage}
-          contentContainerStyle={[styles.stageContent, gutter]}
+          // Opened, the picture's extra room is all scrollable, so scrolling takes it back to its band.
+          contentContainerStyle={[styles.stageContent, gutter, art.open && stage !== null && { minHeight: stage + width - cover }]}
           onLayout={(e: LayoutChangeEvent) => setStage(Math.round(e.nativeEvent.layout.height))}
+          onContentSizeChange={(w) => setPageWidth(Math.round(w))}
+          scrollEventThrottle={16}
+          onScroll={art.onScroll}
         >
           <View style={[styles.cover, { marginHorizontal: -side }, cover === 0 && styles.gone]}>
-            <PhraseImage icons={phrase.image} tone={tone} width={width} height={cover} rounded={0} phrase={phrase} redraw />
+            <ExpandArt art={art} small={{ width, height: cover }} large={{ width, height: width }}>
+              {(size) => <PhraseImage icons={phrase.image} tone={tone} width={size.width} height={size.height} rounded={0} phrase={phrase} redraw />}
+            </ExpandArt>
           </View>
           <View style={[styles.about, cover > 0 && styles.underCover]}>
             <PhraseBlock phrase={phrase} revealed={revealed} />
@@ -176,7 +189,7 @@ export function NowPlayingScreen() {
               <PlayTime phrase={phrase} />
             </View>
           )}
-        </ScrollView>
+        </Animated.ScrollView>
 
         <View style={[styles.dock, gutter, !endedOnce && styles.dockLine]}>
           {endedOnce ? <EndPanel onClose={close} /> : <Rating phrase={phrase} />}

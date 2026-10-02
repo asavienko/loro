@@ -3,7 +3,8 @@
 // sort, and its phrases. Your own set grows from here.
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, Share, StyleSheet, View } from 'react-native';
+import Animated, { runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 import { keepOpenedSet } from '@shared/api/contentCache';
 import { deleteSet, fetchSet, saveItem, unsaveItem } from '@shared/api/library';
 import { coursesFor, getTopic, Phrase, TopicTone, UiLocale } from '@shared/content';
@@ -26,6 +27,7 @@ import { useAccount } from '../state/account';
 import { useContent } from '../state/content';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
+import { ExpandArt, useArtExpansion, type ArtExpansion } from '../ui/ExpandArt';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
 import { Press } from '../ui/Press';
@@ -38,6 +40,7 @@ import { useToast } from '../ui/Toast';
 import { TopBar } from '../ui/TopBar';
 import { Txt } from '../ui/Txt';
 import { colors, radius, shadow, TARGET } from '../ui/theme';
+import { useRoom } from '../ui/useRoom';
 
 const SORTS: { id: SortKey; icon: IconName }[] = [
   { id: 'set', icon: 'format_list_numbered' },
@@ -57,6 +60,10 @@ const TONE_WASH: Record<TopicTone, string> = {
 
 /** Past this much scroll the page's own title is gone, and the top bar says it. */
 const TITLE_SCROLL_PX = 120;
+/** The cover's side, and the head's width and sides (styles.head). */
+const COVER = 96;
+const HEAD_MAX = 768;
+const HEAD_SIDE = 16;
 
 /**
  * What a set page last put in the queue, per set: the whole set or its due-and-new phrases, and in
@@ -73,6 +80,15 @@ export function SetScreen({ setId }: { setId: string }) {
   const { tab } = useShell();
   const { state } = useStore();
   const [past, setPast] = useState(false);
+  const art = useArtExpansion();
+  const { scroller } = art;
+  // Scrolled past the head: the bar takes the title.
+  useAnimatedReaction(
+    () => art.scrollY.get() > TITLE_SCROLL_PX,
+    (now, before) => {
+      if (now !== before) runOnJS(setPast)(now);
+    },
+  );
   const view = findSetView(state.learner, setId);
   const back = () => (router.canGoBack() ? router.back() : router.navigate(hrefOf({ name: tab }) as never));
   // A set not installed here (a link, Community): fetched and kept, so its phrases play (plan 106).
@@ -91,21 +107,17 @@ export function SetScreen({ setId }: { setId: string }) {
   return (
     <View style={styles.screen}>
       <TopBar title={past ? view?.title : undefined} onBack={back} onOpenSettings={nav.openSettings} />
-      <ScrollView
-        scrollEventThrottle={64}
-        onScroll={(e) => {
-          const now = e.nativeEvent.contentOffset.y > TITLE_SCROLL_PX;
-          if (now !== past) setPast(now);
-        }}
-      >
-        {fetching ? <ActivityIndicator color={colors.primaryContainer} style={styles.message} /> : <SetPage setId={setId} onDeleted={back} />}
-      </ScrollView>
+      <Animated.ScrollView ref={scroller} scrollEventThrottle={16} onScroll={art.onScroll}>
+        {fetching ? <ActivityIndicator color={colors.primaryContainer} style={styles.message} /> : <SetPage setId={setId} onDeleted={back} art={art} />}
+      </Animated.ScrollView>
     </View>
   );
 }
 
-function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void }) {
+function SetPage({ setId, onDeleted, art }: { setId: string; onDeleted: () => void; art: ArtExpansion }) {
   const c = useCopy();
+  const room = useRoom();
+  const [headWidth, setHeadWidth] = useState<number | null>(null);
   const nav = useNav();
   const { toast } = useToast();
   const { state, actions } = useStore();
@@ -242,16 +254,20 @@ function SetPage({ setId, onDeleted }: { setId: string; onDeleted: () => void })
   };
 
   const tone = (view.topicId && topic?.tone) || 'secondary';
+  // Shown whole, the cover runs across the head, over its sides, and the title goes under it.
+  const whole = Math.round(headWidth ?? Math.min(room.width, HEAD_MAX));
 
   return (
     <>
       {/* The page takes its cover's colour, edge to edge. */}
       <View style={{ backgroundColor: TONE_WASH[tone] }}>
-        <View style={styles.head}>
+        <View style={styles.head} onLayout={(e) => setHeadWidth(e.nativeEvent.layout.width)}>
           {/* Cover and title side by side, whatever the title's length, so sibling sets share one
               layout; only very large text puts the title under the cover. */}
           <View style={styles.headRow}>
-            <SetCover set={view} px={96} rounded={radius['2xl']} style={shadow.cover} redraw />
+            <ExpandArt art={art} small={{ width: COVER, height: COVER }} large={{ width: whole, height: whole }} bleed={HEAD_SIDE} align="start">
+              {(size) => (size.width > COVER ? <SetCover set={view} px={size.width} rounded={0} redraw /> : <SetCover set={view} px={size.width} rounded={radius['2xl']} style={shadow.cover} redraw />)}
+            </ExpandArt>
             <View style={styles.headText}>
               <View style={styles.kicker}>
                 {mine ? (
@@ -539,7 +555,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
   message: { width: '100%', maxWidth: 768, alignSelf: 'center', paddingHorizontal: 16, paddingTop: 32 },
   otherCourse: { alignItems: 'flex-start', gap: 12 },
-  head: { width: '100%', maxWidth: 768, alignSelf: 'center', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 },
+  head: { width: '100%', maxWidth: HEAD_MAX, alignSelf: 'center', paddingHorizontal: HEAD_SIDE, paddingTop: 16, paddingBottom: 4 },
   headRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', gap: 16 },
   headText: { flexGrow: 1, flexShrink: 1, flexBasis: 160, minWidth: 0 },
   kicker: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4 },
