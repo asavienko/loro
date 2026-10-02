@@ -7,6 +7,8 @@ docs/architecture/openapi.*.json
 # Written by the offline writer (plan 112): shards and run summaries, one record per line.
 packages/content/v2/courses/
 packages/content/v2/runs/
+# Compiled from those shards by build:courses; drift-checked by the content tests.
+packages/content/v2/courses.compiled.json
 
 .claude/
 

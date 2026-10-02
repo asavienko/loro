@@ -16,6 +16,22 @@ after a content change (`library_meta.seed` holds the content version and a seed
 under an advisory lock). The songs of Loro's albums are the sets' phrases arranged as lyrics over
 the demo instrumental.
 
+The course writer's sets (plan [112](../../plans/112-course-content-at-scale.md)) are written as
+shards under `packages/content/v2/courses/<course>/<level>/`.
+`pnpm --filter @loro/content build:courses` compiles them into `v2/courses.compiled.json`, committed
+and held equal to the shards by the content tests, which the API bundles as `V2_CONTENT.written`;
+their hash is part of the content version, so a new batch reseeds the library on the next deploy.
+The seed adds them after Loro's own sets, as Loro's (`origin = 'loro'`), with three differences:
+their notes are written by Loro's rules at seed time (`notes/index.ts`, English with every other
+note language, `notesBy: 'rules'`) until the writer has a `notes` stage; their picture is the
+writer's; and they have no song in Loro's albums. A set is compiled only when it is complete in
+every interface language but its course's own: the pack is per course, not per learner language, so
+a set missing one would reach that learner in English. An incomplete set is listed as held, with
+what it lacks, and the writer's `translate` stage completes it. Rejected for now: plan 112's on-disk
+artifacts read from `LORO_CONTENT_DIR` (the image would need the files beside the bundle; the
+compiled JSON is enough until the content outgrows the bundle) and publishing a set per language
+(`locales[]`; needs an app that hides a set the learner's language lacks).
+
 The app downloads a course's **pack** (`GET /library/pack?target=es-ES`): the topics, Loro's sets
 and phrases, the learner's own and saved sets when signed in, the course's phrase bank and the
 albums. It keeps every pack on the device (`shared/api/contentCache.ts`) and installs them before

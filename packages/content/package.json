@@ -26,7 +26,8 @@
     "review:export": "tsx src/exportReviewPacket.ts",
     "draft:phrases": "tsx src/draftPhrases.ts",
     "gap-priority": "tsx src/gapPriorityCli.ts",
-    "check:release": "tsx src/releaseCheck.ts"
+    "check:release": "tsx src/releaseCheck.ts",
+    "build:courses": "tsx src/coursesCli.ts"
   },
   "dependencies": {
     "@loro/core": "workspace:*",

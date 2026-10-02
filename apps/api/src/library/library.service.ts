@@ -90,6 +90,7 @@ import { transcribeSong, transcriptionConfigured } from './transcribe.js'
 import { imageModelConfigured, textModelConfigured } from '../integrations/models.js'
 import type { StructuredTextModel } from '../integrations/text-model.js'
 import { registerSpeech, registerSpeechMany, SpeechService, speechFor } from './speech.js'
+import { deviceNotes } from './notes/index.js'
 import { readTtsRuntimeConfig, type TtsRuntimeConfig } from '../tts/transport.js'
 import { demoLineLimit, synthesizeDemo } from './synth.js'
 import {
@@ -383,7 +384,8 @@ export class LibraryService {
         JSON.stringify(topic),
       ])
     }
-    const loroSets = V2_CONTENT.sets.map((s) => s.id)
+    const { written } = V2_CONTENT
+    const loroSets = [...V2_CONTENT.sets, ...written.sets].map((s) => s.id)
     await tx.query(
       "DELETE FROM library_phrases WHERE set_id IN (SELECT id FROM library_sets WHERE origin = 'loro')",
     )
@@ -392,26 +394,7 @@ export class LibraryService {
       [loroSets],
     )
     for (const [position, set] of V2_CONTENT.sets.entries()) {
-      await tx.query(
-        `INSERT INTO library_sets(id, owner_id, target_lang, native_lang, title, subtitle, description, topic_id, level,
-           cover_icon, cover_id, visibility, share_code, origin, position, created_at, updated_at)
-         VALUES ($1, NULL, $2, NULL, $3, $4, NULL, $5, $6, $7, NULL, 'public', $8, 'loro', $9, $10, $10)
-         ON CONFLICT (id) DO UPDATE SET target_lang = EXCLUDED.target_lang, title = EXCLUDED.title,
-           subtitle = EXCLUDED.subtitle, topic_id = EXCLUDED.topic_id, level = EXCLUDED.level,
-           cover_icon = EXCLUDED.cover_icon, position = EXCLUDED.position, updated_at = EXCLUDED.updated_at`,
-        [
-          set.id,
-          set.targetLang,
-          set.title,
-          JSON.stringify(set.subtitle),
-          set.topicId,
-          set.level,
-          set.coverIcon,
-          shareCodeFor(set.id),
-          position,
-          now,
-        ],
-      )
+      await upsertLoroSet(tx, set, position, now)
       for (const [index, phraseId] of set.phraseIds.entries()) {
         const phrase = V2_CONTENT.phrases.find((p) => p.id === phraseId)
         if (!phrase) throw new Error(`Seed: ${set.id} names unknown phrase ${phraseId}`)
@@ -425,6 +408,35 @@ export class LibraryService {
             'loro',
             JSON.stringify(doc),
             JSON.stringify(noteTranslationsOf(id, V2_CONTENT.noteTranslations)),
+          ],
+        )
+        await registerSpeech(tx, { [set.targetLang]: phrase.target, ...phrase.translations }, now)
+      }
+    }
+    // The course writer's sets (plan 112), after Loro's own. They have no notes yet (its `notes`
+    // stage), so Loro's rules write them, in English and every other note language, as for a
+    // learner's phrase; the picture stays the writer's.
+    for (const [offset, set] of written.sets.entries()) {
+      await upsertLoroSet(tx, set, V2_CONTENT.sets.length + offset, now)
+      for (const [index, phraseId] of set.phraseIds.entries()) {
+        const phrase = written.phrases.find((p) => p.id === phraseId)
+        if (!phrase) throw new Error(`Seed: ${set.id} names unknown phrase ${phraseId}`)
+        const { id, ...rest } = phrase
+        const rules = deviceNotes({
+          target: phrase.target,
+          native: phrase.translations['en-GB'] ?? phrase.target,
+          targetLang: set.targetLang,
+          nativeLang: 'en-GB',
+        })
+        await tx.query(
+          'INSERT INTO library_phrases(id, set_id, position, source, doc, note_translations) VALUES ($1,$2,$3,$4,$5,$6)',
+          [
+            id,
+            set.id,
+            index,
+            'loro',
+            JSON.stringify({ ...rest, notes: rules.notes, notesBy: 'rules' }),
+            JSON.stringify(rules.noteTranslations),
           ],
         )
         await registerSpeech(tx, { [set.targetLang]: phrase.target, ...phrase.translations }, now)
@@ -3118,6 +3130,43 @@ function toPhraseWire(row: PhraseRow, speech: TtsRuntimeConfig): PhraseWire {
     noteTranslations: row.note_translations,
     source: row.source,
   }
+}
+
+/** One of Loro's sets, inserted or brought up to date in place (its saves and covers stay). */
+async function upsertLoroSet(
+  tx: SqlConnection,
+  set: {
+    id: string
+    targetLang: Language
+    title: string
+    subtitle: object
+    topicId: string
+    level: string
+    coverIcon: string
+  },
+  position: number,
+  now: number,
+): Promise<void> {
+  await tx.query(
+    `INSERT INTO library_sets(id, owner_id, target_lang, native_lang, title, subtitle, description, topic_id, level,
+       cover_icon, cover_id, visibility, share_code, origin, position, created_at, updated_at)
+     VALUES ($1, NULL, $2, NULL, $3, $4, NULL, $5, $6, $7, NULL, 'public', $8, 'loro', $9, $10, $10)
+     ON CONFLICT (id) DO UPDATE SET target_lang = EXCLUDED.target_lang, title = EXCLUDED.title,
+       subtitle = EXCLUDED.subtitle, topic_id = EXCLUDED.topic_id, level = EXCLUDED.level,
+       cover_icon = EXCLUDED.cover_icon, position = EXCLUDED.position, updated_at = EXCLUDED.updated_at`,
+    [
+      set.id,
+      set.targetLang,
+      set.title,
+      JSON.stringify(set.subtitle),
+      set.topicId,
+      set.level,
+      set.coverIcon,
+      shareCodeFor(set.id),
+      position,
+      now,
+    ],
+  )
 }
 
 /** A content id's note translations, by note kind. */

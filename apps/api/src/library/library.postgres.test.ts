@@ -5,6 +5,7 @@
 import type { Pool } from 'pg'
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_SONG_OPTIONS } from '@loro/core'
+import { V2_CONTENT } from '@loro/content/v2'
 import { LoroError } from '../common/errors.js'
 import { ChatCompletions, FIREWORKS_CHAT_URL } from '../integrations/openai-compatible/chat.js'
 import { PostgresDatabase } from '../database/database.js'
@@ -137,7 +138,10 @@ describePostgres('the library against real PostgreSQL', () => {
     const [album] = pack.albums
     expect(album?.owner).toBe('loro')
     const { songs } = await library.album(null, album?.id)
-    expect(songs.length).toBe(pack.sets.length)
+    // One song per set Loro made by hand; the writer's sets have none (plan 112).
+    expect(songs.map((s) => s.setId)).toEqual(
+      V2_CONTENT.sets.filter((s) => s.targetLang === 'es-ES').map((s) => s.id),
+    )
     expect(
       songs.every((s) => s.status === 'ready' && s.audioBy === 'demo' && s.lyricsBy === 'phrases'),
     ).toBe(true)
@@ -146,6 +150,33 @@ describePostgres('the library against real PostgreSQL', () => {
     expect(
       (await new LibraryService(database, { now: () => now }).pack(null, 'es-ES')).version,
     ).toBe(pack.version)
+  })
+
+  it('serves the writer’s sets after Loro’s own, in every language, with notes by the rules', async () => {
+    const pack = await library.pack(null, 'pl-PL')
+    const written = V2_CONTENT.written.sets.filter((s) => s.targetLang === 'pl-PL')
+    expect(written.length).toBeGreaterThan(0)
+    expect(pack.sets.slice(-written.length).map((s) => s.id)).toEqual(written.map((s) => s.id))
+    const set = pack.sets.find((s) => s.id === written[0]?.id)
+    expect(set?.owner).toBe('loro')
+    expect(set?.songCount).toBe(0)
+    expect(Object.keys(set?.subtitle ?? {}).sort()).toEqual(['bg', 'cs', 'en', 'ru'])
+    const phrase = pack.phrases.find((p) => p.id === set?.phraseIds[0])
+    expect(Object.keys(phrase?.translations ?? {}).sort()).toEqual([
+      'bg-BG',
+      'cs-CZ',
+      'en-GB',
+      'en-US',
+      'ru-RU',
+    ])
+    expect(phrase?.notesBy).toBe('rules')
+    expect(phrase?.notes.grammar.text.length).toBeGreaterThan(0)
+    expect(phrase?.notes.pronunciation.ipa.length).toBeGreaterThan(0)
+    for (const lang of ['bg-BG', 'ru-RU', 'cs-CZ'] as const)
+      expect(phrase?.noteTranslations.mnemonic?.[lang]?.text.length).toBeGreaterThan(0)
+    expect(phrase?.image).toEqual(
+      V2_CONTENT.written.phrases.find((p) => p.id === phrase?.id)?.image,
+    )
   })
 
   it('serves a pack for every course the languages name, and none for the others', async () => {
