@@ -6,6 +6,11 @@ import {
   compositionPlanLeaksReviewTitle,
   lyricDocumentToCompositionPlan,
   planSectionDurations,
+  DEFAULT_SONG_OPTIONS,
+  resolveSongOptions,
+  SONG_LENGTH_LIMITS,
+  songLengthMs,
+  storedSongOptions,
 } from './lyric-plan.js'
 import { bundledLyricDocument } from './lyrics.js'
 
@@ -62,5 +67,33 @@ describe('music duration packing', () => {
     expect(compositionPlanLeaksReviewTitle(plan, document)).toBe(false)
     expect(compositionPlanHasConditioning(plan)).toBe(false)
     expect(compositionPlanHasConditioning({ ...plan, conditioning_ref: 'song_1' })).toBe(true)
+  })
+})
+
+describe('song options (plan 113)', () => {
+  it('fills what was left out from the base, and reads unknown stored values as the defaults', () => {
+    expect(resolveSongOptions(undefined)).toEqual(DEFAULT_SONG_OPTIONS)
+    const base = resolveSongOptions({ voice: 'male', mood: 'calm', theme: ' rain ' })
+    expect(base).toEqual({ ...DEFAULT_SONG_OPTIONS, voice: 'male', mood: 'calm', theme: 'rain' })
+    // A request may clear the mood or theme its lyrics were written with.
+    expect(resolveSongOptions({ mood: null, theme: '' }, base)).toEqual({
+      ...base,
+      mood: null,
+      theme: null,
+    })
+    expect(resolveSongOptions({ tempo: 'lively' }, base)).toEqual({ ...base, tempo: 'lively' })
+    expect(storedSongOptions(null)).toEqual(DEFAULT_SONG_OPTIONS)
+    expect(storedSongOptions({ voice: 'robot', length: 'short' })).toEqual({
+      ...DEFAULT_SONG_OPTIONS,
+      length: 'short',
+    })
+  })
+
+  it('asks for the lines at the tempo’s pace, within the length’s bounds', () => {
+    expect(songLengthMs({ tempo: 'natural', length: 'standard' }, 12)).toBe(60_000)
+    expect(songLengthMs({ tempo: 'slow', length: 'short' }, 10)).toBe(
+      SONG_LENGTH_LIMITS.short.maxMs,
+    )
+    expect(songLengthMs({ tempo: 'lively', length: 'long' }, 4)).toBe(SONG_LENGTH_LIMITS.long.minMs)
   })
 })

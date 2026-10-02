@@ -41,6 +41,75 @@ export const MUSIC_STYLE_IDS = [
 ] as const
 export type MusicStyleId = (typeof MUSIC_STYLE_IDS)[number]
 
+/**
+ * How a song is sung besides its style (plan 113): who sings it, how fast, in what mood, and how
+ * long it runs. `any` and a null mood leave it to the style.
+ */
+export const SONG_VOICES = ['any', 'female', 'male', 'duet'] as const
+export type SongVoice = (typeof SONG_VOICES)[number]
+export const SONG_TEMPOS = ['slow', 'natural', 'lively'] as const
+export type SongTempo = (typeof SONG_TEMPOS)[number]
+export const SONG_MOODS = [
+  'cheerful',
+  'calm',
+  'romantic',
+  'nostalgic',
+  'energetic',
+  'playful',
+] as const
+export type SongMood = (typeof SONG_MOODS)[number]
+export const SONG_LENGTHS = ['short', 'standard', 'long'] as const
+export type SongLength = (typeof SONG_LENGTHS)[number]
+
+/** A song's options, every one resolved. `theme` is what the learner wants it to be about. */
+export interface SongOptions {
+  voice: SongVoice
+  tempo: SongTempo
+  mood: SongMood | null
+  length: SongLength
+  theme: string | null
+}
+
+export const DEFAULT_SONG_OPTIONS: SongOptions = {
+  voice: 'any',
+  tempo: 'natural',
+  mood: null,
+  length: 'standard',
+  theme: null,
+}
+
+/**
+ * What each length allows: the most lines its lyrics may have, and the bounds of the music asked
+ * for. `long` is the sixteen lines and two minutes every song had before.
+ */
+export const SONG_LENGTH_LIMITS: Record<
+  SongLength,
+  { lines: number; minMs: number; maxMs: number }
+> = {
+  short: { lines: 8, minMs: 30_000, maxMs: 50_000 },
+  standard: { lines: 12, minMs: 40_000, maxMs: 80_000 },
+  long: { lines: 16, minMs: 60_000, maxMs: 120_000 },
+}
+
+/** Seconds of music per lyric line at each tempo: a slower song gives every line more room. */
+export const SONG_TEMPO_LINE_MS: Record<SongTempo, number> = {
+  slow: 6_000,
+  natural: 5_000,
+  lively: 4_000,
+}
+
+/** The music asked for: the lines at the tempo's pace, kept within the length's bounds. */
+export function songLengthMs(
+  options: Pick<SongOptions, 'tempo' | 'length'>,
+  lineCount: number,
+): number {
+  const limits = SONG_LENGTH_LIMITS[options.length]
+  return Math.min(
+    limits.maxMs,
+    Math.max(limits.minMs, lineCount * SONG_TEMPO_LINE_MS[options.tempo]),
+  )
+}
+
 export const MUSIC_MIN_TOTAL_MS = 35_000
 export const MUSIC_MAX_TOTAL_MS = 60_000
 export const MUSIC_MIN_CHUNK_MS = 8_000
@@ -143,4 +212,37 @@ export function compositionPlanLeaksReviewTitle(
 export function compositionPlanHasConditioning(plan: unknown): boolean {
   if (typeof plan !== 'object' || plan === null) return false
   return 'conditioning_ref' in plan || 'AudioRefChunk' in plan || 'sections' in plan
+}
+
+/**
+ * A song's options with what was left out filled from `base` (the approved lyrics' options, or the
+ * defaults). An empty theme is no theme.
+ */
+export function resolveSongOptions(
+  given: { [K in keyof SongOptions]?: SongOptions[K] | null | undefined } | null | undefined,
+  base: SongOptions = DEFAULT_SONG_OPTIONS,
+): SongOptions {
+  const asked = given?.theme?.trim() ?? ''
+  const theme = given?.theme === undefined ? base.theme : asked.length > 0 ? asked : null
+  return {
+    voice: given?.voice ?? base.voice,
+    tempo: given?.tempo ?? base.tempo,
+    mood: given?.mood === undefined ? base.mood : given.mood,
+    length: given?.length ?? base.length,
+    theme,
+  }
+}
+
+/** Options read back from storage: anything unknown is the default, as rows from before them are. */
+export function storedSongOptions(value: unknown): SongOptions {
+  const row = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>
+  const pick = <T extends string>(list: readonly T[], v: unknown): T | undefined =>
+    typeof v === 'string' && (list as readonly string[]).includes(v) ? (v as T) : undefined
+  return {
+    voice: pick(SONG_VOICES, row.voice) ?? DEFAULT_SONG_OPTIONS.voice,
+    tempo: pick(SONG_TEMPOS, row.tempo) ?? DEFAULT_SONG_OPTIONS.tempo,
+    mood: pick(SONG_MOODS, row.mood) ?? null,
+    length: pick(SONG_LENGTHS, row.length) ?? DEFAULT_SONG_OPTIONS.length,
+    theme: typeof row.theme === 'string' && row.theme.trim() ? row.theme.trim() : null,
+  }
 }
