@@ -672,6 +672,8 @@ internal object IntegrityCheckingUniffiLib {
         uniffiCheckContractApiVersion(this)
         uniffiCheckApiChecksums(this)
     }
+
+    internal fun ensureInitialized() = Unit
     external fun uniffi_loro_core_checksum_func_match_tokens(
     ): Int
     external fun uniffi_loro_core_checksum_func_normalize(
@@ -775,6 +777,8 @@ internal object UniffiLib {
         Native.register(UniffiLib::class.java, findLibraryName(componentName = "loro_core"))
 
     }
+
+    internal fun ensureInitialized() = Unit
     external fun uniffi_loro_core_fn_func_match_tokens(`heard`: RustBuffer.ByValue,`target`: RustBuffer.ByValue,`revealed`: Int,`fuzzy`: Byte,uniffi_out_err: UniffiRustCallStatus,
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_normalize(`s`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
@@ -984,139 +988,139 @@ private fun uniffiCheckContractApiVersion(lib: IntegrityCheckingUniffiLib) {
 }
 @Suppress("UNUSED_PARAMETER")
 private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
-    if (lib.uniffi_loro_core_checksum_func_match_tokens() != 45107) {
+    if ((lib.uniffi_loro_core_checksum_func_match_tokens() and 0xFFFF) != 45107) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_normalize() != 36037) {
+    if ((lib.uniffi_loro_core_checksum_func_normalize() and 0xFFFF) != 36037) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_tokenize() != 50042) {
+    if ((lib.uniffi_loro_core_checksum_func_tokenize() and 0xFFFF) != 50042) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_core_call() != 43046) {
+    if ((lib.uniffi_loro_core_checksum_func_core_call() and 0xFFFF) != 43046) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_days_between() != 61716) {
+    if ((lib.uniffi_loro_core_checksum_func_days_between() and 0xFFFF) != 61716) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_streak() != 18523) {
+    if ((lib.uniffi_loro_core_checksum_func_streak() and 0xFFFF) != 18523) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_streak_day_for() != 29614) {
+    if ((lib.uniffi_loro_core_checksum_func_streak_day_for() and 0xFFFF) != 29614) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_streak_survives() != 57834) {
+    if ((lib.uniffi_loro_core_checksum_func_streak_survives() and 0xFFFF) != 57834) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_normalize_f0() != 21709) {
+    if ((lib.uniffi_loro_core_checksum_func_normalize_f0() and 0xFFFF) != 21709) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_advance_axes() != 1156) {
+    if ((lib.uniffi_loro_core_checksum_func_advance_axes() and 0xFFFF) != 1156) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_band() != 39941) {
+    if ((lib.uniffi_loro_core_checksum_func_band() and 0xFFFF) != 39941) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_earns_level_up() != 49403) {
+    if ((lib.uniffi_loro_core_checksum_func_earns_level_up() and 0xFFFF) != 49403) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_daily_review_cap() != 8914) {
+    if ((lib.uniffi_loro_core_checksum_func_daily_review_cap() and 0xFFFF) != 8914) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_format_interval() != 50827) {
+    if ((lib.uniffi_loro_core_checksum_func_format_interval() and 0xFFFF) != 50827) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_grade_for_confidence() != 31441) {
+    if ((lib.uniffi_loro_core_checksum_func_grade_for_confidence() and 0xFFFF) != 31441) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_initial_difficulty() != 41499) {
+    if ((lib.uniffi_loro_core_checksum_func_initial_difficulty() and 0xFFFF) != 41499) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_nudge_difficulty() != 10246) {
+    if ((lib.uniffi_loro_core_checksum_func_nudge_difficulty() and 0xFFFF) != 10246) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_review_grade() != 5503) {
+    if ((lib.uniffi_loro_core_checksum_func_review_grade() and 0xFFFF) != 5503) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_initialize() != 10030) {
+    if ((lib.uniffi_loro_core_checksum_func_initialize() and 0xFFFF) != 10030) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_rerate() != 38115) {
+    if ((lib.uniffi_loro_core_checksum_func_rerate() and 0xFFFF) != 38115) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_retrievability() != 3854) {
+    if ((lib.uniffi_loro_core_checksum_func_retrievability() and 0xFFFF) != 3854) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_review() != 25686) {
+    if ((lib.uniffi_loro_core_checksum_func_review() and 0xFFFF) != 25686) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_review_confidence() != 30479) {
+    if ((lib.uniffi_loro_core_checksum_func_review_confidence() and 0xFFFF) != 30479) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_climb() != 50333) {
+    if ((lib.uniffi_loro_core_checksum_func_climb() and 0xFFFF) != 50333) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_draw() != 17799) {
+    if ((lib.uniffi_loro_core_checksum_func_draw() and 0xFFFF) != 17799) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_need() != 14278) {
+    if ((lib.uniffi_loro_core_checksum_func_need() and 0xFFFF) != 14278) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_copy_key_for() != 34469) {
+    if ((lib.uniffi_loro_core_checksum_func_copy_key_for() and 0xFFFF) != 34469) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_deep_link_for() != 25113) {
+    if ((lib.uniffi_loro_core_checksum_func_deep_link_for() and 0xFFFF) != 25113) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_is_quiet_hour() != 14173) {
+    if ((lib.uniffi_loro_core_checksum_func_is_quiet_hour() and 0xFFFF) != 14173) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_may_fire() != 35123) {
+    if ((lib.uniffi_loro_core_checksum_func_may_fire() and 0xFFFF) != 35123) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_plan_notifications() != 41196) {
+    if ((lib.uniffi_loro_core_checksum_func_plan_notifications() and 0xFFFF) != 41196) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_repeat_target() != 48455) {
+    if ((lib.uniffi_loro_core_checksum_func_repeat_target() and 0xFFFF) != 48455) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_stream_rank() != 33635) {
+    if ((lib.uniffi_loro_core_checksum_func_stream_rank() and 0xFFFF) != 33635) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_automaticity() != 54682) {
+    if ((lib.uniffi_loro_core_checksum_func_automaticity() and 0xFFFF) != 54682) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_beat_ms_for_mode() != 18787) {
+    if ((lib.uniffi_loro_core_checksum_func_beat_ms_for_mode() and 0xFFFF) != 18787) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_cloze_mask() != 8541) {
+    if ((lib.uniffi_loro_core_checksum_func_cloze_mask() and 0xFFFF) != 8541) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_effort_state() != 42974) {
+    if ((lib.uniffi_loro_core_checksum_func_effort_state() and 0xFFFF) != 42974) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_mode_for_rep() != 35315) {
+    if ((lib.uniffi_loro_core_checksum_func_mode_for_rep() and 0xFFFF) != 35315) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_model_rate_for_mode() != 59286) {
+    if ((lib.uniffi_loro_core_checksum_func_model_rate_for_mode() and 0xFFFF) != 59286) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_refrain_set_size() != 44059) {
+    if ((lib.uniffi_loro_core_checksum_func_refrain_set_size() and 0xFFFF) != 44059) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_select_refrain_set() != 22613) {
+    if ((lib.uniffi_loro_core_checksum_func_select_refrain_set() and 0xFFFF) != 22613) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_clamp_to_server() != 51700) {
+    if ((lib.uniffi_loro_core_checksum_func_clamp_to_server() and 0xFFFF) != 51700) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_is_skewed() != 16657) {
+    if ((lib.uniffi_loro_core_checksum_func_is_skewed() and 0xFFFF) != 16657) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_receive() != 34320) {
+    if ((lib.uniffi_loro_core_checksum_func_receive() and 0xFFFF) != 34320) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_tick() != 63061) {
+    if ((lib.uniffi_loro_core_checksum_func_tick() and 0xFFFF) != 63061) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
 }
@@ -1125,10 +1129,10 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
  * @suppress
  */
 public fun uniffiEnsureInitialized() {
-    IntegrityCheckingUniffiLib
-    // UniffiLib() initialized as objects are used, but we still need to explicitly
-    // reference it so initialization across crates works as expected.
-    UniffiLib
+    // Call arbitrary methods on IntegrityCheckingUniffiLib and UniffiLib to ensure that
+    // their init blocks run. This ensures initialization across crates works as expected.
+    IntegrityCheckingUniffiLib.ensureInitialized()
+    UniffiLib.ensureInitialized()
 }
 
 // Async support
