@@ -74,7 +74,7 @@ const POLISH_VERB = /^(.+?)(owac|iec|ac|ec|ic|yc|uc|c)(\s+sie)?$/
 /**
  * The stems a Polish word's forms may start with, folded: a verb without its infinitive ending
  * («płacić» finds «płacę», «kosztować» «kosztuje»), a noun or adjective without its final vowel
- * («kawa» finds «kawę», «zimny» «zimną»), a fleeting e dropped («rachunek» finds «rachunku»), and
+ * («kawa» finds «kawę», «zimny» «zimną»), a fleeting e dropped («rachunek» finds «rachunku», «dworzec» «dworca»), and
  * a stem's softening «i» dropped («chcieć» finds «chcę»). Folding already joins ś/s, ć/c, ż/z, ó/o
  * and ę/e, and a prefix match covers s → sz and c → cz. Rough on purpose, as for Spanish.
  */
@@ -89,8 +89,12 @@ export function polishStems(lemma: string, pos?: string): string[] {
     out.add(word)
     const vowel = /^(.+?)[aeiouy]$/.exec(word)
     if (vowel?.[1]) out.add(vowel[1])
-    const fleeting = /^(.+)e([kcn])$/.exec(word)
-    if (fleeting?.[1] && fleeting[2]) out.add(`${fleeting[1]}${fleeting[2]}`)
+    const fleeting = /^(.+)e([kclnr])$/.exec(word)
+    if (fleeting?.[1] && fleeting[2]) {
+      out.add(`${fleeting[1]}${fleeting[2]}`)
+      // «rz» hardens to «r» once the e drops: «dworzec» → «dworca».
+      if (fleeting[1].endsWith('rz')) out.add(`${fleeting[1].slice(0, -1)}${fleeting[2]}`)
+    }
   }
   for (const stem of [...out]) if (stem.length > 3 && stem.endsWith('i')) out.add(stem.slice(0, -1))
   return [...out].filter((stem) => stem.length >= 3 || stem === word)

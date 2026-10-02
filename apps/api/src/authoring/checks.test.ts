@@ -50,6 +50,8 @@ describe('checks', () => {
     expect(pl('Poproszę sok', 'kawa')).toBe(false)
     expect(pl('Na miejscu', 'na wynos')).toBe(false)
     expect(pl('Ty płacisz', 'płacić')).toBe(true)
+    expect(pl('Coś na kaszel? Syrop od kaszlu', 'kaszel')).toBe(true)
+    expect(pl('Czekam na dworcu', 'dworzec')).toBe(true)
   })
 
   it('finds lemmas as words, prefixes of long words, and multi-word units', () => {
