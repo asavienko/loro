@@ -7,7 +7,12 @@
  * text) when it is stored, and the route renders nothing else. An utterance's id is a hash of its
  * language and text, so its URL reveals nothing and needs no bearer (an audio element can't send
  * one). New renders per day are capped (`LIMIT_SPEECH_RENDERS_DAILY`) to bound spend. Without a
- * provider, phrases carry no clip and the app's device voice speaks them, as before.
+ * provider, phrases carry no clip and the app says it can't play them.
+ *
+ * A clip not rendered yet is made on demand (P3-01): `<id>.json` says where it stands (`ready`,
+ * `rendering`, `failed`) and, asked about one that isn't made, starts its render in the background,
+ * so the app can show that the recording is being made and play it when it is ready rather than
+ * wait on a request that is still rendering. Asking for the `.mp3` itself renders it too.
  */
 import { createHash } from 'node:crypto'
 import { Controller, Get, Inject, Injectable, Logger, Optional, Param, Res } from '@nestjs/common'
@@ -118,6 +123,16 @@ function failureCode(error: unknown): string {
 const DEFAULT_OWNER_RENDERS = 100
 /** A clip whose render failed (a voice the provider refuses) isn't asked for again for this long. */
 const RETRY_AFTER_FAILURE_MS = 6 * 3_600_000
+/**
+ * A render that failed for a passing reason (a busy provider, the day's renders used up) answers as
+ * failed for this long, so an app asking where it stands hears so rather than starting it again.
+ */
+const PASSING_FAILURE_MS = 30_000
+
+/** Where a phrase's clip stands, as `GET /library/speech/<id>.json` answers. */
+export interface ClipState {
+  status: 'ready' | 'rendering' | 'failed'
+}
 
 interface SpeechRow {
   id: string
@@ -134,6 +149,8 @@ interface SpeechRow {
 export class SpeechService {
   private readonly logger = new Logger('speech')
   private readonly inflight = new Map<string, Promise<{ bytes: Buffer; contentType: string }>>()
+  /** Utterances whose last render failed for a passing reason, and when. */
+  private readonly lately = new Map<string, number>()
 
   constructor(
     @Inject(DATABASE) private readonly db: SqlDatabase,
@@ -234,12 +251,70 @@ export class SpeechService {
     return this.runtime !== undefined ? this.runtime : readTtsRuntimeConfig()
   }
 
+  private async row(file: string, ext: 'mp3' | 'json'): Promise<SpeechRow | undefined> {
+    const id = new RegExp(`^([a-f0-9]{32})\\.${ext}$`).exec(file)?.[1]
+    if (!id) throw new LoroError('NOT_FOUND')
+    return (await this.db.query<SpeechRow>('SELECT * FROM library_speech WHERE id = $1', [id]))
+      .rows[0]
+  }
+
+  /** Whether a render that failed lately would only fail again, so it isn't tried yet. */
+  private resting(row: SpeechRow): boolean {
+    const now = this.clock.now()
+    if (row.failed_at !== null && now - Number(row.failed_at) < RETRY_AFTER_FAILURE_MS) return true
+    const at = this.lately.get(row.id)
+    return at !== undefined && now - at < PASSING_FAILURE_MS
+  }
+
+  /**
+   * Where a clip stands (P3-01). One not made yet starts rendering in the background (once, however
+   * many ask) and answers `rendering`; one that can't be made answers `failed`. Text the library
+   * doesn't hold answers `failed` too, as the clip route does.
+   */
+  async clipState(file: string): Promise<ClipState> {
+    const row = await this.row(file, 'json')
+    const voice = row ? speechVoice(this.config(), row.lang) : null
+    if (!row || !voice) return { status: 'failed' }
+    if (row.audio_id && row.voice_id === voice.voiceId && row.model === voice.model)
+      return { status: 'ready' }
+    if (this.inflight.has(row.id)) return { status: 'rendering' }
+    if (this.resting(row)) return { status: 'failed' }
+    // Its failure is kept in `lately`, for the next time the app asks.
+    this.ensure(row, voice).catch(() => undefined)
+    return { status: 'rendering' }
+  }
+
+  /** The render of an utterance's clip: started once, shared by everyone waiting on it. */
+  private ensure(
+    row: SpeechRow,
+    voice: { voiceId: string; model: string },
+  ): Promise<{ bytes: Buffer; contentType: string }> {
+    const pending = this.inflight.get(row.id)
+    if (pending) return pending
+    const work = this.render(row, voice).then(
+      (clip) => {
+        this.lately.delete(row.id)
+        return clip
+      },
+      (error: unknown) => {
+        const now = this.clock.now()
+        for (const [id, at] of this.lately)
+          if (now - at >= PASSING_FAILURE_MS) this.lately.delete(id)
+        this.lately.set(row.id, now)
+        throw error
+      },
+    )
+    this.inflight.set(row.id, work)
+    const done = () => {
+      if (this.inflight.get(row.id) === work) this.inflight.delete(row.id)
+    }
+    work.then(done, done)
+    return work
+  }
+
   /** The clip for an utterance the library holds, rendered on first request. */
   async clip(file: string): Promise<{ bytes: Buffer; contentType: string }> {
-    const id = /^([a-f0-9]{32})\.mp3$/.exec(file)?.[1]
-    if (!id) throw new LoroError('NOT_FOUND')
-    const row = (await this.db.query<SpeechRow>('SELECT * FROM library_speech WHERE id = $1', [id]))
-      .rows[0]
+    const row = await this.row(file, 'mp3')
     // Text the library doesn't hold answers as a clip that can't be made, so the route can't be
     // used to learn which phrases are in someone's private set.
     if (!row) throw new LoroError('PROVIDER_UNAVAILABLE')
@@ -254,22 +329,11 @@ export class SpeechService {
       ).rows[0]
       if (stored) return { bytes: stored.body, contentType: stored.content_type }
     }
-    // A render that just failed would fail again and cost a try: the device voice speaks meanwhile.
-    if (
-      row.failed_at !== null &&
-      this.clock.now() - Number(row.failed_at) < RETRY_AFTER_FAILURE_MS
-    ) {
-      throw new LoroError('PROVIDER_UNAVAILABLE')
-    }
-    const pending = this.inflight.get(id)
+    const pending = this.inflight.get(row.id)
     if (pending) return pending
-    const work = this.render(row, voice)
-    this.inflight.set(id, work)
-    try {
-      return await work
-    } finally {
-      this.inflight.delete(id)
-    }
+    // A render that just failed would fail again and cost a try: the app says it can't play.
+    if (this.resting(row)) throw new LoroError('PROVIDER_UNAVAILABLE')
+    return this.ensure(row, voice)
   }
 
   /** The provider allows few requests at once: a busy answer waits a moment and asks again. */
@@ -374,6 +438,13 @@ export class SpeechController {
 
   @Get(':file')
   async clip(@Param('file') file: string, @Res() response: Response): Promise<void> {
+    if (file.endsWith('.json')) {
+      // Where a clip stands (P3-01): asked again while it renders.
+      const state = await this.speech.clipState(file)
+      response.setHeader('Cache-Control', 'no-store')
+      response.json(state)
+      return
+    }
     const { bytes, contentType } = await this.speech.clip(file)
     response.setHeader('Content-Type', contentType)
     response.setHeader('Content-Length', String(bytes.byteLength))

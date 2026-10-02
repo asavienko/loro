@@ -83,7 +83,7 @@ Resources:
             [['GET', 'HEAD'], ['(pack|community|languages|usage|profile|progress)',
               `sets/${ID}(/(songs|more))?`, `albums/${ID}(/more)?`, 'shared/[a-z0-9]{10}',
               `songs/${ID}(/audio)?`, `covers/${ID}\\.(svg|json)`, `covers/(set|album|song|phrase)/${ID}`,
-              `decks/${ID}`, `lyrics/${ID}`, 'speech/[a-f0-9]{32}\\.mp3']],
+              `decks/${ID}`, `lyrics/${ID}`, 'speech/[a-f0-9]{32}\\.(mp3|json)']],
             [['POST'], ['(profile|progress|sets|phrases|albums|saves|reports|decks|lyrics|push-tokens)',
               'me/(delete|delete-account)', 'generate/(phrases|notes|note|cover|song)',
               `sets/${ID}`, `sets/${ID}/phrases/${ID}`, `albums/${ID}`, `songs/${ID}/retry`,

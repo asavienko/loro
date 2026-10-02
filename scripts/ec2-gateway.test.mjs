@@ -420,6 +420,8 @@ test('every library route the app calls is open, by its own methods only', async
       // Plan 113: lyrics written first, polled while they are written.
       'lyrics/lyrics-1a2b3c4d5e6f',
       'speech/0123456789abcdef0123456789abcdef.mp3',
+      // P3-01: where a clip being made on demand stands.
+      'speech/0123456789abcdef0123456789abcdef.json',
     ].flatMap((p) => [
       ['GET', p],
       ['HEAD', p],
@@ -482,6 +484,7 @@ test('an unknown library path or method still gets 404 without reaching the API'
     ['GET', '/v1/library/sets/SET-U-1'],
     ['GET', '/v1/library/sets/set-u-1/phrases'],
     ['GET', '/v1/library/speech/0123.mp3'],
+    ['GET', '/v1/library/speech/0123456789abcdef0123456789abcdef.wav'],
     ['GET', '/v1/library/covers/cover-1.png'],
     ['POST', '/v1/library/covers/cover-1a2b3c.json'],
     ['DELETE', '/v1/library/decks/deck-1a2b3c'],
