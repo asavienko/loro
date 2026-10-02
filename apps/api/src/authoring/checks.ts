@@ -68,16 +68,66 @@ export function verbStems(lemma: string): string[] {
   return [...out]
 }
 
+/** Polish verb endings, folded (ć → c), longest first; «-ować» verbs conjugate on «-uj-». */
+const POLISH_VERB = /^(.+?)(owac|iec|ac|ec|ic|yc|uc|c)(\s+sie)?$/
+
+/**
+ * The stems a Polish word's forms may start with, folded: a verb without its infinitive ending
+ * («płacić» finds «płacę», «kosztować» «kosztuje»), a noun or adjective without its final vowel
+ * («kawa» finds «kawę», «zimny» «zimną»), a fleeting e dropped («rachunek» finds «rachunku»), and
+ * a stem's softening «i» dropped («chcieć» finds «chcę»). Folding already joins ś/s, ć/c, ż/z, ó/o
+ * and ę/e, and a prefix match covers s → sz and c → cz. Rough on purpose, as for Spanish.
+ */
+export function polishStems(lemma: string, pos?: string): string[] {
+  const word = fold(lemma)
+  const out = new Set<string>()
+  const verb = pos === 'verb' ? POLISH_VERB.exec(word) : null
+  if (verb?.[1]) {
+    out.add(verb[1])
+    if (verb[2] === 'owac') out.add(`${verb[1]}uj`)
+  } else {
+    out.add(word)
+    const vowel = /^(.+?)[aeiouy]$/.exec(word)
+    if (vowel?.[1]) out.add(vowel[1])
+    const fleeting = /^(.+)e([kcn])$/.exec(word)
+    if (fleeting?.[1] && fleeting[2]) out.add(`${fleeting[1]}${fleeting[2]}`)
+  }
+  for (const stem of [...out]) if (stem.length > 3 && stem.endsWith('i')) out.add(stem.slice(0, -1))
+  return [...out].filter((stem) => stem.length >= 3 || stem === word)
+}
+
+function polishWordMatches(word: string, part: string, pos?: string): boolean {
+  if (word === part) return true
+  if (part.length < 3) return false
+  return polishStems(part, pos).some((stem) => word.startsWith(stem))
+}
+
 /**
  * Whether a lemma is in the text: a multi-word unit as a run of words; a verb (an infinitive by
  * its ending, or by `pos`) by a stem at the start of a word; any other word of four letters or
- * more as a prefix, so «tostada» finds «tostadas». Rough on purpose; the lemmatizer stage replaces
- * it (plan 112 §3).
+ * more as a prefix, so «tostada» finds «tostadas». Polish matches each word by its stems, since
+ * its cases change endings. Rough on purpose; the lemmatizer stage replaces it (plan 112 §3).
  */
-export function containsLemma(text: string, lemma: string, pos?: string): boolean {
+export function containsLemma(
+  text: string,
+  lemma: string,
+  pos?: string,
+  course?: Slot['course'],
+): boolean {
   const words = tokens(text)
   const parts = tokens(lemma)
   if (parts.length === 0) return false
+  if (course === 'pl-PL') {
+    // An infinitive is known by its «ć» before folding, when no part of speech is given.
+    const partPos =
+      parts.length > 1 ? undefined : (pos ?? (lemma.trim().endsWith('ć') ? 'verb' : undefined))
+    return words.some((_, start) =>
+      parts.every((part, i) => {
+        const w = words[start + i]
+        return w !== undefined && polishWordMatches(w, part, partPos)
+      }),
+    )
+  }
   if (parts.length > 1) return ` ${words.join(' ')} `.includes(` ${parts.join(' ')} `)
   const [one] = parts
   if (one === undefined) return false
@@ -121,12 +171,14 @@ export function checkCandidate(
   // The brief's words: what the text really contains, and nothing banned.
   const mustUse = slot.brief.mustUse.map((l) => l.lemma)
   const uses = slot.brief.mustUse
-    .filter((l) => containsLemma(target, l.lemma, l.pos))
+    .filter((l) => containsLemma(target, l.lemma, l.pos, slot.course))
     .map((l) => l.lemma)
   const claimedButAbsent = candidate.uses.filter((u) => mustUse.includes(u) && !uses.includes(u))
   if (claimedButAbsent.length > 0)
     problems.push(`claims to use ${claimedButAbsent.join(', ')} but does not`)
-  const banned = slot.brief.avoid.lemmas.filter((lemma) => containsLemma(target, lemma))
+  const banned = slot.brief.avoid.lemmas.filter((lemma) =>
+    containsLemma(target, lemma, undefined, slot.course),
+  )
   if (banned.length > 0) problems.push(`uses banned word(s): ${banned.join(', ')}`)
 
   // Duplicates: the course and the bank, then the siblings.
