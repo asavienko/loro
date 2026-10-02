@@ -1,0 +1,39 @@
+{"kind":"set","id":"set-es-a1-cafe-counter","subtitle":"Snídaně v madridském kavárenském pultu: nápoje a toasty"}
+{"kind":"phrase","id":"es-7j7qahq","translation":"Dáte nám dva džusy, prosím?","words":{"nos":"nám","pone":"dáte","dos":"dva","zumos":"džusy","por favor":"prosím"}}
+{"kind":"phrase","id":"es-jrpw2vw","translation":"Sedneme si k jednomu stolu?","words":{"nos":"sebe","sentamos":"sedneme si","en":"k","una":"jeden","mesa":"stůl"}}
+{"kind":"phrase","id":"es-td3y33c","translation":"Máte kávu s mlékem?","words":{"tienen":"máte","café con leche":"kávu s mlékem"}}
+{"kind":"phrase","id":"es-kcwjb6g","translation":"Dáte mi jedno kafe solo, prosím?","words":{"me":"mi","pone":"dáte","un":"jeden","café":"káva","solo":"solo","por favor":"prosím"}}
+{"kind":"phrase","id":"es-3t3nu4a","translation":"Dáte nám dva toasty?","words":{"nos":"nám","pone":"dáte","dos":"dva","tostadas":"toasty"}}
+{"kind":"phrase","id":"es-y7dvynj","translation":"Chcete cukr?","words":{"quiere":"chcete","azúcar":"cukr"}}
+{"kind":"phrase","id":"es-hsdzpxu","translation":"Je to s sebou?","words":{"es":"je","para llevar":"s sebou"}}
+{"kind":"phrase","id":"es-wxjusx5","translation":"Kolik to je?","words":{"cuánto":"kolik","es":"je"}}
+{"kind":"phrase","id":"es-j25n6h4","translation":"Pro mě jedno bez kofeinu z automatu.","words":{"para mí":"pro mě","un":"jeden","descafeinado":"bez kofeinu","de":"z","máquina":"automat"}}
+{"kind":"phrase","id":"es-56szgjm","translation":"Jeden croissant pro mě, díky.","words":{"un":"jeden","croissant":"croissant","para mí":"pro mě","gracias":"díky"}}
+{"kind":"phrase","id":"es-p75xvbp","translation":"Ne, díky, dám si ho solo.","words":{"no":"ne","gracias":"díky","lo":"ho","tomo":"dám si","solo":"solo"}}
+{"kind":"phrase","id":"es-iauq3dj","translation":"Platím v hotovosti, díky.","words":{"pago":"platím","en":"v","efectivo":"hotovosti","gracias":"díky"}}
+{"kind":"set","id":"set-es-a1-cafe-counter-2","subtitle":"Objednejte si studený nápoj nebo svačinu v kavárně a zeptejte se, kde co je."}
+{"kind":"phrase","id":"es-cqjyc6y","translation":"Máte něco studeného s ledem?","words":{"hay":"je (tam)","algo":"něco","frío":"studený","con hielo":"s ledem"}}
+{"kind":"phrase","id":"es-cxu36gk","translation":"Je místo na terase?","words":{"hay":"je (tam)","sitio":"místo","en":"na","la":"(určitý člen)","terraza":"terasa"}}
+{"kind":"phrase","id":"es-gmxiswh","translation":"Máte nějaký teplý sendvič?","words":{"hay":"je (tam)","algún":"nějaký","bocadillo":"sendvič","caliente":"teplý"}}
+{"kind":"phrase","id":"es-rr52gmb","translation":"Dáte nám dva ledové čaje?","words":{"nos":"nám","pone":"dáte (vy)","dos":"dva","té":"čaj","con hielo":"s ledem"}}
+{"kind":"phrase","id":"es-n7kdwor","translation":"Dáte mi studený sendvič, prosím?","words":{"me":"mi","pone":"dáte (vy)","un":"(neurčitý člen)","bocadillo":"sendvič","frío":"studený","por favor":"prosím"}}
+{"kind":"phrase","id":"es-uhajdf5","translation":"Pro mě sendvič, nic víc.","words":{"para mí":"pro mě","un":"(neurčitý člen)","bocadillo":"sendvič","nada más":"nic víc"}}
+{"kind":"phrase","id":"es-lv7hi4p","translation":"Je místo uvnitř?","words":{"hay":"je (tam)","sitio":"místo","dentro":"uvnitř"}}
+{"kind":"phrase","id":"es-muwamzx","translation":"Promiňte, kde je toaleta?","words":{"perdone":"promiňte (vy)","dónde":"kde","está":"je","el":"(určitý člen)","baño":"toaleta"}}
+{"kind":"phrase","id":"es-6fvb6so","translation":"Přinesete mi ubrousek, prosím?","words":{"me":"mi","trae":"přinesete (vy)","una":"(neurčitý člen)","servilleta":"ubrousek","por favor":"prosím"}}
+{"kind":"phrase","id":"es-fn2df75","translation":"Máte wifi?","words":{"tienen":"máte (vy)","wifi":"wifi"}}
+{"kind":"phrase","id":"es-ve7jwlx","translation":"Promiňte, přinesete mi ubrousek?","words":{"perdone":"promiňte (vy)","me":"mi","trae":"přinesete (vy)","una":"(neurčitý člen)","servilleta":"ubrousek"}}
+{"kind":"phrase","id":"es-kuxoeld","translation":"Máte něco teplého?","words":{"tienen":"máte (vy)","algo":"něco","caliente":"teplý"}}
+{"kind":"set","id":"set-es-a1-paying","subtitle":"Placení na konci jídla nebo kávy, když spěcháte."}
+{"kind":"phrase","id":"es-jzbynd7","translation":"Můžete to vzít kartou, prosím?","words":{"me":"(pro) mě","cobra":"(vy) účtujete, berete platbu","con":"s, pomocí","tarjeta":"karta","por favor":"prosím"}}
+{"kind":"phrase","id":"es-q5vrej5","translation":"Platím v hotovosti, dáte mi drobné?","words":{"pago":"platím","en":"v","efectivo":"hotovost","me":"(mně)","da":"(vy) dáte","el":"(určitý člen)","cambio":"drobné"}}
+{"kind":"phrase","id":"es-3leenxo","translation":"Můžete nám to naúčtovat zvlášť, prosím?","words":{"nos":"(pro) nás","cobra":"(vy) účtujete, berete platbu","por separado":"zvlášť","por favor":"prosím"}}
+{"kind":"phrase","id":"es-bmucxkz","translation":"Platíme spolu, můžete to vzít?","words":{"pagamos":"platíme","juntos":"spolu","me":"(pro) mě","cobra":"(vy) účtujete, berete platbu"}}
+{"kind":"phrase","id":"es-l5vgoel","translation":"Dnes platím já, můžete to vzít?","words":{"hoy":"dnes","invito":"platím, zvu","yo":"já","me":"(pro) mě","cobra":"(vy) účtujete, berete platbu"}}
+{"kind":"phrase","id":"es-y65fyh7","translation":"Můžete mi vzít účet, prosím?","words":{"me":"(pro) mě","cobra":"(vy) účtujete, berete platbu","la":"(určitý člen)","cuenta":"účet","por favor":"prosím"}}
+{"kind":"phrase","id":"es-srfsrjd","translation":"Berete kartu, nebo platím v hotovosti?","words":{"acepta":"(vy) přijímáte, berete","tarjeta":"karta","o":"nebo","pago":"platím","en":"v","efectivo":"hotovost"}}
+{"kind":"phrase","id":"es-4spcsev","translation":"Můžete to vzít? A dejte mi účtenku.","words":{"me":"(pro) mě","cobra":"(vy) účtujete, berete platbu","y":"a","deme":"dejte mi","el":"(určitý člen)","ticket":"účtenka"}}
+{"kind":"phrase","id":"es-unhmaql","translation":"Promiňte, můžete to vzít? Spěchám.","words":{"perdone":"promiňte","me":"(pro) mě","cobra":"(vy) účtujete, berete platbu","tengo":"mám","prisa":"spěch"}}
+{"kind":"phrase","id":"es-4anz7u2","translation":"Berete bezkontaktně?","words":{"acepta":"(vy) přijímáte, berete","contactless":"bezkontaktně"}}
+{"kind":"phrase","id":"es-ubsh643","translation":"Kolik to je? A nechte si drobné.","words":{"cuánto":"kolik","es":"je to","y":"a","quédese":"nechte si","con":"s","el":"(určitý člen)","cambio":"drobné"}}
+{"kind":"phrase","id":"es-jcr6gba","translation":"Zvete mě vy? Tak platíme spolu.","words":{"me":"(pro) mě","invita":"(vy) zvete, platíte za","usted":"vy","entonces":"tak, potom","pagamos":"platíme","juntos":"spolu"}}

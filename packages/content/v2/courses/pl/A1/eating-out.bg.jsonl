@@ -1,0 +1,39 @@
+{"kind":"set","id":"set-pl-a1-cafe-counter","subtitle":"Поръчване на напитки и сладкиши на щанда на краковско кафене сутрин."}
+{"kind":"phrase","id":"pl-g5zjlre","translation":"Черно кафе за вкъщи, моля.","words":{"czarna":"черен","kawa":"кафе","na":"за","wynos":"за вкъщи","poproszę":"моля"}}
+{"kind":"phrase","id":"pl-tnccjrb","translation":"За мен, моля, голямо кафе с мляко.","words":{"dla":"за","mnie":"мен","poproszę":"моля","dużą":"голям","kawę":"кафе","z":"с","mlekiem":"мляко"}}
+{"kind":"phrase","id":"pl-u6uw6bw","translation":"Моля, малък чай с лимон.","words":{"poproszę":"моля","małą":"малък","herbatę":"чай","z":"с","cytryną":"лимон"}}
+{"kind":"phrase","id":"pl-52rcexp","translation":"Моля, голям сок и кроасанче.","words":{"poproszę":"моля","duży":"голям","sok":"сок","i":"и","rogalik":"кроасанче"}}
+{"kind":"phrase","id":"pl-ichirvm","translation":"Сокът за вкъщи ли е?","words":{"czy":"ли (дали)","sok":"сок","jest":"е","na":"за","wynos":"за вкъщи"}}
+{"kind":"phrase","id":"pl-r4vk5uj","translation":"Моля, сладкиш и сок.","words":{"poproszę":"моля","ciastko":"сладкиш","i":"и","sok":"сок"}}
+{"kind":"phrase","id":"pl-vk2ghj6","translation":"За тук или за вкъщи?","words":{"na":"за","miejscu":"място (тук, на място)","czy":"или","wynos":"за вкъщи"}}
+{"kind":"phrase","id":"pl-ymqkur2","translation":"Има ли кафе с мляко?","words":{"czy":"ли (дали)","jest":"има","kawa":"кафе","z":"с","mlekiem":"мляко"}}
+{"kind":"phrase","id":"pl-6hs4mqg","translation":"Имате ли кроасанчета?","words":{"czy":"ли (дали)","pani":"Вие (към жена, учтиво)","ma":"има","rogaliki":"кроасанчета"}}
+{"kind":"phrase","id":"pl-so7vfoz","translation":"Колко плащам?","words":{"ile":"колко","płacę":"плащам"}}
+{"kind":"phrase","id":"pl-p5zzl7z","translation":"За тук, благодаря.","words":{"na":"за","miejscu":"място (тук, на място)","dziękuję":"благодаря"}}
+{"kind":"phrase","id":"pl-qxrwzrb","translation":"Колко струва малко кафе с мляко?","words":{"ile":"колко","kosztuje":"струва","mała":"малък","kawa":"кафе","z mlekiem":"с мляко"}}
+{"kind":"set","id":"set-pl-a1-restaurant-order","subtitle":"Бърз обяд в малък полски ресторант"}
+{"kind":"phrase","id":"pl-uwp4ngl","translation":"Има ли свободна маса за двама?","words":{"czy":"дали (въпросителна частица)","jest":"има","wolny":"свободен","stolik":"маса","dla":"за","dwóch":"двама","osób":"души"}}
+{"kind":"phrase","id":"pl-w5swdpc","translation":"Препоръчвате ли котлета?","words":{"czy":"дали (въпросителна частица)","pan":"Вие (към мъж)","poleca":"препоръчва","kotlet":"котлет"}}
+{"kind":"phrase","id":"pl-mnmydrq","translation":"Салатата без месо ли е?","words":{"czy":"дали (въпросителна частица)","sałatka":"салата","jest":"е","bez":"без","mięsa":"месо"}}
+{"kind":"phrase","id":"pl-snd53y2","translation":"Препоръчвате ли пиероги?","words":{"czy":"дали (въпросителна частица)","pani":"Вие (към жена)","poleca":"препоръчва","pierogi":"пиероги"}}
+{"kind":"phrase","id":"pl-bsykgr4","translation":"Менюто и супата на деня, моля.","words":{"poproszę":"моля (бих искал)","menu":"меню","i":"и","zupę":"супа","dnia":"на деня"}}
+{"kind":"phrase","id":"pl-tftwg5y","translation":"Котлет и салата, моля.","words":{"poproszę":"моля (бих искал)","kotlet":"котлет","i":"и","sałatkę":"салата"}}
+{"kind":"phrase","id":"pl-js624jk","translation":"Имате ли десерт?","words":{"czy":"дали (въпросителна частица)","pani":"Вие (към жена)","ma":"има","deser":"десерт"}}
+{"kind":"phrase","id":"pl-oii67zy","translation":"Може ли да помоля за менюто?","words":{"czy":"дали (въпросителна частица)","mogę":"мога","prosić":"помоля","o":"за","menu":"меню"}}
+{"kind":"phrase","id":"pl-sh5votg","translation":"Водата без газ студена ли е?","words":{"czy":"дали (въпросителна частица)","woda":"вода","niegazowana":"без газ","jest":"е","zimna":"студен"}}
+{"kind":"phrase","id":"pl-cap6opt","translation":"Пиероги за мен, моля.","words":{"poproszę":"моля (бих искал)","pierogi":"пиероги","dla":"за","mnie":"мен"}}
+{"kind":"phrase","id":"pl-o5yqvut","translation":"Вода без газ, моля.","words":{"poproszę":"моля (бих искал)","wodę":"вода","niegazowaną":"без газ"}}
+{"kind":"phrase","id":"pl-ljgxlmw","translation":"Десерт за мен, моля.","words":{"poproszę":"моля (бих искал)","deser":"десерт","dla":"за","mnie":"мен"}}
+{"kind":"set","id":"set-pl-a1-paying","subtitle":"Плащане на сметката в полско кафене с приятел."}
+{"kind":"phrase","id":"pl-3bzqdoo","translation":"Плащаме ли заедно или отделно?","words":{"czy":"или","płacimy":"плащаме","razem":"заедно","osobno":"отделно"}}
+{"kind":"phrase","id":"pl-2fim5tt","translation":"Колко плащаме общо?","words":{"ile":"колко","płacimy":"плащаме","razem":"заедно, общо"}}
+{"kind":"phrase","id":"pl-pfv75a5","translation":"Ще платя заедно, добре?","words":{"zapłacę":"ще платя","razem":"заедно","dobrze":"добре"}}
+{"kind":"phrase","id":"pl-edllpap","translation":"Ще платим отделно, добре?","words":{"zapłacimy":"ще платим","osobno":"отделно","dobrze":"добре"}}
+{"kind":"phrase","id":"pl-updaeuy","translation":"Мога ли да платя безконтактно?","words":{"czy":"дали (маркер за въпрос)","mogę":"мога","zapłacić":"да платя","zbliżeniowo":"безконтактно"}}
+{"kind":"phrase","id":"pl-klpttnc","translation":"Плащам с карта, добре?","words":{"płacę":"плащам","kartą":"с карта","dobrze":"добре"}}
+{"kind":"phrase","id":"pl-3ztz46p","translation":"Сметката, моля, плащаме заедно.","words":{"poproszę":"моля, бих искал","rachunek":"сметката","płacimy":"плащаме","razem":"заедно"}}
+{"kind":"phrase","id":"pl-5b6mwvz","translation":"Ще платя в брой, добре?","words":{"zapłacę":"ще платя","gotówką":"в брой","dobrze":"добре"}}
+{"kind":"phrase","id":"pl-7oacco5","translation":"Предпочитам да платя в брой.","words":{"wolę":"предпочитам","zapłacić":"да платя","gotówką":"в брой"}}
+{"kind":"phrase","id":"pl-pb2re5n","translation":"Мога ли да платя с телефон?","words":{"czy":"дали (маркер за въпрос)","mogę":"мога","zapłacić":"да платя","telefonem":"с телефон"}}
+{"kind":"phrase","id":"pl-3v2ttdm","translation":"Ще получа ли касова бележка?","words":{"czy":"дали (маркер за въпрос)","dostanę":"ще получа","paragon":"касова бележка"}}
+{"kind":"phrase","id":"pl-tbluyyd","translation":"Рестото не е нужно, благодаря.","words":{"reszty":"рестото","nie":"не","trzeba":"нужно е","dziękuję":"благодаря"}}

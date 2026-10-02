@@ -1,0 +1,39 @@
+{"kind":"set","id":"set-pl-a1-cafe-counter","subtitle":"Ranní objednávka nápojů a pečiva u pultu v krakovské kavárně."}
+{"kind":"phrase","id":"pl-g5zjlre","translation":"Černou kávu s sebou, prosím.","words":{"czarna":"černý","kawa":"kava","na":"na","wynos":"s sebou","poproszę":"prosím"}}
+{"kind":"phrase","id":"pl-tnccjrb","translation":"Pro mě prosím velkou kávu s mlékem.","words":{"dla":"pro","mnie":"mě","poproszę":"prosím","dużą":"velký","kawę":"kava","z":"s","mlekiem":"mléko"}}
+{"kind":"phrase","id":"pl-u6uw6bw","translation":"Prosím malý čaj s citronem.","words":{"poproszę":"prosím","małą":"malý","herbatę":"čaj","z":"s","cytryną":"citron"}}
+{"kind":"phrase","id":"pl-52rcexp","translation":"Prosím velký džus a rohlíček.","words":{"poproszę":"prosím","duży":"velký","sok":"džus","i":"a","rogalik":"rohlíček"}}
+{"kind":"phrase","id":"pl-ichirvm","translation":"Je ten džus s sebou?","words":{"czy":"zda / jestli","sok":"džus","jest":"je","na":"na","wynos":"s sebou"}}
+{"kind":"phrase","id":"pl-r4vk5uj","translation":"Prosím zákusek a džus.","words":{"poproszę":"prosím","ciastko":"zákusek","i":"a","sok":"džus"}}
+{"kind":"phrase","id":"pl-vk2ghj6","translation":"Tady na místě, nebo s sebou?","words":{"na":"na","miejscu":"místo","czy":"nebo","wynos":"s sebou"}}
+{"kind":"phrase","id":"pl-ymqkur2","translation":"Je káva s mlékem?","words":{"czy":"zda / jestli","jest":"je","kawa":"kava","z":"s","mlekiem":"mléko"}}
+{"kind":"phrase","id":"pl-6hs4mqg","translation":"Máte rohlíčky?","words":{"czy":"zda / jestli","pani":"paní (vy, zdvořile)","ma":"má","rogaliki":"rohlíčky"}}
+{"kind":"phrase","id":"pl-so7vfoz","translation":"Kolik platím?","words":{"ile":"kolik","płacę":"platím"}}
+{"kind":"phrase","id":"pl-p5zzl7z","translation":"Tady na místě, děkuji.","words":{"na":"na","miejscu":"místo","dziękuję":"děkuji"}}
+{"kind":"phrase","id":"pl-qxrwzrb","translation":"Kolik stojí malá káva s mlékem?","words":{"ile":"kolik","kosztuje":"stojí","mała":"malý","kawa":"kava","z mlekiem":"s mlékem"}}
+{"kind":"set","id":"set-pl-a1-restaurant-order","subtitle":"Rychlý oběd v malé polské restauraci"}
+{"kind":"phrase","id":"pl-uwp4ngl","translation":"Je tu volný stůl pro dva?","words":{"czy":"tázací částice (ano/ne)","jest":"je","wolny":"volný","stolik":"stůl","dla":"pro","dwóch":"dvou","osób":"osob"}}
+{"kind":"phrase","id":"pl-w5swdpc","translation":"Doporučujete ten řízek?","words":{"czy":"tázací částice (ano/ne)","pan":"vy (muži)","poleca":"doporučuje","kotlet":"řízek"}}
+{"kind":"phrase","id":"pl-mnmydrq","translation":"Je ten salát bez masa?","words":{"czy":"tázací částice (ano/ne)","sałatka":"salát","jest":"je","bez":"bez","mięsa":"masa"}}
+{"kind":"phrase","id":"pl-snd53y2","translation":"Doporučujete ty pierogy?","words":{"czy":"tázací částice (ano/ne)","pani":"vy (ženě)","poleca":"doporučuje","pierogi":"pierogy, knedlíčky"}}
+{"kind":"phrase","id":"pl-bsykgr4","translation":"Prosím menu a polévku dne.","words":{"poproszę":"prosím","menu":"menu","i":"a","zupę":"polévku","dnia":"dne"}}
+{"kind":"phrase","id":"pl-tftwg5y","translation":"Prosím řízek a salát.","words":{"poproszę":"prosím","kotlet":"řízek","i":"a","sałatkę":"salát"}}
+{"kind":"phrase","id":"pl-js624jk","translation":"Máte dezert?","words":{"czy":"tázací částice (ano/ne)","pani":"vy (ženě)","ma":"má","deser":"dezert"}}
+{"kind":"phrase","id":"pl-oii67zy","translation":"Mohl bych poprosit o menu?","words":{"czy":"tázací částice (ano/ne)","mogę":"mohu","prosić":"prosit","o":"o","menu":"menu"}}
+{"kind":"phrase","id":"pl-sh5votg","translation":"Je ta neperlivá voda studená?","words":{"czy":"tázací částice (ano/ne)","woda":"voda","niegazowana":"neperlivá","jest":"je","zimna":"studená"}}
+{"kind":"phrase","id":"pl-cap6opt","translation":"Prosím pierogy pro mě.","words":{"poproszę":"prosím","pierogi":"pierogy, knedlíčky","dla":"pro","mnie":"mě"}}
+{"kind":"phrase","id":"pl-o5yqvut","translation":"Prosím neperlivou vodu.","words":{"poproszę":"prosím","wodę":"vodu","niegazowaną":"neperlivou"}}
+{"kind":"phrase","id":"pl-ljgxlmw","translation":"Prosím dezert pro mě.","words":{"poproszę":"prosím","deser":"dezert","dla":"pro","mnie":"mě"}}
+{"kind":"set","id":"set-pl-a1-paying","subtitle":"Placení v polské kavárně s kamarádem."}
+{"kind":"phrase","id":"pl-3bzqdoo","translation":"Platíme spolu, nebo zvlášť?","words":{"czy":"nebo","płacimy":"platíme","razem":"spolu","osobno":"zvlášť"}}
+{"kind":"phrase","id":"pl-2fim5tt","translation":"Kolik platíme dohromady?","words":{"ile":"kolik","płacimy":"platíme","razem":"dohromady"}}
+{"kind":"phrase","id":"pl-pfv75a5","translation":"Zaplatím to za nás oba, dobře?","words":{"zapłacę":"zaplatím","razem":"spolu","dobrze":"dobře"}}
+{"kind":"phrase","id":"pl-edllpap","translation":"Zaplatíme zvlášť, dobře?","words":{"zapłacimy":"zaplatíme","osobno":"zvlášť","dobrze":"dobře"}}
+{"kind":"phrase","id":"pl-updaeuy","translation":"Můžu zaplatit bezkontaktně?","words":{"czy":"zda (tázací částice)","mogę":"můžu","zapłacić":"zaplatit","zbliżeniowo":"bezkontaktně"}}
+{"kind":"phrase","id":"pl-klpttnc","translation":"Platím kartou, dobře?","words":{"płacę":"platím","kartą":"kartou","dobrze":"dobře"}}
+{"kind":"phrase","id":"pl-3ztz46p","translation":"Prosím účet, platíme spolu.","words":{"poproszę":"prosím","rachunek":"účet","płacimy":"platíme","razem":"spolu"}}
+{"kind":"phrase","id":"pl-5b6mwvz","translation":"Zaplatím hotově, dobře?","words":{"zapłacę":"zaplatím","gotówką":"hotově","dobrze":"dobře"}}
+{"kind":"phrase","id":"pl-7oacco5","translation":"Radši zaplatím hotově.","words":{"wolę":"radši","zapłacić":"zaplatit","gotówką":"hotově"}}
+{"kind":"phrase","id":"pl-pb2re5n","translation":"Můžu zaplatit mobilem?","words":{"czy":"zda (tázací částice)","mogę":"můžu","zapłacić":"zaplatit","telefonem":"mobilem"}}
+{"kind":"phrase","id":"pl-3v2ttdm","translation":"Dostanu účtenku?","words":{"czy":"zda (tázací částice)","dostanę":"dostanu","paragon":"účtenka"}}
+{"kind":"phrase","id":"pl-tbluyyd","translation":"Vrátit nemusíte, děkuju.","words":{"reszty":"vrácení (drobné nazpět)","nie":"ne","trzeba":"je třeba","dziękuję":"děkuju"}}

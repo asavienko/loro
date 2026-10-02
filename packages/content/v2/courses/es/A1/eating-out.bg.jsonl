@@ -11,3 +11,29 @@
 {"kind":"phrase","id":"es-56szgjm","translation":"Един кроасан за мен, благодаря.","words":{"un":"един","croissant":"кроасан","para mí":"за мен","gracias":"благодаря"}}
 {"kind":"phrase","id":"es-p75xvbp","translation":"Не, благодаря, пия го соло.","words":{"no":"не","gracias":"благодаря","lo":"го","tomo":"пия (аз)","solo":"соло"}}
 {"kind":"phrase","id":"es-iauq3dj","translation":"Плащам в брой, благодаря.","words":{"pago":"плащам (аз)","en":"в","efectivo":"брой","gracias":"благодаря"}}
+{"kind":"set","id":"set-es-a1-cafe-counter-2","subtitle":"Поръчайте студена напитка или нещо за хапване в кафене и попитайте къде се намират нещата."}
+{"kind":"phrase","id":"es-cqjyc6y","translation":"Има ли нещо студено с лед?","words":{"hay":"има","algo":"нещо","frío":"студен","con hielo":"с лед"}}
+{"kind":"phrase","id":"es-cxu36gk","translation":"Има ли място на терасата?","words":{"hay":"има","sitio":"място","en":"на","la":"(определителен член: -та)","terraza":"тераса"}}
+{"kind":"phrase","id":"es-gmxiswh","translation":"Има ли някакъв топъл сандвич?","words":{"hay":"има","algún":"някакъв","bocadillo":"сандвич","caliente":"топъл"}}
+{"kind":"phrase","id":"es-rr52gmb","translation":"Ще ни донесете ли два студени чая?","words":{"nos":"ни","pone":"сервирате (Вие)","dos":"два","té":"чай","con hielo":"с лед"}}
+{"kind":"phrase","id":"es-n7kdwor","translation":"Ще ми донесете ли един студен сандвич, моля?","words":{"me":"ми","pone":"сервирате (Вие)","un":"един","bocadillo":"сандвич","frío":"студен","por favor":"моля"}}
+{"kind":"phrase","id":"es-uhajdf5","translation":"За мен, един сандвич, нищо друго.","words":{"para mí":"за мен","un":"един","bocadillo":"сандвич","nada más":"нищо повече"}}
+{"kind":"phrase","id":"es-lv7hi4p","translation":"Има ли място вътре?","words":{"hay":"има","sitio":"място","dentro":"вътре"}}
+{"kind":"phrase","id":"es-muwamzx","translation":"Извинете, къде е тоалетната?","words":{"perdone":"извинете (Вие)","dónde":"къде","está":"е","el":"(определителен член: -ът)","baño":"тоалетна"}}
+{"kind":"phrase","id":"es-6fvb6so","translation":"Ще ми донесете ли една салфетка, моля?","words":{"me":"ми","trae":"донасяте (Вие)","una":"една","servilleta":"салфетка","por favor":"моля"}}
+{"kind":"phrase","id":"es-fn2df75","translation":"Имате ли wifi?","words":{"tienen":"имате (Вие, мн. ч.)","wifi":"wifi"}}
+{"kind":"phrase","id":"es-ve7jwlx","translation":"Извинете, ще ми донесете ли една салфетка?","words":{"perdone":"извинете (Вие)","me":"ми","trae":"донасяте (Вие)","una":"една","servilleta":"салфетка"}}
+{"kind":"phrase","id":"es-kuxoeld","translation":"Имате ли нещо топло?","words":{"tienen":"имате (Вие, мн. ч.)","algo":"нещо","caliente":"топъл"}}
+{"kind":"set","id":"set-es-a1-paying","subtitle":"Плащане в края на хранене или кафе, когато бързате."}
+{"kind":"phrase","id":"es-jzbynd7","translation":"Може ли да ми вземете с карта, моля?","words":{"me":"(за) мен","cobra":"(вие) вземате плащане","con":"с","tarjeta":"карта","por favor":"моля"}}
+{"kind":"phrase","id":"es-q5vrej5","translation":"Плащам в брой, ще ми дадете ли рестото?","words":{"pago":"плащам","en":"в","efectivo":"брой","me":"(на) мен","da":"(вие) давате","el":"(определителен член: -ът/-та/-то/-те)","cambio":"ресто"}}
+{"kind":"phrase","id":"es-3leenxo","translation":"Може ли да ни вземете поотделно, моля?","words":{"nos":"(за) нас","cobra":"(вие) вземате плащане","por separado":"поотделно","por favor":"моля"}}
+{"kind":"phrase","id":"es-bmucxkz","translation":"Плащаме заедно, може ли да ми вземете?","words":{"pagamos":"плащаме","juntos":"заедно","me":"(за) мен","cobra":"(вие) вземате плащане"}}
+{"kind":"phrase","id":"es-l5vgoel","translation":"Днес черпя аз, може ли да ми вземете?","words":{"hoy":"днес","invito":"черпя","yo":"аз","me":"(за) мен","cobra":"(вие) вземате плащане"}}
+{"kind":"phrase","id":"es-y65fyh7","translation":"Може ли да ми вземете сметката, моля?","words":{"me":"(за) мен","cobra":"(вие) вземате плащане","la":"(определителен член: -ът/-та/-то/-те)","cuenta":"сметка","por favor":"моля"}}
+{"kind":"phrase","id":"es-srfsrjd","translation":"Приемате ли карта или плащам в брой?","words":{"acepta":"(вие) приемате","tarjeta":"карта","o":"или","pago":"плащам","en":"в","efectivo":"брой"}}
+{"kind":"phrase","id":"es-4spcsev","translation":"Може ли да ми вземете? И ми дайте касовата бележка.","words":{"me":"(за) мен","cobra":"(вие) вземате плащане","y":"и","deme":"дайте ми","el":"(определителен член: -ът/-та/-то/-те)","ticket":"касова бележка"}}
+{"kind":"phrase","id":"es-unhmaql","translation":"Извинете, може ли да ми вземете? Бързам.","words":{"perdone":"извинете","me":"(за) мен","cobra":"(вие) вземате плащане","tengo":"имам","prisa":"бързане"}}
+{"kind":"phrase","id":"es-4anz7u2","translation":"Приемате ли безконтактно плащане?","words":{"acepta":"(вие) приемате","contactless":"безконтактно"}}
+{"kind":"phrase","id":"es-ubsh643","translation":"Колко е? И задръжте рестото.","words":{"cuánto":"колко","es":"е","y":"и","quédese":"(вие) задръжте","con":"с","el":"(определителен член: -ът/-та/-то/-те)","cambio":"ресто"}}
+{"kind":"phrase","id":"es-jcr6gba","translation":"Вие ли ме черпите? Тогава плащаме заедно.","words":{"me":"(за) мен","invita":"(вие) черпите","usted":"вие","entonces":"тогава","pagamos":"плащаме","juntos":"заедно"}}

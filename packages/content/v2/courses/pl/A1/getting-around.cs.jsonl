@@ -1,0 +1,39 @@
+{"kind":"set","id":"set-pl-a1-bus-tram","subtitle":"Po Varšavě a Krakově tramvají a autobusem"}
+{"kind":"phrase","id":"pl-vbnr5rt","translation":"Můžu si označit zlevněnou jízdenku?","words":{"czy":"(tázací částice)","mogę":"můžu","skasować":"označit","bilet":"jízdenka","ulgowy":"zlevněný"}}
+{"kind":"phrase","id":"pl-x2ghm6d","translation":"Je přestup na příští zastávce?","words":{"czy":"(tázací částice)","przesiadka":"přestup","jest":"je","na":"na","następnym":"příští","przystanku":"zastávka"}}
+{"kind":"phrase","id":"pl-qoifore","translation":"Která linka jede do centra?","words":{"która":"která","linia":"linka","jedzie":"jede","do":"do","centrum":"centrum"}}
+{"kind":"phrase","id":"pl-77tezd3","translation":"Jede tahle tramvaj do centra?","words":{"czy":"(tázací částice)","ten":"tenhle","tramwaj":"tramvaj","jedzie":"jede","do":"do","centrum":"centrum"}}
+{"kind":"phrase","id":"pl-bonnacg","translation":"Jak se dostanu na tramvajovou zastávku?","words":{"jak":"jak","dojść":"dojít","do":"do","przystanku":"zastávka","tramwajowego":"tramvajový"}}
+{"kind":"phrase","id":"pl-mnqafqv","translation":"Promiňte, staví tenhle autobus v centru?","words":{"przepraszam":"promiňte","czy":"(tázací částice)","ten":"tenhle","autobus":"autobus","staje":"staví","w":"v","centrum":"centrum"}}
+{"kind":"phrase","id":"pl-a545khu","translation":"Prosím zlevněnou a normální jízdenku.","words":{"poproszę":"prosím","bilet":"jízdenka","ulgowy":"zlevněný","i":"a","normalny":"normální"}}
+{"kind":"phrase","id":"pl-zlutsqi","translation":"Vystupuju na příští, díky za pomoc.","words":{"wysiadam":"vystupuju","na":"na","następnym":"příští","dziękuję":"děkuju","za":"za","pomoc":"pomoc"}}
+{"kind":"phrase","id":"pl-lmhgnzp","translation":"Kde se přestupuje na autobus?","words":{"gdzie":"kde","jest":"je","przesiadka":"přestup","na":"na","autobus":"autobus"}}
+{"kind":"phrase","id":"pl-pps3rhf","translation":"Je na týhle zastávce automat?","words":{"czy":"(tázací částice)","na":"na","tym":"tenhle","przystanku":"zastávka","jest":"je","automat":"automat"}}
+{"kind":"phrase","id":"pl-qbkib62","translation":"Prosím normální jízdenku, hodně spěchám.","words":{"poproszę":"prosím","bilet":"jízdenka","normalny":"normální","bardzo":"velmi","się":"(zvratná částice)","spieszę":"spěchám"}}
+{"kind":"phrase","id":"pl-465eto7","translation":"Můžu zaplatit kartou v tramvaji?","words":{"czy":"(tázací částice)","mogę":"můžu","zapłacić":"zaplatit","kartą":"kartou","w":"v","tramwaju":"tramvaj"}}
+{"kind":"set","id":"set-pl-a1-asking-the-way","subtitle":"Jak se zeptat kolemjdoucího na cestu v polském starém městě."}
+{"kind":"phrase","id":"pl-672mmeo","translation":"Za mostem prosím zahněte doprava.","words":{"proszę":"prosím","skręcić":"zahnout","w prawo":"doprava","za":"za","mostem":"most"}}
+{"kind":"phrase","id":"pl-h6yx6lp","translation":"Jděte prosím pořád rovně a pak doprava.","words":{"proszę":"prosím","iść":"jít","prosto":"rovně","a":"a","potem":"potom","w prawo":"doprava"}}
+{"kind":"phrase","id":"pl-kl42rax","translation":"Tahle ulice vede na náměstí.","words":{"ta":"tato","ulica":"ulice","prowadzi":"vede","do":"do","rynku":"náměstí"}}
+{"kind":"phrase","id":"pl-2n4vyvk","translation":"Promiňte, hledám lékárnu.","words":{"przepraszam":"promiňte","szukam":"hledám","apteki":"lékárna"}}
+{"kind":"phrase","id":"pl-p4zmcfl","translation":"Nevíte, kde je lékárna?","words":{"czy":"(tázací slovo)","pani":"vy (o ženě)","wie":"ví","gdzie":"kde","jest":"je","apteka":"lékárna"}}
+{"kind":"phrase","id":"pl-2xlfcjh","translation":"Nevíte, kde je náměstí?","words":{"czy":"(tázací slovo)","pan":"vy (o muži)","wie":"ví","gdzie":"kde","jest":"je","rynek":"náměstí"}}
+{"kind":"phrase","id":"pl-lqv5jbj","translation":"Jak se dostanu na náměstí?","words":{"jak":"jak","dojść":"dojít","do":"do","rynku":"náměstí"}}
+{"kind":"phrase","id":"pl-wqi23r4","translation":"Máte mapu?","words":{"czy":"(tázací slovo)","pani":"vy (o ženě)","ma":"má","mapę":"mapa"}}
+{"kind":"phrase","id":"pl-kcncfdd","translation":"Je to odsud daleko?","words":{"czy":"(tázací slovo)","to":"to","daleko":"daleko","stąd":"odsud"}}
+{"kind":"phrase","id":"pl-77s5cyd","translation":"Jak se dostanu na nádraží?","words":{"jak":"jak","dojść":"dojít","do":"do","dworca":"nádraží"}}
+{"kind":"phrase","id":"pl-bupnre4","translation":"Ne, je to docela blízko.","words":{"nie":"ne","to":"to","całkiem":"docela","blisko":"blízko"}}
+{"kind":"phrase","id":"pl-q5kbhdf","translation":"Mockrát děkuji, už vím.","words":{"dziękuję":"děkuji","bardzo":"velmi","już":"už","wiem":"vím"}}
+{"kind":"set","id":"set-pl-a1-train-station","subtitle":"Rychle si koupit jízdenky a najít místo na nádraží."}
+{"kind":"phrase","id":"pl-5f5z3yx","translation":"Jede tenhle vlak ze třetího nástupiště?","words":{"czy":"jestli (tázací částice)","ten":"tenhle","pociąg":"vlak","odjeżdża":"odjíždí","z":"z","peronu":"nástupiště (2. pád)","trzeciego":"třetího"}}
+{"kind":"phrase","id":"pl-f6mhig6","translation":"V kolik jede vlak do Gdaňska?","words":{"o":"v","której":"kolik (hodina)","odjeżdża":"odjíždí","pociąg":"vlak","do":"do","gdańska":"Gdaňska (2. pád)"}}
+{"kind":"phrase","id":"pl-64ufjif","translation":"Ze kterého nástupiště jede tenhle vlak?","words":{"z":"z","którego":"kterého","peronu":"nástupiště (2. pád)","odjeżdża":"odjíždí","ten":"tenhle","pociąg":"vlak"}}
+{"kind":"phrase","id":"pl-4pa7ipt","translation":"Jsou ještě místa ve vagóně?","words":{"czy":"jestli (tázací částice)","są":"jsou","jeszcze":"ještě","miejsca":"místa","w":"v","wagonie":"vagonu (6. pád)"}}
+{"kind":"phrase","id":"pl-xumsbac","translation":"Je tohle místo volné?","words":{"czy":"jestli (tázací částice)","to":"tohle","miejsce":"místo","jest":"je","wolne":"volné"}}
+{"kind":"phrase","id":"pl-krxnzzt","translation":"Má vlak zpoždění?","words":{"czy":"jestli (tázací částice)","pociąg":"vlak","jest":"je","spóźniony":"zpožděný"}}
+{"kind":"phrase","id":"pl-cbvnlo2","translation":"Je ve vagóně místo u okna?","words":{"czy":"jestli (tázací částice)","w":"v","wagonie":"vagonu (6. pád)","jest":"je","miejsce":"místo","przy":"u","oknie":"okna (6. pád)"}}
+{"kind":"phrase","id":"pl-dgliskg","translation":"Prosím místo ve vagóně bez oddělení.","words":{"poproszę":"prosím","miejsce":"místo","w":"v","wagonie":"vagonu (6. pád)","bez":"bez","przedziału":"oddělení (2. pád)"}}
+{"kind":"phrase","id":"pl-cxccjjn","translation":"Je pokladna ještě otevřená?","words":{"czy":"jestli (tázací částice)","kasa":"pokladna","jest":"je","jeszcze":"ještě","otwarta":"otevřená"}}
+{"kind":"phrase","id":"pl-w6qxau7","translation":"Prosím dva lístky na jednu cestu.","words":{"poproszę":"prosím","dwa":"dva","bilety":"jízdenky","w":"na","jedną":"jednu","stronę":"stranu"}}
+{"kind":"phrase","id":"pl-6t366ge","translation":"Prosím zpáteční jízdenku do Krakova.","words":{"poproszę":"prosím","bilet":"jízdenku","powrotny":"zpáteční","do":"do","krakowa":"Krakova (2. pád)"}}
+{"kind":"phrase","id":"pl-lp45h63","translation":"V kolik jede vlak ze třetího nástupiště?","words":{"o":"v","której":"kolik (hodina)","odjeżdża":"odjíždí","pociąg":"vlak","z":"z","peronu":"nástupiště","trzeciego":"třetího"}}
