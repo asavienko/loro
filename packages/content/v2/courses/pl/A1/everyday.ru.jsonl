@@ -1,0 +1,39 @@
+{"kind":"set","id":"set-pl-a1-food-shop","subtitle":"У прилавка в продуктовом: просим хлеб, булочки, сыр и масло и платим."}
+{"kind":"phrase","id":"pl-4u36ljc","translation":"Кусочек сыра и немного масла, пожалуйста.","words":{"poproszę":"пожалуйста, я хотел бы… (вежливая просьба)","kawałek":"кусочек","sera":"сыр","i":"и","trochę":"немного","masła":"масло"}}
+{"kind":"phrase","id":"pl-z64s63o","translation":"Ещё молоко и яйца, пожалуйста.","words":{"poproszę":"пожалуйста, я хотел бы… (вежливая просьба)","jeszcze":"ещё, также","mleko":"молоко","i":"и","jajka":"яйца"}}
+{"kind":"phrase","id":"pl-jjps7by","translation":"Свежий хлеб ещё есть?","words":{"czy":"(начинает вопрос да/нет)","jest":"есть","jeszcze":"ещё, остался","świeży":"свежий","chleb":"хлеб"}}
+{"kind":"phrase","id":"pl-j3x5ouc","translation":"Свежие яйца ещё есть?","words":{"czy":"(начинает вопрос да/нет)","są":"есть","jeszcze":"ещё, остались","świeże":"свежие","jajka":"яйца"}}
+{"kind":"phrase","id":"pl-6d3l3xx","translation":"Масла уже нет?","words":{"nie ma":"нет, не имеется","już":"уже, больше","masła":"масло"}}
+{"kind":"phrase","id":"pl-lxtrdlk","translation":"У вас есть свежий сыр?","words":{"czy":"(начинает вопрос да/нет)","pan":"вы (к мужчине)","ma":"имеет","świeży":"свежий","ser":"сыр"}}
+{"kind":"phrase","id":"pl-5ta7iui","translation":"Хлеб и две булочки, пожалуйста.","words":{"poproszę":"пожалуйста, я хотел бы… (вежливая просьба)","chleb":"хлеб","i":"и","dwie":"две","bułki":"булочки"}}
+{"kind":"phrase","id":"pl-7insb5x","translation":"Ещё полбуханки хлеба, пожалуйста.","words":{"poproszę":"пожалуйста, я хотел бы… (вежливая просьба)","jeszcze":"ещё, также","pół":"половина","chleba":"хлеб"}}
+{"kind":"phrase","id":"pl-om5huvn","translation":"Булочки свежие?","words":{"czy":"(начинает вопрос да/нет)","są":"есть","świeże":"свежие","bułki":"булочки"}}
+{"kind":"phrase","id":"pl-mi3ovfn","translation":"У вас есть пакет?","words":{"czy":"(начинает вопрос да/нет)","pani":"вы (к женщине)","ma":"имеет","torbę":"сумка, пакет"}}
+{"kind":"phrase","id":"pl-u65jinu","translation":"Вы знаете, сколько стоит масло?","words":{"czy":"(начинает вопрос да/нет)","pani":"вы (к женщине)","wie":"знает","ile":"сколько","kosztuje":"стоит","masło":"масло"}}
+{"kind":"phrase","id":"pl-futsgn2","translation":"Сколько стоит этот хлеб?","words":{"ile":"сколько","kosztuje":"стоит","ten":"этот","chleb":"хлеб"}}
+{"kind":"set","id":"set-pl-a1-pharmacy","subtitle":"В аптеке: говорим, что болит, и просим средство от этого."}
+{"kind":"phrase","id":"pl-cr5dhxn","translation":"Пожалуйста, что-нибудь от головной боли.","words":{"poproszę":"пожалуйста (вежливая просьба)","coś":"что-то","na":"от","ból":"боль","głowy":"головы"}}
+{"kind":"phrase","id":"pl-v5apxhx","translation":"У вас есть что-нибудь от кашля?","words":{"czy":"ли (вопрос)","ma":"есть (у вас)","pani":"вы (к женщине)","coś":"что-то","na":"от","kaszel":"кашель"}}
+{"kind":"phrase","id":"pl-gtg6zbe","translation":"Есть что-нибудь от температуры?","words":{"czy":"ли (вопрос)","jest":"есть","coś":"что-то","na":"от","gorączkę":"температура"}}
+{"kind":"phrase","id":"pl-ubz7x7f","translation":"Этот сироп по рецепту?","words":{"czy":"ли (вопрос)","ten":"этот","syrop":"сироп","jest":"есть","na":"по","receptę":"рецепт"}}
+{"kind":"phrase","id":"pl-5iwpbzt","translation":"У меня болит горло и насморк.","words":{"boli":"болит","mnie":"меня","gardło":"горло","i":"и","mam":"у меня есть","katar":"насморк"}}
+{"kind":"phrase","id":"pl-z3d6wa7","translation":"Пожалуйста, таблетки от насморка.","words":{"poproszę":"пожалуйста (вежливая просьба)","tabletki":"таблетки","na":"от","katar":"насморк"}}
+{"kind":"phrase","id":"pl-jsvvir6","translation":"Спасибо, ещё сироп от кашля, пожалуйста.","words":{"dziękuję":"спасибо","poproszę":"пожалуйста (вежливая просьба)","jeszcze":"ещё","syrop":"сироп","na":"от","kaszel":"кашель"}}
+{"kind":"phrase","id":"pl-oat7tkx","translation":"Пожалуйста, рецепт на этот сироп.","words":{"poproszę":"пожалуйста (вежливая просьба)","receptę":"рецепт","na":"на","ten":"этот","syrop":"сироп"}}
+{"kind":"phrase","id":"pl-vszn4p2","translation":"У меня ещё кашель, пожалуйста, сироп.","words":{"mam":"у меня есть","jeszcze":"ещё","kaszel":"кашель","poproszę":"пожалуйста (вежливая просьба)","syrop":"сироп"}}
+{"kind":"phrase","id":"pl-wli32pf","translation":"Можно принимать эти таблетки с едой?","words":{"czy":"ли (вопрос)","mogę":"могу","brać":"принимать","te":"эти","tabletki":"таблетки","z":"с","jedzeniem":"еда"}}
+{"kind":"phrase","id":"pl-p4q6q4r","translation":"Нет, спасибо, возьму только таблетки.","words":{"nie":"нет","dziękuję":"спасибо","wezmę":"возьму","tylko":"только","tabletki":"таблетки"}}
+{"kind":"phrase","id":"pl-nwwequr","translation":"Пожалуйста, сироп от кашля и насморка.","words":{"poproszę":"пожалуйста (вежливая просьба)","syrop":"сироп","na":"от","kaszel":"кашель","i":"и","katar":"насморк"}}
+{"kind":"set","id":"set-pl-a1-hotel","subtitle":"Регистрация в маленьком отеле или гостевом доме в Польше."}
+{"kind":"phrase","id":"pl-ubloajn","translation":"Полотенце в номере?","words":{"czy":"(начинает вопрос да/нет)","ręcznik":"полотенце","jest":"есть","w":"в","pokoju":"номер"}}
+{"kind":"phrase","id":"pl-eampnym","translation":"Паспорт нужен на ресепшене?","words":{"czy":"(начинает вопрос да/нет)","paszport":"паспорт","jest":"есть","potrzebny":"нужный","w":"на","recepcji":"ресепшен"}}
+{"kind":"phrase","id":"pl-6a47m26","translation":"Есть лифт на этаж?","words":{"czy":"(начинает вопрос да/нет)","jest":"есть","winda":"лифт","na":"на","piętro":"этаж"}}
+{"kind":"phrase","id":"pl-3spbuk2","translation":"На каком этаже наш номер?","words":{"na":"на","którym":"какой","piętrze":"этаж","jest":"есть","nasz":"наш","pokój":"номер"}}
+{"kind":"phrase","id":"pl-qtadxkh","translation":"У меня нет ключа от номера.","words":{"nie mam":"я не имею","klucza":"ключ","do":"от","pokoju":"номер"}}
+{"kind":"phrase","id":"pl-wddyieu","translation":"Спасибо, ключ на ресепшене.","words":{"dziękuję":"спасибо","klucz":"ключ","jest":"есть","w":"на","recepcji":"ресепшен"}}
+{"kind":"phrase","id":"pl-kgkf5wv","translation":"Доброе утро, у меня бронь на две ночи.","words":{"dzień dobry":"доброе утро","mam":"я имею","rezerwację":"бронь","na":"на","dwie":"две","noce":"ночи"}}
+{"kind":"phrase","id":"pl-wzyhqiz","translation":"У вас мой паспорт?","words":{"czy":"(начинает вопрос да/нет)","pani":"вы","ma":"имеет","mój":"мой","paszport":"паспорт"}}
+{"kind":"phrase","id":"pl-sbdtao6","translation":"Завтрак входит в стоимость?","words":{"czy":"(начинает вопрос да/нет)","śniadanie":"завтрак","jest":"есть","w":"в","cenie":"цена"}}
+{"kind":"phrase","id":"pl-srt3iid","translation":"У вас есть номер на первом этаже?","words":{"czy":"(начинает вопрос да/нет)","pani":"вы","ma":"имеет","pokój":"номер","na":"на","parterze":"первый этаж"}}
+{"kind":"phrase","id":"pl-numt5s2","translation":"Во сколько завтрак?","words":{"o":"в","której":"который час","jest":"есть","śniadanie":"завтрак"}}
+{"kind":"phrase","id":"pl-qgf3tpr","translation":"Можно ещё одно полотенце?","words":{"poproszę":"прошу","jeszcze":"ещё","jeden":"один","ręcznik":"полотенце"}}

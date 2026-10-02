@@ -1,0 +1,119 @@
+[
+  {
+    "id": "set-pl-a1-bus-tram",
+    "title": "Bilet i przesiadka",
+    "subtitle": {
+      "en": "Getting around Warsaw and Kraków by tram and bus"
+    },
+    "topicId": "getting-around",
+    "situation": "bus-tram",
+    "level": "A1",
+    "coverIcon": "confirmation_number",
+    "targetLang": "pl-PL",
+    "phraseIds": [
+      "pl-vbnr5rt",
+      "pl-x2ghm6d",
+      "pl-qoifore",
+      "pl-77tezd3",
+      "pl-bonnacg",
+      "pl-mnqafqv",
+      "pl-a545khu",
+      "pl-zlutsqi",
+      "pl-lmhgnzp",
+      "pl-pps3rhf",
+      "pl-qbkib62",
+      "pl-465eto7"
+    ],
+    "grammarFocus": [
+      "pl-czy-question",
+      "pl-do-genitive",
+      "pl-locative-place"
+    ],
+    "provenance": {
+      "writer": "deepseek",
+      "provider": "fireworks",
+      "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+      "run": "spike-pl-a1-around-everyday-ru",
+      "promptVersion": "phrases.v1",
+      "briefHash": "d4424a031b649735bfbb0790343b30afe6a11d94c3b98dd05d142a0edf89fd6d"
+    }
+  },
+  {
+    "id": "set-pl-a1-asking-the-way",
+    "title": "Jak dojść do rynku?",
+    "subtitle": {
+      "en": "Asking a passer-by for directions in a Polish old town."
+    },
+    "topicId": "getting-around",
+    "situation": "asking-the-way",
+    "level": "A1",
+    "coverIcon": "chevron_right",
+    "targetLang": "pl-PL",
+    "phraseIds": [
+      "pl-672mmeo",
+      "pl-h6yx6lp",
+      "pl-kl42rax",
+      "pl-2n4vyvk",
+      "pl-p4zmcfl",
+      "pl-2xlfcjh",
+      "pl-lqv5jbj",
+      "pl-wqi23r4",
+      "pl-kcncfdd",
+      "pl-77s5cyd",
+      "pl-bupnre4",
+      "pl-q5kbhdf"
+    ],
+    "grammarFocus": [
+      "pl-pan-pani-formal",
+      "pl-do-genitive",
+      "pl-prosze-infinitive"
+    ],
+    "provenance": {
+      "writer": "deepseek",
+      "provider": "fireworks",
+      "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+      "run": "spike-pl-a1-around-everyday-ru",
+      "promptVersion": "phrases.v1",
+      "briefHash": "94fc52441204ae8e87fbb8e3c26102c03f6ce8844d54cd307c10d9a997b91126"
+    }
+  },
+  {
+    "id": "set-pl-a1-train-station",
+    "title": "Na dworcu, szybko",
+    "subtitle": {
+      "en": "Buying tickets and finding your seat in a hurry at the station."
+    },
+    "topicId": "getting-around",
+    "situation": "train-station",
+    "level": "A1",
+    "coverIcon": "train",
+    "targetLang": "pl-PL",
+    "phraseIds": [
+      "pl-5f5z3yx",
+      "pl-f6mhig6",
+      "pl-64ufjif",
+      "pl-4pa7ipt",
+      "pl-xumsbac",
+      "pl-krxnzzt",
+      "pl-cbvnlo2",
+      "pl-dgliskg",
+      "pl-cxccjjn",
+      "pl-w6qxau7",
+      "pl-6t366ge",
+      "pl-lp45h63"
+    ],
+    "grammarFocus": [
+      "pl-czy-question",
+      "pl-locative-place",
+      "pl-accusative-object"
+    ],
+    "provenance": {
+      "writer": "deepseek",
+      "provider": "fireworks",
+      "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+      "run": "spike-pl-a1-around-everyday-ru",
+      "promptVersion": "phrases.v1",
+      "briefHash": "799ec2504ee8d8aaf190b6ba0c70add02c9f902a256f56faa0ebad9ca922c4ce"
+    }
+  }
+]

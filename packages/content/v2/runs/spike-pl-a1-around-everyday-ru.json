@@ -1,0 +1,191 @@
+{
+  "runId": "spike-pl-a1-around-everyday-ru",
+  "at": "2026-10-02T12:48:52.328Z",
+  "stages": [
+    "phrases",
+    "judge",
+    "translate",
+    "judge-translate"
+  ],
+  "langs": [
+    "ru"
+  ],
+  "course": "pl-PL",
+  "levels": [
+    "A1"
+  ],
+  "topics": [
+    "getting-around",
+    "everyday"
+  ],
+  "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+  "pricing": "assumed on 2026-10-02, not verified against the providers' price lists; the run summary's dollar figure is an estimate until this file is checked",
+  "spend": {
+    "calls": 32,
+    "cached": 0,
+    "usd": 0.034629599999999996,
+    "inputTokens": 65907,
+    "outputTokens": 35747
+  },
+  "outcomes": [
+    {
+      "setId": "set-pl-a1-bus-tram",
+      "status": "written",
+      "phrases": 12,
+      "coverage": 1,
+      "calls": 2,
+      "judge": "12 ok, 0 review, 0 reject",
+      "rejected": []
+    },
+    {
+      "setId": "set-pl-a1-bus-tram",
+      "status": "translated",
+      "lang": "ru",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "5 ok, 7 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-asking-the-way",
+      "status": "written",
+      "phrases": 12,
+      "coverage": 0.9166666666666666,
+      "calls": 2,
+      "judge": "12 ok, 0 review, 0 reject",
+      "rejected": [
+        {
+          "target": "Proszę skręcić w lewo przy moście.",
+          "reason": "claims to use most but does not"
+        },
+        {
+          "target": "Proszę iść prosto, to niedaleko.",
+          "reason": "claims to use daleko but does not"
+        }
+      ]
+    },
+    {
+      "setId": "set-pl-a1-asking-the-way",
+      "status": "translated",
+      "lang": "ru",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "3 ok, 9 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-train-station",
+      "status": "written",
+      "phrases": 12,
+      "coverage": 0.9166666666666666,
+      "calls": 6,
+      "judge": "11 ok, 1 review, 0 reject",
+      "rejected": [
+        {
+          "target": "Dziękuję, mam już bilet powrotny.",
+          "reason": "judge: duplicate of 11"
+        },
+        {
+          "target": "O której odjeżdża pociąg z tego peronu?",
+          "reason": "judge: duplicate of 3"
+        }
+      ]
+    },
+    {
+      "setId": "set-pl-a1-train-station",
+      "status": "translated",
+      "lang": "ru",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "12 ok, 0 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-food-shop",
+      "status": "written",
+      "phrases": 12,
+      "coverage": 1,
+      "calls": 2,
+      "judge": "12 ok, 0 review, 0 reject",
+      "rejected": [
+        {
+          "target": "Nie ma już świeżych bułek?",
+          "reason": "claims to use bułka but does not"
+        },
+        {
+          "target": "Poproszę trochę sera i masła.",
+          "reason": "too close to «Poproszę kawałek sera i trochę masła.»"
+        }
+      ]
+    },
+    {
+      "setId": "set-pl-a1-food-shop",
+      "status": "translated",
+      "lang": "ru",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "12 ok, 0 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-pharmacy",
+      "status": "written",
+      "phrases": 12,
+      "coverage": 0.9166666666666666,
+      "calls": 6,
+      "judge": "12 ok, 0 review, 0 reject",
+      "rejected": [
+        {
+          "target": "Dzień dobry, boli mnie głowa i mam gorączkę.",
+          "reason": "8 words, the limit at A1 is 7"
+        },
+        {
+          "target": "Ile tabletek dziennie mam brać?",
+          "reason": "claims to use tabletka but does not"
+        },
+        {
+          "target": "Czy mogę zapłacić kartą?",
+          "reason": "already in the course as pl-kawiarnia-04"
+        },
+        {
+          "target": "Boli mnie gardło, mam też gorączkę.",
+          "reason": "judge: duplicate of 5"
+        },
+        {
+          "target": "Czy jest coś na kaszel i katar",
+          "reason": "judge: natural: wrong, duplicate of 3"
+        }
+      ]
+    },
+    {
+      "setId": "set-pl-a1-pharmacy",
+      "status": "translated",
+      "lang": "ru",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "12 ok, 0 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-hotel",
+      "status": "written",
+      "phrases": 12,
+      "coverage": 0.8333333333333334,
+      "calls": 2,
+      "judge": "11 ok, 1 review, 0 reject",
+      "rejected": [
+        {
+          "target": "Mam rezerwację na nazwisko Kowalski.",
+          "reason": "already in the course as bank-hotel-pl-01"
+        },
+        {
+          "target": "Jakie jest hasło do wifi?",
+          "reason": "already in the course as bank-phone-pl-02"
+        }
+      ]
+    },
+    {
+      "setId": "set-pl-a1-hotel",
+      "status": "translated",
+      "lang": "ru",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "1 ok, 11 review, 0 reject"
+    }
+  ]
+}

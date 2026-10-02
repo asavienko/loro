@@ -9,7 +9,7 @@
 - **Milestone:** Course content
 - **Status:** 🟡 The `phrases`, `judge`, `translate` and `judge-translate` stages of the writer
   exist (`apps/api/src/authoring/`, 0f in part) and wrote three Spanish A1 sets, with Russian for
-  all three, Polish for two and Bulgarian for one, and three Polish A1 sets with Russian, on
+  all three, Polish for two and Bulgarian for one, and nine Polish A1 sets with Russian, on
   2026-10-02 (see "Spike result" and "Spike result: pl-PL"). Left: the rest of phase 0 (0b, 0c, 0d,
   0e, 0g; the other stages, batches, status and regenerate of 0f) and the spike in the other five
   courses. Phase 1 (the pilot batch) is ⛔ until a native reader per pilot language is named (Q-23)
@@ -619,7 +619,7 @@ judge):
   the new layout, not yet read by the loader or shipped), the verdicts in `v2/reviews/es.jsonl`, the
   run summaries in `v2/runs/`.
 
-## Spike result: pl-PL (2026-10-02, A1 eating-out, three sets; Russian)
+## Spike result: pl-PL (2026-10-02, A1, nine sets; Russian)
 
 `author:run --course pl-PL --level A1 --topic eating-out --lang ru` with the three slots in
 `v2/plan/pl/A1/eating-out.json` (café counter, ordering at a restaurant, paying), the same model and
@@ -644,9 +644,18 @@ settings as the Spanish spike:
   «пироги» (should be «вареники»), and «kotlet» → «котлета», a false friend (a Polish kotlet is a
   breaded cutlet). Most Russian review flags are the gloss convention again («mlekiem = молоко»,
   nominative by rule). Both are for `author:regenerate` and the native reader, not a rerun.
+- **Six more sets** (getting around: bus and tram, asking the way, the train station; everyday: a
+  food shop, a pharmacy, a hotel), one run, written from their first briefs: three sets in one round
+  with no judge reject, three with one or two repair rounds for duplicates, 83–100% coverage. The
+  matcher learned that a fleeting e also drops before l and r («kaszel» → «kaszlu») and that «rz»
+  then hardens («dworzec» → «dworca»). Read by eye: «Czy jest winda na piętro?» and «miejsce w
+  wagonie bez przedziału» are awkward (both flagged), one phrase lacks its full stop, and Russian
+  gives «рынок» for «rynek» (a false friend: the old-town square) and «Доброе утро» for «Dzień
+  dobry». 32 calls, ≈66,000 input and ≈36,000 output tokens, about $0.035.
 - **Cost:** 26 calls over three runs, ≈56,000 input and ≈30,000 output tokens, about $0.03 at the
-  assumed prices. Output in `v2/courses/pl/A1/eating-out.{sets.json,phrases.jsonl,ru.jsonl}` (36
-  phrases), verdicts in `v2/reviews/pl.jsonl`, summaries in
+  assumed prices. Output in
+  `v2/courses/pl/A1/{eating-out,getting-around,everyday}.{sets.json,phrases.jsonl,ru.jsonl}` (108
+  phrases in nine sets), verdicts in `v2/reviews/pl.jsonl`, summaries in
   `v2/runs/spike-pl-a1-eating-out-ru*.json`.
 
 ## Worked example: a first batch

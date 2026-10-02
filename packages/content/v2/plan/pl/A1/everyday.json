@@ -1,0 +1,378 @@
+{
+  "version": 1,
+  "slots": [
+    {
+      "setId": "set-pl-a1-food-shop",
+      "course": "pl-PL",
+      "level": "A1",
+      "topic": "everyday",
+      "situation": "food-shop",
+      "count": 12,
+      "song": false,
+      "brief": {
+        "edited": true,
+        "scene": "At a small Polish grocery shop (sklep spożywczy) with a counter: asking for bread, rolls, cheese and butter, how much of each, whether something is fresh, a bag, anything else.",
+        "speakers": ["customer", "shop assistant"],
+        "register": "neutral; customer and assistant use pan/pani with the third person",
+        "grammarFocus": [
+          {
+            "id": "pl-accusative-object",
+            "kind": "case",
+            "rule": "The direct object of poproszę, chcę, kupię, mam takes the accusative: feminine -a becomes -ę (bułka → bułkę, tabletka → tabletkę); masculine inanimate and neuter nouns do not change (bilet, chleb, mleko).",
+            "example": "Poproszę bilet i mapę miasta.",
+            "minPhrases": 3
+          },
+          {
+            "id": "pl-genitive-quantity",
+            "kind": "case",
+            "rule": "After a quantity word (ile, pół, kilo, kawałek, dużo, trochę) and after «nie ma» the noun takes the genitive: kilo jabłek, kawałek sera, trochę masła, nie ma chleba.",
+            "example": "Poproszę kawałek sera i trochę masła.",
+            "minPhrases": 3
+          },
+          {
+            "id": "pl-pan-pani-formal",
+            "kind": "register",
+            "rule": "Formal address to a stranger: pan (to a man) / pani (to a woman) with the verb in the third person singular: «Czy pani wie, gdzie…?», «Czy pan ma…?»; never ty to strangers or staff.",
+            "example": "Przepraszam, czy pan wie, gdzie jest dworzec?",
+            "minPhrases": 3
+          }
+        ],
+        "functions": ["request", "ask-availability", "ask-price", "decline", "thank"],
+        "mustUse": [
+          {
+            "lemma": "chleb",
+            "gloss": "bread",
+            "pos": "noun"
+          },
+          {
+            "lemma": "bułka",
+            "gloss": "bread roll",
+            "pos": "noun"
+          },
+          {
+            "lemma": "ser",
+            "gloss": "cheese",
+            "pos": "noun"
+          },
+          {
+            "lemma": "masło",
+            "gloss": "butter",
+            "pos": "noun"
+          },
+          {
+            "lemma": "jajko",
+            "gloss": "egg",
+            "pos": "noun"
+          },
+          {
+            "lemma": "mleko",
+            "gloss": "milk",
+            "pos": "noun"
+          },
+          {
+            "lemma": "świeży",
+            "gloss": "fresh",
+            "pos": "adj"
+          },
+          {
+            "lemma": "kawałek",
+            "gloss": "a piece",
+            "pos": "noun"
+          },
+          {
+            "lemma": "torba",
+            "gloss": "bag",
+            "pos": "noun"
+          },
+          {
+            "lemma": "trochę",
+            "gloss": "a little, some",
+            "pos": "adv"
+          },
+          {
+            "lemma": "jeszcze",
+            "gloss": "still; more, else",
+            "pos": "adv"
+          },
+          {
+            "lemma": "nie ma",
+            "gloss": "there is no",
+            "pos": "phrase"
+          }
+        ],
+        "shouldUse": [
+          {
+            "lemma": "poproszę",
+            "gloss": "I'd like (polite request)",
+            "pos": "verb"
+          },
+          {
+            "lemma": "to wszystko",
+            "gloss": "that's all",
+            "pos": "phrase"
+          }
+        ],
+        "avoid": {
+          "lemmas": ["jabłko", "pomidor", "kilo"],
+          "themes": ["alcohol", "prices in numbers", "politics"],
+          "textKeys": "siblings"
+        },
+        "mention": [
+          "At a counter shop you say what you want and the assistant hands it over; «Coś jeszcze?» means anything else."
+        ],
+        "doNotMention": ["brand names", "prices in numbers", "ty forms to the assistant"],
+        "variety": null,
+        "notesHints": ["«bułka»: the everyday roll, bought by the piece"]
+      }
+    },
+    {
+      "setId": "set-pl-a1-pharmacy",
+      "course": "pl-PL",
+      "level": "A1",
+      "topic": "everyday",
+      "situation": "pharmacy",
+      "count": 12,
+      "song": false,
+      "brief": {
+        "edited": true,
+        "scene": "At a Polish pharmacy with a mild cold or a headache: saying what hurts, asking for something for it, how to take it, whether a prescription is needed.",
+        "speakers": ["customer", "pharmacist"],
+        "register": "neutral; customer and pharmacist use pan/pani with the third person",
+        "grammarFocus": [
+          {
+            "id": "pl-boli-pain",
+            "kind": "construction",
+            "rule": "Saying what hurts: «boli mnie» + the body part in the nominative (boli mnie głowa, boli mnie gardło); «mam» + accusative for a symptom (mam gorączkę, mam katar).",
+            "example": "Boli mnie gardło i mam katar.",
+            "minPhrases": 3
+          },
+          {
+            "id": "pl-accusative-object",
+            "kind": "case",
+            "rule": "The direct object of poproszę, chcę, kupię, mam takes the accusative: feminine -a becomes -ę (bułka → bułkę, tabletka → tabletkę); masculine inanimate and neuter nouns do not change (bilet, chleb, mleko).",
+            "example": "Poproszę bilet i mapę miasta.",
+            "minPhrases": 3
+          },
+          {
+            "id": "pl-czy-question",
+            "kind": "construction",
+            "rule": "A yes/no question may start with «czy», the word order otherwise unchanged: «Czy ten tramwaj jedzie do centrum?», «Czy jest winda?».",
+            "example": "Czy to daleko stąd?",
+            "minPhrases": 3
+          }
+        ],
+        "functions": ["request", "explain", "ask-availability", "thank"],
+        "mustUse": [
+          {
+            "lemma": "głowa",
+            "gloss": "head",
+            "pos": "noun"
+          },
+          {
+            "lemma": "gardło",
+            "gloss": "throat",
+            "pos": "noun"
+          },
+          {
+            "lemma": "gorączka",
+            "gloss": "fever, temperature",
+            "pos": "noun"
+          },
+          {
+            "lemma": "katar",
+            "gloss": "runny nose",
+            "pos": "noun"
+          },
+          {
+            "lemma": "kaszel",
+            "gloss": "cough",
+            "pos": "noun"
+          },
+          {
+            "lemma": "tabletka",
+            "gloss": "tablet, pill",
+            "pos": "noun"
+          },
+          {
+            "lemma": "syrop",
+            "gloss": "syrup",
+            "pos": "noun"
+          },
+          {
+            "lemma": "recepta",
+            "gloss": "prescription",
+            "pos": "noun"
+          },
+          {
+            "lemma": "boleć",
+            "gloss": "to hurt",
+            "pos": "verb"
+          },
+          {
+            "lemma": "na",
+            "gloss": "for (a complaint: na kaszel)",
+            "pos": "prep"
+          },
+          {
+            "lemma": "dziennie",
+            "gloss": "a day, per day",
+            "pos": "adv"
+          },
+          {
+            "lemma": "coś",
+            "gloss": "something",
+            "pos": "pron"
+          }
+        ],
+        "shouldUse": [
+          {
+            "lemma": "dzień dobry",
+            "gloss": "good morning, hello",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "dziękuję",
+            "gloss": "thank you",
+            "pos": "interj"
+          }
+        ],
+        "avoid": {
+          "lemmas": ["szpital", "operacja", "rak"],
+          "themes": ["serious illness", "drug names and doses in numbers", "alcohol"],
+          "textKeys": "siblings"
+        },
+        "mention": ["«Coś na ból głowy / na kaszel» is how you ask for something against a complaint."],
+        "doNotMention": [
+          "brand names of medicines",
+          "doses in numbers",
+          "serious illness",
+          "ty forms to the pharmacist"
+        ],
+        "variety": null,
+        "notesHints": ["«boli mnie głowa»: literally «the head hurts me»"]
+      }
+    },
+    {
+      "setId": "set-pl-a1-hotel",
+      "course": "pl-PL",
+      "level": "A1",
+      "topic": "everyday",
+      "situation": "hotel",
+      "count": 12,
+      "song": false,
+      "brief": {
+        "edited": true,
+        "scene": "Checking in at a small Polish hotel or guesthouse: a reservation in one's name, the room and its key, breakfast times, the lift and the floor, the wifi password, a towel.",
+        "speakers": ["guest", "receptionist"],
+        "register": "neutral; guest and receptionist use pan/pani with the third person",
+        "grammarFocus": [
+          {
+            "id": "pl-mam-present",
+            "kind": "tense",
+            "rule": "The present of mieć (to have), irregular: mam, masz, ma, mamy; «mam rezerwację», «czy pani ma…?»; and «nie mam» + genitive.",
+            "example": "Mam rezerwację na dwie noce.",
+            "minPhrases": 3
+          },
+          {
+            "id": "pl-czy-question",
+            "kind": "construction",
+            "rule": "A yes/no question may start with «czy», the word order otherwise unchanged: «Czy ten tramwaj jedzie do centrum?», «Czy jest winda?».",
+            "example": "Czy to daleko stąd?",
+            "minPhrases": 3
+          },
+          {
+            "id": "pl-locative-place",
+            "kind": "case",
+            "rule": "Where something is: «na» or «w» + locative: na przystanku, na peronie, w centrum, na rogu, w pokoju.",
+            "example": "Czekam na przystanku.",
+            "minPhrases": 3
+          }
+        ],
+        "functions": ["request", "ask-availability", "ask-location", "ask-time", "thank"],
+        "mustUse": [
+          {
+            "lemma": "rezerwacja",
+            "gloss": "reservation, booking",
+            "pos": "noun"
+          },
+          {
+            "lemma": "pokój",
+            "gloss": "room",
+            "pos": "noun"
+          },
+          {
+            "lemma": "klucz",
+            "gloss": "key",
+            "pos": "noun"
+          },
+          {
+            "lemma": "śniadanie",
+            "gloss": "breakfast",
+            "pos": "noun"
+          },
+          {
+            "lemma": "noc",
+            "gloss": "night",
+            "pos": "noun"
+          },
+          {
+            "lemma": "winda",
+            "gloss": "lift, elevator",
+            "pos": "noun"
+          },
+          {
+            "lemma": "piętro",
+            "gloss": "floor, storey",
+            "pos": "noun"
+          },
+          {
+            "lemma": "nazwisko",
+            "gloss": "surname",
+            "pos": "noun"
+          },
+          {
+            "lemma": "hasło",
+            "gloss": "password",
+            "pos": "noun"
+          },
+          {
+            "lemma": "ręcznik",
+            "gloss": "towel",
+            "pos": "noun"
+          },
+          {
+            "lemma": "recepcja",
+            "gloss": "reception",
+            "pos": "noun"
+          },
+          {
+            "lemma": "paszport",
+            "gloss": "passport",
+            "pos": "noun"
+          }
+        ],
+        "shouldUse": [
+          {
+            "lemma": "dzień dobry",
+            "gloss": "good morning, hello",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "proszę",
+            "gloss": "please; here you are",
+            "pos": "interj"
+          }
+        ],
+        "avoid": {
+          "lemmas": ["basen", "sauna", "minibar"],
+          "themes": ["alcohol", "prices in numbers", "politics"],
+          "textKeys": "siblings"
+        },
+        "mention": ["In Poland the ground floor is «parter»; «pierwsze piętro» is one floor up."],
+        "doNotMention": ["brand names", "room numbers or prices in digits", "ty forms to staff"],
+        "variety": null,
+        "notesHints": ["«parter»: the ground floor, so «pierwsze piętro» is one up"]
+      }
+    }
+  ]
+}
