@@ -30,8 +30,9 @@ server does is of the songs it generated itself, in the API process, to show the
 Email addresses are never stored in plaintext, and rate-limit buckets key on hashes, never raw
 addresses or emails.
 
-Product analytics and session replay go to PostHog EU Cloud, on by default with an opt-out in
-Settings; replay is unmasked except the sign-in code, and never includes sound
+Product analytics and session replay go to PostHog US Cloud
+([ADR-0020](adr/0020-posthog-us-cloud.md)), on by default with an opt-out in Settings; replay is
+unmasked except the sign-in code, and never includes sound
 ([ADR-0011](adr/0011-analytics-and-privacy.md#product-analytics-and-session-replay-amended-2026-09-30)).
 A learner can delete their library (`POST /library/me/delete`) or their whole account
 (`POST /library/me/delete-account`) from the app ([library.md](library.md#accounts)). There is no

@@ -16,8 +16,9 @@ actually considered, what we chose, and the consequences we accepted.
 | [0017](0017-content-per-language-pair.md)          | Content per language pair, in batches   | Accepted | 2026-10-02 |
 | [0018](0018-public-source-available-repository.md) | A public, source-available repository   | Accepted | 2026-10-02 |
 | [0019](0019-transcribing-generated-songs.md)       | The server may transcribe its own songs | Accepted | 2026-10-01 |
+| [0020](0020-posthog-us-cloud.md)                   | Analytics go to PostHog US Cloud        | Accepted | 2026-10-02 |
 
-The next new record is 0020; numbers are never reused.
+The next new record is 0021; numbers are never reused.
 
 ### Removed records
 

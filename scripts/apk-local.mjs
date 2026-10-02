@@ -12,7 +12,7 @@ import {
 import { tmpdir, homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { apkBuildEnvironment } from './apk-environment.mjs'
+import { apkBuildEnvironment, posthogFromDotenv } from './apk-environment.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const args = process.argv.slice(2)
@@ -68,6 +68,20 @@ if (web) {
 env.EXPO_PUBLIC_API_URL = api
 env.EXPO_PUBLIC_WEB_URL = web
 // PostHog's project key is public by design (ADR-0011); without it the APK sends no analytics.
+const mobileDotenv = join(root, 'apps/mobile/.env')
+Object.assign(
+  env,
+  posthogFromDotenv(
+    process.env,
+    existsSync(mobileDotenv) ? readFileSync(mobileDotenv, 'utf8') : '',
+  ),
+)
+if (!env.EXPO_PUBLIC_POSTHOG_KEY) {
+  const message =
+    'EXPO_PUBLIC_POSTHOG_KEY is not set (in the shell or apps/mobile/.env): the APK will send no analytics, session replay or error reports.'
+  if (upload) throw new Error(`${message} Set it before uploading a build for testers.`)
+  console.warn(message)
+}
 const PUBLIC_KEYS = new Set([
   'EXPO_PUBLIC_API_URL',
   'EXPO_PUBLIC_WEB_URL',
