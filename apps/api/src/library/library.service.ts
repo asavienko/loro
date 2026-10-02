@@ -8,7 +8,15 @@
  */
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common'
-import { MUSIC_STYLE_IDS, type MusicStyleId } from '@loro/core'
+import {
+  MUSIC_STYLE_IDS,
+  resolveSongOptions,
+  SONG_LENGTH_LIMITS,
+  songLengthMs,
+  storedSongOptions,
+  type MusicStyleId,
+  type SongOptions,
+} from '@loro/core'
 import {
   V2_CONTENT,
   V2_LANGUAGES,
@@ -85,7 +93,6 @@ import { registerSpeech, registerSpeechMany, SpeechService, speechFor } from './
 import { readTtsRuntimeConfig, type TtsRuntimeConfig } from '../tts/transport.js'
 import { demoLineLimit, synthesizeDemo } from './synth.js'
 import {
-  MAX_SONG_LINES,
   assembleLyrics,
   bankPhrases,
   aiCover,
@@ -184,6 +191,8 @@ interface SongRow {
   audio_by: SongWire['audioBy']
   voiced?: boolean | null
   timing_by?: SongWire['timingBy'] | undefined
+  /** Null on songs from before the options: they read as the defaults. */
+  options?: unknown
   duration_ms: number | null
   error: string | null
   created_at: string | number
@@ -200,6 +209,7 @@ interface LyricsRow {
   sections: SongSection[] | null
   lyrics_by: 'ai' | 'phrases' | null
   instruction: string | null
+  options?: unknown
   revision: number
   created_at: string | number
   updated_at: string | number
@@ -2282,17 +2292,18 @@ export class LibraryService {
   async startLyrics(userId: string, body: unknown): Promise<LyricsWire> {
     await this.ready()
     const request = parseContract(StartLyricsSchema, body)
+    const options = resolveSongOptions(request.options)
     const set = await this.readableSet(userId, request.setId)
-    const phrases = await this.songPhrases(set.id, request.nativeLang)
+    const phrases = await this.songPhrases(set.id, request.nativeLang, options)
     const title = request.title ?? set.title
     const now = this.clock.now()
     const id = newId('lyrics')
     const ai = writer()
     if (ai) await this.spend(userId, 'lyrics')
-    const sections = ai ? null : assembleLyrics(phrases)
+    const sections = ai ? null : assembleLyrics(phrases, lineLimit(options))
     await this.db.query(
-      `INSERT INTO library_lyric_drafts(id, owner_id, set_id, style_id, target_lang, native_lang, title, status, sections, lyrics_by, instruction, revision, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NULL,1,$11,$11)`,
+      `INSERT INTO library_lyric_drafts(id, owner_id, set_id, style_id, target_lang, native_lang, title, status, sections, lyrics_by, instruction, revision, created_at, updated_at, options)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NULL,1,$11,$11,$12)`,
       [
         id,
         userId,
@@ -2305,6 +2316,7 @@ export class LibraryService {
         sections ? JSON.stringify(sections) : null,
         ai ? null : 'phrases',
         now,
+        JSON.stringify(options),
       ],
     )
     // A draft is read within minutes and sung within the hour; a week later nobody wants it.
@@ -2320,6 +2332,7 @@ export class LibraryService {
         targetLang: set.target_lang,
         nativeLang: request.nativeLang,
         phrases,
+        options,
       })
     return this.lyrics(userId, id)
   }
@@ -2341,7 +2354,8 @@ export class LibraryService {
     const ai = writer()
     if (!ai) throw new LoroError('PROVIDER_UNAVAILABLE', 'No text model writes lyrics here')
     const set = await this.readableSet(userId, row.set_id)
-    const phrases = await this.songPhrases(set.id, row.native_lang)
+    const options = storedSongOptions(row.options)
+    const phrases = await this.songPhrases(set.id, row.native_lang, options)
     const now = this.clock.now()
     const instruction = request.instruction ?? null
     // Claimed in one statement, so two taps write it once; a draft lost to a restart may be claimed.
@@ -2371,6 +2385,7 @@ export class LibraryService {
       targetLang: row.target_lang,
       nativeLang: row.native_lang,
       phrases,
+      options,
       current: claimed.sections ?? undefined,
       instruction: instruction ?? undefined,
     })
@@ -2393,6 +2408,7 @@ export class LibraryService {
       targetLang: Language
       nativeLang: Language
       phrases: SongPhrase[]
+      options: SongOptions
       current?: SongSection[] | undefined
       instruction?: string | undefined
     },
@@ -2415,7 +2431,7 @@ export class LibraryService {
           .catch(() => undefined)
         return
       }
-      sections = assembleLyrics(input.phrases)
+      sections = assembleLyrics(input.phrases, lineLimit(input.options))
       lyricsBy = 'phrases'
     }
     await this.db
@@ -2451,13 +2467,21 @@ export class LibraryService {
       lyricsBy: row.lyrics_by,
       revision: row.revision,
       instruction: row.instruction,
+      options: storedSongOptions(row.options),
       updatedAt: num(row.updated_at),
     }
   }
 
-  /** A set's phrases as a song sings them, at most as many as a song has lines for. */
-  private async songPhrases(setId: string, nativeLang: Language): Promise<SongPhrase[]> {
-    const phrases = (await this.phrasesOf([setId])).slice(0, MAX_SONG_LINES - 4)
+  /**
+   * A set's phrases as a song sings them, at most as many as its length has lines for (with room
+   * left for the chorus to repeat one).
+   */
+  private async songPhrases(
+    setId: string,
+    nativeLang: Language,
+    options: SongOptions,
+  ): Promise<SongPhrase[]> {
+    const phrases = (await this.phrasesOf([setId])).slice(0, lineLimit(options) - 4)
     if (phrases.length === 0) throw new LoroError('VALIDATION_FAILED', 'The set has no phrases')
     return phrases.map((p) => ({
       id: p.id,
@@ -2478,8 +2502,9 @@ export class LibraryService {
     await this.ready()
     const request = parseContract(GenerateSongSchema, body)
     const set = await this.readableSet(userId, request.setId)
-    const phrases = await this.songPhrases(set.id, request.nativeLang)
     let approved: { sections: SongSection[]; lyricsBy: 'ai' | 'phrases' } | null = null
+    // What the request leaves out is as the approved lyrics were written for, or the default.
+    let options = resolveSongOptions(request.options)
     if (request.lyricsId) {
       const draft = this.toLyricsWire(await this.ownDraft(userId, request.lyricsId))
       if (draft.setId !== set.id)
@@ -2487,7 +2512,9 @@ export class LibraryService {
       if (draft.status !== 'ready' || draft.sections.length === 0)
         throw new LoroError('VALIDATION_FAILED', 'The lyrics are not ready')
       approved = { sections: draft.sections, lyricsBy: draft.lyricsBy ?? 'phrases' }
+      options = resolveSongOptions(request.options, draft.options)
     }
+    const phrases = await this.songPhrases(set.id, request.nativeLang, options)
     await this.assertKept(userId, 'songs')
     let albumId = request.albumId
     if (albumId) {
@@ -2517,8 +2544,8 @@ export class LibraryService {
     const now = this.clock.now()
     await this.db.query(
       `INSERT INTO library_songs(id, album_id, owner_id, set_id, position, title, style_id, status, lyrics, lyrics_by, audio_id, audio_by,
-         duration_ms, error, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,'rendering',$8,$9,NULL,NULL,NULL,NULL,$10)`,
+         duration_ms, error, created_at, options)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'rendering',$8,$9,NULL,NULL,NULL,NULL,$10,$11)`,
       [
         id,
         albumId,
@@ -2530,6 +2557,7 @@ export class LibraryService {
         JSON.stringify(approved ? timed(approved.sections, null) : []),
         approved?.lyricsBy ?? 'phrases',
         now,
+        JSON.stringify(options),
       ],
     )
     await this.db.query('UPDATE library_albums SET updated_at = $2 WHERE id = $1', [albumId, now])
@@ -2542,6 +2570,7 @@ export class LibraryService {
       targetLang: set.target_lang,
       nativeLang: request.nativeLang,
       phrases,
+      options,
       approved,
     })
     return { song: await this.song(userId, id), album: (await this.album(userId, albumId)).album }
@@ -2556,7 +2585,8 @@ export class LibraryService {
     const { nativeLang } = parseContract(RetrySongSchema, body)
     const row = await this.ownSong(userId, parseContract(LibraryIdSchema, id))
     const set = await this.readableSet(userId, row.set_id)
-    const phrases = await this.songPhrases(set.id, nativeLang)
+    const options = storedSongOptions(row.options)
+    const phrases = await this.songPhrases(set.id, nativeLang, options)
     const now = this.clock.now()
     // Claimed in one statement, so two taps make it once. A song lost to a restart kept its
     // allowance (nothing gave it back), so making it again costs nothing more.
@@ -2592,6 +2622,7 @@ export class LibraryService {
       targetLang: set.target_lang,
       nativeLang,
       phrases,
+      options,
       approved: given ? { sections: given, lyricsBy: row.lyrics_by } : null,
     })
     return this.song(userId, row.id)
@@ -2633,6 +2664,7 @@ export class LibraryService {
       targetLang: Language
       nativeLang: Language
       phrases: SongPhrase[]
+      options: SongOptions
       /** The learner's approved lyrics (plan 113), sung as they stand; null writes them here. */
       approved: { sections: SongSection[]; lyricsBy: SongWire['lyricsBy'] } | null
     },
@@ -2651,7 +2683,7 @@ export class LibraryService {
           )
         }
       }
-      sections ??= assembleLyrics(input.phrases)
+      sections ??= assembleLyrics(input.phrases, lineLimit(input.options))
       let audio: {
         bytes: Uint8Array
         contentType: string
@@ -2665,8 +2697,9 @@ export class LibraryService {
         const live = await composeLive({
           sections,
           styleId: input.styleId,
+          options: input.options,
           targetLang: input.targetLang,
-          lengthMs: Math.min(120_000, Math.max(30_000, lineCount * 5_000)),
+          lengthMs: songLengthMs(input.options, lineCount),
         })
         audio = {
           ...live,
@@ -2861,6 +2894,7 @@ export class LibraryService {
       // Songs from before plan 113 have no column value: a demo's lines were timed by its bars.
       timingBy:
         row.timing_by ?? (row.audio_by === 'demo' && row.status === 'ready' ? 'demo' : null),
+      options: storedSongOptions(row.options),
       durationMs: row.duration_ms,
       error: lost ? 'lost' : row.error,
       createdAt: num(row.created_at),
@@ -3200,3 +3234,8 @@ export function writersInUse(): UsageWire['writers'] {
 }
 
 export type { WrittenPhrase }
+
+/** The most lines a song of these options may have. */
+function lineLimit(options: SongOptions): number {
+  return SONG_LENGTH_LIMITS[options.length].lines
+}

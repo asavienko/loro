@@ -3,6 +3,7 @@
  * pack into the same structures it reads its content into.
  */
 import type { V2LanguageInfo, V2Localized, V2Topic } from '@loro/content/v2'
+import type { SongOptions } from '@loro/core'
 import type { LibraryNotes, PhraseSource, Visibility } from '@loro/core/api/library'
 import type { SongLine, SongSection, WrittenPhrase } from './writers.js'
 
@@ -105,6 +106,8 @@ export interface SongWire {
    * as they were sung; `demo`, the synthesizer's bars; null, no timing.
    */
   timingBy: 'transcript' | 'demo' | null
+  /** How it was asked to be sung besides its style (plan 113). */
+  options: SongOptions
   durationMs: number | null
   error: string | null
   createdAt: number
@@ -125,6 +128,8 @@ export interface LyricsWire {
   lyricsBy: 'ai' | 'phrases' | null
   revision: number
   instruction: string | null
+  /** The options the lyrics were written for, which the song is sung with unless changed. */
+  options: SongOptions
   updatedAt: number
 }
 

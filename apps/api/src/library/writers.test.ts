@@ -230,6 +230,75 @@ describe('lyrics', () => {
     )
   })
 
+  it('bounds the lines by the song’s length and gives the model its mood and theme (plan 113)', async () => {
+    let body: Record<string, unknown> | undefined
+    const many = {
+      sections: [
+        {
+          name: 'verse',
+          lines: phrases.map((p) => ({ text: p.target, meaning: p.native, phraseId: p.id })),
+        },
+        {
+          name: 'chorus',
+          lines: phrases.map((p) => ({ text: p.target, meaning: p.native, phraseId: p.id })),
+        },
+      ],
+    }
+    const input = {
+      targetLang: 'es-ES' as const,
+      nativeLang: 'en-GB' as const,
+      title: 'T',
+      phrases,
+      style: 'bossa_nova',
+      options: {
+        voice: 'duet',
+        tempo: 'slow',
+        mood: 'nostalgic',
+        length: 'short',
+        theme: 'the sea',
+      } as const,
+    }
+    // Ten lines are too many for a short song's eight.
+    await expect(
+      aiLyrics(
+        answering(many, (sent) => (body = sent)),
+        input,
+      ),
+    ).rejects.toThrow('unusable')
+    const messages = body?.['messages'] as { role: string; content: string }[]
+    expect(messages.find((m) => m.role === 'system')?.content).toContain('8 lines at most')
+    expect(JSON.parse(messages.find((m) => m.role === 'user')?.content ?? '{}')).toMatchObject({
+      mood: 'nostalgic',
+      theme: 'the sea',
+      tempo: 'slow',
+      voice: 'duet',
+    })
+    // A long song takes them; with no mood, theme or voice chosen, the model sees none.
+    const long = {
+      ...input,
+      options: { voice: 'any', tempo: 'natural', mood: null, length: 'long', theme: null } as const,
+    }
+    expect(
+      (
+        await aiLyrics(
+          answering(many, (sent) => (body = sent)),
+          long,
+        )
+      ).flatMap((s) => s.lines),
+    ).toHaveLength(10)
+    const user = JSON.parse(
+      (body?.['messages'] as { role: string; content: string }[]).find((m) => m.role === 'user')
+        ?.content ?? '{}',
+    ) as Record<string, unknown>
+    expect(Object.keys(user)).not.toEqual(expect.arrayContaining(['mood']))
+    expect(user).not.toHaveProperty('theme')
+    expect(user).not.toHaveProperty('voice')
+  })
+
+  it('arranges no more phrases than the length has lines for', () => {
+    expect(assembleLyrics(phrases, 8).flatMap((s) => s.lines).length).toBeLessThanOrEqual(8)
+  })
+
   it('translates the lines a singer changed, one meaning per line, or nothing (plan 113)', async () => {
     const input = {
       lines: ['muy buenas noches amor', 'hasta mañana'],

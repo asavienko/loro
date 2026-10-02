@@ -252,6 +252,18 @@ there is nothing to rewrite (`PROVIDER_UNAVAILABLE`). Drafts are the learner's o
 week after they were last written. A song started without `lyricsId` has its lyrics written as part
 of the song, for older app builds.
 
+**Song options** (plan 113). Both requests take `options`: a `voice` (`any`, `female`, `male`,
+`duet`), a `tempo` (`slow`, `natural`, `lively`), a `mood` (six, or null for the style's own), a
+`length` (`short`, `standard`, `long`: at most 8, 12 or 16 lines) and a `theme` in the learner's
+words; each is optional and defaults to any voice, natural tempo, the style's mood, standard length
+and no theme (`DEFAULT_SONG_OPTIONS` in `packages/core`). They are kept on the draft and the song
+(`options`, migration `022`; rows from before read as the defaults) and returned on both. A song
+from a draft takes the draft's options, changed by any its request gives; a retry uses the song's.
+The length bounds the lyrics and the music asked for (`songLengthMs`: 6, 5 or 4 s a line by tempo,
+within 30–50, 40–80 or 60–120 s). The text model gets the mood, tempo, voice and theme as data; the
+music model gets the voice, tempo and mood (`livePrompt`), never the theme. The demo synthesizer
+plays the style only.
+
 A song is saved at once as `rendering` and made in the background; the app polls it. A song sung
 from a draft holds its lines from the start. A song that fails (or is lost to a restart, after ten
 minutes) gives the day's song back; its owner can make it again (`POST /library/songs/:id/retry`,

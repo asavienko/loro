@@ -18,6 +18,7 @@ import {
   LIBRARY_LYRIC_DRAFTS_MIGRATION_SQL,
   LIBRARY_SONG_TIMING_MIGRATION_SQL,
   LIBRARY_PUSH_TOKENS_MIGRATION_SQL,
+  LIBRARY_SONG_OPTIONS_MIGRATION_SQL,
 } from '../library/library.schema.js'
 import { MUSIC_MIGRATION_SQL } from '../music/music.schema.js'
 import { SYNC_MIGRATION_SQL } from '../sync/sync.schema.js'
@@ -51,6 +52,7 @@ export const NAMED_MIGRATIONS: readonly NamedMigration[] = [
   { id: '019_lyric_drafts', sql: LIBRARY_LYRIC_DRAFTS_MIGRATION_SQL },
   { id: '020_song_timing', sql: LIBRARY_SONG_TIMING_MIGRATION_SQL },
   { id: '021_push_tokens', sql: LIBRARY_PUSH_TOKENS_MIGRATION_SQL },
+  { id: '022_song_options', sql: LIBRARY_SONG_OPTIONS_MIGRATION_SQL },
 ]
 
 const LEDGER = `CREATE TABLE IF NOT EXISTS schema_migrations (
