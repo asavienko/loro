@@ -47,6 +47,7 @@ const settings = {
   emailHashKey: 'test-email-hash-key-with-at-least-32-characters',
   magicDeliveryUrl: 'https://delivery.example.test/send',
   magicDeliveryToken: 'test-delivery-only',
+  emailFrom: undefined,
   googleClientIds: [],
   appleClientIds: [],
 }

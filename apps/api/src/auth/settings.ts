@@ -26,8 +26,11 @@ export function isLoopbackHttpUrl(url: URL): boolean {
 export const LOCAL_INBOX_DELIVERY = 'inbox:local'
 export const LOCAL_INBOX_PATH = '/tmp/loro-magic-delivery.json'
 
+/** Amazon SES sends email codes from `AUTH_EMAIL_FROM` with the host's AWS credentials. */
+export const SES_DELIVERY = 'ses'
+
 export function isAllowedMagicDeliveryUrl(value: string, production = false): boolean {
-  if (value === LOCAL_INBOX_DELIVERY) return true
+  if (value === LOCAL_INBOX_DELIVERY || value === SES_DELIVERY) return true
   try {
     const url = new URL(value)
     if (url.username || url.password || url.hash) return false
