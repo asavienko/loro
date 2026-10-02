@@ -34,7 +34,12 @@ Product analytics and session replay go to PostHog US Cloud
 ([ADR-0020](adr/0020-posthog-us-cloud.md)), on by default with an opt-out in Settings; replay is
 unmasked except the sign-in code, and never includes sound
 ([ADR-0011](adr/0011-analytics-and-privacy.md#product-analytics-and-session-replay-amended-2026-09-30)).
-A learner can delete their library (`POST /library/me/delete`) or their whole account
+The person in PostHog carries the account's id, email, provider and display name, the learner's
+name, course and the figures the screens show
+([ADR-0011](adr/0011-analytics-and-privacy.md#who-the-person-is-amended-2026-10-02)); the landing
+page sends its visits and their replays, anonymous, to the same project
+([ADR-0011](adr/0011-analytics-and-privacy.md#the-landing-page-amended-2026-10-02)). A learner can
+delete their library (`POST /library/me/delete`) or their whole account
 (`POST /library/me/delete-account`) from the app ([library.md](library.md#accounts)). There is no
 data export.
 

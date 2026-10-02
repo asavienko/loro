@@ -11,7 +11,9 @@
 <a id="local"></a>Local setup: [local-development.md](local-development.md). The host:
 [ec2-deployment.md](ec2-deployment.md) and [the runbook](../runbooks/backend-testing.md). There is
 no staging or production environment. The landing page is a static folder on Amplify Hosting
-([landing-deployment.md](landing-deployment.md)); it reads nothing from the API.
+([landing-deployment.md](landing-deployment.md)); it reads nothing from the API, and its deploy
+writes `EXPO_PUBLIC_POSTHOG_KEY` and `EXPO_PUBLIC_POSTHOG_HOST` (the shell's, else
+`apps/mobile/.env`'s) into the served page for its analytics and session replay.
 
 ## Configuration
 

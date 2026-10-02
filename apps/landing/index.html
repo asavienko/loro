@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://loro-landing-media-bucket-ws2lr1msajdt.s3.eu-central-1.amazonaws.com; media-src 'self' https://loro-landing-media-bucket-ws2lr1msajdt.s3.eu-central-1.amazonaws.com; connect-src https://api.github.com; base-uri 'none'; form-action 'none'; object-src 'none'"
+      content="default-src 'self'; script-src 'self' https://us-assets.i.posthog.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://loro-landing-media-bucket-ws2lr1msajdt.s3.eu-central-1.amazonaws.com; media-src 'self' https://loro-landing-media-bucket-ws2lr1msajdt.s3.eu-central-1.amazonaws.com; connect-src https://api.github.com https://us.i.posthog.com https://us-assets.i.posthog.com; base-uri 'none'; form-action 'none'; object-src 'none'"
     />
     <title>Loro — learn a language by the phrase</title>
     <meta
@@ -22,6 +22,9 @@
       content="Hear a phrase in your language, say it in the pause, hear it in the one you're learning. Download the newest Android build."
     />
     <meta name="theme-color" content="#fcf9f4" />
+    <!-- PostHog (src/analytics.js): the key is written in at deploy time; empty, the page sends nothing. -->
+    <meta name="posthog-key" content="" />
+    <meta name="posthog-host" content="https://us.i.posthog.com" />
     <link rel="icon" href="src/icon.svg" type="image/svg+xml" />
     <link
       rel="stylesheet"
@@ -94,6 +97,7 @@
                   class="btn btn-p"
                   href="https://github.com/asavienko/loro/releases"
                   data-latest-apk
+                  data-where="hero"
                   rel="noopener"
                 >
                   <svg class="dl" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
@@ -1349,6 +1353,7 @@
               class="btn btn-p"
               href="https://github.com/asavienko/loro/releases"
               data-latest-apk
+              data-where="footer"
               rel="noopener"
             >
               <svg class="dl" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">

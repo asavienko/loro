@@ -24,12 +24,14 @@ one light palette.
 pack from `GET /v1/library/pack` (seeded from `packages/content/v2/`), keeps it for offline use and
 installs it before learner state loads. Product analytics, session replay, logs, error tracking and
 metrics go to PostHog US (`apps/mobile/src/analytics`; shared code reports through
-`src/shared/analytics/telemetry.ts`; on by default with an opt-out in Settings, never audio;
-[ADR-0011](docs/architecture/adr/0011-analytics-and-privacy.md)). Sign-in (email code, Google,
-Apple) goes through the API's `auth` module; sharing (private/link/public, Community), progress sync
-and AI generation of phrase sets, covers and songs (within per-user daily limits) go through its
-`library` module: DeepSeek on Fireworks writes (the same model through OpenRouter when it fails) and
-Muse Image draws covers, decks and covers in the background
+`src/shared/analytics/telemetry.ts`; on by default with an opt-out in Settings, never audio; the
+person carries the account and the learner's real figures, `src/shared/analytics/person.ts`;
+[ADR-0011](docs/architecture/adr/0011-analytics-and-privacy.md)). The landing page sends its visits
+and their replays, anonymous, to the same project (`apps/landing/src/analytics.js`). Sign-in (email
+code, Google, Apple) goes through the API's `auth` module; sharing (private/link/public, Community),
+progress sync and AI generation of phrase sets, covers and songs (within per-user daily limits) go
+through its `library` module: DeepSeek on Fireworks writes (the same model through OpenRouter when
+it fails) and Muse Image draws covers, decks and covers in the background
 ([ADR-0015](docs/architecture/adr/0015-open-model-providers.md)); without
 `FIREWORKS_API_KEY`/`OPENROUTER_API_KEY` or a music provider the server uses labelled fallbacks
 (phrase bank, drawn patterns, the set's phrases as lyrics, a "Demo sound" instrumental). A song's
@@ -230,12 +232,12 @@ Administrative access uses an SSH tunnel. See [`ec2-deployment.md`](docs/process
 ## Landing page deployment
 
 `pnpm landing:deploy` (`scripts/deploy-landing.sh`) deploys `infra/landing/template.yaml`, an
-Amplify Hosting app in the same account, and uploads `apps/landing` to it as one archive; nothing
-deploys on merge. `infra/landing/cloudfront.yaml` is the no-cost S3-behind-CloudFront host, waiting
-on AWS verifying the account. The page's video (`apps/promo`) is not in that archive:
-`pnpm promo:upload` (`scripts/upload-promo.sh`) puts it in the media bucket
-(`infra/landing/media.yaml`, public under `promo/` only, files named by content hash) and re-points
-`index.html`; deploy the page after. See
+Amplify Hosting app in the same account, and uploads `apps/landing` to it as one archive with the
+PostHog key written into the page (from `apps/mobile/.env`; no key, no deploy); nothing deploys on
+merge. `infra/landing/cloudfront.yaml` is the no-cost S3-behind-CloudFront host, waiting on AWS
+verifying the account. The page's video (`apps/promo`) is not in that archive: `pnpm promo:upload`
+(`scripts/upload-promo.sh`) puts it in the media bucket (`infra/landing/media.yaml`, public under
+`promo/` only, files named by content hash) and re-points `index.html`; deploy the page after. See
 [`landing-deployment.md`](docs/process/landing-deployment.md).
 
 ## Python

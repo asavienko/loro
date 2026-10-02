@@ -1,7 +1,9 @@
 // The landing page's behaviour: the builds (read from GitHub on each visit, newest first), what each
 // one changed, the player demo, the language drum and the pointer tilt. Everything GitHub returns
-// goes into the page as text or as a checked github.com link, never as HTML.
+// goes into the page as text or as a checked github.com link, never as HTML. What the visitor does
+// with the page (a download, the film, a course) is recorded through ./analytics.js.
 
+import { setUpAnalytics, track } from './analytics.js'
 import {
   API,
   RELEASES_PAGE,
@@ -147,6 +149,7 @@ function readCachedBuilds() {
  * @param {number} checkedAt
  */
 function show(builds, source, checkedAt) {
+  if (source !== 'live') track('builds_unavailable', { source })
   downloads.builds = builds
   downloads.source = source
   downloads.checkedAt = checkedAt
@@ -246,6 +249,7 @@ function renderList() {
     pick.addEventListener('click', () => {
       downloads.selected = build.tag
       downloads.picked = true
+      track('build_picked', { build: build.short, latest: i === 0 })
       renderList()
       renderTicket()
       void renderChanges()
@@ -253,6 +257,9 @@ function renderList() {
     const link = one('.vdl', row)
     point(link, build.apk)
     link.setAttribute('aria-label', `Download build ${build.short}, ${size}`)
+    link.addEventListener('click', () => {
+      track('download_clicked', { build: build.short, where: 'list' })
+    })
     return row
   })
   list.replaceChildren(...rows)
@@ -382,8 +389,21 @@ function setUpDownloads() {
     renderList()
   })
   one('#tk-copy').addEventListener('click', () => {
+    track('checksum_copied', { build: downloads.builds[selectedIndex()]?.short ?? '' })
     void copyDigest()
   })
+  one('#tk-apk').addEventListener('click', () => {
+    track('download_clicked', {
+      build: downloads.builds[selectedIndex()]?.short ?? '',
+      where: 'ticket',
+    })
+  })
+  for (const link of every('a[data-latest-apk]')) {
+    link.addEventListener('click', () => {
+      const where = link.dataset['where'] ?? 'page'
+      track('download_clicked', { build: downloads.builds[0]?.short ?? '', where })
+    })
+  }
   document.addEventListener('visibilitychange', () => {
     const stale = Date.now() - downloads.checkedAt > FRESH_MS
     if (document.visibilityState === 'visible' && stale && downloads.source !== 'loading')
@@ -548,6 +568,7 @@ function setUpDemo() {
   })
   playButton.addEventListener('click', () => {
     demo.paused = !demo.paused
+    track(demo.paused ? 'demo_paused' : 'demo_resumed', { step: demo.phase })
     if (demo.paused) segment?.pause()
     else {
       segment?.play()
@@ -587,6 +608,7 @@ function setUpDrum() {
 
   pills.forEach((pill, i) => {
     pill.addEventListener('click', () => {
+      track('course_picked', { course: pill.textContent.trim() })
       const front = ((spin % count) + count) % count
       const forward = (i - front + count) % count
       spin += forward <= count / 2 ? forward : forward - count
@@ -604,6 +626,27 @@ function setUpDrum() {
     render()
   }, 2600)
   render()
+}
+
+// ── The film ──
+
+function setUpFilm() {
+  const video = one('#film video')
+  if (!(video instanceof HTMLVideoElement)) return
+  video.addEventListener(
+    'play',
+    () => {
+      track('film_played')
+    },
+    { once: true },
+  )
+  video.addEventListener(
+    'ended',
+    () => {
+      track('film_finished')
+    },
+    { once: true },
+  )
 }
 
 // ── Decoration: bars, marquees and the pointer tilt ──
@@ -656,7 +699,16 @@ function setUpTilt() {
 }
 
 // The downloads first: they are what the page is for, and a fault in a decoration never stops them.
-for (const setUp of [setUpDownloads, setUpBars, setUpMarquees, setUpTilt, setUpDemo, setUpDrum]) {
+for (const setUp of [
+  setUpDownloads,
+  setUpAnalytics,
+  setUpFilm,
+  setUpBars,
+  setUpMarquees,
+  setUpTilt,
+  setUpDemo,
+  setUpDrum,
+]) {
   try {
     setUp()
   } catch (error) {

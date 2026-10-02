@@ -28,6 +28,8 @@ mkdir -p "$work/site/src"
 cp apps/landing/index.html "$work/site/"
 cp apps/landing/src/*.css apps/landing/src/*.js apps/landing/src/*.svg "$work/site/src/"
 rm -f "$work/site/src/"*.test.js
+# PostHog's key goes into the copy that is served, never into the tree (ADR-0011); no key, no deploy.
+node apps/landing/scripts/analytics-key.mjs "$work/site/index.html"
 (cd "$work/site" && zip -qr ../site.zip .)
 deployment=$(aws amplify create-deployment --region "$AWS_REGION" --app-id "$app" --branch-name main --output json)
 job=$(jq -r .jobId <<< "$deployment")

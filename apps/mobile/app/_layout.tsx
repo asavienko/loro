@@ -19,7 +19,7 @@ import { loadSession } from '@shared/api/session';
 import { copyForNative, languageName } from '@shared/copy';
 import { coursesFor, installedCourses, NATIVE_LANGUAGES } from '@shared/content';
 import { openStorage, Stored } from '@shared/state/storage';
-import { Analytics } from '../src/analytics/Analytics';
+import { Analytics, useLearnerPerson } from '../src/analytics/Analytics';
 import { setContext } from '../src/analytics/posthog';
 import { usePlaybackDriver } from '../src/audio/driver';
 import { LockScreen } from '../src/audio/lockScreen';
@@ -106,6 +106,7 @@ function App() {
   const { state } = useStore();
   const { nativeLang, targetLang, onboarded } = state.learner.profile;
   useEffect(() => setContext({ course: targetLang, uiLang: nativeLang, onboarded }), [targetLang, nativeLang, onboarded]);
+  useLearnerPerson(state.learner);
   const locale = copyForNative(nativeLang).locale;
   return (
     <UiLocaleContext.Provider value={locale}>

@@ -1,12 +1,18 @@
 // Serves the landing page at http://localhost:4173 for a look on your machine: browsers won't load
-// module scripts from file://. In production any static host serves this folder as it is.
+// module scripts from file://. In production any static host serves this folder as it is, with
+// PostHog's key written into the page (./analytics-key.mjs); here the page gets the key the same way
+// when the shell or apps/mobile/.env has one, so analytics can be watched locally, else it is served
+// as it is and sends nothing.
 import { readFile } from 'node:fs/promises'
 import { createServer } from 'node:http'
 import { extname, join, normalize, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { analyticsFrom, readDotenv, withAnalytics } from './analytics-key.mjs'
+
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const port = Number(process.env['PORT'] ?? '4173')
+const analytics = analyticsFrom(process.env, await readDotenv())
 
 /** @type {Record<string, string>} */
 const TYPES = {
@@ -26,7 +32,10 @@ async function serve(url, response) {
     const file = normalize(join(root, path.endsWith('/') ? `${path}index.html` : path))
     const type = TYPES[extname(file)]
     if (!file.startsWith(`${root}${sep}`) || type === undefined) throw new Error('Not served')
-    const body = await readFile(file)
+    let body = await readFile(file)
+    if (analytics && file.endsWith('index.html')) {
+      body = Buffer.from(withAnalytics(body.toString('utf8'), analytics), 'utf8')
+    }
     response.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-store' })
     response.end(body)
   } catch {
@@ -38,5 +47,7 @@ async function serve(url, response) {
 createServer((request, response) => {
   void serve(request.url ?? '/', response)
 }).listen(port, () => {
-  console.log(`Loro's landing page: http://localhost:${port}/`)
+  console.log(
+    `Loro's landing page: http://localhost:${port}/ (analytics ${analytics ? 'on' : 'off: no PostHog key'})`,
+  )
 })
