@@ -1,6 +1,6 @@
-// The end of a pass through a queue that keeps going (P3-01), said as it is: in repeat mode "played
-// through, starting again" with the course's next set one tap away; in continue mode "on to" the next
-// set. Until its phrase gives way, the player says it in a card over the top of its picture, clear of
+// The end of a pass through a queue that keeps going (P3-01), marked by a short jingle (passCue) and
+// said as it is: in repeat mode "played through, starting again" with the course's next set one tap
+// away; in continue mode "on to" the next set. Until its phrase gives way, the player says it in a card over the top of its picture, clear of
 // the grades and the controls; with the player closed, the bar above the tabs offers only the way on,
 // as a button before its grades. Elsewhere a message says it once. In continue mode with nothing left
 // to go on with, they say so for as long as the queue stays ended.
@@ -8,6 +8,7 @@ import { usePathname } from 'expo-router';
 import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import Animated, { FadeIn, FadeOut, useReducedMotion } from 'react-native-reanimated';
+import { passCue } from '@shared/audio/cues';
 import type { Copy } from '@shared/copy';
 import { useLatest } from '@shared/lib/useLatest';
 import { Navigation, useNav } from '@shared/nav/NavContext';
@@ -56,6 +57,7 @@ export function PassNoticeProvider({ children }: { children: ReactNode }) {
     const found = passNotice(before, s.player, displayLearner(s), clock.now());
     if (!found) return;
     setNotice(found);
+    passCue();
     // The player says it in its card; on the tabs the bar offers the way on, and a screen reader hears it.
     if (path === '/player') return;
     const said = describe(copy, found, s.learner, go);

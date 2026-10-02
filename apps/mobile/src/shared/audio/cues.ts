@@ -1,5 +1,9 @@
-// Short Web Audio cues and haptics. Every cue is soft: nothing here sounds
-// like an error or a punishment.
+// The player's cues in a browser: the bundled cue sounds (sounds.ts) through Web Audio, and haptics
+// where the browser has them. Every cue is soft: nothing here sounds like an error or a punishment.
+// A sound still decoding when its moment comes plays as a soft sine tone instead, once.
+import { Asset } from 'expo-asset';
+import { CUE_VOLUME, SOUNDS, type SoundName } from './sounds';
+
 let audioCtx: AudioContext | null = null;
 
 function create(): AudioContext | null {
@@ -7,6 +11,7 @@ function create(): AudioContext | null {
     if (!audioCtx) {
       const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       audioCtx = new Ctx();
+      loadSounds(audioCtx);
     }
     return audioCtx;
   } catch {
@@ -18,6 +23,18 @@ function context(): AudioContext | null {
   const ctx = create();
   if (ctx?.state === 'suspended') void ctx.resume().catch(() => undefined);
   return ctx;
+}
+
+const buffers: Partial<Record<SoundName, AudioBuffer>> = {};
+
+function loadSounds(ctx: AudioContext) {
+  for (const name of Object.keys(SOUNDS) as SoundName[]) {
+    void fetch(Asset.fromModule(SOUNDS[name]).uri)
+      .then((response) => response.arrayBuffer())
+      .then((bytes) => ctx.decodeAudioData(bytes))
+      .then((buffer) => (buffers[name] = buffer))
+      .catch(() => undefined);
+  }
 }
 
 /**
@@ -41,7 +58,22 @@ function vibrate(pattern: number | number[]) {
   }
 }
 
-/** A gentle sine tone with a soft attack and release. */
+/** Plays a cue sound; false if it isn't decoded yet. */
+function sound(name: SoundName): boolean {
+  const ctx = context();
+  const buffer = buffers[name];
+  if (!ctx || !buffer) return false;
+  const source = ctx.createBufferSource();
+  const gain = ctx.createGain();
+  source.buffer = buffer;
+  gain.gain.value = CUE_VOLUME;
+  source.connect(gain);
+  gain.connect(ctx.destination);
+  source.start();
+  return true;
+}
+
+/** A gentle sine tone with a soft attack and release: the stand-in while a sound decodes. */
 function tone(freq: number, start: number, duration: number, gain = 0.08) {
   const ctx = context();
   if (!ctx) return;
@@ -59,30 +91,38 @@ function tone(freq: number, start: number, duration: number, gain = 0.08) {
   osc.stop(t + duration + 0.02);
 }
 
-/** "Your turn": two quick rising notes, so the learner knows to speak without looking. */
+/** "Your turn": a warm two-note rise, so the learner knows to speak without looking. */
 export function turnCue() {
+  if (sound('turn')) return;
   tone(660, 0, 0.12);
   tone(880, 0.1, 0.16);
 }
 
-/** The rating hold begins: one soft, neutral note, so the silence that follows isn't a mystery. */
+/** The rating hold begins: one soft wooden tick, so the silence that follows isn't a mystery. */
 export function holdCue() {
-  tone(587.33, 0, 0.14, 0.05);
+  if (!sound('hold')) tone(587.33, 0, 0.14, 0.05);
 }
 
-/** Easy: a light tap. */
+/** Easy: a rounded pop and a light tap. */
 export function easyCue() {
   vibrate(15);
+  sound('easy');
 }
 
-/** Hard or Missed: one soft, neutral note — information, not a buzzer. */
+/** Hard or Missed: one soft felt note — information, not a buzzer. */
 export function gentleCue() {
   vibrate(20);
-  tone(523.25, 0, 0.18, 0.06);
+  if (!sound('gentle')) tone(523.25, 0, 0.18, 0.06);
 }
 
-/** A phrase became learned: a rising major chord. Reserved for that moment. */
+/** A phrase became learned: a rising arpeggio of soft bells. Reserved for that moment. */
 export function learnedCue() {
   vibrate([15, 30, 25, 30, 40]);
+  if (sound('learned')) return;
   [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => tone(freq, i * 0.06, 0.4, 0.12));
+}
+
+/** The queue was played through: a short warm jingle. Nothing, if it hasn't decoded. */
+export function passCue() {
+  sound('pass');
 }
