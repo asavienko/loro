@@ -9,11 +9,11 @@
 - **Milestone:** Course content
 - **Status:** 🟡 The `phrases`, `judge`, `translate` and `judge-translate` stages of the writer
   exist (`apps/api/src/authoring/`, 0f in part) and wrote three Spanish A1 sets, with Russian for
-  all three, Polish for two and Bulgarian for one, on 2026-10-02 (see "Spike result"). Left: the
-  rest of phase 0 (0b, 0c, 0d, 0e, 0g; the other stages, batches, status and regenerate of 0f) and
-  the spike in the other six courses. Phase 1 (the pilot batch) is ⛔ until a native reader per
-  pilot language is named (Q-23) and the first pairs and topics are chosen; the vocabulary bands
-  (0c) wait on Q-25.
+  all three, Polish for two and Bulgarian for one, and three Polish A1 sets with Russian, on
+  2026-10-02 (see "Spike result" and "Spike result: pl-PL"). Left: the rest of phase 0 (0b, 0c, 0d,
+  0e, 0g; the other stages, batches, status and regenerate of 0f) and the spike in the other five
+  courses. Phase 1 (the pilot batch) is ⛔ until a native reader per pilot language is named (Q-23)
+  and the first pairs and topics are chosen; the vocabulary bands (0c) wait on Q-25.
 - **Owner request, 2026-10-01:** "at the end I want to get at least 10 000 phrases for each language
   in all languages with different difficulty covering the different topics levels, aspects, words,
   rules, situations, times"
@@ -618,6 +618,36 @@ judge):
   `v2/courses/es/A1/eating-out.{sets.json,phrases.jsonl,ru.jsonl,pl.jsonl,bg.jsonl}` (36 phrases,
   the new layout, not yet read by the loader or shipped), the verdicts in `v2/reviews/es.jsonl`, the
   run summaries in `v2/runs/`.
+
+## Spike result: pl-PL (2026-10-02, A1 eating-out, three sets; Russian)
+
+`author:run --course pl-PL --level A1 --topic eating-out --lang ru` with the three slots in
+`v2/plan/pl/A1/eating-out.json` (café counter, ordering at a restaurant, paying), the same model and
+settings as the Spanish spike:
+
+- **The checks needed Polish.** `containsLemma` matched Spanish stems only, so «kawa» never found
+  «kawę» and «rachunek» never found «rachunku». Polish now matches each word by its stems
+  (`polishStems`: a verb without its infinitive ending, «-ować» also on «-uj-»; a noun or adjective
+  without its final vowel; a fleeting e dropped; a softening «i» dropped), after the same folding
+  that joins ś/s, ż/z, ó/o, ę/e. Irregular verbs («wziąć» → «wezmę», «mieć» → «mam») are not found,
+  so a brief does not list them as must-use words.
+- **Writing and judging:** the café and paying sets were written in one or two rounds (92–93%
+  coverage). The restaurant set failed twice, as `needs-brief`. Its must-use «zamówić» kept
+  producing «Czy pani może zamówić…?» (wrong; the judge's fix was «przyjąć zamówienie»), and six
+  must-use words about one order (soup, «dnia», pierogi, water, «niegazowana», «bez mięsa») forced
+  near-duplicates the judge rejected each round. The brief, never written, was changed: «zamówić»
+  went to `avoid`, «zupa dnia» and «woda niegazowana» became units, and kotlet, sałatka and deser
+  spread the set. The next run wrote it in one round.
+- **Read by eye:** «Czy sok jest na wynos?» (awkward, flagged by the judge) and «Zapłacę razem,
+  dobrze?» for "I'll pay for both of us" (should be «Zapłacę za nas» or «Ja stawiam»; not flagged)
+  are weak. The Russian lines read naturally but carry two errors the judge passed: «pierogi» →
+  «пироги» (should be «вареники»), and «kotlet» → «котлета», a false friend (a Polish kotlet is a
+  breaded cutlet). Most Russian review flags are the gloss convention again («mlekiem = молоко»,
+  nominative by rule). Both are for `author:regenerate` and the native reader, not a rerun.
+- **Cost:** 26 calls over three runs, ≈56,000 input and ≈30,000 output tokens, about $0.03 at the
+  assumed prices. Output in `v2/courses/pl/A1/eating-out.{sets.json,phrases.jsonl,ru.jsonl}` (36
+  phrases), verdicts in `v2/reviews/pl.jsonl`, summaries in
+  `v2/runs/spike-pl-a1-eating-out-ru*.json`.
 
 ## Worked example: a first batch
 

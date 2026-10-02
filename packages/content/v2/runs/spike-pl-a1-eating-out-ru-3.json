@@ -1,0 +1,48 @@
+{
+  "runId": "spike-pl-a1-eating-out-ru-3",
+  "at": "2026-10-02T12:17:13.612Z",
+  "stages": [
+    "phrases",
+    "judge",
+    "translate",
+    "judge-translate"
+  ],
+  "langs": [
+    "ru"
+  ],
+  "course": "pl-PL",
+  "levels": [
+    "A1"
+  ],
+  "topics": [
+    "eating-out"
+  ],
+  "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+  "pricing": "assumed on 2026-10-02, not verified against the providers' price lists; the run summary's dollar figure is an estimate until this file is checked",
+  "spend": {
+    "calls": 4,
+    "cached": 0,
+    "usd": 0.004188,
+    "inputTokens": 8577,
+    "outputTokens": 4121
+  },
+  "outcomes": [
+    {
+      "setId": "set-pl-a1-restaurant-order",
+      "status": "written",
+      "phrases": 12,
+      "coverage": 0.9166666666666666,
+      "calls": 2,
+      "judge": "10 ok, 2 review, 0 reject",
+      "rejected": []
+    },
+    {
+      "setId": "set-pl-a1-restaurant-order",
+      "status": "translated",
+      "lang": "ru",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "11 ok, 1 review, 0 reject"
+    }
+  ]
+}

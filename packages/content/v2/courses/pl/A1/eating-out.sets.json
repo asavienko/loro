@@ -1,0 +1,119 @@
+[
+  {
+    "id": "set-pl-a1-cafe-counter",
+    "title": "W kawiarni rano",
+    "subtitle": {
+      "en": "Ordering drinks and pastries at a Kraków café counter in the morning."
+    },
+    "topicId": "eating-out",
+    "situation": "cafe-counter",
+    "level": "A1",
+    "coverIcon": "coffee",
+    "targetLang": "pl-PL",
+    "phraseIds": [
+      "pl-g5zjlre",
+      "pl-tnccjrb",
+      "pl-u6uw6bw",
+      "pl-52rcexp",
+      "pl-ichirvm",
+      "pl-r4vk5uj",
+      "pl-vk2ghj6",
+      "pl-ymqkur2",
+      "pl-6hs4mqg",
+      "pl-so7vfoz",
+      "pl-p5zzl7z",
+      "pl-qxrwzrb"
+    ],
+    "grammarFocus": [
+      "pl-accusative-object",
+      "pl-poprosze-request",
+      "pl-pan-pani-formal"
+    ],
+    "provenance": {
+      "writer": "deepseek",
+      "provider": "fireworks",
+      "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+      "run": "spike-pl-a1-eating-out-ru",
+      "promptVersion": "phrases.v1",
+      "briefHash": "f5d189bb44a16f4f37fc473334c363eeb8e3a61b316319955eeea04249cec17a"
+    }
+  },
+  {
+    "id": "set-pl-a1-paying",
+    "title": "Płacenie w kawiarni",
+    "subtitle": {
+      "en": "Settling the bill at a Polish café with a friend."
+    },
+    "topicId": "eating-out",
+    "situation": "paying",
+    "level": "A1",
+    "coverIcon": "payments",
+    "targetLang": "pl-PL",
+    "phraseIds": [
+      "pl-3bzqdoo",
+      "pl-2fim5tt",
+      "pl-pfv75a5",
+      "pl-edllpap",
+      "pl-updaeuy",
+      "pl-klpttnc",
+      "pl-3ztz46p",
+      "pl-5b6mwvz",
+      "pl-7oacco5",
+      "pl-pb2re5n",
+      "pl-3v2ttdm",
+      "pl-tbluyyd"
+    ],
+    "grammarFocus": [
+      "pl-instrumental-means",
+      "pl-czy-question",
+      "pl-future-perfective"
+    ],
+    "provenance": {
+      "writer": "deepseek",
+      "provider": "fireworks",
+      "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+      "run": "spike-pl-a1-eating-out-ru",
+      "promptVersion": "phrases.v1",
+      "briefHash": "f8d85d02fc4dbce8c9790a1b933e93dca390d0071defe427a58bc4f8a54d842e"
+    }
+  },
+  {
+    "id": "set-pl-a1-restaurant-order",
+    "title": "Szybki lunch w restauracji",
+    "subtitle": {
+      "en": "Ordering a quick lunch at a small Polish restaurant"
+    },
+    "topicId": "eating-out",
+    "situation": "restaurant-order",
+    "level": "A1",
+    "coverIcon": "table_restaurant",
+    "targetLang": "pl-PL",
+    "phraseIds": [
+      "pl-uwp4ngl",
+      "pl-w5swdpc",
+      "pl-mnmydrq",
+      "pl-snd53y2",
+      "pl-bsykgr4",
+      "pl-tftwg5y",
+      "pl-js624jk",
+      "pl-oii67zy",
+      "pl-sh5votg",
+      "pl-cap6opt",
+      "pl-o5yqvut",
+      "pl-ljgxlmw"
+    ],
+    "grammarFocus": [
+      "pl-czy-question",
+      "pl-accusative-object",
+      "pl-pan-pani-formal"
+    ],
+    "provenance": {
+      "writer": "deepseek",
+      "provider": "fireworks",
+      "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+      "run": "spike-pl-a1-eating-out-ru-3",
+      "promptVersion": "phrases.v1",
+      "briefHash": "1de38fe203f00196a0416af295af7b44fbbf70e753fbbbb1bcf6135e6437c1a6"
+    }
+  }
+]
