@@ -35,8 +35,10 @@ it the APK looks for `http://localhost:3000/v1`, which a release build can't rea
 to run without it. `EXPO_PUBLIC_WEB_URL` (HTTPS) makes shared links open in a browser
 (`https://…/shared/CODE`) instead of only in the app (`loro://shared/CODE`).
 `EXPO_PUBLIC_POSTHOG_KEY` and `EXPO_PUBLIC_POSTHOG_HOST` pass through
-([environments.md](environments.md#the-app-build-time)). The runner clears every other
-`EXPO_PUBLIC_*` value and ignores dotenv files, so no secret reaches the build.
+([environments.md](environments.md#the-app-build-time)); when the shell doesn't set them they are
+read from `apps/mobile/.env`, and an upload without a key is refused, since that APK would send no
+analytics ([ADR-0020](../architecture/adr/0020-posthog-us-cloud.md)). The runner clears every other
+`EXPO_PUBLIC_*` value and reads nothing else from dotenv files, so no secret reaches the build.
 
 The EC2 gateway's `ApiUrl` output serves the library only with the gateway's `AccountAccess=enabled`
 and nginx in `accounts` mode ([ec2-deployment.md](ec2-deployment.md#public-https-gateway)).
