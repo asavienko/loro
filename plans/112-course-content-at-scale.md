@@ -685,6 +685,10 @@ after deploying, saw no new Polish sets for a Russian speaker. An interim 0c/0d 
 
 ## Worked example: a first batch
 
+The planned scripts below are partly built; what runs today, from brief to a learner's phone (the
+stages, completing every language, `build:courses`, voices, deploy), is the project skill
+[`generate-phrase-sets`](../.claude/skills/generate-phrase-sets/SKILL.md).
+
 ```bash
 nvm use 22 && export PATH="$HOME/.cargo/bin:$PATH"
 pnpm --filter @loro/api author:plan --course es-ES --level A1 --topic eating-out,getting-around
