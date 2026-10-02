@@ -49,6 +49,15 @@ Everything from GitHub goes into the page as text; links are kept only if they p
 `https://github.com/`, and the page's Content-Security-Policy lets it connect to `api.github.com`
 and nothing else.
 
+## The film
+
+`#film` plays the video `apps/promo` renders. Its files are not in this folder: they are in the
+landing media bucket, named by their content hash, and the page's Content-Security-Policy allows
+that bucket in `img-src` (the poster) and `media-src` (the video) and nowhere else.
+`pnpm promo:upload` uploads a new render and rewrites the URLs here
+([landing-deployment.md](../../docs/process/landing-deployment.md#the-videos-files-the-media-bucket));
+the transcript under the video is the narration in `apps/promo/scripts/lines.mjs`, kept by hand.
+
 ## Decisions (2026-10-01)
 
 - **The browser reads GitHub on each visit; no list is baked into the page.** A baked list goes

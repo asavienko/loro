@@ -36,6 +36,42 @@ console, and an earlier one can be redeployed from there.
 Only the browser's files go up: not the README, `package.json`, `tsconfig.json`, the local server or
 `src/releases.test.js`.
 
+## The video's files: the media bucket
+
+The page's film ([promo-video.md](promo-video.md)) is about 10 MB, so it is not in the Amplify
+archive: it is served straight from S3 over HTTPS.
+
+- **Stack `loro-landing-media`** (`infra/landing/media.yaml`): bucket
+  `loro-landing-media-bucket-ws2lr1msajdt`, served at
+  <https://loro-landing-media-bucket-ws2lr1msajdt.s3.eu-central-1.amazonaws.com/promo/>. The bucket
+  policy lets anyone read `promo/*` and nothing else (any other key answers 403), and refuses any
+  request that is not HTTPS. ACLs are off; encryption is S3's own; unfinished uploads are cleaned up
+  after a day.
+- **Files are named by their content's hash** (`promo/loro-promo-web.<12 hex>.mp4`, `.webm`, the
+  poster `.jpg`) and sent with `Cache-Control: public, max-age=31536000, immutable`. A new render is
+  a new name, so a browser or a page cached with the old one keeps working, and nothing is ever
+  overwritten. Old files stay until someone deletes them; at 20 MB a render, that is not worth a
+  lifecycle rule.
+- **The page names the bucket twice:** the `<video>`, its poster and `og:image` point at the files,
+  and the Content-Security-Policy meta tag allows the bucket in `img-src` and `media-src`.
+- **Cost:** storage is a fraction of a cent; reads leave AWS as internet egress, inside the
+  account's 100 GB a month free and then about $0.09 per GB. The video is `preload="none"`, so only
+  visitors who press play download it: a thousand plays a month is about 10 GB.
+
+To publish a new render (Node 22, the AWS CLI with the `loro` profile, `curl`, `shasum`, `perl`):
+
+```bash
+export AWS_PROFILE=loro AWS_REGION=eu-central-1
+pnpm --filter @loro/promo video          # apps/promo/out/: the web MP4, the WebM, the poster
+pnpm promo:upload                        # the stack (a no-op when unchanged), the files, index.html re-pointed
+pnpm landing:deploy                      # the page with the new URLs
+```
+
+`scripts/upload-promo.sh` skips a file the bucket already has, checks that each URL answers anyone
+with the right content type, rewrites every URL of the same file in `apps/landing/index.html` to the
+new hash, and fails if the page's Content-Security-Policy does not allow the bucket. It changes the
+page in the working tree: commit that change with the render it points at.
+
 ## The cheaper host, once the account is verified
 
 A private S3 bucket behind CloudFront costs nothing at this size: CloudFront's always-free tier
@@ -64,6 +100,10 @@ its charset, and a `/*` invalidation at the end; the first version of the script
 exactly this), delete the `loro-landing` stack, and update this page and
 [Q-27](../decisions/open-questions.md#q-27).
 
+The film can move behind the same distribution: add the media bucket as a second origin for
+`promo/*` (an origin access control instead of the public policy), point the page at the
+distribution's URLs, then close the bucket with `BlockPublicPolicy`.
+
 ## Decisions (2026-10-02)
 
 - **The cheapest host with HTTPS is S3 behind CloudFront**, at no cost inside the always-free tier.
@@ -79,3 +119,9 @@ exactly this), delete the `loro-landing` stack, and update this page and
   says what exists, and the console is for looking.
 - **Deploying is a person's command, not a merge.** The CI policy ([ci-cd.md](ci-cd.md)) runs
   nothing on GitHub, and the page changes rarely.
+- **The film is served from its own S3 bucket, public under `promo/` only** (2026-10-02). It is 50
+  times the rest of the page, and Amplify charges $0.15 per GB served where S3's egress is free for
+  the first 100 GB a month. Set aside: shipping it in the Amplify archive (every deployment
+  re-uploads 10 MB, and each play costs more), a private bucket behind CloudFront (the right end
+  state, blocked by the same account verification), and YouTube or Vimeo (their player, tracking and
+  branding on a page whose promise is that nothing is watched).

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://api.github.com; base-uri 'none'; form-action 'none'; object-src 'none'"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://loro-landing-media-bucket-ws2lr1msajdt.s3.eu-central-1.amazonaws.com; media-src 'self' https://loro-landing-media-bucket-ws2lr1msajdt.s3.eu-central-1.amazonaws.com; connect-src https://api.github.com; base-uri 'none'; form-action 'none'; object-src 'none'"
     />
     <title>Loro — learn a language by the phrase</title>
     <meta
@@ -13,6 +13,10 @@
       content="A listening-first phrase player for Android, iOS and the web. Hear a phrase, say it in the pause, hear it in the language you're learning, and rate how it went."
     />
     <meta property="og:title" content="Loro — learn a language by the phrase" />
+    <meta
+      property="og:image"
+      content="https://loro-landing-media-bucket-ws2lr1msajdt.s3.eu-central-1.amazonaws.com/promo/loro-promo-poster.6b8933143fff.jpg"
+    />
     <meta
       property="og:description"
       content="Hear a phrase in your language, say it in the pause, hear it in the one you're learning. Download the newest Android build."
@@ -37,6 +41,7 @@
             <span class="brand-word">Loro</span>
           </a>
           <nav class="navlinks" aria-label="Sections">
+            <a href="#film">The film</a>
             <a href="#loop">The loop</a>
             <a href="#languages">Languages</a>
             <a href="#memory">Memory</a>
@@ -439,6 +444,79 @@
                 ><small>ES</small>¿Nos podemos sentar en la terraza?<span class="mdot"></span
               ></span>
             </div>
+          </div>
+        </section>
+
+        <!-- THE FILM: made in code by apps/promo; its files are in the media bucket (scripts/upload-promo.sh) -->
+        <section class="sec film" id="film">
+          <div class="wrap">
+            <div class="sec-head rv">
+              <p class="eyebrow">The film</p>
+              <h2 class="h2">Loro in eighty seconds. <em>Sound on.</em></h2>
+              <p class="lede">
+                The loop on a phone, each language in its own voice, the sets and songs you make,
+                and what Loro won’t do. The words are on the picture, so it plays muted too.
+              </p>
+            </div>
+            <figure class="film-frame rv">
+              <video
+                controls
+                playsinline
+                preload="none"
+                width="1920"
+                height="1080"
+                poster="https://loro-landing-media-bucket-ws2lr1msajdt.s3.eu-central-1.amazonaws.com/promo/loro-promo-poster.6b8933143fff.jpg"
+                aria-label="Loro, a film about the app (1 minute 19 seconds)"
+              >
+                <source
+                  src="https://loro-landing-media-bucket-ws2lr1msajdt.s3.eu-central-1.amazonaws.com/promo/loro-promo-web.0904be40c475.mp4"
+                  type="video/mp4"
+                />
+                <a
+                  href="https://loro-landing-media-bucket-ws2lr1msajdt.s3.eu-central-1.amazonaws.com/promo/loro-promo-web.0904be40c475.mp4"
+                  >Download the film (MP4, 10 MB)</a
+                >
+              </video>
+              <figcaption>
+                <span>1:19 · narrated · captions on the picture</span>
+                <details class="film-script">
+                  <summary>Read what it says</summary>
+                  <p>
+                    This is Loro. It teaches you a language the way you’ll actually use it: one
+                    phrase at a time.
+                  </p>
+                  <p>
+                    First, you hear the phrase in your own language. <i>“The bill, please.”</i> Then
+                    it goes quiet. That’s your turn: say it out loud, in Spanish. Now hear how it’s
+                    really said. <i lang="es">“La cuenta, por favor.”</i> Say it once more, just as
+                    you heard it. Then rate how it went.
+                  </p>
+                  <p>
+                    A real memory model decides when it comes back, so you review it just before
+                    you’d forget.
+                  </p>
+                  <p>
+                    It runs hands-free, like a playlist. On a walk, on the bus, while the coffee
+                    brews.
+                  </p>
+                  <p>
+                    Spanish, Bulgarian, Russian, Polish, Czech and English.
+                    <i lang="es">¿Dónde está la estación?</i> <i lang="bg">Къде е гарата?</i>
+                    <i lang="ru">Где вокзал?</i> <i lang="pl">Gdzie jest dworzec?</i>
+                    <i lang="cs">Kde je nádraží?</i> <i>Where’s the station?</i>
+                  </p>
+                  <p>
+                    Make sets of your own with AI, for any moment you want to be ready for. Loro
+                    even turns your phrases into songs.
+                  </p>
+                  <p>
+                    Your voice never leaves your phone: nothing is recorded. And no screen ever
+                    shames a missed day.
+                  </p>
+                  <p>Loro is Spanish for parrot. Say it until it’s yours.</p>
+                </details>
+              </figcaption>
+            </figure>
           </div>
         </section>
 

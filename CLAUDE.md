@@ -174,6 +174,7 @@ pnpm --filter @loro/mobile bundle     # proves the iOS bundle compiles
 pnpm --filter @loro/api dev           # :3000; requires PostgreSQL/auth configuration
 pnpm --filter @loro/landing dev       # the landing page on :4173 (builds live from GitHub)
 pnpm landing:deploy                   # the landing page to Amplify Hosting (AWS_PROFILE=loro AWS_REGION=eu-central-1)
+pnpm promo:upload                     # the promo video (apps/promo/out) to the landing media bucket, the page re-pointed
 pnpm local:up / pnpm local:down       # SOPS-decrypted API + Expo web containers
 
 # One test file (app tests need the content fixture installed first)
@@ -209,6 +210,7 @@ cd packages/core-rs && cargo test <name>
 | `packages/content/`                        | Server catalogs, review gates; `v2/` is the app's seeded content               |
 | `apps/api/src/library/`                    | Packs, sharing, limits, AI phrases/covers/songs, progress sync                 |
 | `apps/api/src/authoring/`                  | The offline course writer (`author:run`, plan 112); never in the server bundle |
+| `apps/promo/`                              | The landing page's video in code (Remotion, synthesized audio, ElevenLabs)     |
 | `docs/`                                    | All documentation — start at `docs/README.md`                                  |
 
 ## Open questions
@@ -230,7 +232,11 @@ Administrative access uses an SSH tunnel. See [`ec2-deployment.md`](docs/process
 `pnpm landing:deploy` (`scripts/deploy-landing.sh`) deploys `infra/landing/template.yaml`, an
 Amplify Hosting app in the same account, and uploads `apps/landing` to it as one archive; nothing
 deploys on merge. `infra/landing/cloudfront.yaml` is the no-cost S3-behind-CloudFront host, waiting
-on AWS verifying the account. See [`landing-deployment.md`](docs/process/landing-deployment.md).
+on AWS verifying the account. The page's video (`apps/promo`) is not in that archive:
+`pnpm promo:upload` (`scripts/upload-promo.sh`) puts it in the media bucket
+(`infra/landing/media.yaml`, public under `promo/` only, files named by content hash) and re-points
+`index.html`; deploy the page after. See
+[`landing-deployment.md`](docs/process/landing-deployment.md).
 
 ## Python
 
