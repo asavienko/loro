@@ -77,16 +77,18 @@ Resources:
           ]);
           // F-04: the library routes the app calls, by method; ids are the API's LibraryIdSchema.
           const ID = '[a-z0-9][a-z0-9.-]{2,95}';
+          // An Expo push token as the app sends it, brackets percent-encoded (plan 113).
+          const PUSH_TOKEN = 'push-tokens/Expo(nent)?PushToken(%5[Bb]|\\[)[A-Za-z0-9_-]{8,128}(%5[Dd]|\\])';
           const libraryRoutes = [
             [['GET', 'HEAD'], ['(pack|community|languages|usage|profile|progress)',
               `sets/${ID}(/(songs|more))?`, `albums/${ID}(/more)?`, 'shared/[a-z0-9]{10}',
               `songs/${ID}(/audio)?`, `covers/${ID}\\.(svg|json)`, `covers/(set|album|song|phrase)/${ID}`,
-              `decks/${ID}`, 'speech/[a-f0-9]{32}\\.mp3']],
-            [['POST'], ['(profile|progress|sets|phrases|albums|saves|reports|decks)',
-              'me/(delete|delete-account)', 'generate/(phrases|notes|cover|song)',
+              `decks/${ID}`, `lyrics/${ID}`, 'speech/[a-f0-9]{32}\\.mp3']],
+            [['POST'], ['(profile|progress|sets|phrases|albums|saves|reports|decks|lyrics|push-tokens)',
+              'me/(delete|delete-account)', 'generate/(phrases|notes|note|cover|song)',
               `sets/${ID}`, `sets/${ID}/phrases/${ID}`, `albums/${ID}`, `songs/${ID}/retry`,
-              `covers/${ID}/wear`]],
-            [['DELETE'], [`(sets|phrases|albums|songs)/${ID}`, `saves/(set|album)/${ID}`]]
+              `covers/${ID}/wear`, `lyrics/${ID}/rewrite`]],
+            [['DELETE'], [`(sets|phrases|albums|songs)/${ID}`, `saves/(set|album)/${ID}`, PUSH_TOKEN]]
           ].map(([methods, paths]) => [methods, new RegExp(`^/v1/library/(${paths.join('|')})$`)]);
           const libraryMethods = (path) =>
             libraryRoutes.flatMap(([methods, pattern]) => pattern.test(path) ? methods : []);
