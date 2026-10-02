@@ -13,14 +13,16 @@ pnpm --filter @loro/landing lint       # the repository's ESLint, type-aware
 pnpm --filter @loro/landing typecheck  # tsc over the JSDoc types (checkJs)
 ```
 
-| File                | What                                                                        |
-| ------------------- | --------------------------------------------------------------------------- |
-| `index.html`        | The page                                                                    |
-| `src/styles.css`    | The app's palette and faces, the 3D scenes, the motion                      |
-| `src/main.js`       | Fetching and showing the builds; the player demo, the drum, the tilt        |
-| `src/releases.js`   | Pure: GitHub's release and compare JSON as builds and changes, newest first |
-| `src/snapshot.js`   | The builds as of 2026-10-01, shown only when GitHub can't be reached        |
-| `scripts/serve.mjs` | The local static server                                                     |
+| File                        | What                                                                        |
+| --------------------------- | --------------------------------------------------------------------------- |
+| `index.html`                | The page                                                                    |
+| `src/styles.css`            | The app's palette and faces, the 3D scenes, the motion                      |
+| `src/main.js`               | Fetching and showing the builds; the player demo, the drum, the tilt        |
+| `src/analytics.js`          | PostHog: page views, clicks, replay, and what the visitor did with the page |
+| `src/releases.js`           | Pure: GitHub's release and compare JSON as builds and changes, newest first |
+| `src/snapshot.js`           | The builds as of 2026-10-01, shown only when GitHub can't be reached        |
+| `scripts/serve.mjs`         | The local static server (writes the PostHog key in when the shell has one)  |
+| `scripts/analytics-key.mjs` | Writes the PostHog key and host into a copy of the page, at deploy          |
 
 ## How the build list stays current
 
@@ -47,7 +49,22 @@ that carries an APK. Nothing in this folder changes for a new build: `pnpm apk:g
 
 Everything from GitHub goes into the page as text; links are kept only if they point at
 `https://github.com/`, and the page's Content-Security-Policy lets it connect to `api.github.com`
-and nothing else.
+and PostHog's two hosts, and nothing else.
+
+## Analytics and session replay
+
+The page reports to the app's PostHog project
+([ADR-0011](../../docs/architecture/adr/0011-analytics-and-privacy.md#the-landing-page-amended-2026-10-02)):
+page views, autocaptured clicks, web vitals and a replay of each visit, plus the page's own events
+(`download_clicked` with the build and where on the page, `build_picked`, `checksum_copied`,
+`builds_unavailable`, `film_played`, `film_finished`, `demo_paused`/`demo_resumed`,
+`course_picked`). Visits are anonymous: nobody signs in here, so no person is kept.
+
+`src/analytics.js` loads PostHog only when `<meta name="posthog-key">` carries a key. The page in
+Git carries it empty and sends nothing; `pnpm landing:deploy` writes the key from
+`EXPO_PUBLIC_POSTHOG_KEY` (the shell, else `apps/mobile/.env`) into the copy it uploads and refuses
+to deploy without one, and `pnpm --filter @loro/landing dev` does the same for the local page when
+the shell or that file has a key, so a visit can be watched arrive in PostHog from your machine.
 
 ## The film
 
