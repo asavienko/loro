@@ -1,0 +1,39 @@
+{"kind":"set","id":"set-pl-a1-bus-tram","subtitle":"Придвижване с трамвай и автобус във Варшава и Краков"}
+{"kind":"phrase","id":"pl-vbnr5rt","translation":"Мога ли да маркирам билет за намаление?","words":{"czy":"(маркер за въпрос)","mogę":"мога","skasować":"маркирам","bilet":"билет","ulgowy":"за намаление"}}
+{"kind":"phrase","id":"pl-x2ghm6d","translation":"На следващата спирка ли е прекачването?","words":{"czy":"(маркер за въпрос)","przesiadka":"прекачване","jest":"е","na":"на","następnym":"следващ","przystanku":"спирка"}}
+{"kind":"phrase","id":"pl-qoifore","translation":"Коя линия отива до центъра?","words":{"która":"коя","linia":"линия","jedzie":"отива","do":"до","centrum":"център"}}
+{"kind":"phrase","id":"pl-77tezd3","translation":"Този трамвай отива ли до центъра?","words":{"czy":"(маркер за въпрос)","ten":"този","tramwaj":"трамвай","jedzie":"отива","do":"до","centrum":"център"}}
+{"kind":"phrase","id":"pl-bonnacg","translation":"Как да стигна до трамвайната спирка?","words":{"jak":"как","dojść":"стигна","do":"до","przystanku":"спирка","tramwajowego":"трамваен"}}
+{"kind":"phrase","id":"pl-mnqafqv","translation":"Извинете, този автобус спира ли в центъра?","words":{"przepraszam":"извинете","czy":"(маркер за въпрос)","ten":"този","autobus":"автобус","staje":"спира","w":"в","centrum":"център"}}
+{"kind":"phrase","id":"pl-a545khu","translation":"Един билет за намаление и един редовен, моля.","words":{"poproszę":"моля","bilet":"билет","ulgowy":"за намаление","i":"и","normalny":"редовен"}}
+{"kind":"phrase","id":"pl-zlutsqi","translation":"Слизам на следващата, благодаря за помощта.","words":{"wysiadam":"слизам","na":"на","następnym":"следващ","dziękuję":"благодаря","za":"за","pomoc":"помощ"}}
+{"kind":"phrase","id":"pl-lmhgnzp","translation":"Къде е прекачването за автобуса?","words":{"gdzie":"къде","jest":"е","przesiadka":"прекачване","na":"за","autobus":"автобус"}}
+{"kind":"phrase","id":"pl-pps3rhf","translation":"На тази спирка има ли автомат?","words":{"czy":"(маркер за въпрос)","na":"на","tym":"този","przystanku":"спирка","jest":"има","automat":"автомат"}}
+{"kind":"phrase","id":"pl-qbkib62","translation":"Един редовен билет, моля, много бързам.","words":{"poproszę":"моля","bilet":"билет","normalny":"редовен","bardzo":"много","się":"(възвратна частица)","spieszę":"бързам"}}
+{"kind":"phrase","id":"pl-465eto7","translation":"Мога ли да платя с карта в трамвая?","words":{"czy":"(маркер за въпрос)","mogę":"мога","zapłacić":"платя","kartą":"с карта","w":"в","tramwaju":"трамвай"}}
+{"kind":"set","id":"set-pl-a1-asking-the-way","subtitle":"Питане за посока на минувач в полски стар град."}
+{"kind":"phrase","id":"pl-672mmeo","translation":"Завийте вдясно след моста, моля.","words":{"proszę":"моля","skręcić":"завивам","w prawo":"надясно","za":"след","mostem":"мост"}}
+{"kind":"phrase","id":"pl-h6yx6lp","translation":"Вървете направо, а после надясно, моля.","words":{"proszę":"моля","iść":"вървя","prosto":"направо","a":"а","potem":"после","w prawo":"надясно"}}
+{"kind":"phrase","id":"pl-kl42rax","translation":"Тази улица води до площада.","words":{"ta":"тази","ulica":"улица","prowadzi":"води","do":"до","rynku":"площад"}}
+{"kind":"phrase","id":"pl-2n4vyvk","translation":"Извинете, търся аптека.","words":{"przepraszam":"извинете","szukam":"търся","apteki":"аптека"}}
+{"kind":"phrase","id":"pl-p4zmcfl","translation":"Знаете ли къде е аптеката?","words":{"czy":"ли (въпросителна частица)","pani":"Вие (към жена)","wie":"знае","gdzie":"къде","jest":"е","apteka":"аптека"}}
+{"kind":"phrase","id":"pl-2xlfcjh","translation":"Знаете ли къде е площадът?","words":{"czy":"ли (въпросителна частица)","pan":"Вие (към мъж)","wie":"знае","gdzie":"къде","jest":"е","rynek":"площад"}}
+{"kind":"phrase","id":"pl-lqv5jbj","translation":"Как да стигна до площада?","words":{"jak":"как","dojść":"стигам (пеша)","do":"до","rynku":"площад"}}
+{"kind":"phrase","id":"pl-wqi23r4","translation":"Имате ли карта?","words":{"czy":"ли (въпросителна частица)","pani":"Вие (към жена)","ma":"има","mapę":"карта"}}
+{"kind":"phrase","id":"pl-kcncfdd","translation":"Далеч ли е оттук?","words":{"czy":"ли (въпросителна частица)","to":"това","daleko":"далеч","stąd":"оттук"}}
+{"kind":"phrase","id":"pl-77s5cyd","translation":"Как да стигна до гарата?","words":{"jak":"как","dojść":"стигам (пеша)","do":"до","dworca":"гара"}}
+{"kind":"phrase","id":"pl-bupnre4","translation":"Не, съвсем наблизо е.","words":{"nie":"не","to":"това","całkiem":"съвсем","blisko":"близо"}}
+{"kind":"phrase","id":"pl-q5kbhdf","translation":"Много благодаря, вече знам.","words":{"dziękuję":"благодаря","bardzo":"много","już":"вече","wiem":"зная"}}
+{"kind":"set","id":"set-pl-a1-train-station","subtitle":"Купуване на билети и намиране на място набързо на гарата."}
+{"kind":"phrase","id":"pl-5f5z3yx","translation":"Този влак от трети перон ли тръгва?","words":{"czy":"дали (маркер за въпрос)","ten":"този","pociąg":"влак","odjeżdża":"тръгва","z":"от","peronu":"перон (родителен падеж)","trzeciego":"трети"}}
+{"kind":"phrase","id":"pl-f6mhig6","translation":"В колко часа тръгва влакът за Гданск?","words":{"o":"в","której":"кой (час)","odjeżdża":"тръгва","pociąg":"влак","do":"до/за","gdańska":"Гданск (родителен падеж)"}}
+{"kind":"phrase","id":"pl-64ufjif","translation":"От кой перон тръгва този влак?","words":{"z":"от","którego":"кой","peronu":"перон (родителен падеж)","odjeżdża":"тръгва","ten":"този","pociąg":"влак"}}
+{"kind":"phrase","id":"pl-4pa7ipt","translation":"Има ли още места във вагона?","words":{"czy":"дали (маркер за въпрос)","są":"има","jeszcze":"още","miejsca":"места","w":"в","wagonie":"вагон (местен падеж)"}}
+{"kind":"phrase","id":"pl-xumsbac","translation":"Това място свободно ли е?","words":{"czy":"дали (маркер за въпрос)","to":"това","miejsce":"място","jest":"е","wolne":"свободно"}}
+{"kind":"phrase","id":"pl-krxnzzt","translation":"Влакът закъснява ли?","words":{"czy":"дали (маркер за въпрос)","pociąg":"влак","jest":"е","spóźniony":"закъснял"}}
+{"kind":"phrase","id":"pl-cbvnlo2","translation":"Има ли място до прозореца във вагона?","words":{"czy":"дали (маркер за въпрос)","w":"в","wagonie":"вагон (местен падеж)","jest":"има","miejsce":"място","przy":"до","oknie":"прозорец (местен падеж)"}}
+{"kind":"phrase","id":"pl-dgliskg","translation":"Място във вагон без купе, моля.","words":{"poproszę":"моля (учтива молба)","miejsce":"място","w":"в","wagonie":"вагон (местен падеж)","bez":"без","przedziału":"купе (родителен падеж)"}}
+{"kind":"phrase","id":"pl-cxccjjn","translation":"Касата още ли е отворена?","words":{"czy":"дали (маркер за въпрос)","kasa":"каса","jest":"е","jeszcze":"още","otwarta":"отворена"}}
+{"kind":"phrase","id":"pl-w6qxau7","translation":"Два билета в една посока, моля.","words":{"poproszę":"моля (учтива молба)","dwa":"два","bilety":"билети","w":"в","jedną":"една","stronę":"посока"}}
+{"kind":"phrase","id":"pl-6t366ge","translation":"Един билет за връщане до Краков, моля.","words":{"poproszę":"моля (учтива молба)","bilet":"билет","powrotny":"за връщане","do":"до","krakowa":"Краков (родителен падеж)"}}
+{"kind":"phrase","id":"pl-lp45h63","translation":"В колко часа тръгва влакът от трети перон?","words":{"o":"в","której":"кой (час)","odjeżdża":"тръгва","pociąg":"влак","z":"от","peronu":"перон","trzeciego":"трети"}}

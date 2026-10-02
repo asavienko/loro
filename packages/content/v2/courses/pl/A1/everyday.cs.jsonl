@@ -1,0 +1,39 @@
+{"kind":"set","id":"set-pl-a1-food-shop","subtitle":"U pultu v potravinách: prosíme o chleba, housky, sýr a máslo a platíme."}
+{"kind":"phrase","id":"pl-4u36ljc","translation":"Prosím kousek sýra a trochu másla.","words":{"poproszę":"prosím (zdvořilá žádost)","kawałek":"kousek","sera":"sýr","i":"a","trochę":"trochu","masła":"máslo"}}
+{"kind":"phrase","id":"pl-z64s63o","translation":"Prosím ještě mléko a vejce.","words":{"poproszę":"prosím (zdvořilá žádost)","jeszcze":"ještě","mleko":"mléko","i":"a","jajka":"vejce"}}
+{"kind":"phrase","id":"pl-jjps7by","translation":"Je ještě čerstvý chleba?","words":{"czy":"(uvozuje otázku ano/ne)","jest":"je","jeszcze":"ještě","świeży":"čerstvý","chleb":"chleba"}}
+{"kind":"phrase","id":"pl-j3x5ouc","translation":"Jsou ještě čerstvá vejce?","words":{"czy":"(uvozuje otázku ano/ne)","są":"jsou","jeszcze":"ještě","świeże":"čerstvá","jajka":"vejce"}}
+{"kind":"phrase","id":"pl-6d3l3xx","translation":"Už není máslo?","words":{"nie ma":"není","już":"už","masła":"máslo"}}
+{"kind":"phrase","id":"pl-lxtrdlk","translation":"Máte čerstvý sýr?","words":{"czy":"(uvozuje otázku ano/ne)","pan":"vy (o muži)","ma":"má","świeży":"čerstvý","ser":"sýr"}}
+{"kind":"phrase","id":"pl-5ta7iui","translation":"Prosím chleba a dvě housky.","words":{"poproszę":"prosím (zdvořilá žádost)","chleb":"chleba","i":"a","dwie":"dvě","bułki":"housky"}}
+{"kind":"phrase","id":"pl-7insb5x","translation":"Prosím ještě půl chleba.","words":{"poproszę":"prosím (zdvořilá žádost)","jeszcze":"ještě","pół":"půl","chleba":"chleba"}}
+{"kind":"phrase","id":"pl-om5huvn","translation":"Jsou housky čerstvé?","words":{"czy":"(uvozuje otázku ano/ne)","są":"jsou","świeże":"čerstvé","bułki":"housky"}}
+{"kind":"phrase","id":"pl-mi3ovfn","translation":"Máte tašku?","words":{"czy":"(uvozuje otázku ano/ne)","pani":"vy (o ženě)","ma":"má","torbę":"taška"}}
+{"kind":"phrase","id":"pl-u65jinu","translation":"Víte, kolik stojí máslo?","words":{"czy":"(uvozuje otázku ano/ne)","pani":"vy (o ženě)","wie":"ví","ile":"kolik","kosztuje":"stojí","masło":"máslo"}}
+{"kind":"phrase","id":"pl-futsgn2","translation":"Kolik stojí tenhle chleba?","words":{"ile":"kolik","kosztuje":"stojí","ten":"tenhle","chleb":"chleba"}}
+{"kind":"set","id":"set-pl-a1-pharmacy","subtitle":"V lékárně: co mě bolí a poprosím něco na to."}
+{"kind":"phrase","id":"pl-cr5dhxn","translation":"Poprosím něco na bolest hlavy.","words":{"poproszę":"prosím (zdvořilá žádost)","coś":"něco","na":"na","ból":"bolest","głowy":"hlava"}}
+{"kind":"phrase","id":"pl-v5apxhx","translation":"Máte něco na kašel?","words":{"czy":"(tázací částice)","ma":"máte (3. os.)","pani":"paní (vykání ženě)","coś":"něco","na":"na","kaszel":"kašel"}}
+{"kind":"phrase","id":"pl-gtg6zbe","translation":"Je něco na horečku?","words":{"czy":"(tázací částice)","jest":"je","coś":"něco","na":"na","gorączkę":"horečka"}}
+{"kind":"phrase","id":"pl-ubz7x7f","translation":"Je ten sirup na předpis?","words":{"czy":"(tázací částice)","ten":"ten","syrop":"sirup","jest":"je","na":"na","receptę":"předpis"}}
+{"kind":"phrase","id":"pl-5iwpbzt","translation":"Bolí mě v krku a mám rýmu.","words":{"boli":"bolí","mnie":"mě","gardło":"krk","i":"a","mam":"mám","katar":"rýma"}}
+{"kind":"phrase","id":"pl-z3d6wa7","translation":"Poprosím tablety na rýmu.","words":{"poproszę":"prosím (zdvořilá žádost)","tabletki":"tablety","na":"na","katar":"rýma"}}
+{"kind":"phrase","id":"pl-jsvvir6","translation":"Děkuji, poprosím ještě sirup na kašel.","words":{"dziękuję":"děkuji","poproszę":"prosím (zdvořilá žádost)","jeszcze":"ještě","syrop":"sirup","na":"na","kaszel":"kašel"}}
+{"kind":"phrase","id":"pl-oat7tkx","translation":"Poprosím předpis na ten sirup.","words":{"poproszę":"prosím (zdvořilá žádost)","receptę":"předpis","na":"na","ten":"ten","syrop":"sirup"}}
+{"kind":"phrase","id":"pl-vszn4p2","translation":"Mám ještě kašel, poprosím sirup.","words":{"mam":"mám","jeszcze":"ještě","kaszel":"kašel","poproszę":"prosím (zdvořilá žádost)","syrop":"sirup"}}
+{"kind":"phrase","id":"pl-wli32pf","translation":"Můžu ty tablety brát s jídlem?","words":{"czy":"(tázací částice)","mogę":"můžu","brać":"brát","te":"ty","tabletki":"tablety","z":"s","jedzeniem":"jídlo"}}
+{"kind":"phrase","id":"pl-p4q6q4r","translation":"Ne, děkuji, vezmu si jen tablety.","words":{"nie":"ne","dziękuję":"děkuji","wezmę":"vezmu","tylko":"jen","tabletki":"tablety"}}
+{"kind":"phrase","id":"pl-nwwequr","translation":"Poprosím sirup na kašel a rýmu","words":{"poproszę":"prosím (zdvořilá žádost)","syrop":"sirup","na":"na","kaszel":"kašel","i":"a","katar":"rýma"}}
+{"kind":"set","id":"set-pl-a1-hotel","subtitle":"Ubytování v malém hotelu nebo penzionu v Polsku."}
+{"kind":"phrase","id":"pl-ubloajn","translation":"Je ten ručník v pokoji?","words":{"czy":"(uvozuje otázku ano/ne)","ręcznik":"ručník","jest":"je","w":"v","pokoju":"pokoj"}}
+{"kind":"phrase","id":"pl-eampnym","translation":"Je pas potřeba na recepci?","words":{"czy":"(uvozuje otázku ano/ne)","paszport":"pas","jest":"je","potrzebny":"potřebný","w":"na","recepcji":"recepce"}}
+{"kind":"phrase","id":"pl-6a47m26","translation":"Je tam výtah do patra?","words":{"czy":"(uvozuje otázku ano/ne)","jest":"je","winda":"výtah","na":"na","piętro":"patro"}}
+{"kind":"phrase","id":"pl-3spbuk2","translation":"Ve kterém patře je náš pokoj?","words":{"na":"na","którym":"který","piętrze":"patro","jest":"je","nasz":"náš","pokój":"pokoj"}}
+{"kind":"phrase","id":"pl-qtadxkh","translation":"Nemám klíč od pokoje.","words":{"nie mam":"nemám","klucza":"klíč","do":"k","pokoju":"pokoj"}}
+{"kind":"phrase","id":"pl-wddyieu","translation":"Děkuji, klíč je na recepci.","words":{"dziękuję":"děkuji","klucz":"klíč","jest":"je","w":"na","recepcji":"recepce"}}
+{"kind":"phrase","id":"pl-kgkf5wv","translation":"Dobrý den, mám rezervaci na dvě noci.","words":{"dzień dobry":"dobrý den","mam":"mám","rezerwację":"rezervace","na":"na","dwie":"dva","noce":"noc"}}
+{"kind":"phrase","id":"pl-wzyhqiz","translation":"Máte můj pas?","words":{"czy":"(uvozuje otázku ano/ne)","pani":"paní","ma":"má","mój":"můj","paszport":"pas"}}
+{"kind":"phrase","id":"pl-sbdtao6","translation":"Je snídaně v ceně?","words":{"czy":"(uvozuje otázku ano/ne)","śniadanie":"snídaně","jest":"je","w":"v","cenie":"cena"}}
+{"kind":"phrase","id":"pl-srt3iid","translation":"Máte pokoj v přízemí?","words":{"czy":"(uvozuje otázku ano/ne)","pani":"paní","ma":"má","pokój":"pokoj","na":"na","parterze":"přízemí"}}
+{"kind":"phrase","id":"pl-numt5s2","translation":"V kolik je snídaně?","words":{"o":"v","której":"kolik","jest":"je","śniadanie":"snídaně"}}
+{"kind":"phrase","id":"pl-qgf3tpr","translation":"Poprosím ještě jeden ručník.","words":{"poproszę":"prosím, chtěl bych","jeszcze":"ještě","jeden":"jeden","ręcznik":"ručník"}}

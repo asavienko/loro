@@ -14,6 +14,10 @@ import bankNoteTranslationsJson from '../v2/bank-note-translations.json' with { 
 import metaJson from '../v2/meta.json' with { type: 'json' }
 import iconsJson from '../v2/icons.json' with { type: 'json' }
 import languagesJson from '../v2/languages.json' with { type: 'json' }
+import coursesJson from '../v2/courses.compiled.json' with { type: 'json' }
+import type { V2WrittenContent } from './courses.js'
+
+export type { V2WrittenContent, V2WrittenPhrase, V2WrittenSet } from './courses.js'
 
 export type V2Language = 'en-GB' | 'en-US' | 'es-ES' | 'bg-BG' | 'ru-RU' | 'pl-PL' | 'cs-CZ'
 export interface V2Localized {
@@ -86,17 +90,25 @@ export interface V2Content {
   noteTranslations: V2NoteTranslations
   bank: { themes: V2BankTheme[]; phrases: V2BankPhrase[] }
   bankNoteTranslations: V2NoteTranslations
+  /**
+   * The course writer's sets (plan 112), compiled from `v2/courses/` by `build:courses`: only those
+   * complete in every interface language, without notes (the seed writes them by Loro's rules) and
+   * without songs in Loro's albums.
+   */
+  written: V2WrittenContent
 }
 
 /** The files' inferred types are wider (plain strings); the app's content tests prove the narrow ones. */
 export const V2_CONTENT: V2Content = {
-  version: metaJson.version,
+  // The writer's batches change the content without a hand-edited version: their hash is part of it.
+  version: `${metaJson.version}+${coursesJson.version}`,
   phrases: phrasesJson as unknown as V2Phrase[],
   sets: setsJson as unknown as V2Set[],
   topics: topicsJson as unknown as V2Topic[],
   noteTranslations: noteTranslationsJson,
   bank: bankJson as unknown as V2Content['bank'],
   bankNoteTranslations: bankNoteTranslationsJson,
+  written: coursesJson as unknown as V2WrittenContent,
 }
 
 /** A language the app offers (plan 108); the API serves the list at `GET /v1/library/languages`. */

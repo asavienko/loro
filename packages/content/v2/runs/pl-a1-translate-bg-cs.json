@@ -1,0 +1,176 @@
+{
+  "runId": "pl-a1-translate-bg-cs",
+  "at": "2026-10-02T14:20:38.731Z",
+  "stages": [
+    "translate",
+    "judge-translate"
+  ],
+  "langs": [
+    "bg",
+    "cs"
+  ],
+  "course": "pl-PL",
+  "levels": [
+    "A1"
+  ],
+  "topics": [
+    "eating-out",
+    "getting-around",
+    "everyday"
+  ],
+  "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+  "pricing": "assumed on 2026-10-02, not verified against the providers' price lists; the run summary's dollar figure is an estimate until this file is checked",
+  "spend": {
+    "calls": 38,
+    "cached": 0,
+    "usd": 0.027990400000000002,
+    "inputTokens": 69290,
+    "outputTokens": 23554
+  },
+  "outcomes": [
+    {
+      "setId": "set-pl-a1-cafe-counter",
+      "status": "translated",
+      "lang": "bg",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "9 ok, 3 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-cafe-counter",
+      "status": "translated",
+      "lang": "cs",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "7 ok, 5 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-restaurant-order",
+      "status": "translated",
+      "lang": "bg",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "11 ok, 1 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-restaurant-order",
+      "status": "translated",
+      "lang": "cs",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "12 ok, 0 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-paying",
+      "status": "translated",
+      "lang": "bg",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "8 ok, 4 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-paying",
+      "status": "translated",
+      "lang": "cs",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "9 ok, 3 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-bus-tram",
+      "status": "translated",
+      "lang": "bg",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "12 ok, 0 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-bus-tram",
+      "status": "translated",
+      "lang": "cs",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "11 ok, 1 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-asking-the-way",
+      "status": "translated",
+      "lang": "bg",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "0 ok, 12 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-asking-the-way",
+      "status": "translated",
+      "lang": "cs",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "5 ok, 7 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-train-station",
+      "status": "translated",
+      "lang": "bg",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "11 ok, 1 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-train-station",
+      "status": "translated",
+      "lang": "cs",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "8 ok, 4 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-food-shop",
+      "status": "translated",
+      "lang": "bg",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "9 ok, 3 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-food-shop",
+      "status": "translated",
+      "lang": "cs",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "10 ok, 2 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-pharmacy",
+      "status": "translated",
+      "lang": "bg",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "10 ok, 2 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-pharmacy",
+      "status": "translated",
+      "lang": "cs",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "12 ok, 0 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-hotel",
+      "status": "translated",
+      "lang": "bg",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "11 ok, 1 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-hotel",
+      "status": "translated",
+      "lang": "cs",
+      "phrases": 12,
+      "calls": 4,
+      "judge": "1 ok, 0 review, 0 reject"
+    }
+  ]
+}

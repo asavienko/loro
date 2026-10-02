@@ -35,8 +35,9 @@ export const LINES = [
 ]
 
 /**
- * The phrases as the app plays them, in its voices (apps/api/.env TTS_VOICE_*). Polish and Czech have
- * no voice configured yet; the multilingual model speaks them in the Russian and Bulgarian voices.
+ * The phrases as the app plays them, in its voices (apps/api/.env TTS_VOICE_*). The Polish and Czech
+ * lines were made before those languages had voices, so the multilingual model speaks them in the
+ * Russian and Bulgarian voices.
  */
 export const CLIPS = [
   { id: 'c_en_bill', voice: 'TTS_VOICE_EN_GB', text: 'The bill, please.' },

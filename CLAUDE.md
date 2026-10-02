@@ -131,8 +131,10 @@ A change that violates one of these is reverted, not discussed.
   events are in `state/chart.ts`. The app has its own `eslint.config.mjs` and is excluded from the
   root ESLint/Prettier configs.
 - **Generated files are committed and drift-checked** — the UniFFI bindings, the core-rs browser
-  build, `apps/mobile/src/ui/iconCodepoints.ts` (`pnpm --filter @loro/mobile icons`) and the OpenAPI
-  specs. Never hand-edit them; fix the generator.
+  build, `apps/mobile/src/ui/iconCodepoints.ts` (`pnpm --filter @loro/mobile icons`), the OpenAPI
+  specs and `packages/content/v2/courses.compiled.json`
+  (`pnpm --filter @loro/content build:courses`, after the course writer). Never hand-edit them; fix
+  the generator.
 - **`packages/core-rs` owns FSRS scheduling** — the app calls only `fsrs_initialize` and
   `fsrs_review` ([ADR-0002](docs/architecture/adr/0002-shared-rust-core.md)). There is no JavaScript
   scheduler: `src/shared/core/fsrs.ts` only evaluates the recall curve for display,

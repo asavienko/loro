@@ -8,12 +8,14 @@
   touching what exists); also `F-03`, `AS-01`, `AI-06`, `LIB-01`
 - **Milestone:** Course content
 - **Status:** 🟡 The `phrases`, `judge`, `translate` and `judge-translate` stages of the writer
-  exist (`apps/api/src/authoring/`, 0f in part) and wrote three Spanish A1 sets, with Russian for
-  all three, Polish for two and Bulgarian for one, and nine Polish A1 sets with Russian, on
-  2026-10-02 (see "Spike result" and "Spike result: pl-PL"). Left: the rest of phase 0 (0b, 0c, 0d,
-  0e, 0g; the other stages, batches, status and regenerate of 0f) and the spike in the other five
-  courses. Phase 1 (the pilot batch) is ⛔ until a native reader per pilot language is named (Q-23)
-  and the first pairs and topics are chosen; the vocabulary bands (0c) wait on Q-25.
+  exist (`apps/api/src/authoring/`, 0f in part) and wrote three Spanish A1 sets and nine Polish A1
+  sets on 2026-10-02, each in every interface language (see "Spike result", "Spike result: pl-PL"
+  and "Shipped to the seed"). They ship: `build:courses` compiles the shards and the seed serves
+  them, with notes by Loro's rules (an interim 0c/0d). Left: the rest of phase 0 (0b, the loader,
+  validators and artifacts of 0c, 0d, 0e, 0g; the `notes` and other stages, batches, status and
+  regenerate of 0f) and the spike in the other five courses. Phase 1 (the pilot batch) is ⛔ until a
+  native reader per pilot language is named (Q-23) and the first pairs and topics are chosen; the
+  vocabulary bands (0c) wait on Q-25.
 - **Owner request, 2026-10-01:** "at the end I want to get at least 10 000 phrases for each language
   in all languages with different difficulty covering the different topics levels, aspects, words,
   rules, situations, times"
@@ -616,8 +618,8 @@ judge):
     budget ceiling and the three-round cap bound a disagreement.
 - The output is in
   `v2/courses/es/A1/eating-out.{sets.json,phrases.jsonl,ru.jsonl,pl.jsonl,bg.jsonl}` (36 phrases,
-  the new layout, not yet read by the loader or shipped), the verdicts in `v2/reviews/es.jsonl`, the
-  run summaries in `v2/runs/`.
+  the new layout), the verdicts in `v2/reviews/es.jsonl`, the run summaries in `v2/runs/`; shipped
+  since "Shipped to the seed".
 
 ## Spike result: pl-PL (2026-10-02, A1, nine sets; Russian)
 
@@ -658,7 +660,34 @@ settings as the Spanish spike:
   phrases in nine sets), verdicts in `v2/reviews/pl.jsonl`, summaries in
   `v2/runs/spike-pl-a1-eating-out-ru*.json`.
 
+## Shipped to the seed (2026-10-02)
+
+The twelve sets were written but reached no learner: the seed read only `sets.json` and
+`phrases.json`, the shards had no notes, and no set was in every interface language. The owner,
+after deploying, saw no new Polish sets for a Russian speaker. An interim 0c/0d ships them:
+
+- **Completed per pair:** `translate` and `judge-translate` wrote Bulgarian and Czech for the nine
+  Polish sets and Czech (three) and Bulgarian (two) for the Spanish ones (four runs, 52 calls, about
+  $0.04, 0 failed; three Czech lines rejected and repaired, 55 review flags, mostly gloss
+  convention). Read by eye: Czech glosses «kava» for «káva» and «v madridském kavárenském pultu» are
+  for the native reader.
+- **Compiled, not loaded:** `pnpm --filter @loro/content build:courses` (`src/courses.ts`) compiles
+  the shards into `v2/courses.compiled.json`, which `v2.ts` bundles as `V2_CONTENT.written`; a test
+  keeps it equal to the shards and the content version carries its hash, so a batch reseeds on the
+  next deploy. §2's artifacts under `LORO_CONTENT_DIR` wait until the content outgrows the bundle.
+- **Published to every language or none:** a set is compiled only when complete in every interface
+  language but its course's own; otherwise it is held with what it lacks. `locales[]` per set waits
+  for an app that hides a set the learner's language lacks.
+- **Notes by the rules:** until the `notes` stage exists, the seed writes each phrase's notes with
+  Loro's rules (`library/notes`), English and every other note language, `notesBy: 'rules'`; a word
+  the rules haven't transcribed shows as … with "listen to the clip".
+- **No songs:** the writer's sets get no song in Loro's albums (§6's `song: true` later).
+
 ## Worked example: a first batch
+
+The planned scripts below are partly built; what runs today, from brief to a learner's phone (the
+stages, completing every language, `build:courses`, voices, deploy), is the project skill
+[`generate-phrase-sets`](../.claude/skills/generate-phrase-sets/SKILL.md).
 
 ```bash
 nvm use 22 && export PATH="$HOME/.cargo/bin:$PATH"

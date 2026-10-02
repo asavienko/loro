@@ -109,7 +109,7 @@ Every phrase the app plays is a clip rendered by the server's voices; the app ha
 | `TTS_API_KEY`, `TTS_MODEL`, `TTS_VOICE_ES_ES`           | —               | Required with `elevenlabs` (`.env.example` has the model `eleven_multilingual_v2`)                                                                   |
 | `TTS_OUTPUT_FORMAT`                                     | `mp3_44100_128` | Clip format                                                                                                                                          |
 | `TTS_VOICE_BG_BG`, `TTS_VOICE_RU_RU`, `TTS_VOICE_EN_GB` | —               | One pinned voice per language (Q-15); a language without one gets no clips. `EN_GB` speaks English-speaking learners' prompts and the English course |
-| `TTS_VOICE_EN_US`, `TTS_VOICE_PL_PL`, `TTS_VOICE_CS_CZ` | —               | The same for American English, Polish and Czech (2026-10-02); not yet chosen, so those languages are silent                                          |
+| `TTS_VOICE_EN_US`, `TTS_VOICE_PL_PL`, `TTS_VOICE_CS_CZ` | —               | The same for American English, Polish and Czech (pinned 2026-10-02; `.env.example` has the four voices Q-15 names)                                   |
 | `LIMIT_SPEECH_RENDERS_DAILY`                            | `500`           | New clips rendered per UTC day, server-wide                                                                                                          |
 | `LIMIT_SPEECH_OWNER_DAILY`                              | `100`           | New clips per UTC day for one learner's own phrases                                                                                                  |
 

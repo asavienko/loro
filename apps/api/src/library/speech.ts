@@ -15,10 +15,21 @@
  * wait on a request that is still rendering. Asking for the `.mp3` itself renders it too.
  */
 import { createHash } from 'node:crypto'
-import { Controller, Get, Inject, Injectable, Logger, Optional, Param, Res } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  Inject,
+  Injectable,
+  Logger,
+  type OnModuleInit,
+  Optional,
+  Param,
+  Res,
+} from '@nestjs/common'
 import type { Response } from 'express'
 import { normalizeListeningText } from '@loro/core'
 import { audioDurationMs } from '@loro/content/audio-duration'
+import { V2_LANGUAGES } from '@loro/content/v2'
 import { DEMO_SAMPLE_RATE } from './synth.js'
 import { SERVER_CLOCK, type ServerClock } from '../common/clock.js'
 import { LoroError } from '../common/errors.js'
@@ -51,6 +62,15 @@ export function speechVoice(
   if (runtime?.provider !== 'elevenlabs') return null
   const voiceId = runtime.voices[lang]?.trim()
   return voiceId ? { voiceId, model: runtime.model } : null
+}
+
+/**
+ * The languages Loro offers that this server's provider has no voice for. Their phrases and prompts
+ * carry no clip, so the app can only say there is no recording (Q-15); without a provider, none.
+ */
+export function silentLanguages(runtime: TtsRuntimeConfig): string[] {
+  if (runtime?.provider !== 'elevenlabs') return []
+  return V2_LANGUAGES.map((l) => l.code).filter((code) => speechVoice(runtime, code) === null)
 }
 
 /** A phrase's clips by language, for each language this server can speak. */
@@ -146,7 +166,7 @@ interface SpeechRow {
 }
 
 @Injectable()
-export class SpeechService {
+export class SpeechService implements OnModuleInit {
   private readonly logger = new Logger('speech')
   private readonly inflight = new Map<string, Promise<{ bytes: Buffer; contentType: string }>>()
   /** Utterances whose last render failed for a passing reason, and when. */
@@ -160,6 +180,15 @@ export class SpeechService {
     /** Renders raw PCM for song lines; built from the runtime config unless a test supplies one. */
     @Optional() @Inject(PCM_TRANSPORT) private readonly pcmTransport?: TtsTransport,
   ) {}
+
+  /** A language left without a voice is silent in the app; said once, where a deploy shows it. */
+  onModuleInit(): void {
+    const silent = silentLanguages(this.config())
+    if (silent.length > 0)
+      this.logger.warn(
+        `no voice for ${silent.join(', ')}: their phrases have no clips (set TTS_VOICE_*)`,
+      )
+  }
 
   private pcm: TtsTransport | null | undefined
 

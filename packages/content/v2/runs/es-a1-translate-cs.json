@@ -1,0 +1,53 @@
+{
+  "runId": "es-a1-translate-cs",
+  "at": "2026-10-02T14:21:29.037Z",
+  "stages": [
+    "translate",
+    "judge-translate"
+  ],
+  "langs": [
+    "cs"
+  ],
+  "course": "es-ES",
+  "levels": [
+    "A1"
+  ],
+  "topics": [
+    "eating-out"
+  ],
+  "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+  "pricing": "assumed on 2026-10-02, not verified against the providers' price lists; the run summary's dollar figure is an estimate until this file is checked",
+  "spend": {
+    "calls": 8,
+    "cached": 0,
+    "usd": 0.0051336,
+    "inputTokens": 13272,
+    "outputTokens": 4132
+  },
+  "outcomes": [
+    {
+      "setId": "set-es-a1-cafe-counter",
+      "status": "translated",
+      "lang": "cs",
+      "phrases": 12,
+      "calls": 4,
+      "judge": "0 ok, 2 review, 0 reject"
+    },
+    {
+      "setId": "set-es-a1-cafe-counter-2",
+      "status": "translated",
+      "lang": "cs",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "11 ok, 1 review, 0 reject"
+    },
+    {
+      "setId": "set-es-a1-paying",
+      "status": "translated",
+      "lang": "cs",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "12 ok, 0 review, 0 reject"
+    }
+  ]
+}

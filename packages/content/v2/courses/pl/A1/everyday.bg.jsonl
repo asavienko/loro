@@ -1,0 +1,39 @@
+{"kind":"set","id":"set-pl-a1-food-shop","subtitle":"На щанда в магазина: искаме хляб, кифли, сирене и масло и плащаме."}
+{"kind":"phrase","id":"pl-4u36ljc","translation":"Едно парче сирене и малко масло, моля.","words":{"poproszę":"моля (учтива молба)","kawałek":"парче","sera":"сирене","i":"и","trochę":"малко","masła":"масло"}}
+{"kind":"phrase","id":"pl-z64s63o","translation":"Още мляко и яйца, моля.","words":{"poproszę":"моля (учтива молба)","jeszcze":"още, също","mleko":"мляко","i":"и","jajka":"яйца"}}
+{"kind":"phrase","id":"pl-jjps7by","translation":"Има ли още пресен хляб?","words":{"czy":"(започва въпрос с да/не)","jest":"има","jeszcze":"още","świeży":"пресен","chleb":"хляб"}}
+{"kind":"phrase","id":"pl-j3x5ouc","translation":"Има ли още пресни яйца?","words":{"czy":"(започва въпрос с да/не)","są":"има (мн.ч.)","jeszcze":"още","świeże":"пресни","jajka":"яйца"}}
+{"kind":"phrase","id":"pl-6d3l3xx","translation":"Няма ли вече масло?","words":{"nie ma":"няма","już":"вече","masła":"масло"}}
+{"kind":"phrase","id":"pl-lxtrdlk","translation":"Имате ли пресно сирене?","words":{"czy":"(започва въпрос с да/не)","pan":"Вие (към мъж)","ma":"има","świeży":"пресен","ser":"сирене"}}
+{"kind":"phrase","id":"pl-5ta7iui","translation":"Един хляб и две кифли, моля.","words":{"poproszę":"моля (учтива молба)","chleb":"хляб","i":"и","dwie":"две","bułki":"кифли"}}
+{"kind":"phrase","id":"pl-7insb5x","translation":"Още половин хляб, моля.","words":{"poproszę":"моля (учтива молба)","jeszcze":"още, също","pół":"половин","chleba":"хляб"}}
+{"kind":"phrase","id":"pl-om5huvn","translation":"Пресни ли са кифлите?","words":{"czy":"(започва въпрос с да/не)","są":"са","świeże":"пресни","bułki":"кифли"}}
+{"kind":"phrase","id":"pl-mi3ovfn","translation":"Имате ли торба?","words":{"czy":"(започва въпрос с да/не)","pani":"Вие (към жена)","ma":"има","torbę":"торба"}}
+{"kind":"phrase","id":"pl-u65jinu","translation":"Знаете ли колко струва маслото?","words":{"czy":"(започва въпрос с да/не)","pani":"Вие (към жена)","wie":"знае","ile":"колко","kosztuje":"струва","masło":"масло"}}
+{"kind":"phrase","id":"pl-futsgn2","translation":"Колко струва този хляб?","words":{"ile":"колко","kosztuje":"струва","ten":"този","chleb":"хляб"}}
+{"kind":"set","id":"set-pl-a1-pharmacy","subtitle":"В аптеката: казваме какво ни боли и искаме нещо за него."}
+{"kind":"phrase","id":"pl-cr5dhxn","translation":"Искам нещо за главоболие, моля.","words":{"poproszę":"моля (учтива молба)","coś":"нещо","na":"за","ból":"болка","głowy":"глава"}}
+{"kind":"phrase","id":"pl-v5apxhx","translation":"Имате ли нещо за кашлица?","words":{"czy":"дали (въпросителна частица)","ma":"имате (3 л.)","pani":"Вие (към жена)","coś":"нещо","na":"за","kaszel":"кашлица"}}
+{"kind":"phrase","id":"pl-gtg6zbe","translation":"Има ли нещо за температура?","words":{"czy":"дали (въпросителна частица)","jest":"има","coś":"нещо","na":"за","gorączkę":"треска, температура"}}
+{"kind":"phrase","id":"pl-ubz7x7f","translation":"Този сироп с рецепта ли е?","words":{"czy":"дали (въпросителна частица)","ten":"този","syrop":"сироп","jest":"е","na":"за, по","receptę":"рецепта"}}
+{"kind":"phrase","id":"pl-5iwpbzt","translation":"Боли ме гърлото и имам хрема.","words":{"boli":"боли","mnie":"ме","gardło":"гърло","i":"и","mam":"имам","katar":"хрема"}}
+{"kind":"phrase","id":"pl-z3d6wa7","translation":"Искам таблетки за хрема, моля.","words":{"poproszę":"моля (учтива молба)","tabletki":"таблетки","na":"за","katar":"хрема"}}
+{"kind":"phrase","id":"pl-jsvvir6","translation":"Благодаря, искам още сироп за кашлица.","words":{"dziękuję":"благодаря","poproszę":"моля (учтива молба)","jeszcze":"още, също","syrop":"сироп","na":"за","kaszel":"кашлица"}}
+{"kind":"phrase","id":"pl-oat7tkx","translation":"Искам рецепта за този сироп, моля.","words":{"poproszę":"моля (учтива молба)","receptę":"рецепта","na":"за","ten":"този","syrop":"сироп"}}
+{"kind":"phrase","id":"pl-vszn4p2","translation":"Още имам кашлица, искам сироп.","words":{"mam":"имам","jeszcze":"още","kaszel":"кашлица","poproszę":"моля (учтива молба)","syrop":"сироп"}}
+{"kind":"phrase","id":"pl-wli32pf","translation":"Мога ли да вземам тези таблетки с храна?","words":{"czy":"дали (въпросителна частица)","mogę":"мога","brać":"вземам","te":"тези","tabletki":"таблетки","z":"с","jedzeniem":"храна"}}
+{"kind":"phrase","id":"pl-p4q6q4r","translation":"Не, благодаря, ще взема само таблетките.","words":{"nie":"не","dziękuję":"благодаря","wezmę":"ще взема","tylko":"само","tabletki":"таблетки"}}
+{"kind":"phrase","id":"pl-nwwequr","translation":"Искам сироп за кашлица и хрема, моля.","words":{"poproszę":"моля (учтива молба)","syrop":"сироп","na":"за","kaszel":"кашлица","i":"и","katar":"хрема"}}
+{"kind":"set","id":"set-pl-a1-hotel","subtitle":"Настаняване в малък хотел или къща за гости в Полша."}
+{"kind":"phrase","id":"pl-ubloajn","translation":"Има ли хавлия в стаята?","words":{"czy":"(започва въпрос с да/не)","ręcznik":"хавлия","jest":"е","w":"в","pokoju":"стаята"}}
+{"kind":"phrase","id":"pl-eampnym","translation":"Нужен ли е паспорт на рецепцията?","words":{"czy":"(започва въпрос с да/не)","paszport":"паспорт","jest":"е","potrzebny":"нужен","w":"на","recepcji":"рецепцията"}}
+{"kind":"phrase","id":"pl-6a47m26","translation":"Има ли асансьор за етажа?","words":{"czy":"(започва въпрос с да/не)","jest":"има","winda":"асансьор","na":"за","piętro":"етаж"}}
+{"kind":"phrase","id":"pl-3spbuk2","translation":"На кой етаж е нашата стая?","words":{"na":"на","którym":"кой","piętrze":"етаж","jest":"е","nasz":"наш","pokój":"стая"}}
+{"kind":"phrase","id":"pl-qtadxkh","translation":"Нямам ключ за стаята.","words":{"nie mam":"не имам","klucza":"ключ","do":"за","pokoju":"стаята"}}
+{"kind":"phrase","id":"pl-wddyieu","translation":"Благодаря, ключът е на рецепцията.","words":{"dziękuję":"благодаря","klucz":"ключ","jest":"е","w":"на","recepcji":"рецепцията"}}
+{"kind":"phrase","id":"pl-kgkf5wv","translation":"Добър ден, имам резервация за две нощувки.","words":{"dzień dobry":"добър ден","mam":"имам","rezerwację":"резервация","na":"за","dwie":"две","noce":"нощувки"}}
+{"kind":"phrase","id":"pl-wzyhqiz","translation":"Имате ли моя паспорт?","words":{"czy":"(започва въпрос с да/не)","pani":"Вие (към жена)","ma":"има","mój":"мой","paszport":"паспорт"}}
+{"kind":"phrase","id":"pl-sbdtao6","translation":"Включена ли е закуската в цената?","words":{"czy":"(започва въпрос с да/не)","śniadanie":"закуска","jest":"е","w":"в","cenie":"цената"}}
+{"kind":"phrase","id":"pl-srt3iid","translation":"Имате ли стая на партера?","words":{"czy":"(започва въпрос с да/не)","pani":"Вие (към жена)","ma":"има","pokój":"стая","na":"на","parterze":"партера"}}
+{"kind":"phrase","id":"pl-numt5s2","translation":"В колко часа е закуската?","words":{"o":"в","której":"колко часа","jest":"е","śniadanie":"закуска"}}
+{"kind":"phrase","id":"pl-qgf3tpr","translation":"Още една хавлия, моля.","words":{"poproszę":"моля","jeszcze":"още","jeden":"една","ręcznik":"хавлия"}}
