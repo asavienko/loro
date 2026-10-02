@@ -3,7 +3,7 @@
 // (a phrase learned, a save that didn't reach storage; the end of a pass is the player's: PassNotice).
 import { usePathname, useRouter, useGlobalSearchParams } from 'expo-router';
 import { createContext, ReactNode, RefObject, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { learnedCue } from '@shared/audio/cues';
+import { learnedCue, prepareAudio } from '@shared/audio/cues';
 import { NavContext, Navigation, Shareable } from '@shared/nav/NavContext';
 import { formatRoute, Route, Tab } from '@shared/nav/routes';
 import { findPhrase, findSetView } from '@shared/state/catalog';
@@ -147,6 +147,8 @@ export function Shell({ children }: { children: ReactNode }) {
   useSaveWarning();
   useDeviceUpload();
   useQueueFollowsContent();
+  // The cue sounds load once, ahead of their first moment.
+  useEffect(prepareAudio, []);
   // A tap on a song's notification (plan 113) opens its album.
   useEffect(() => onNotificationTap((tap) => nav.openAlbum(tap.albumId)), [nav]);
 
