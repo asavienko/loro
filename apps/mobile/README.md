@@ -47,7 +47,8 @@ phrase clips still stream from the API. On the Android emulator run `adb reverse
 See [running it locally](../../docs/architecture/library.md#running-it-locally).
 
 Analytics and session replay are on by default, with "Share usage data" in Settings to turn them
-off; they never include sound
+off; they never include sound, and the person in PostHog carries the account and the learner's real
+figures (`src/shared/analytics/person.ts`)
 ([ADR-0011](../../docs/architecture/adr/0011-analytics-and-privacy.md)).
 
 ## How it's built

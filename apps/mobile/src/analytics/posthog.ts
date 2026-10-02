@@ -11,7 +11,8 @@ import Constants from 'expo-constants';
 import PostHog from 'posthog-react-native';
 import type { AppEvent } from '@shared/state/machine';
 import type { AppState } from '@shared/state/types';
-import { analyticsEvent } from '@shared/analytics/events';
+import { analyticsEvent, AnalyticsProperties } from '@shared/analytics/events';
+import { AccountLike, accountProperties } from '@shared/analytics/person';
 import { Attributes, setTelemetrySink } from '@shared/analytics/telemetry';
 
 const KEY = process.env.EXPO_PUBLIC_POSTHOG_KEY || '';
@@ -78,19 +79,41 @@ export function trackScreen(pathname: string): void {
   posthog?.screen(pathname);
 }
 
-/** Ties this device's events to the signed-in account, or starts a fresh anonymous id. */
-export function identify(account: { userId: string; email?: string | null } | null): void {
+/**
+ * Ties this device's events to the signed-in account and names the person by it (id, email, provider
+ * and display name), or starts a fresh anonymous id.
+ */
+export function identify(account: AccountLike | null): void {
   if (!posthog) return;
   if (account) {
-    posthog.identify(account.userId, account.email ? { email: account.email } : undefined);
+    posthog.identify(account.userId, { $set: defined(accountProperties(account)) });
     return;
   }
-  // reset() forgets an opt-out and the context along with the identity: keep the learner's choice.
+  // reset() forgets an opt-out, the context and the person along with the identity: keep the
+  // learner's choice, and say again who this (now anonymous) person is in the app.
   const out = posthog.optedOut;
   posthog.reset();
   if (out) void posthog.optOut();
   if (context) void posthog.register(context);
+  if (person) posthog.setPersonProperties(person, undefined, false);
 }
+
+/** The account's details changed while signed in (the display name arrives after the sign-in). */
+export function setAccount(account: AccountLike): void {
+  posthog?.setPersonProperties(defined(accountProperties(account)), undefined, false);
+}
+
+/**
+ * The learner's name, course and figures as the person's properties (`learnerProperties`), for the
+ * anonymous person as much as a signed-in one. No feature flags are reloaded: the app uses none.
+ */
+export function setPerson(properties: AnalyticsProperties): void {
+  person = defined(properties);
+  posthog?.setPersonProperties(person, undefined, false);
+}
+
+/** The last learner properties set, sent again after `reset()` forgets them. */
+let person: Record<string, string | number | boolean | null> | null = null;
 
 export function analyticsAvailable(): boolean {
   return posthog !== null;
