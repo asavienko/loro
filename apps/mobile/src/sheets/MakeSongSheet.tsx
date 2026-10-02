@@ -1,11 +1,12 @@
-// Making a song from a set (plans 106, 113): which set, which of the twelve styles, which album and
-// a title; then the lyrics first, written by the server's text model in the background and shown
+// Making a song from a set (plans 106, 113): which set, which of the twelve styles, how it is sung
+// (voice, tempo, mood, length: folded under one row), what it is about, which album and a title;
+// then the lyrics first, written by the server's text model in the background and shown
 // here line by line with their meanings. The learner has them written again, or changed as they ask
 // in their own words, and only then has them sung: the song is made from exactly those lines and
 // appears in its album as it is made. Spent allowances (lyrics, songs) are shown before they ask.
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, TextInput, View } from 'react-native';
-import { generateSong, rewriteLyrics, SONG_STYLES, writeLyrics, type Lyrics, type SongStyle } from '@shared/api/library';
+import { DEFAULT_SONG_OPTIONS, generateSong, rewriteLyrics, SONG_STYLES, SONG_THEME_MAX, writeLyrics, type Lyrics, type SongOptions, type SongStyle } from '@shared/api/library';
 import { albumsForCourse, librarySets, setsForCourse } from '@shared/content';
 import { useNav } from '@shared/nav/NavContext';
 import { tidy } from '@shared/state/limits';
@@ -22,6 +23,7 @@ import { Sheet, SheetOption, SheetSection } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
 import { colors, radius } from '../ui/theme';
+import { optionsSummary, SongOptionsPanel } from './SongOptions';
 
 export interface MakeSongRequest {
   setId?: string;
@@ -55,6 +57,8 @@ function MakeSongForm({ request, onClose }: { request: MakeSongRequest; onClose:
   const albums = albumsForCourse(target).filter((a) => a.owner === 'me');
   const [setId, setSetId] = useState<string | null>(request.setId ?? null);
   const [style, setStyle] = useState<SongStyle>('modern_pop');
+  const [options, setOptions] = useState<SongOptions>(DEFAULT_SONG_OPTIONS);
+  const [theme, setTheme] = useState('');
   const [albumId, setAlbumId] = useState<string | null>(request.albumId ?? null);
   const [title, setTitle] = useState('');
   // The lyrics step: the draft as the server last sent it, and what the learner asks to change.
@@ -80,13 +84,15 @@ function MakeSongForm({ request, onClose }: { request: MakeSongRequest; onClose:
   const aiWrites = account.usage?.writers.lyrics === 'ai';
   const chosen = sets.find((s) => s.id === setId) ?? null;
   const cleanTitle = tidy(title);
+  // What the song is about only reaches a writer; the set's phrases arranged have no lines to give it.
+  const asked: SongOptions = { ...options, theme: aiWrites ? tidy(theme) || null : null };
 
   /** Step one's end: the lyrics, written in the background while this waits. */
   const write = async () => {
     if (!chosen) return;
     setBusy('writing');
     try {
-      const draft = await writeLyrics({ setId: chosen.id, styleId: style, nativeLang, ...(cleanTitle ? { title: cleanTitle } : {}) });
+      const draft = await writeLyrics({ setId: chosen.id, styleId: style, nativeLang, options: asked, ...(cleanTitle ? { title: cleanTitle } : {}) });
       if (!open.current) return;
       setLyrics(draft);
       if (draft.status === 'failed') toast(c.create.lyricsFailed);
@@ -122,6 +128,8 @@ function MakeSongForm({ request, onClose }: { request: MakeSongRequest; onClose:
     if (!chosen || !lyrics || lyrics.status !== 'ready') return;
     setBusy('singing');
     try {
+      // Sung with the options the lyrics were written for (the server reads them from the draft): they
+      // change only by going back to the setup, which writes new lyrics.
       const made = await generateSong({ setId: chosen.id, styleId: style, nativeLang, lyricsId: lyrics.id, ...(cleanTitle ? { title: cleanTitle } : {}), ...(albumId ? { albumId } : {}) });
       toast(c.create.songStarted, { tone: 'success' });
       music.watch(made.song, made.album);
@@ -167,6 +175,12 @@ function MakeSongForm({ request, onClose }: { request: MakeSongRequest; onClose:
             </Txt>
             <Txt variant="label" color="secondary">
               {`${c.create.draft(lyrics.revision)} · ${c.music.style[style]}`}
+            </Txt>
+          </View>
+          <View style={styles.tags}>
+            <Icon name="graphic_eq" size="xs" color="secondary" />
+            <Txt variant="label" color="secondary" style={{ flex: 1 }}>
+              {[optionsSummary(c, lyrics.options ?? asked), ...(lyrics.options?.theme ? [`“${lyrics.options.theme}”`] : [])].join(' · ')}
             </Txt>
           </View>
           <Txt variant="label" color="secondary">
@@ -272,12 +286,31 @@ function MakeSongForm({ request, onClose }: { request: MakeSongRequest; onClose:
         </View>
       </SheetSection>
       <SheetSection title={c.create.pickStyle}>
-        <View style={styles.chips}>
+        <View style={styles.chips} accessibilityRole="radiogroup" accessibilityLabel={c.create.pickStyle}>
           {SONG_STYLES.map((id) => (
             <Chip key={id} label={c.music.style[id]} selected={style === id} onPress={() => setStyle(id)} />
           ))}
         </View>
       </SheetSection>
+      <SongOptionsPanel c={c} options={options} onChange={setOptions} demoSound={account.usage?.writers.music === 'demo'} />
+      {aiWrites && (
+        <View style={styles.pad}>
+          <Txt variant="label" weight={600} nativeID="song-theme">
+            {c.create.themeLabel}
+          </Txt>
+          <TextInput
+            accessibilityLabelledBy="song-theme"
+            aria-label={c.create.themeLabel}
+            value={theme}
+            onChangeText={setTheme}
+            maxLength={SONG_THEME_MAX}
+            placeholder={c.create.themePlaceholder}
+            placeholderTextColor={placeholderColor}
+            multiline
+            style={[field, styles.instruction]}
+          />
+        </View>
+      )}
       <SheetSection title={c.create.pickAlbum}>
         <View accessibilityRole="radiogroup" accessibilityLabel={c.create.pickAlbum}>
           <SheetOption icon="add" label={c.create.newAlbum} detail={chosen?.title} selected={albumId === null} onPress={() => setAlbumId(null)} />
@@ -330,6 +363,7 @@ const styles = StyleSheet.create({
   inset: { paddingHorizontal: 16 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16 },
   draftHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  tags: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   writing: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48 },
   lyrics: { paddingHorizontal: 16, paddingTop: 8, gap: 8 },
   dim: { opacity: 0.5 },
