@@ -4,7 +4,13 @@
  * app reads without zod.
  */
 import { z } from 'zod'
-import { MUSIC_STYLE_IDS } from '../domain/lyric-plan.js'
+import {
+  MUSIC_STYLE_IDS,
+  SONG_LENGTHS,
+  SONG_MOODS,
+  SONG_TEMPOS,
+  SONG_VOICES,
+} from '../domain/lyric-plan.js'
 
 /**
  * The languages and courses the library accepts: those of `packages/content/v2/languages.json`,
@@ -60,6 +66,8 @@ export const LIBRARY_TEXT = {
   coverPrompt: 200,
   /** What a learner asks to change in a song's lyrics (plan 113). */
   instruction: 200,
+  /** What a learner wants a song to be about, in their own words. */
+  songTheme: 200,
 }
 
 /** Links are how spam travels; nothing a learner names or describes here needs one. */
@@ -327,6 +335,18 @@ export const WearCoverSchema = z.strictObject({
   attachTo: LibraryIdSchema,
 })
 
+/**
+ * How the learner wants a song sung (plan 113). Each is optional; the server fills what is left
+ * out with `DEFAULT_SONG_OPTIONS`.
+ */
+export const SongOptionsSchema = z.strictObject({
+  voice: z.enum(SONG_VOICES).optional(),
+  tempo: z.enum(SONG_TEMPOS).optional(),
+  mood: z.enum(SONG_MOODS).nullable().optional(),
+  length: z.enum(SONG_LENGTHS).optional(),
+  theme: shownText(LIBRARY_TEXT.songTheme).nullable().optional(),
+})
+
 export const GenerateSongSchema = z.strictObject({
   /** Any set the learner can read: Loro's, theirs, or a shared one. */
   setId: LibraryIdSchema,
@@ -340,6 +360,8 @@ export const GenerateSongSchema = z.strictObject({
    * stands. Without one the server writes the lyrics itself, as before.
    */
   lyricsId: LibraryIdSchema.optional(),
+  /** Without them, the approved lyrics' options, or the defaults. */
+  options: SongOptionsSchema.optional(),
 })
 
 /** Lyrics written first, for the learner to read, change and approve (plan 113). */
@@ -348,6 +370,7 @@ export const StartLyricsSchema = z.strictObject({
   styleId: z.enum(MUSIC_STYLE_IDS),
   nativeLang: LibraryLanguageSchema,
   title: shownText(LIBRARY_TEXT.title, 1).optional(),
+  options: SongOptionsSchema.optional(),
 })
 
 /** The same draft written again: anew, or changed as the learner asks. */

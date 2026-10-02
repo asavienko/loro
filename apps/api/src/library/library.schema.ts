@@ -301,3 +301,12 @@ UPDATE library_covers c SET item_kind = 'album', item_id = a.id
 UPDATE library_covers c SET item_kind = i.kind, item_id = i.item_id
   FROM library_item_covers i WHERE i.cover_id = c.id AND i.user_id = c.owner_id AND c.item_id IS NULL;
 `
+
+/**
+ * Plan 113: how a song is sung besides its style (voice, tempo, mood, length, theme), kept on the
+ * draft its lyrics were written for and on the song, so a failed song is made again the same way.
+ * Null on rows from before: they read as the defaults.
+ */
+export const LIBRARY_SONG_OPTIONS_MIGRATION_SQL = `ALTER TABLE library_lyric_drafts ADD COLUMN IF NOT EXISTS options jsonb;
+ALTER TABLE library_songs ADD COLUMN IF NOT EXISTS options jsonb;
+`

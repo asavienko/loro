@@ -8,6 +8,28 @@ import { api, ApiError } from './client';
 export const SONG_STYLES = ['modern_pop', 'acoustic_folk', 'gentle_ballad', 'upbeat_kids', 'indie_rock', 'hip_hop', 'reggaeton', 'jazz_lounge', 'electronic_dance', 'country', 'lullaby', 'bossa_nova'] as const;
 export type SongStyle = (typeof SONG_STYLES)[number];
 
+/**
+ * How a song is sung besides its style (plan 113), as the API's `SongOptionsSchema` takes them:
+ * who sings, how fast (`natural` is the style's own pace), the mood (null: the style's own), how
+ * long it runs, and what it is about in the learner's words.
+ */
+export const SONG_VOICES = ['any', 'female', 'male', 'duet'] as const;
+export const SONG_TEMPOS = ['slow', 'natural', 'lively'] as const;
+export const SONG_MOODS = ['cheerful', 'calm', 'romantic', 'nostalgic', 'energetic', 'playful'] as const;
+export const SONG_LENGTHS = ['short', 'standard', 'long'] as const;
+/** What a learner may say a song is about, as the server bounds it. */
+export const SONG_THEME_MAX = 200;
+export interface SongOptions {
+  voice: (typeof SONG_VOICES)[number];
+  tempo: (typeof SONG_TEMPOS)[number];
+  mood: (typeof SONG_MOODS)[number] | null;
+  length: (typeof SONG_LENGTHS)[number];
+  theme: string | null;
+}
+export const DEFAULT_SONG_OPTIONS: SongOptions = { voice: 'any', tempo: 'natural', mood: null, length: 'standard', theme: null };
+/** The most lines a song of each length has, as the server's `SONG_LENGTH_LIMITS` bounds it. */
+export const SONG_LENGTH_LINES: Record<SongOptions['length'], number> = { short: 8, standard: 12, long: 16 };
+
 export interface SongLine {
   /** The line as it is heard: as sung, where the song was heard back (plan 113); as written otherwise. */
   text: string;
@@ -41,6 +63,8 @@ export interface Song {
    * lines as sung; `demo`, the synthesizer's bars; null, none. An older server sends nothing.
    */
   timingBy?: 'transcript' | 'demo' | null;
+  /** How it was asked to be sung besides its style; an older server sends nothing. */
+  options?: SongOptions;
   durationMs: number | null;
   error: string | null;
   createdAt: number;
@@ -59,6 +83,8 @@ export interface Lyrics {
   revision: number;
   /** What the learner last asked to change. */
   instruction: string | null;
+  /** The options they were written for; an older server sends nothing. */
+  options?: SongOptions;
   updatedAt: number;
 }
 
@@ -292,7 +318,7 @@ async function awaitLyrics(lyrics: Lyrics, pace: { pollMs: number; polls: number
  * app waits. Without a text model the server answers at once with the set's phrases arranged.
  */
 export async function writeLyrics(
-  body: { setId: string; styleId: SongStyle; nativeLang: LanguageCode; title?: string },
+  body: { setId: string; styleId: SongStyle; nativeLang: LanguageCode; title?: string; options?: SongOptions },
   pace = { pollMs: LYRICS_POLL_MS, polls: LYRICS_POLLS },
 ): Promise<Lyrics> {
   return awaitLyrics(readLyrics(await api<Lyrics>('/library/lyrics', { method: 'POST', body, auth: 'required' })), pace);
@@ -307,7 +333,7 @@ export async function rewriteLyrics(id: string, instruction: string | undefined,
 export const fetchLyrics = (id: string) => api<Lyrics>(`/library/lyrics/${encodeURIComponent(id)}`, { auth: 'required' }).then(readLyrics);
 
 /** A song: from the learner's approved lyrics (`lyricsId`, plan 113), or with its lyrics written by the server. */
-export const generateSong = (body: { setId: string; styleId: SongStyle; nativeLang: LanguageCode; title?: string; albumId?: string; lyricsId?: string }) =>
+export const generateSong = (body: { setId: string; styleId: SongStyle; nativeLang: LanguageCode; title?: string; albumId?: string; lyricsId?: string; options?: SongOptions }) =>
   api<{ song: Song; album: Album }>('/library/generate/song', { method: 'POST', body, auth: 'required', timeoutMs: 60_000 });
 
 /** A device's Expo push token, with the UI language its messages are in (plan 113). */

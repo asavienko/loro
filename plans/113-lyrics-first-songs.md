@@ -5,7 +5,8 @@
 - **Milestone:** Main app
 - **Status:** 🟡 Started 2026-10-01 at the owner's request; scope 1–8 landed the same day. **Left:**
   scope 9, a live run against ElevenLabs (a sung song transcribed and aligned, a push delivered to a
-  phone) and an APK; the transcription and the push are tested against recorded answers only.
+  phone) and an APK; the transcription and the push are tested against recorded answers only. Scope
+  10 (song options) landed 2026-10-02.
 - **Owner request, 2026-10-01:** "When a user generates a song, make sure he can select more styles
   than he has right now after selecting the phrases. 1. Generate the lyrics. 2. Allow the user to
   regenerate the lyrics or tweak it with the text query. 3. After the lyrics are approved, send a
@@ -60,6 +61,29 @@ timing has none.
 - **Twelve styles.** Pop, folk, ballad, sing-along, rock, hip-hop, reggaeton, jazz, dance, country,
   lullaby and bossa nova: each a style pack for ElevenLabs and a tempo, chord progression and feel
   for the demo synthesizer, so every style sounds different with or without a music provider.
+- **Song options besides the style** (owner request, 2026-10-02: "provide more options for
+  generating the song, improve the ui accordingly"). A song is asked for with a voice (any, female,
+  male, duet), a tempo (slow, natural, lively), a mood (one of six, or the style's own), a length
+  (short, standard, long: at most 8, 12 or 16 lines, and 30–50 s, 40–80 s or 60–120 s of music at
+  4–6 s a line by tempo) and a theme in the learner's words (200 characters, no links). They are
+  kept on the draft and the song (`options`, migration `022`), so a song sung from a draft, and a
+  failed song made again, are made the same way; a song's request may change any of them, and what
+  it leaves out comes from the draft. The default is a **standard** length (twelve lines), not the
+  sixteen every song had before: shorter songs are easier to learn from, and `long` keeps sixteen.
+  The text model gets the mood, tempo, voice and theme as data (the theme shapes the connecting
+  lines and never replaces a phrase); the music model gets the voice, tempo and mood, and **never
+  the theme**: the learner's own words stay with the text model, and the lyrics already carry them.
+  `natural` adds no tempo words, so the style pack's own pace stands; a slow or lively tempo drops
+  the pack's pace words so the prompt never contradicts itself. The demo synthesizer plays the style
+  only, and the sheet says so on a demo server. Rejected: a free-text music prompt (it would send
+  the learner's words to the music provider and invite prompts the style packs exist to bound), and
+  a BPM slider (a number the learner can't hear on a demo server, and the provider takes words).
+- **The options fold under one row.** The set-up sheet shows "Song options" with a one-line summary
+  (e.g. "Duet · Slow · Calm · Short") under the styles; a tap opens voice, tempo, mood and length as
+  chips, with what the chosen tempo and length mean under them. Defaults make a song without a look;
+  every choice is one tap away. The theme field shows only where an AI writer is set up (the phrases
+  arranged have no lines for it to shape). The lyrics step shows the options and theme the draft was
+  written for; changing them is "Change the set, style or options", which writes new lyrics.
 
 ## Scope
 
@@ -81,6 +105,10 @@ timing has none.
    first song, a local notification from the watcher when the app is in the background, a tap
    opening the album.
 9. A live run with `MUSIC_PROVIDER=elevenlabs` and a device with an EAS project id; an APK.
+10. Song options: `SongOptionsSchema` and the length/tempo limits in `packages/core`, `options` on
+    drafts and songs (migration `022`), the writer's and the music prompt's use of them
+    (`livePrompt` in `music-live.ts`), the folded options panel in the sheet
+    (`sheets/SongOptions.tsx`), copy in five languages. ✅ 2026-10-02.
 
 ## Verification
 

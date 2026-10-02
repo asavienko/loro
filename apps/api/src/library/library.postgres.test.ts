@@ -4,6 +4,7 @@
  */
 import type { Pool } from 'pg'
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
+import { DEFAULT_SONG_OPTIONS } from '@loro/core'
 import { LoroError } from '../common/errors.js'
 import { ChatCompletions, FIREWORKS_CHAT_URL } from '../integrations/openai-compatible/chat.js'
 import { PostgresDatabase } from '../database/database.js'
@@ -830,6 +831,7 @@ describePostgres('the library against real PostgreSQL', () => {
       setId: set.id,
       styleId: 'gentle_ballad',
       nativeLang: 'en-GB',
+      options: { length: 'long' },
     })
     await vi.waitFor(
       async () => {
@@ -1758,6 +1760,41 @@ describePostgres('the library against real PostgreSQL', () => {
     } finally {
       resetWriter()
     }
+  })
+
+  it('keeps the options the lyrics were written for, and sings the song with them (plan 113)', async () => {
+    const options = {
+      voice: 'duet',
+      length: 'short',
+      mood: 'calm',
+      theme: 'a rainy morning',
+    } as const
+    const ask = { setId: 'set-cafe', styleId: 'bossa_nova', nativeLang: 'en-GB' } as const
+    const draft = await library.startLyrics('ivy', { ...ask, options })
+    // A short song: its lines fit eight, and the draft says what it was written for.
+    expect(draft.sections.flatMap((s) => s.lines).length).toBeLessThanOrEqual(8)
+    expect(draft.options).toEqual({ ...options, tempo: 'natural' })
+    expect(await code(library.startLyrics('ivy', { ...ask, options: { voice: 'robot' } }))).toBe(
+      'VALIDATION_FAILED',
+    )
+    // What the song's request leaves out is as the lyrics were written; what it says wins.
+    const { song } = await library.generateSong('ivy', {
+      ...ask,
+      lyricsId: draft.id,
+      options: { tempo: 'lively', mood: null },
+    })
+    const sung = { ...options, tempo: 'lively', mood: null }
+    expect(song.options).toEqual(sung)
+    await vi.waitFor(
+      async () => {
+        expect((await library.song('ivy', song.id)).status).toBe('ready')
+      },
+      { timeout: 5000 },
+    )
+    expect((await library.song('ivy', song.id)).options).toEqual(sung)
+    // Without options or lyrics, a song is made as before.
+    const plain = await library.generateSong('ivy', ask)
+    expect(plain.song.options).toEqual(DEFAULT_SONG_OPTIONS)
   })
 
   it('tells the learner’s phones when a song is ready, in their language, and forgets a dead token (plan 113)', async () => {
