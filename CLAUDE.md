@@ -23,7 +23,7 @@ one light palette.
 [library.md](docs/architecture/library.md)): it ships no phrase content. It downloads each course's
 pack from `GET /v1/library/pack` (seeded from `packages/content/v2/`), keeps it for offline use and
 installs it before learner state loads. Product analytics, session replay, logs, error tracking and
-metrics go to PostHog EU (`apps/mobile/src/analytics`; shared code reports through
+metrics go to PostHog US (`apps/mobile/src/analytics`; shared code reports through
 `src/shared/analytics/telemetry.ts`; on by default with an opt-out in Settings, never audio;
 [ADR-0011](docs/architecture/adr/0011-analytics-and-privacy.md)). Sign-in (email code, Google,
 Apple) goes through the API's `auth` module; sharing (private/link/public, Community), progress sync

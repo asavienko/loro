@@ -1,5 +1,5 @@
-// Product analytics, session replay, logs, error tracking and metrics (ADR-0011): PostHog, EU
-// cloud. On unless the learner turns "Share usage data" off in Settings; PostHog keeps that choice
+// Product analytics, session replay, logs, error tracking and metrics (ADR-0011, ADR-0020): PostHog,
+// US cloud. On unless the learner turns "Share usage data" off in Settings; PostHog keeps that choice
 // on the device and it stops all of them. A build without EXPO_PUBLIC_POSTHOG_KEY (development,
 // tests) sends nothing.
 //
@@ -15,7 +15,7 @@ import { analyticsEvent } from '@shared/analytics/events';
 import { Attributes, setTelemetrySink } from '@shared/analytics/telemetry';
 
 const KEY = process.env.EXPO_PUBLIC_POSTHOG_KEY || '';
-const HOST = process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://eu.i.posthog.com';
+const HOST = process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com';
 
 export const posthog: PostHog | null = KEY
   ? new PostHog(KEY, {
