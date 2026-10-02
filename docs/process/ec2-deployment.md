@@ -176,14 +176,18 @@ instance a role that may only call `ses:SendEmail`, and a metadata hop limit of 
 reaches its credentials; `scripts/provision-ec2.sh` applies both in place. SES itself is set up
 once, by hand, in the host's region:
 
-1. **Verify the sending domain** (it waits on [Q-27](../decisions/open-questions.md#q-27)): create
-   the domain identity in SES and add its three DKIM CNAME records, plus SPF and DMARC records, at
-   the domain's DNS.
+1. **Verify the sending domain.** Codes come from `codes@loro.savienko.com`. The SES identity is
+   `loro.savienko.com` (Easy DKIM, RSA 2048) with the custom MAIL FROM domain
+   `mail.loro.savienko.com`. Its DNS is at GoDaddy: the three DKIM CNAME records that
+   `aws sesv2 get-email-identity --email-identity loro.savienko.com` lists, an MX record for
+   `mail.loro.savienko.com` pointing at `feedback-smtp.eu-central-1.amazonses.com` (priority 10),
+   and a TXT record `v=spf1 include:amazonses.com ~all` on the same name. DMARC comes from the
+   registrar's default record on `savienko.com`.
 2. **Request production access** in the SES console. Until it is granted the account is in the
    sandbox: it sends only to verified addresses, 200 a day.
 3. **Switch the host** in `secrets/ec2-api.enc.env`: `AUTH_MAGIC_DELIVERY_URL=ses`,
-   `AUTH_EMAIL_FROM=Loro <codes@DOMAIN>` and `AWS_REGION=eu-central-1`; `AUTH_MAGIC_DELIVERY_TOKEN`
-   may stay. Then redeploy.
+   `AUTH_EMAIL_FROM=Loro <codes@loro.savienko.com>` and `AWS_REGION=eu-central-1`;
+   `AUTH_MAGIC_DELIVERY_TOKEN` may stay. Then redeploy.
 
 A refused send answers `PROVIDER_UNAVAILABLE` and logs only the error's name:
 

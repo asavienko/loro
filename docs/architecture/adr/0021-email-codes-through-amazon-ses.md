@@ -16,6 +16,8 @@ was on its way and never got it. Only someone with SSH access to the host could 
 - The API sends codes itself through **Amazon SES** (API v2, `SendEmail`) when
   `AUTH_MAGIC_DELIVERY_URL=ses`, from the address in `AUTH_EMAIL_FROM`. Email sign-in is advertised
   only when that sender is set. The webhook and `inbox:local` remain for local development.
+- Codes come from `codes@loro.savienko.com`, a subdomain of the owner's domain (registered
+  2026-10-02), so the app's sending reputation and DKIM keys stay apart from the root domain's mail.
 - The email is plain text in English: the code in the subject and the body, how long it lasts, and
   that it can be ignored.
 - The EC2 host gets an instance role whose only permission is `ses:SendEmail` in its region, and a
@@ -49,9 +51,8 @@ was on its way and never got it. Only someone with SSH access to the host could 
   email.
 - The email is English whatever the learner's interface language, until the sign-in request carries
   one.
-- SES must first be set up by hand: a verified sending domain (it waits on
-  [Q-27](../../decisions/open-questions.md#q-27)) and production access, without which SES sends
-  only to verified addresses
+- SES must first be set up by hand: a verified sending domain and production access, without which
+  SES sends only to verified addresses
   ([ec2-deployment.md](../../process/ec2-deployment.md#email-sign-in-codes)).
 
 ### Revisit if…
