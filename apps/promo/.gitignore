@@ -1,0 +1,4 @@
+# Rendered video, and what the scripts copy or rebuild for free (pnpm audio).
+out/
+public/fonts/
+public/audio/

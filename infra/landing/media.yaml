@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Loro landing page - the media bucket for the promo video, readable by anyone under promo/ (F-09)
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      # No ACLs ever; the bucket policy below is the only way in, and it opens only promo/.
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: false
+        RestrictPublicBuckets: false
+      # A <video> needs no CORS; this is for a page that fetches the files (a range request, a preload).
+      CorsConfiguration:
+        CorsRules:
+          - AllowedMethods: [GET, HEAD]
+            AllowedOrigins: ['*']
+            AllowedHeaders: [Range]
+            ExposedHeaders: [Content-Length, Content-Range, Accept-Ranges, ETag]
+            MaxAge: 86400
+      # Uploads that never finished cost storage until they are cleaned up.
+      LifecycleConfiguration:
+        Rules:
+          - Id: abort-incomplete-uploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Bucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadPromo
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub '${Bucket.Arn}/promo/*'
+          - Sid: HttpsOnly
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !GetAtt Bucket.Arn
+              - !Sub '${Bucket.Arn}/*'
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+Outputs:
+  Bucket:
+    Value: !Ref Bucket
+  BaseUrl:
+    Description: Where the objects are served, over HTTPS
+    Value: !Sub 'https://${Bucket.RegionalDomainName}'

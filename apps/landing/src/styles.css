@@ -298,6 +298,49 @@ a:hover {
   margin-bottom: 64px;
 }
 
+/* the film (apps/promo) */
+.film {
+  padding-top: 96px;
+}
+.film-frame {
+  margin: 0;
+}
+.film-frame video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border-radius: 28px;
+  background: var(--paper3);
+  box-shadow:
+    0 50px 100px -40px rgba(87, 66, 59, 0.45),
+    0 0 0 1px var(--line);
+}
+.film-frame figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px 24px;
+  margin-top: 18px;
+  font-size: 15px;
+  color: var(--muted);
+}
+.film-script summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--clay);
+}
+.film-script[open] {
+  flex-basis: 100%;
+}
+.film-script p {
+  max-width: 46em;
+  margin: 12px 0 0;
+  line-height: 1.6;
+  color: var(--ink2);
+}
+
 /* hero */
 .hero {
   position: relative;
@@ -2842,6 +2885,9 @@ a:hover {
   }
 }
 @media (max-width: 680px) {
+  .film-frame video {
+    border-radius: 16px;
+  }
   .wrap {
     padding: 0 16px;
   }

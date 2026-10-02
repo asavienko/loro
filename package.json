@@ -46,6 +46,7 @@
     "apk:local": "node scripts/apk-local.mjs",
     "apk:github": "node scripts/apk-local.mjs --upload",
     "landing:deploy": "bash scripts/deploy-landing.sh",
+    "promo:upload": "bash scripts/upload-promo.sh",
     "check:plan-index": "node --test scripts/check-plan-index.test.mjs && node scripts/check-plan-index.mjs",
     "test:deploy": "node --test scripts/ec2-release.test.mjs scripts/ec2-gateway.test.mjs scripts/ec2-backup.test.mjs scripts/ec2-backup-verify.test.mjs scripts/local-magic-delivery.test.mjs",
     "test:native:evidence": "node --test scripts/native-device-evidence.test.mjs",
