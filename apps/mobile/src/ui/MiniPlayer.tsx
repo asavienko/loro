@@ -7,6 +7,7 @@ import { playsOnce } from '@shared/state/machine';
 import { continuation, currentPhraseId, displayLearner, pendingFor, sessionSummary, windowLeft } from '@shared/state/selectors';
 import { endTitle, isTargetRevealed, PHASE_ICONS, phaseStepLabel } from '@shared/ui/phase';
 import { barLoopRating, barRating } from '@shared/ui/rating';
+import { useClipMaking } from '../audio/clipMaking';
 import { useRate } from '../screens/useRate';
 import { useCopy, useNow, useStore } from '../state/store';
 import { BarGrades, BarLead, useRedrawIn } from './BarGrades';
@@ -30,6 +31,7 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
 
   const player = state.player;
   const phrase = findPhrase(state.learner, currentPhraseId(player));
+  const making = useClipMaking(player.cycle, phrase?.id ?? null);
   if (!phrase) return null;
   const { phase, repetition, repeats, audioError, index, order } = player;
   const playing = player.status === 'playing';
@@ -78,8 +80,12 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
   const status = audioError
     ? audioError.reason === 'no-clip'
       ? c.player.noClip
-      : c.player.silent
-    : ended
+      : audioError.reason === 'unmade'
+        ? c.player.unmade
+        : c.player.silent
+    : making && playing
+      ? c.player.making
+      : ended
       ? endTitle(c, player.source, summary ? summary.ratings.missed + summary.ratings.hard + summary.ratings.easy : 0)
       : !playing
         ? c.player.paused

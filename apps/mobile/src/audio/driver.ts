@@ -12,6 +12,7 @@ import { findPhrase, promptOf } from '@shared/state/catalog';
 import { currentPhraseId, phaseDurationMs } from '@shared/state/selectors';
 import { GAP_MS, RATE_HOLD_MS } from '@shared/state/timing';
 import { useStore } from '../state/store';
+import { endClipMaking, startClipMaking } from './clipMaking';
 import { backgroundPlayback } from './media';
 
 /** Speech followed by a gap; the gap is not part of the measurement. */
@@ -50,6 +51,9 @@ export function usePlaybackDriver(): void {
     const prompt = promptOf(phrase, s.learner.profile.nativeLang);
     let playback: Playback;
     let lang = phrase.targetLang;
+    // A clip the server is still making: the player says so until it plays (P3-01).
+    const making = (spoken: typeof lang) => (rendering: boolean) =>
+      rendering ? startClipMaking({ cycle, phraseId: phrase.id, lang: spoken }) : endClipMaking(cycle);
     switch (phase) {
       case 'native':
         // A target with no clip stops the phrase before its prompt: it could never be heard.
@@ -58,14 +62,14 @@ export function usePlaybackDriver(): void {
           break;
         }
         lang = prompt.lang;
-        playback = speakThenGap(speak(phrase.audio?.[prompt.lang], speed));
+        playback = speakThenGap(speak(phrase.audio?.[prompt.lang], speed, making(prompt.lang)));
         break;
       case 'pause':
         turnCue();
         playback = silence(s.player.phaseMs ?? phaseDurationMs(s) ?? 0);
         break;
       case 'target':
-        playback = speakThenGap(speak(phrase.audio?.[phrase.targetLang], speed));
+        playback = speakThenGap(speak(phrase.audio?.[phrase.targetLang], speed, making(phrase.targetLang)));
         break;
       case 'echo':
         playback = silence(s.player.phaseMs ?? phaseDurationMs(s) ?? 0);
@@ -77,6 +81,7 @@ export function usePlaybackDriver(): void {
     }
     let active = true;
     void playback.done.then((result) => {
+      endClipMaking(cycle);
       if (!active) return;
       if (result.status === 'failed') {
         actions.phaseDone(cycle, { failure: { lang, reason: result.reason } });
@@ -90,6 +95,7 @@ export function usePlaybackDriver(): void {
     });
     return () => {
       active = false;
+      endClipMaking(cycle);
       playback.cancel();
     };
   }, [status, phase, cycle, phraseId, actions, latest]);

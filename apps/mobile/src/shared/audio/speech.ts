@@ -1,17 +1,19 @@
 // Playback of one utterance: the clip the server's voice recorded for it (plans 106, 108). There is
 // no device voice: a phrase the server has no clip for can't be played, and says so ('no-clip').
 // Clips play at the learner's speed (the browser keeps their pitch) and are measured by their own
-// length.
+// length. A clip the server hasn't made yet is made when first asked for (P3-01): the player waits
+// for it (./clipState.ts), saying so through `onRendering`, and plays it when it is ready.
+import { awaitClip, readClipState, type ClipIo } from './clipState';
 
 export type PlaybackResult =
   /** Played to the end; `ms` is the real duration of the sound at this speed, or null if unknown. */
   | { status: 'ended'; ms: number | null }
   /** Probably played, but never confirmed its end: nothing is recorded or paid. */
   | { status: 'timeout' }
-  /** Could not be played: no clip for it, or the clip didn't load or play. */
+  /** Could not be played: no clip for it, the server couldn't make it, or it didn't load or play. */
   | { status: 'failed'; reason: FailureReason };
 
-export type FailureReason = 'no-clip' | 'silent';
+export type FailureReason = 'no-clip' | 'unmade' | 'silent';
 
 export interface Playback {
   done: Promise<PlaybackResult>;
@@ -37,6 +39,55 @@ export function preloadClip(url: string): void {
 
 /** A clip that never ends (a stalled network) gives way after this, or twice its length. */
 const CLIP_STALL_MS = 15_000;
+
+/** Clips the server said are made: they play without asking again. */
+const made = new Set<string>();
+
+const browserIo: ClipIo = {
+  ask: (url, answer) => {
+    const controller = typeof AbortController === 'undefined' ? null : new AbortController();
+    let open = true;
+    fetch(url, { signal: controller?.signal, cache: 'no-store' })
+      .then(async (response) => readClipState(response.status, await response.text()))
+      .catch(() => 'unreachable' as const)
+      .then((a) => open && answer(a));
+    return () => {
+      open = false;
+      controller?.abort();
+    };
+  },
+  wait: (ms, then) => {
+    const timer = setTimeout(then, ms);
+    return () => clearTimeout(timer);
+  },
+};
+
+/** Waits for the server to make a clip it hasn't yet, then plays it. */
+function playMadeClip(url: string, rate: number, onRendering?: (rendering: boolean) => void): Playback {
+  if (made.has(url) || typeof fetch === 'undefined') return playClip(url, rate);
+  const [done, finish] = deferred();
+  let playing: Playback | null = null;
+  const stop = awaitClip(
+    url,
+    browserIo,
+    () => onRendering?.(true),
+    (outcome) => {
+      if (outcome === 'unmade') return finish({ status: 'failed', reason: 'unmade' });
+      if (outcome === 'unreachable') return finish({ status: 'failed', reason: 'silent' });
+      made.add(url);
+      onRendering?.(false);
+      playing = playClip(url, rate);
+      void playing.done.then(finish);
+    },
+  );
+  return {
+    done,
+    cancel: () => {
+      stop();
+      playing?.cancel();
+    },
+  };
+}
 
 function playClip(url: string, rate: number): Playback {
   const [done, finish] = deferred();
@@ -64,7 +115,10 @@ function playClip(url: string, rate: number): Playback {
     finish(r);
   };
   audio.onended = () => settle({ status: 'ended', ms: (audio.duration * 1000) / rate });
-  audio.onerror = () => settle({ status: 'failed', reason: 'silent' });
+  audio.onerror = () => {
+    made.delete(url);
+    settle({ status: 'failed', reason: 'silent' });
+  };
   audio.play().catch(() => settle({ status: 'failed', reason: 'silent' }));
   return {
     done,
@@ -76,9 +130,12 @@ function playClip(url: string, rate: number): Playback {
   };
 }
 
-/** Plays a phrase's clip at `rate`; without one it fails at once as 'no-clip'. */
-export function speak(clipUrl: string | null | undefined, rate: number): Playback {
-  if (clipUrl) return playClip(clipUrl, rate);
+/**
+ * Plays a phrase's clip at `rate`; without one it fails at once as 'no-clip'. `onRendering(true)` is
+ * told when the server is making the clip, and `onRendering(false)` when it is made and plays.
+ */
+export function speak(clipUrl: string | null | undefined, rate: number, onRendering?: (rendering: boolean) => void): Playback {
+  if (clipUrl) return playMadeClip(clipUrl, rate, onRendering);
   const [done, finish] = deferred();
   finish({ status: 'failed', reason: 'no-clip' });
   return { done, cancel: () => {} };

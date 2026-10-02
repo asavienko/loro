@@ -45,7 +45,9 @@ export function phraseNowPlaying(state: AppState, c: Copy, now: number): NowPlay
   const status = player.audioError
     ? player.audioError.reason === 'no-clip'
       ? c.player.noClip
-      : c.player.silent
+      : player.audioError.reason === 'unmade'
+        ? c.player.unmade
+        : c.player.silent
     : ended
       ? endTitle(c, player.source, summary ? summary.ratings.missed + summary.ratings.hard + summary.ratings.easy : 0)
       : !playing

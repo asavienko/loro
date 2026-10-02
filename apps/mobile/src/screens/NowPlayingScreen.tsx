@@ -4,7 +4,7 @@
 // back is the core's to decide, and the grades don't show it.
 import { useRouter } from 'expo-router';
 import { ReactNode, useState } from 'react';
-import { LayoutChangeEvent, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, LayoutChangeEvent, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { languageName } from '@shared/copy';
 import { getTopic, Phrase } from '@shared/content';
@@ -32,6 +32,7 @@ import type { LearnerState, Phase } from '@shared/state/types';
 import { endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel, queueTitle } from '@shared/ui/phase';
 import { recentLoopRating } from '@shared/ui/rating';
 import { playerArtSize } from '@shared/ui/room';
+import { useClipMaking } from '../audio/clipMaking';
 import { PassCard } from '../nav/PassNotice';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Button } from '../ui/Button';
@@ -74,6 +75,8 @@ export function NowPlayingScreen() {
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
   const phrase = findPhrase(state.learner, currentPhraseId(state.player));
+  // A recording the server is making for this step (P3-01): said, with a spinner and no number.
+  const making = useClipMaking(state.player.cycle, phrase?.id ?? null);
   // Nothing queued (the course changed, or the page was opened directly): only the way out.
   if (!phrase)
     return (
@@ -87,7 +90,7 @@ export function NowPlayingScreen() {
     );
   const { status, phase, index, order, audioError } = state.player;
   const playing = status === 'playing';
-  const cannotSay = audioError?.reason === 'no-clip' && audioError.lang === phrase.targetLang;
+  const cannotSay = (audioError?.reason === 'no-clip' || audioError?.reason === 'unmade') && audioError.lang === phrase.targetLang;
   const revealed = isTargetRevealed(state.player) || (cannotSay && shownAnyway === phrase.id);
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
   const targetName = languageName(phrase.targetLang, c.locale);
@@ -148,9 +151,20 @@ export function NowPlayingScreen() {
                 <View style={styles.error} accessibilityRole="alert">
                   <View style={styles.row}>
                     <Icon name="volume_off" size="md" color="error" />
-                    <Txt style={styles.flex}>{audioError.reason === 'no-clip' ? c.player.audioError(languageName(audioError.lang, c.locale)) : c.player.audioSilent}</Txt>
+                    <Txt style={styles.flex}>
+                      {audioError.reason === 'no-clip'
+                        ? c.player.audioError(languageName(audioError.lang, c.locale))
+                        : audioError.reason === 'unmade'
+                          ? c.player.audioUnmade(languageName(audioError.lang, c.locale))
+                          : c.player.audioSilent}
+                    </Txt>
                   </View>
                   {cannotSay && !revealed && <Button variant="text" label={c.player.showText(targetName)} onPress={() => setShownAnyway(phrase.id)} />}
+                </View>
+              ) : making && playing ? (
+                <View style={styles.row} accessibilityLiveRegion="polite">
+                  <ActivityIndicator color={colors.primary} />
+                  <Txt style={styles.flex}>{c.player.makingAudio(languageName(making.lang, c.locale))}</Txt>
                 </View>
               ) : (
                 <Txt variant="title" weight={600} accessibilityLiveRegion="polite">
