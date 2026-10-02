@@ -2,8 +2,7 @@
 // by default, so the page fits; tapped, or pulled down, it shows whole, edge to edge, and the page
 // moves down under it without changing screen. Opened, it follows the page's scroll: scrolled down it
 // shrinks back as far as the page has moved, held where the scroll stops, and scrolled back up it
-// grows again. Tapped again it closes. The chip in its corner does the same for anyone who can't tap
-// the picture or doesn't know to. Both sizes are drawn as themselves (a phrase's picture is composed
+// grows again. Tapped again it closes. Both sizes are drawn as themselves (a phrase's picture is composed
 // for its shape), and the small one gives way to the large as the frame grows.
 import { ReactNode, useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
@@ -24,11 +23,8 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { useCopy } from '../state/store';
-import { Icon } from './Icon';
 import { Press } from './Press';
 import { holdClicks, releaseClicks } from './swallowClick';
-import { colors, radius } from './theme';
 
 export interface ArtSize {
   width: number;
@@ -83,7 +79,6 @@ export function ExpandArt({
   /** The artwork drawn at a size. */
   children: (size: ArtSize) => ReactNode;
 }) {
-  const c = useCopy();
   const reduce = useReducedMotion();
   const { open, setOpen, scrollY, scroller } = art;
   const can = grows(small, large);
@@ -126,12 +121,15 @@ export function ExpandArt({
     'worklet';
     return o * (1 - taken(y));
   };
-  // Mostly small on screen: the chip offers it whole again.
+  // Mostly small on screen, a tap shows it whole again; past SWAP the large drawing is the one on
+  // screen, and its buttons (a new cover) are the ones pressed.
   const [mostlyWhole, setMostlyWhole] = useState(shown);
+  const [largeOnTop, setLargeOnTop] = useState(shown);
   useAnimatedReaction(
-    () => shows(p.get(), scrollY.get()) > 0.5,
+    () => shows(p.get(), scrollY.get()),
     (now, before) => {
-      if (now !== before) runOnJS(setMostlyWhole)(now);
+      if (before === null || now > 0.5 !== before > 0.5) runOnJS(setMostlyWhole)(now > 0.5);
+      if (before === null || now > SWAP !== before > SWAP) runOnJS(setLargeOnTop)(now > SWAP);
     },
   );
 
@@ -207,27 +205,22 @@ export function ExpandArt({
     .onFinalize(releaseClicks);
   // A band changes shape as it grows, so it is cut to its frame; a square only changes size.
   const clip = Math.abs(small.width / small.height - large.width / large.height) > 0.01;
-  const chip = Math.round(Math.max(28, Math.min(36, Math.min(small.width, small.height) * 0.16)));
-  const inset = Math.max(4, Math.round(Math.min(small.width, small.height) * 0.04));
-  const whole = open && mostlyWhole;
 
   return (
     <Animated.View style={[room, styles.room]}>
       <GestureDetector gesture={pull}>
         <Animated.View style={[styles.frame, frame, clip && styles.clip]}>
+          {/* The picture is the control: a tap anywhere on it opens or closes it. Only the drawing on
+              screen takes presses of its own (a new cover). */}
           <Press accessible={false} haptic="none" onPress={toggle} style={StyleSheet.absoluteFill}>
-            <Animated.View style={[styles.layer, { width: small.width, height: small.height, pointerEvents: whole ? 'none' : 'box-none' }, smallLayer]}>{children(small)}</Animated.View>
-            {drawn && <Animated.View style={[styles.layer, { width: large.width, height: large.height, pointerEvents: whole ? 'box-none' : 'none' }, largeLayer]}>{children(large)}</Animated.View>}
-          </Press>
-          <Press
-            accessibilityRole="button"
-            accessibilityLabel={whole ? c.common.showSmallerPicture : c.common.showWholePicture}
-            accessibilityState={{ expanded: whole }}
-            onPress={toggle}
-            hitSlop={Math.max(0, Math.ceil((44 - chip) / 2))}
-            style={({ pressed }) => [styles.chip, { width: chip, height: chip, right: inset, top: inset }, pressed && styles.pressed]}
-          >
-            <Icon name={whole ? 'close_fullscreen' : 'open_in_full'} size={Math.round(chip * 0.5)} color="onSurface" />
+            <Animated.View pointerEvents={largeOnTop ? 'none' : 'box-none'} style={[styles.layer, { width: small.width, height: small.height }, smallLayer]}>
+              {children(small)}
+            </Animated.View>
+            {drawn && (
+              <Animated.View pointerEvents={largeOnTop ? 'box-none' : 'none'} style={[styles.layer, { width: large.width, height: large.height }, largeLayer]}>
+                {children(large)}
+              </Animated.View>
+            )}
           </Press>
         </Animated.View>
       </GestureDetector>
@@ -241,19 +234,4 @@ const styles = StyleSheet.create({
   frame: { position: 'absolute' },
   clip: { overflow: 'hidden' },
   layer: { position: 'absolute' },
-  chip: {
-    position: 'absolute',
-    borderRadius: radius.full,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderWidth: 1,
-    borderColor: colors.hairline,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#57423b',
-    shadowOpacity: 0.18,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  pressed: { backgroundColor: colors.surfaceContainer },
 });

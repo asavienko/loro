@@ -17,8 +17,6 @@ export function makeBg(n: Plural): Copy {
       pause: 'Пауза',
       delete: 'Изтрий',
       moreOptions: 'Още',
-      showWholePicture: 'Покажи цялата картина',
-      showSmallerPicture: 'Смали картината',
       phrases,
       sets,
       points: (c) => n(c, { one: `${c} точка`, other: `${c} точки` }),
