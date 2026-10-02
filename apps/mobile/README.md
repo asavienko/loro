@@ -86,7 +86,11 @@ figures (`src/shared/analytics/person.ts`)
   the one player shows on the lock screen and in the notification shade with its grades
   (`lockScreen.ts`, P3-11), through the `LoroMedia` module. On iOS and Android the player plays on
   with the screen locked: the loop's silences are timed natively (`after` in `media.ts`), and calls,
-  other apps and unplugged headphones pause it.
+  other apps and unplugged headphones pause it. Each clip gets its own expo-audio player, freed with
+  `releasePlayer` (`release.ts`) the moment it ends or is cancelled: expo-audio's `remove()` alone
+  leaves the native player, and the Android audio track it holds, alive until garbage collection,
+  and after a few minutes of clips Android refused new tracks, so songs and clips played silent
+  while showing as playing. The cues' players and the song player are made once and kept.
 - **UI.** `app/` holds the routes (expo-router), `src/screens/` and `src/sheets/` the screens,
   `src/ui/` the primitives and tokens (`theme.ts`), and `src/nav/Shell.tsx` the navigation.
 - **The keyboard.** The app is drawn edge to edge, so Android resizes no window for the keyboard,

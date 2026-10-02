@@ -9,6 +9,7 @@
 import { createAudioPlayer } from 'expo-audio';
 import { awaitClip, clipStateUrl, readClipState, type ClipAnswer, type ClipIo } from '@shared/audio/clipState';
 import { after } from '../audio/media';
+import { releasePlayer } from '../audio/release';
 
 export type PlaybackResult = { status: 'ended'; ms: number | null } | { status: 'timeout' } | { status: 'failed'; reason: FailureReason };
 export type FailureReason = 'no-clip' | 'unmade' | 'silent';
@@ -110,7 +111,8 @@ function startClip(url: string, rate: number): Playback {
     settled = true;
     watchdog();
     subscription.remove();
-    player.remove();
+    // Freed now, not when collected: each clip's player holds one of Android's few audio tracks.
+    releasePlayer(player);
     resolve(r);
   };
   let watchdog = after(CLIP_LOAD_MS, () => settle({ status: 'failed', reason: 'silent' }));
@@ -135,7 +137,7 @@ function startClip(url: string, rate: number): Playback {
       watchdog();
       subscription.remove();
       player.pause();
-      player.remove();
+      releasePlayer(player);
     },
   };
 }
