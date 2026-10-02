@@ -150,9 +150,31 @@ New renders are capped per day for the server (`LIMIT_SPEECH_RENDERS_DAILY`, def
 learner whose phrases they are (`LIMIT_SPEECH_OWNER_DAILY`, default 100); a render the provider
 refuses isn't tried again for six hours.
 
-The app has no device voice. A phrase without a clip (no provider, no voice for its language, or a
-clip that won't load) can't be played, and the player says so. On the web the player preloads the
-next phrase's clips in the two languages the learner hears.
+A clip not rendered yet is made on demand (P3-01). `GET /library/speech/<utterance>.json` (no
+bearer, `no-store`, through the gateway like the clip) answers
+`{ status: 'ready' | 'rendering' | 'failed' }`; asked about a clip that isn't made, it starts the
+render in the background and answers `rendering`. A render is shared by everyone waiting on it (one
+per utterance, whether started by the `.json` or by the `.mp3`), counts against the same daily caps,
+and keeps the same failure rules; a render that failed for a passing reason (a busy provider, the
+day's renders used up) answers `failed` for 30 seconds rather than starting again. Text the library
+doesn't hold, a language without a voice and a server without a provider all answer `failed`, so the
+route reveals nothing the clip route doesn't.
+
+The app has no device voice. Before a clip plays, the player asks where it stands
+(`src/shared/audio/clipState.ts`, used by both the web and native players). `rendering` shows a
+spinner and "Making the … recording of this phrase. It plays as soon as it's ready." (the mini
+player: "Making the recording…") and asks again every 1.5 s; ready, it plays. A clip still not made
+after 60 s, or one the server answers `failed` for, stops the loop with "The … recording of this
+phrase couldn't be made just now" (`unmade`), and the target's text can be shown instead. No
+progress is shown as a number: the provider reports none. An older server without the `.json` route
+answers 404, and the clip plays as before. A phrase without a clip URL (no provider, no voice for
+its language) or a clip that won't load can't be played, and the player says so. The players look
+one phrase ahead: the web preloads the next phrase's clips, and on iOS and Android asking about them
+has the server make any that aren't made, so a new phrase rarely waits.
+
+Rejected: having the clip request itself answer `202` while it renders (an audio element or
+expo-audio can't read it, so the app would learn nothing until it timed out), and showing a loader
+whenever a clip is slow to answer (a slow network would then claim a recording was being made).
 
 ## Generation and limits
 
