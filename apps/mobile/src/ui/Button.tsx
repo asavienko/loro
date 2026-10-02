@@ -45,7 +45,7 @@ export function Button({ variant = 'tonal', label, icon, iconFill, color, style,
     >
       {icon && <Icon name={icon} fill={iconFill} size={variant === 'icon' ? 'lg' : 'md'} color={tint} />}
       {label !== undefined && (
-        <Txt variant={look.variant} weight={look.weight} color={tint} numberOfLines={2} align="center">
+        <Txt variant={look.variant} weight={look.weight} color={tint} numberOfLines={2} align="center" style={styles.label}>
           {label}
         </Txt>
       )}
@@ -57,6 +57,8 @@ export function Button({ variant = 'tonal', label, icon, iconFill, color, style,
 const styles = StyleSheet.create({
   base: { borderRadius: radius.full, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   disabled: { opacity: 0.4 },
+  // A button given less room than its label (a narrow row, large system text) wraps it, up to two lines.
+  label: { flexShrink: 1 },
 });
 
 /** A 36 px pill inside a 44 px target; selected is ink, never terracotta (which means play). */

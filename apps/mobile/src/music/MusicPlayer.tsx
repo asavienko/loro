@@ -41,6 +41,8 @@ interface MusicValue {
   stop: () => void;
   /** Keeps an eye on a song being made: when it's ready (or failed) the learner hears of it anywhere. */
   watch: (song: Song, album: Album) => void;
+  /** The album as the server has it now (its cover drawn, renamed): shown in its place if it is the one playing. */
+  refresh: (album: Album) => void;
 }
 
 /** How often a song being made is asked after, and for how long at most. */
@@ -176,6 +178,10 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     [album, index, queue, load],
   );
 
+  // A song started before its album's cover was drawn keeps the album as it was; the album's page
+  // passes the newer one on, so the bar and the player show the cover.
+  const refresh = useCallback((next: Album) => setAlbum((now) => (now && now.id === next.id && now !== next ? next : now)), []);
+
   // A finished song moves on to the next, and the album ends after its last.
   const stepRef = useLatest(step);
   const atEnd = useLatest(index + 1 >= queue.length);
@@ -266,8 +272,9 @@ export function MusicProvider({ children }: { children: ReactNode }) {
         setWatched((list) => (list.some((w) => w.song.id === song.id) ? list : [...list, { song, album: of, since: clock.now() }]));
       },
       stop: stopAll,
+      refresh,
     }),
-    [songInFront, album, queue, index, status.playing, status.currentTime, status.duration, status.isBuffering, playAlbum, step, player, actions, state.player.status, stopAll],
+    [refresh, songInFront, album, queue, index, status.playing, status.currentTime, status.duration, status.isBuffering, playAlbum, step, player, actions, state.player.status, stopAll],
   );
 
   return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;

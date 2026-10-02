@@ -92,6 +92,13 @@ export function AlbumScreen({ id }: { id: string }) {
     };
   }, [id]);
 
+  // The album playing may be an older copy of this one (from before its cover was drawn).
+  const { refresh } = music;
+  const shown = detail?.album;
+  useEffect(() => {
+    if (shown) refresh(shown);
+  }, [shown, refresh]);
+
   const rendering = detail?.songs.some((s) => s.status === 'rendering') ?? false;
   useEffect(() => {
     if (!rendering) return;
@@ -174,7 +181,15 @@ export function AlbumScreen({ id }: { id: string }) {
       </View>
 
       <View style={styles.actions}>
-        <Button variant="primary" icon="play_arrow" iconFill label={c.music.playAlbum} disabled={ready.length === 0} onPress={() => music.playAlbum(album, ready, 0)} />
+        <Button
+          variant="primary"
+          icon="play_arrow"
+          iconFill
+          label={c.music.playAlbum}
+          disabled={ready.length === 0}
+          onPress={() => music.playAlbum(album, ready, 0)}
+          style={styles.play}
+        />
         {mine ? (
           <>
             <Button variant="icon" icon="share" color="onSurface" accessibilityLabel={c.share.share} onPress={() => nav.share({ kind: 'album', ...album }, () => void load())} />
@@ -314,6 +329,8 @@ const styles = StyleSheet.create({
   hero: { alignItems: 'center', gap: 6, paddingHorizontal: 24 },
   kicker: { marginTop: 12, letterSpacing: 1 },
   actions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingTop: 16, paddingHorizontal: 16 },
+  // With large system text the label wraps rather than pushing the row past the screen's edges.
+  play: { flexShrink: 1 },
   songs: { paddingTop: 20, gap: 2, paddingHorizontal: 12 },
   pad: { paddingHorizontal: 12, paddingVertical: 8 },
   songRow: { flexDirection: 'row', alignItems: 'center', borderRadius: radius.xl },
