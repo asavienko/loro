@@ -1,0 +1,39 @@
+{"kind":"set","id":"set-pl-a1-bus-tram","subtitle":"Передвижение по Варшаве и Кракову на трамвае и автобусе"}
+{"kind":"phrase","id":"pl-vbnr5rt","translation":"Можно прокомпостировать льготный билет?","words":{"czy":"(вопросительная частица)","mogę":"могу","skasować":"прокомпостировать","bilet":"билет","ulgowy":"льготный"}}
+{"kind":"phrase","id":"pl-x2ghm6d","translation":"Пересадка на следующей остановке?","words":{"czy":"(вопросительная частица)","przesiadka":"пересадка","jest":"есть","na":"на","następnym":"следующий","przystanku":"остановка"}}
+{"kind":"phrase","id":"pl-qoifore","translation":"Какой маршрут идёт в центр?","words":{"która":"который","linia":"линия","jedzie":"едет","do":"до","centrum":"центр"}}
+{"kind":"phrase","id":"pl-77tezd3","translation":"Этот трамвай идёт в центр?","words":{"czy":"(вопросительная частица)","ten":"этот","tramwaj":"трамвай","jedzie":"едет","do":"до","centrum":"центр"}}
+{"kind":"phrase","id":"pl-bonnacg","translation":"Как дойти до трамвайной остановки?","words":{"jak":"как","dojść":"дойти","do":"до","przystanku":"остановка","tramwajowego":"трамвайный"}}
+{"kind":"phrase","id":"pl-mnqafqv","translation":"Извините, этот автобус останавливается в центре?","words":{"przepraszam":"извините","czy":"(вопросительная частица)","ten":"этот","autobus":"автобус","staje":"останавливается","w":"в","centrum":"центр"}}
+{"kind":"phrase","id":"pl-a545khu","translation":"Льготный и обычный билет, пожалуйста.","words":{"poproszę":"пожалуйста","bilet":"билет","ulgowy":"льготный","i":"и","normalny":"обычный"}}
+{"kind":"phrase","id":"pl-zlutsqi","translation":"Я выхожу на следующей, спасибо за помощь.","words":{"wysiadam":"выхожу","na":"на","następnym":"следующий","dziękuję":"спасибо","za":"за","pomoc":"помощь"}}
+{"kind":"phrase","id":"pl-lmhgnzp","translation":"Где пересадка на автобус?","words":{"gdzie":"где","jest":"есть","przesiadka":"пересадка","na":"на","autobus":"автобус"}}
+{"kind":"phrase","id":"pl-pps3rhf","translation":"На этой остановке есть автомат?","words":{"czy":"(вопросительная частица)","na":"на","tym":"этот","przystanku":"остановка","jest":"есть","automat":"автомат"}}
+{"kind":"phrase","id":"pl-qbkib62","translation":"Обычный билет, пожалуйста, я очень спешу.","words":{"poproszę":"пожалуйста","bilet":"билет","normalny":"обычный","bardzo":"очень","się":"(возвратная частица)","spieszę":"спешу"}}
+{"kind":"phrase","id":"pl-465eto7","translation":"Можно оплатить картой в трамвае?","words":{"czy":"(вопросительная частица)","mogę":"могу","zapłacić":"оплатить","kartą":"карта","w":"в","tramwaju":"трамвай"}}
+{"kind":"set","id":"set-pl-a1-asking-the-way","subtitle":"Как спросить дорогу в старом городе в Польше"}
+{"kind":"phrase","id":"pl-672mmeo","translation":"Пожалуйста, поверните направо за мостом.","words":{"proszę":"пожалуйста","skręcić":"повернуть","w prawo":"направо","za":"за","mostem":"мост"}}
+{"kind":"phrase","id":"pl-h6yx6lp","translation":"Пожалуйста, идите прямо, а потом направо.","words":{"proszę":"пожалуйста","iść":"идти","prosto":"прямо","a":"а","potem":"потом","w prawo":"направо"}}
+{"kind":"phrase","id":"pl-kl42rax","translation":"Эта улица ведёт к рынку.","words":{"ta":"этот","ulica":"улица","prowadzi":"ведёт","do":"к","rynku":"рынок"}}
+{"kind":"phrase","id":"pl-2n4vyvk","translation":"Извините, я ищу аптеку.","words":{"przepraszam":"извините","szukam":"я ищу","apteki":"аптека"}}
+{"kind":"phrase","id":"pl-p4zmcfl","translation":"Вы не знаете, где аптека?","words":{"czy":"(вопросительная частица)","pani":"вы (к женщине)","wie":"знает","gdzie":"где","jest":"есть","apteka":"аптека"}}
+{"kind":"phrase","id":"pl-2xlfcjh","translation":"Вы не знаете, где рынок?","words":{"czy":"(вопросительная частица)","pan":"вы (к мужчине)","wie":"знает","gdzie":"где","jest":"есть","rynek":"рынок"}}
+{"kind":"phrase","id":"pl-lqv5jbj","translation":"Как дойти до рынка?","words":{"jak":"как","dojść":"дойти","do":"до","rynku":"рынок"}}
+{"kind":"phrase","id":"pl-wqi23r4","translation":"У вас есть карта?","words":{"czy":"(вопросительная частица)","pani":"вы (к женщине)","ma":"имеет","mapę":"карта"}}
+{"kind":"phrase","id":"pl-kcncfdd","translation":"Это далеко отсюда?","words":{"czy":"(вопросительная частица)","to":"это","daleko":"далеко","stąd":"отсюда"}}
+{"kind":"phrase","id":"pl-77s5cyd","translation":"Как дойти до вокзала?","words":{"jak":"как","dojść":"дойти","do":"до","dworca":"вокзал"}}
+{"kind":"phrase","id":"pl-bupnre4","translation":"Нет, это совсем близко.","words":{"nie":"нет","to":"это","całkiem":"совсем","blisko":"близко"}}
+{"kind":"phrase","id":"pl-q5kbhdf","translation":"Большое спасибо, теперь я знаю.","words":{"dziękuję":"спасибо","bardzo":"очень","już":"уже","wiem":"я знаю"}}
+{"kind":"set","id":"set-pl-a1-train-station","subtitle":"Покупаем билеты и ищем место в спешке на вокзале."}
+{"kind":"phrase","id":"pl-5f5z3yx","translation":"Этот поезд отправляется с третьего перрона?","words":{"czy":"ли (вопросительная частица)","ten":"этот","pociąg":"поезд","odjeżdża":"отправляется","z":"с","peronu":"перрон (родительный)","trzeciego":"третий"}}
+{"kind":"phrase","id":"pl-f6mhig6","translation":"Во сколько отправляется поезд в Гданьск?","words":{"o":"в","której":"который (час)","odjeżdża":"отправляется","pociąg":"поезд","do":"в","gdańska":"Гданьск (родительный)"}}
+{"kind":"phrase","id":"pl-64ufjif","translation":"С какого перрона отправляется этот поезд?","words":{"z":"с","którego":"который","peronu":"перрон (родительный)","odjeżdża":"отправляется","ten":"этот","pociąg":"поезд"}}
+{"kind":"phrase","id":"pl-4pa7ipt","translation":"В вагоне ещё есть места?","words":{"czy":"ли (вопросительная частица)","są":"есть","jeszcze":"ещё","miejsca":"места","w":"в","wagonie":"вагон (предложный)"}}
+{"kind":"phrase","id":"pl-xumsbac","translation":"Это место свободно?","words":{"czy":"ли (вопросительная частица)","to":"это","miejsce":"место","jest":"есть","wolne":"свободный"}}
+{"kind":"phrase","id":"pl-krxnzzt","translation":"Поезд опаздывает?","words":{"czy":"ли (вопросительная частица)","pociąg":"поезд","jest":"есть","spóźniony":"опоздавший"}}
+{"kind":"phrase","id":"pl-cbvnlo2","translation":"В вагоне есть место у окна?","words":{"czy":"ли (вопросительная частица)","w":"в","wagonie":"вагон (предложный)","jest":"есть","miejsce":"место","przy":"у","oknie":"окно (предложный)"}}
+{"kind":"phrase","id":"pl-dgliskg","translation":"Место в вагоне без купе, пожалуйста.","words":{"poproszę":"пожалуйста (вежливая просьба)","miejsce":"место","w":"в","wagonie":"вагон (предложный)","bez":"без","przedziału":"купе (родительный)"}}
+{"kind":"phrase","id":"pl-cxccjjn","translation":"Касса ещё открыта?","words":{"czy":"ли (вопросительная частица)","kasa":"касса","jest":"есть","jeszcze":"ещё","otwarta":"открытый"}}
+{"kind":"phrase","id":"pl-w6qxau7","translation":"Два билета в одну сторону, пожалуйста.","words":{"poproszę":"пожалуйста (вежливая просьба)","dwa":"два","bilety":"билеты","w":"в","jedną":"один","stronę":"сторона"}}
+{"kind":"phrase","id":"pl-6t366ge","translation":"Обратный билет до Кракова, пожалуйста.","words":{"poproszę":"пожалуйста (вежливая просьба)","bilet":"билет","powrotny":"обратный","do":"до","krakowa":"Краков (родительный)"}}
+{"kind":"phrase","id":"pl-lp45h63","translation":"Во сколько отправляется поезд с третьего перрона?","words":{"o":"в","której":"который (час)","odjeżdża":"отправляется","pociąg":"поезд","z":"с","peronu":"перрон","trzeciego":"третий"}}

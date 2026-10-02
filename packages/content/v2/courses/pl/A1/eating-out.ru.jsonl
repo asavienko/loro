@@ -1,0 +1,39 @@
+{"kind":"set","id":"set-pl-a1-cafe-counter","subtitle":"Заказ напитков и выпечки у стойки краковского кафе утром."}
+{"kind":"phrase","id":"pl-g5zjlre","translation":"Чёрный кофе с собой, пожалуйста.","words":{"czarna":"чёрный","kawa":"кофе","na":"на","wynos":"вынос","poproszę":"пожалуйста"}}
+{"kind":"phrase","id":"pl-tnccjrb","translation":"Мне, пожалуйста, большой кофе с молоком.","words":{"dla":"для","mnie":"меня","poproszę":"пожалуйста","dużą":"большой","kawę":"кофе","z":"с","mlekiem":"молоко"}}
+{"kind":"phrase","id":"pl-u6uw6bw","translation":"Пожалуйста, маленький чай с лимоном.","words":{"poproszę":"пожалуйста","małą":"маленький","herbatę":"чай","z":"с","cytryną":"лимон"}}
+{"kind":"phrase","id":"pl-52rcexp","translation":"Пожалуйста, большой сок и круассан.","words":{"poproszę":"пожалуйста","duży":"большой","sok":"сок","i":"и","rogalik":"круассан"}}
+{"kind":"phrase","id":"pl-ichirvm","translation":"Сок с собой?","words":{"czy":"ли","sok":"сок","jest":"есть","na":"на","wynos":"вынос"}}
+{"kind":"phrase","id":"pl-r4vk5uj","translation":"Пожалуйста, пирожное и сок.","words":{"poproszę":"пожалуйста","ciastko":"пирожное","i":"и","sok":"сок"}}
+{"kind":"phrase","id":"pl-vk2ghj6","translation":"Здесь или с собой?","words":{"na":"на","miejscu":"месте","czy":"или","wynos":"вынос"}}
+{"kind":"phrase","id":"pl-ymqkur2","translation":"Есть кофе с молоком?","words":{"czy":"ли","jest":"есть","kawa":"кофе","z":"с","mlekiem":"молоко"}}
+{"kind":"phrase","id":"pl-6hs4mqg","translation":"У вас есть круассаны?","words":{"czy":"ли","pani":"вы","ma":"есть","rogaliki":"круассаны"}}
+{"kind":"phrase","id":"pl-so7vfoz","translation":"Сколько я плачу?","words":{"ile":"сколько","płacę":"плачу"}}
+{"kind":"phrase","id":"pl-p5zzl7z","translation":"Здесь, спасибо.","words":{"na":"на","miejscu":"месте","dziękuję":"спасибо"}}
+{"kind":"phrase","id":"pl-qxrwzrb","translation":"Сколько стоит маленький кофе с молоком?","words":{"ile":"сколько","kosztuje":"стоит","mała":"маленький","kawa":"кофе","z mlekiem":"с молоком"}}
+{"kind":"set","id":"set-pl-a1-paying","subtitle":"Оплата счёта в польском кафе с другом."}
+{"kind":"phrase","id":"pl-3bzqdoo","translation":"Мы платим вместе или отдельно?","words":{"czy":"или","płacimy":"мы платим","razem":"вместе","osobno":"отдельно"}}
+{"kind":"phrase","id":"pl-2fim5tt","translation":"Сколько мы платим вместе?","words":{"ile":"сколько","płacimy":"мы платим","razem":"вместе"}}
+{"kind":"phrase","id":"pl-pfv75a5","translation":"Я заплачу за нас обоих, хорошо?","words":{"zapłacę":"я заплачу","razem":"вместе","dobrze":"хорошо"}}
+{"kind":"phrase","id":"pl-edllpap","translation":"Мы заплатим отдельно, хорошо?","words":{"zapłacimy":"мы заплатим","osobno":"отдельно","dobrze":"хорошо"}}
+{"kind":"phrase","id":"pl-updaeuy","translation":"Можно оплатить бесконтактно?","words":{"czy":"ли (вопросительная частица)","mogę":"я могу","zapłacić":"заплатить","zbliżeniowo":"бесконтактно"}}
+{"kind":"phrase","id":"pl-klpttnc","translation":"Я плачу картой, хорошо?","words":{"płacę":"я плачу","kartą":"картой","dobrze":"хорошо"}}
+{"kind":"phrase","id":"pl-3ztz46p","translation":"Счёт, пожалуйста, мы платим вместе.","words":{"poproszę":"пожалуйста","rachunek":"счёт","płacimy":"мы платим","razem":"вместе"}}
+{"kind":"phrase","id":"pl-5b6mwvz","translation":"Я заплачу наличными, хорошо?","words":{"zapłacę":"я заплачу","gotówką":"наличными","dobrze":"хорошо"}}
+{"kind":"phrase","id":"pl-7oacco5","translation":"Я предпочитаю заплатить наличными.","words":{"wolę":"я предпочитаю","zapłacić":"заплатить","gotówką":"наличными"}}
+{"kind":"phrase","id":"pl-pb2re5n","translation":"Можно оплатить телефоном?","words":{"czy":"ли (вопросительная частица)","mogę":"я могу","zapłacić":"заплатить","telefonem":"телефоном"}}
+{"kind":"phrase","id":"pl-3v2ttdm","translation":"Я получу чек?","words":{"czy":"ли (вопросительная частица)","dostanę":"я получу","paragon":"чек"}}
+{"kind":"phrase","id":"pl-tbluyyd","translation":"Сдачи не надо, спасибо.","words":{"reszty":"сдачи","nie":"не","trzeba":"надо","dziękuję":"спасибо"}}
+{"kind":"set","id":"set-pl-a1-restaurant-order","subtitle":"Быстрый обед в маленьком польском ресторане"}
+{"kind":"phrase","id":"pl-uwp4ngl","translation":"Есть свободный столик на двоих?","words":{"czy":"ли (вопросительная частица)","jest":"есть","wolny":"свободный","stolik":"столик","dla":"для","dwóch":"двух","osób":"человек"}}
+{"kind":"phrase","id":"pl-w5swdpc","translation":"Вы рекомендуете котлету?","words":{"czy":"ли (вопросительная частица)","pan":"вы (к мужчине)","poleca":"рекомендует","kotlet":"котлета"}}
+{"kind":"phrase","id":"pl-mnmydrq","translation":"Салат без мяса?","words":{"czy":"ли (вопросительная частица)","sałatka":"салат","jest":"есть","bez":"без","mięsa":"мясо"}}
+{"kind":"phrase","id":"pl-snd53y2","translation":"Вы рекомендуете пироги?","words":{"czy":"ли (вопросительная частица)","pani":"вы (к женщине)","poleca":"рекомендует","pierogi":"пироги, вареники"}}
+{"kind":"phrase","id":"pl-bsykgr4","translation":"Меню и суп дня, пожалуйста.","words":{"poproszę":"я хотел бы…, пожалуйста","menu":"меню","i":"и","zupę":"суп","dnia":"дня"}}
+{"kind":"phrase","id":"pl-tftwg5y","translation":"Котлету и салат, пожалуйста.","words":{"poproszę":"я хотел бы…, пожалуйста","kotlet":"котлета","i":"и","sałatkę":"салат"}}
+{"kind":"phrase","id":"pl-js624jk","translation":"У вас есть десерт?","words":{"czy":"ли (вопросительная частица)","pani":"вы (к женщине)","ma":"имеет","deser":"десерт"}}
+{"kind":"phrase","id":"pl-oii67zy","translation":"Можно попросить меню?","words":{"czy":"ли (вопросительная частица)","mogę":"могу","prosić":"просить","o":"о","menu":"меню"}}
+{"kind":"phrase","id":"pl-sh5votg","translation":"Вода без газа холодная?","words":{"czy":"ли (вопросительная частица)","woda":"вода","niegazowana":"без газа (негазированная)","jest":"есть","zimna":"холодная"}}
+{"kind":"phrase","id":"pl-cap6opt","translation":"Пироги для меня, пожалуйста.","words":{"poproszę":"я хотел бы…, пожалуйста","pierogi":"пироги, вареники","dla":"для","mnie":"меня"}}
+{"kind":"phrase","id":"pl-o5yqvut","translation":"Воду без газа, пожалуйста.","words":{"poproszę":"я хотел бы…, пожалуйста","wodę":"вода","niegazowaną":"без газа (негазированную)"}}
+{"kind":"phrase","id":"pl-ljgxlmw","translation":"Десерт для меня, пожалуйста.","words":{"poproszę":"я хотел бы…, пожалуйста","deser":"десерт","dla":"для","mnie":"меня"}}

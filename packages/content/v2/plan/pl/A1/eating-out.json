@@ -1,0 +1,417 @@
+{
+  "version": 1,
+  "slots": [
+    {
+      "setId": "set-pl-a1-cafe-counter",
+      "course": "pl-PL",
+      "level": "A1",
+      "topic": "eating-out",
+      "situation": "cafe-counter",
+      "count": 12,
+      "song": false,
+      "brief": {
+        "edited": true,
+        "scene": "A customer orders at the counter of a Kraków café in the morning; the barista answers. Short exchanges: what to drink, with milk or not, something sweet, here or to take away, paying.",
+        "speakers": ["customer", "barista"],
+        "register": "neutral; customer and barista address each other as pan/pani with the third person, never ty",
+        "grammarFocus": [
+          {
+            "id": "pl-accusative-object",
+            "kind": "case",
+            "rule": "The direct object of poproszę, chcę, wezmę, mam takes the accusative: feminine -a becomes -ę (kawa → kawę, herbata → herbatę, woda → wodę); masculine inanimate and neuter nouns do not change (sok, rachunek, ciastko).",
+            "example": "Poproszę wodę i jedno ciastko.",
+            "minPhrases": 4
+          },
+          {
+            "id": "pl-poprosze-request",
+            "kind": "construction",
+            "rule": "Ordering politely with «poproszę» + accusative (I'd like…), or «czy mogę prosić o…» + accusative; «dla mnie» picks one's own order.",
+            "example": "Dla mnie poproszę herbatę z cytryną.",
+            "minPhrases": 3
+          },
+          {
+            "id": "pl-pan-pani-formal",
+            "kind": "register",
+            "rule": "Formal address to a stranger: pan (to a man) / pani (to a woman) with the verb in the third person singular: «Czy pani przyjmuje karty?», «Co pan poleca?»; never ty to staff.",
+            "example": "Czy pan ma coś bez mleka?",
+            "minPhrases": 3
+          }
+        ],
+        "functions": ["request", "ask-price", "offer", "thank", "ask-availability"],
+        "mustUse": [
+          {
+            "lemma": "kawa",
+            "gloss": "coffee",
+            "pos": "noun"
+          },
+          {
+            "lemma": "z mlekiem",
+            "gloss": "with milk",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "czarna",
+            "gloss": "black (of coffee)",
+            "pos": "adj"
+          },
+          {
+            "lemma": "herbata",
+            "gloss": "tea",
+            "pos": "noun"
+          },
+          {
+            "lemma": "z cytryną",
+            "gloss": "with lemon",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "cukier",
+            "gloss": "sugar",
+            "pos": "noun"
+          },
+          {
+            "lemma": "na wynos",
+            "gloss": "to take away",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "na miejscu",
+            "gloss": "to have here",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "ciastko",
+            "gloss": "cake, a pastry",
+            "pos": "noun"
+          },
+          {
+            "lemma": "rogalik",
+            "gloss": "croissant, crescent roll",
+            "pos": "noun"
+          },
+          {
+            "lemma": "sok",
+            "gloss": "juice",
+            "pos": "noun"
+          },
+          {
+            "lemma": "ile",
+            "gloss": "how much",
+            "pos": "pron"
+          },
+          {
+            "lemma": "duża",
+            "gloss": "large (of a drink)",
+            "pos": "adj"
+          },
+          {
+            "lemma": "mała",
+            "gloss": "small (of a drink)",
+            "pos": "adj"
+          }
+        ],
+        "shouldUse": [
+          {
+            "lemma": "poproszę",
+            "gloss": "I'd like (polite request)",
+            "pos": "verb"
+          },
+          {
+            "lemma": "dziękuję",
+            "gloss": "thank you",
+            "pos": "interj"
+          },
+          {
+            "lemma": "coś jeszcze",
+            "gloss": "anything else",
+            "pos": "phrase"
+          }
+        ],
+        "avoid": {
+          "lemmas": ["rachunek", "kelner", "piwo", "śniadanie"],
+          "themes": ["alcohol", "tipping amounts", "prices in numbers"],
+          "textKeys": "siblings"
+        },
+        "mention": [
+          "At a Polish café counter you usually order and pay first, then wait or collect.",
+          "«Czarna kawa» is plain black coffee; «kawa z mlekiem» or «latte» is the milky one."
+        ],
+        "doNotMention": [
+          "brand names",
+          "exact prices or złoty amounts",
+          "slang (kawka, ciacho)",
+          "ty forms to the barista"
+        ],
+        "variety": null,
+        "notesHints": ["«na wynos» (to take away) vs «na miejscu» (to have here): the barista's first question"]
+      }
+    },
+    {
+      "setId": "set-pl-a1-restaurant-order",
+      "course": "pl-PL",
+      "level": "A1",
+      "topic": "eating-out",
+      "situation": "restaurant-order",
+      "count": 12,
+      "song": false,
+      "brief": {
+        "edited": true,
+        "scene": "Lunch at a small Polish restaurant (a bar mleczny or a family place): asking for a table, the menu, the soup of the day, choosing a main course, asking what is without meat, water for the table.",
+        "speakers": ["guest", "waiter"],
+        "register": "neutral; guest and waiter use pan/pani with the third person; short and polite",
+        "grammarFocus": [
+          {
+            "id": "pl-czy-question",
+            "kind": "construction",
+            "rule": "A yes/no question may start with «czy», the word order otherwise unchanged: «Czy jest wolny stolik?», «Czy mogę zapłacić gotówką?».",
+            "example": "Czy jest wolny stolik przy oknie?",
+            "minPhrases": 3
+          },
+          {
+            "id": "pl-accusative-object",
+            "kind": "case",
+            "rule": "The direct object of poproszę, chcę, wezmę, mam takes the accusative: feminine -a becomes -ę (kawa → kawę, herbata → herbatę, woda → wodę); masculine inanimate and neuter nouns do not change (sok, rachunek, ciastko).",
+            "example": "Poproszę wodę i jedno ciastko.",
+            "minPhrases": 4
+          },
+          {
+            "id": "pl-pan-pani-formal",
+            "kind": "register",
+            "rule": "Formal address to a stranger: pan (to a man) / pani (to a woman) with the verb in the third person singular: «Czy pani przyjmuje karty?», «Co pan poleca?»; never ty to staff.",
+            "example": "Czy pan ma coś bez mleka?",
+            "minPhrases": 3
+          }
+        ],
+        "functions": ["request", "ask-availability", "ask-recommendation", "decline", "thank"],
+        "mustUse": [
+          {
+            "lemma": "stolik",
+            "gloss": "table (in a restaurant)",
+            "pos": "noun"
+          },
+          {
+            "lemma": "wolny",
+            "gloss": "free (not taken)",
+            "pos": "adj"
+          },
+          {
+            "lemma": "menu",
+            "gloss": "menu",
+            "pos": "noun"
+          },
+          {
+            "lemma": "zupa dnia",
+            "gloss": "soup of the day",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "pierogi",
+            "gloss": "pierogi, dumplings",
+            "pos": "noun"
+          },
+          {
+            "lemma": "bez mięsa",
+            "gloss": "without meat",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "woda niegazowana",
+            "gloss": "still water",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "kotlet",
+            "gloss": "cutlet",
+            "pos": "noun"
+          },
+          {
+            "lemma": "sałatka",
+            "gloss": "salad",
+            "pos": "noun"
+          },
+          {
+            "lemma": "deser",
+            "gloss": "dessert",
+            "pos": "noun"
+          },
+          {
+            "lemma": "polecać",
+            "gloss": "to recommend",
+            "pos": "verb"
+          },
+          {
+            "lemma": "smacznego",
+            "gloss": "enjoy your meal",
+            "pos": "interj"
+          }
+        ],
+        "shouldUse": [
+          {
+            "lemma": "przepraszam",
+            "gloss": "excuse me",
+            "pos": "interj"
+          },
+          {
+            "lemma": "proszę",
+            "gloss": "please; here you are",
+            "pos": "interj"
+          },
+          {
+            "lemma": "dla mnie",
+            "gloss": "for me",
+            "pos": "phrase"
+          }
+        ],
+        "avoid": {
+          "lemmas": ["rachunek", "kawa", "piwo", "wódka", "napiwek", "zamówić"],
+          "themes": ["alcohol", "tipping amounts", "prices in numbers"],
+          "textKeys": "siblings"
+        },
+        "mention": [
+          "«Smacznego!» is said by the waiter as the food arrives; the guest answers «Dziękuję».",
+          "Pierogi are always plural; one is «pieróg».",
+          "Each phrase says one thing; the set covers the table, the menu, a dish, a drink and a dessert, not the same order twice."
+        ],
+        "doNotMention": [
+          "brand names",
+          "exact prices",
+          "regional dialect words",
+          "ty forms to staff",
+          "vodka or any alcohol"
+        ],
+        "variety": null,
+        "notesHints": ["«zupa dnia»: soup of the day, the cheapest warm thing on the menu"]
+      }
+    },
+    {
+      "setId": "set-pl-a1-paying",
+      "course": "pl-PL",
+      "level": "A1",
+      "topic": "eating-out",
+      "situation": "paying",
+      "count": 12,
+      "song": false,
+      "brief": {
+        "edited": true,
+        "scene": "Paying at the end of a meal in a Polish café or restaurant: catching the waiter's eye, asking for the bill, card or cash, paying together or separately, the receipt and the change, one friend treating the others.",
+        "speakers": ["customer", "waiter"],
+        "register": "neutral; customer and waiter use pan/pani; friends among themselves use ty",
+        "grammarFocus": [
+          {
+            "id": "pl-instrumental-means",
+            "kind": "case",
+            "rule": "How and with what: the instrumental after z (with) and for the means of payment: z mlekiem, z cytryną, kartą, gotówką, telefonem.",
+            "example": "Zapłacę kartą, dobrze?",
+            "minPhrases": 3
+          },
+          {
+            "id": "pl-czy-question",
+            "kind": "construction",
+            "rule": "A yes/no question may start with «czy», the word order otherwise unchanged: «Czy jest wolny stolik?», «Czy mogę zapłacić gotówką?».",
+            "example": "Czy jest wolny stolik przy oknie?",
+            "minPhrases": 3
+          },
+          {
+            "id": "pl-future-perfective",
+            "kind": "aspect",
+            "rule": "The perfective present means the future: zapłacę (I'll pay), zapłacimy (we'll pay), wezmę (I'll take); the imperfective present is now or in general: płacę, płacimy.",
+            "example": "Zapłacimy osobno, dobrze?",
+            "minPhrases": 3
+          }
+        ],
+        "functions": ["request", "ask-price", "offer", "thank", "ask-availability"],
+        "mustUse": [
+          {
+            "lemma": "rachunek",
+            "gloss": "the bill",
+            "pos": "noun"
+          },
+          {
+            "lemma": "zapłacić",
+            "gloss": "to pay (once, completed)",
+            "pos": "verb"
+          },
+          {
+            "lemma": "płacić",
+            "gloss": "to pay (in progress, in general)",
+            "pos": "verb"
+          },
+          {
+            "lemma": "karta",
+            "gloss": "card (to pay)",
+            "pos": "noun"
+          },
+          {
+            "lemma": "gotówka",
+            "gloss": "cash",
+            "pos": "noun"
+          },
+          {
+            "lemma": "razem",
+            "gloss": "together (one bill)",
+            "pos": "adv"
+          },
+          {
+            "lemma": "osobno",
+            "gloss": "separately",
+            "pos": "adv"
+          },
+          {
+            "lemma": "paragon",
+            "gloss": "receipt",
+            "pos": "noun"
+          },
+          {
+            "lemma": "reszta",
+            "gloss": "change (money back)",
+            "pos": "noun"
+          },
+          {
+            "lemma": "zbliżeniowo",
+            "gloss": "contactless (by tap)",
+            "pos": "adv"
+          },
+          {
+            "lemma": "stawiać",
+            "gloss": "to treat, to pay for someone",
+            "pos": "verb"
+          },
+          {
+            "lemma": "ile",
+            "gloss": "how much",
+            "pos": "pron"
+          }
+        ],
+        "shouldUse": [
+          {
+            "lemma": "przepraszam",
+            "gloss": "excuse me",
+            "pos": "interj"
+          },
+          {
+            "lemma": "dziękuję",
+            "gloss": "thank you",
+            "pos": "interj"
+          },
+          {
+            "lemma": "poproszę",
+            "gloss": "I'd like (polite request)",
+            "pos": "verb"
+          }
+        ],
+        "avoid": {
+          "lemmas": ["napiwek", "pieniądze", "faktura", "kelner"],
+          "themes": ["alcohol", "tipping amounts", "prices in numbers"],
+          "textKeys": "siblings"
+        },
+        "mention": [
+          "«Reszty nie trzeba» (keep the change) is how Poles leave the change.",
+          "In Poland the bill is brought when asked for."
+        ],
+        "doNotMention": ["brand names", "exact amounts", "how much to tip", "banks"],
+        "variety": null,
+        "notesHints": ["«Ja stawiam!»: it's on me, said to friends, never to the waiter"]
+      }
+    }
+  ]
+}

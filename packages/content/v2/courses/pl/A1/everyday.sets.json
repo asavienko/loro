@@ -1,0 +1,119 @@
+[
+  {
+    "id": "set-pl-a1-food-shop",
+    "title": "W sklepie spożywczym",
+    "subtitle": {
+      "en": "At the grocery counter: asking for bread, rolls, cheese and butter, and paying."
+    },
+    "topicId": "everyday",
+    "situation": "food-shop",
+    "level": "A1",
+    "coverIcon": "restaurant",
+    "targetLang": "pl-PL",
+    "phraseIds": [
+      "pl-4u36ljc",
+      "pl-z64s63o",
+      "pl-jjps7by",
+      "pl-j3x5ouc",
+      "pl-6d3l3xx",
+      "pl-lxtrdlk",
+      "pl-5ta7iui",
+      "pl-7insb5x",
+      "pl-om5huvn",
+      "pl-mi3ovfn",
+      "pl-u65jinu",
+      "pl-futsgn2"
+    ],
+    "grammarFocus": [
+      "pl-accusative-object",
+      "pl-genitive-quantity",
+      "pl-pan-pani-formal"
+    ],
+    "provenance": {
+      "writer": "deepseek",
+      "provider": "fireworks",
+      "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+      "run": "spike-pl-a1-around-everyday-ru",
+      "promptVersion": "phrases.v1",
+      "briefHash": "95766bd0f43445592207f3d491ce87e5cb7055fb9c617f3785ffa5de00d1a35b"
+    }
+  },
+  {
+    "id": "set-pl-a1-pharmacy",
+    "title": "W aptece",
+    "subtitle": {
+      "en": "At the pharmacy: saying what hurts and asking for something for it."
+    },
+    "topicId": "everyday",
+    "situation": "pharmacy",
+    "level": "A1",
+    "coverIcon": "pill",
+    "targetLang": "pl-PL",
+    "phraseIds": [
+      "pl-cr5dhxn",
+      "pl-v5apxhx",
+      "pl-gtg6zbe",
+      "pl-ubz7x7f",
+      "pl-5iwpbzt",
+      "pl-z3d6wa7",
+      "pl-jsvvir6",
+      "pl-oat7tkx",
+      "pl-vszn4p2",
+      "pl-wli32pf",
+      "pl-p4q6q4r",
+      "pl-nwwequr"
+    ],
+    "grammarFocus": [
+      "pl-boli-pain",
+      "pl-accusative-object",
+      "pl-czy-question"
+    ],
+    "provenance": {
+      "writer": "deepseek",
+      "provider": "fireworks",
+      "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+      "run": "spike-pl-a1-around-everyday-ru",
+      "promptVersion": "phrases.v1",
+      "briefHash": "6e3c066e43f280d9c29c465367861e9639222cf0f89b0f6ec145df2aad3a5e25"
+    }
+  },
+  {
+    "id": "set-pl-a1-hotel",
+    "title": "Zameldowanie w hotelu",
+    "subtitle": {
+      "en": "Checking in at a small hotel or guesthouse in Poland."
+    },
+    "topicId": "everyday",
+    "situation": "hotel",
+    "level": "A1",
+    "coverIcon": "water_drop",
+    "targetLang": "pl-PL",
+    "phraseIds": [
+      "pl-ubloajn",
+      "pl-eampnym",
+      "pl-6a47m26",
+      "pl-3spbuk2",
+      "pl-qtadxkh",
+      "pl-wddyieu",
+      "pl-kgkf5wv",
+      "pl-wzyhqiz",
+      "pl-sbdtao6",
+      "pl-srt3iid",
+      "pl-numt5s2",
+      "pl-qgf3tpr"
+    ],
+    "grammarFocus": [
+      "pl-mam-present",
+      "pl-czy-question",
+      "pl-locative-place"
+    ],
+    "provenance": {
+      "writer": "deepseek",
+      "provider": "fireworks",
+      "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+      "run": "spike-pl-a1-around-everyday-ru",
+      "promptVersion": "phrases.v1",
+      "briefHash": "36a46adc5e01965729b0c92903699ffb90fa3320c8435fbb38c78b8ad2a7711a"
+    }
+  }
+]

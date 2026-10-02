@@ -1,0 +1,108 @@
+{
+  "runId": "spike-pl-a1-eating-out-ru-2",
+  "at": "2026-10-02T12:15:50.853Z",
+  "stages": [
+    "phrases",
+    "judge",
+    "translate",
+    "judge-translate"
+  ],
+  "langs": [
+    "ru"
+  ],
+  "course": "pl-PL",
+  "levels": [
+    "A1"
+  ],
+  "topics": [
+    "eating-out"
+  ],
+  "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+  "pricing": "assumed on 2026-10-02, not verified against the providers' price lists; the run summary's dollar figure is an estimate until this file is checked",
+  "spend": {
+    "calls": 6,
+    "cached": 0,
+    "usd": 0.0071604,
+    "inputTokens": 14037,
+    "outputTokens": 7255
+  },
+  "outcomes": [
+    {
+      "setId": "set-pl-a1-cafe-counter",
+      "status": "skipped"
+    },
+    {
+      "setId": "set-pl-a1-restaurant-order",
+      "status": "needs-brief",
+      "phrases": 9,
+      "coverage": 0.9166666666666666,
+      "calls": 6,
+      "rejected": [
+        {
+          "target": "Poproszę jeszcze wodę niegazowaną.",
+          "reason": "judge: duplicate of 2"
+        },
+        {
+          "target": "Dla mnie poproszę zupę dnia.",
+          "reason": "judge: duplicate of 1"
+        },
+        {
+          "target": "Czy pani może zamówić szybko?",
+          "reason": "judge: natural: wrong, english: wrong"
+        },
+        {
+          "target": "Czy pan poleca zupę dnia?",
+          "reason": "too close to «Czy pan poleca zupę dnia?»"
+        },
+        {
+          "target": "Poproszę menu i wodę niegazowaną.",
+          "reason": "too close to «Poproszę menu i wodę niegazowaną.»"
+        },
+        {
+          "target": "Czy jest wolny stolik dla dwóch?",
+          "reason": "too close to «Czy jest wolny stolik dla dwóch osób?»"
+        },
+        {
+          "target": "Poproszę pierogi bez mięsa dla mnie.",
+          "reason": "judge: duplicate of 9"
+        },
+        {
+          "target": "Czy pani może zamówić od razu?",
+          "reason": "judge: natural: wrong, english: wrong"
+        },
+        {
+          "target": "Smacznego! Dziękuję, śpieszę się.",
+          "reason": "judge: natural: wrong, english: wrong"
+        },
+        {
+          "target": "Czy pan poleca zupę dnia?",
+          "reason": "too close to «Czy pan poleca zupę dnia?»"
+        },
+        {
+          "target": "Poproszę menu i wodę niegazowaną.",
+          "reason": "too close to «Poproszę menu i wodę niegazowaną.»"
+        },
+        {
+          "target": "Czy jest wolny stolik dla dwóch osób?",
+          "reason": "too close to «Czy jest wolny stolik dla dwóch osób?»"
+        },
+        {
+          "target": "Poproszę pierogi bez mięsa dla mnie.",
+          "reason": "judge: duplicate of 9"
+        },
+        {
+          "target": "Czy pani może zamówić szybko?",
+          "reason": "judge: natural: wrong, english: wrong"
+        },
+        {
+          "target": "Smacznego! Dziękuję, śpieszę się.",
+          "reason": "judge: natural: wrong, english: wrong"
+        }
+      ]
+    },
+    {
+      "setId": "set-pl-a1-paying",
+      "status": "skipped"
+    }
+  ]
+}

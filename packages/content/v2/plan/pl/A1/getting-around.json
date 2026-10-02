@@ -1,0 +1,376 @@
+{
+  "version": 1,
+  "slots": [
+    {
+      "setId": "set-pl-a1-bus-tram",
+      "course": "pl-PL",
+      "level": "A1",
+      "topic": "getting-around",
+      "situation": "bus-tram",
+      "count": 12,
+      "song": false,
+      "brief": {
+        "edited": true,
+        "scene": "Getting about Warsaw or Kraków by tram and bus: buying a ticket at a machine or a kiosk, a reduced or a full fare, checking which line goes where, validating the ticket, asking where to get off and where to change.",
+        "speakers": ["passenger", "another passenger"],
+        "register": "neutral; strangers use pan/pani with the third person",
+        "grammarFocus": [
+          {
+            "id": "pl-czy-question",
+            "kind": "construction",
+            "rule": "A yes/no question may start with «czy», the word order otherwise unchanged: «Czy ten tramwaj jedzie do centrum?», «Czy jest winda?».",
+            "example": "Czy to daleko stąd?",
+            "minPhrases": 3
+          },
+          {
+            "id": "pl-do-genitive",
+            "kind": "case",
+            "rule": "Going to a place: «do» + genitive: dworzec → do dworca, centrum → do centrum, rynek → do rynku, apteka → do apteki.",
+            "example": "Jak dojść do rynku?",
+            "minPhrases": 3
+          },
+          {
+            "id": "pl-locative-place",
+            "kind": "case",
+            "rule": "Where something is: «na» or «w» + locative: na przystanku, na peronie, w centrum, na rogu, w pokoju.",
+            "example": "Czekam na przystanku.",
+            "minPhrases": 3
+          }
+        ],
+        "functions": ["request", "ask-location", "ask-availability", "thank"],
+        "mustUse": [
+          {
+            "lemma": "bilet",
+            "gloss": "ticket",
+            "pos": "noun"
+          },
+          {
+            "lemma": "ulgowy",
+            "gloss": "reduced (fare)",
+            "pos": "adj"
+          },
+          {
+            "lemma": "normalny",
+            "gloss": "full (fare)",
+            "pos": "adj"
+          },
+          {
+            "lemma": "tramwaj",
+            "gloss": "tram",
+            "pos": "noun"
+          },
+          {
+            "lemma": "autobus",
+            "gloss": "bus",
+            "pos": "noun"
+          },
+          {
+            "lemma": "linia",
+            "gloss": "line, route number",
+            "pos": "noun"
+          },
+          {
+            "lemma": "przystanek",
+            "gloss": "stop",
+            "pos": "noun"
+          },
+          {
+            "lemma": "następny",
+            "gloss": "next",
+            "pos": "adj"
+          },
+          {
+            "lemma": "przesiadka",
+            "gloss": "change (between lines)",
+            "pos": "noun"
+          },
+          {
+            "lemma": "skasować",
+            "gloss": "to validate (a ticket)",
+            "pos": "verb"
+          },
+          {
+            "lemma": "wysiadać",
+            "gloss": "to get off",
+            "pos": "verb"
+          },
+          {
+            "lemma": "centrum",
+            "gloss": "the city centre",
+            "pos": "noun"
+          }
+        ],
+        "shouldUse": [
+          {
+            "lemma": "przepraszam",
+            "gloss": "excuse me",
+            "pos": "interj"
+          },
+          {
+            "lemma": "dziękuję",
+            "gloss": "thank you",
+            "pos": "interj"
+          }
+        ],
+        "avoid": {
+          "lemmas": ["taksówka", "samochód", "mandat"],
+          "themes": ["alcohol", "prices in numbers", "politics"],
+          "textKeys": "siblings"
+        },
+        "mention": [
+          "In Polish cities a paper ticket is validated («skasować») on boarding.",
+          "«Ulgowy» is the reduced fare for students and pensioners; «normalny» is the full one."
+        ],
+        "doNotMention": ["brand names or app names", "exact fares", "fines and inspectors", "ty forms to strangers"],
+        "variety": null,
+        "notesHints": ["«skasować bilet»: to validate, not to cancel"]
+      }
+    },
+    {
+      "setId": "set-pl-a1-asking-the-way",
+      "course": "pl-PL",
+      "level": "A1",
+      "topic": "getting-around",
+      "situation": "asking-the-way",
+      "count": 12,
+      "song": false,
+      "brief": {
+        "edited": true,
+        "scene": "On foot in a Polish old town: asking a passer-by the way to the market square, a pharmacy or the station, understanding left, right and straight on, how far it is.",
+        "speakers": ["visitor", "passer-by"],
+        "register": "neutral; strangers use pan/pani with the third person; the passer-by answers with «proszę iść…» or the imperative",
+        "grammarFocus": [
+          {
+            "id": "pl-pan-pani-formal",
+            "kind": "register",
+            "rule": "Formal address to a stranger: pan (to a man) / pani (to a woman) with the verb in the third person singular: «Czy pani wie, gdzie…?», «Czy pan ma…?»; never ty to strangers or staff.",
+            "example": "Przepraszam, czy pan wie, gdzie jest dworzec?",
+            "minPhrases": 3
+          },
+          {
+            "id": "pl-do-genitive",
+            "kind": "case",
+            "rule": "Going to a place: «do» + genitive: dworzec → do dworca, centrum → do centrum, rynek → do rynku, apteka → do apteki.",
+            "example": "Jak dojść do rynku?",
+            "minPhrases": 3
+          },
+          {
+            "id": "pl-prosze-infinitive",
+            "kind": "construction",
+            "rule": "Giving directions politely: «proszę» + infinitive (proszę iść prosto, proszę skręcić w lewo) or the imperative (niech pan idzie…, skręć for a friend).",
+            "example": "Proszę iść prosto i skręcić w prawo.",
+            "minPhrases": 3
+          }
+        ],
+        "functions": ["ask-location", "request", "thank", "explain"],
+        "mustUse": [
+          {
+            "lemma": "prosto",
+            "gloss": "straight on",
+            "pos": "adv"
+          },
+          {
+            "lemma": "w lewo",
+            "gloss": "to the left",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "w prawo",
+            "gloss": "to the right",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "daleko",
+            "gloss": "far",
+            "pos": "adv"
+          },
+          {
+            "lemma": "blisko",
+            "gloss": "near",
+            "pos": "adv"
+          },
+          {
+            "lemma": "ulica",
+            "gloss": "street",
+            "pos": "noun"
+          },
+          {
+            "lemma": "rynek",
+            "gloss": "market square, old town square",
+            "pos": "noun"
+          },
+          {
+            "lemma": "most",
+            "gloss": "bridge",
+            "pos": "noun"
+          },
+          {
+            "lemma": "apteka",
+            "gloss": "pharmacy",
+            "pos": "noun"
+          },
+          {
+            "lemma": "skręcić",
+            "gloss": "to turn",
+            "pos": "verb"
+          },
+          {
+            "lemma": "szukać",
+            "gloss": "to look for",
+            "pos": "verb"
+          },
+          {
+            "lemma": "mapa",
+            "gloss": "map",
+            "pos": "noun"
+          }
+        ],
+        "shouldUse": [
+          {
+            "lemma": "przepraszam",
+            "gloss": "excuse me",
+            "pos": "interj"
+          },
+          {
+            "lemma": "dziękuję bardzo",
+            "gloss": "thank you very much",
+            "pos": "phrase"
+          }
+        ],
+        "avoid": {
+          "lemmas": ["taksówka", "autobus", "tramwaj", "bilet"],
+          "themes": ["alcohol", "prices in numbers", "politics"],
+          "textKeys": "siblings"
+        },
+        "mention": ["Most Polish old towns are built around a «rynek», the market square."],
+        "doNotMention": ["brand names", "distances in numbers", "ty forms to strangers"],
+        "variety": null,
+        "notesHints": ["«w lewo» / «w prawo»: left / right, with «w» and no case ending to learn"]
+      }
+    },
+    {
+      "setId": "set-pl-a1-train-station",
+      "course": "pl-PL",
+      "level": "A1",
+      "topic": "getting-around",
+      "situation": "train-station",
+      "count": 12,
+      "song": false,
+      "brief": {
+        "edited": true,
+        "scene": "At a Polish railway station: buying a single or a return ticket at the ticket office, asking which platform, when the train leaves, whether it is late, finding a seat in the carriage.",
+        "speakers": ["traveller", "ticket clerk"],
+        "register": "neutral; traveller and clerk use pan/pani with the third person",
+        "grammarFocus": [
+          {
+            "id": "pl-czy-question",
+            "kind": "construction",
+            "rule": "A yes/no question may start with «czy», the word order otherwise unchanged: «Czy ten tramwaj jedzie do centrum?», «Czy jest winda?».",
+            "example": "Czy to daleko stąd?",
+            "minPhrases": 3
+          },
+          {
+            "id": "pl-locative-place",
+            "kind": "case",
+            "rule": "Where something is: «na» or «w» + locative: na przystanku, na peronie, w centrum, na rogu, w pokoju.",
+            "example": "Czekam na przystanku.",
+            "minPhrases": 3
+          },
+          {
+            "id": "pl-accusative-object",
+            "kind": "case",
+            "rule": "The direct object of poproszę, chcę, kupię, mam takes the accusative: feminine -a becomes -ę (bułka → bułkę, tabletka → tabletkę); masculine inanimate and neuter nouns do not change (bilet, chleb, mleko).",
+            "example": "Poproszę bilet i mapę miasta.",
+            "minPhrases": 3
+          }
+        ],
+        "functions": ["request", "ask-time", "ask-location", "ask-availability", "thank"],
+        "mustUse": [
+          {
+            "lemma": "pociąg",
+            "gloss": "train",
+            "pos": "noun"
+          },
+          {
+            "lemma": "peron",
+            "gloss": "platform",
+            "pos": "noun"
+          },
+          {
+            "lemma": "kasa",
+            "gloss": "ticket office",
+            "pos": "noun"
+          },
+          {
+            "lemma": "w jedną stronę",
+            "gloss": "one-way, single",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "powrotny",
+            "gloss": "return (ticket)",
+            "pos": "adj"
+          },
+          {
+            "lemma": "odjeżdżać",
+            "gloss": "to leave, to depart",
+            "pos": "verb"
+          },
+          {
+            "lemma": "spóźniony",
+            "gloss": "late, delayed",
+            "pos": "adj"
+          },
+          {
+            "lemma": "wagon",
+            "gloss": "carriage",
+            "pos": "noun"
+          },
+          {
+            "lemma": "miejsce",
+            "gloss": "seat",
+            "pos": "noun"
+          },
+          {
+            "lemma": "dworzec",
+            "gloss": "station",
+            "pos": "noun"
+          },
+          {
+            "lemma": "o której",
+            "gloss": "at what time",
+            "pos": "phrase"
+          },
+          {
+            "lemma": "wolne",
+            "gloss": "free, not taken (of a seat)",
+            "pos": "adj"
+          }
+        ],
+        "shouldUse": [
+          {
+            "lemma": "poproszę",
+            "gloss": "I'd like (polite request)",
+            "pos": "verb"
+          },
+          {
+            "lemma": "przepraszam",
+            "gloss": "excuse me",
+            "pos": "interj"
+          }
+        ],
+        "avoid": {
+          "lemmas": ["samolot", "lotnisko", "taksówka"],
+          "themes": ["alcohol", "prices in numbers", "politics"],
+          "textKeys": "siblings"
+        },
+        "mention": [
+          "Station announcements give the platform («peron») and the track («tor»); passengers ask for the platform."
+        ],
+        "doNotMention": ["brand names of rail companies", "exact times or prices in numbers", "ty forms to staff"],
+        "variety": null,
+        "notesHints": ["«bilet w jedną stronę» (single) vs «bilet powrotny» (return)"]
+      }
+    }
+  ]
+}

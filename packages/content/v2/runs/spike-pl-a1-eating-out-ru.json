@@ -1,0 +1,120 @@
+{
+  "runId": "spike-pl-a1-eating-out-ru",
+  "at": "2026-10-02T12:14:11.703Z",
+  "stages": [
+    "phrases",
+    "judge",
+    "translate",
+    "judge-translate"
+  ],
+  "langs": [
+    "ru"
+  ],
+  "course": "pl-PL",
+  "levels": [
+    "A1"
+  ],
+  "topics": [
+    "eating-out"
+  ],
+  "model": "accounts/fireworks/models/deepseek-v4p1-flash",
+  "pricing": "assumed on 2026-10-02, not verified against the providers' price lists; the run summary's dollar figure is an estimate until this file is checked",
+  "spend": {
+    "calls": 16,
+    "cached": 0,
+    "usd": 0.017695199999999998,
+    "inputTokens": 33003,
+    "outputTokens": 18491
+  },
+  "outcomes": [
+    {
+      "setId": "set-pl-a1-cafe-counter",
+      "status": "written",
+      "phrases": 12,
+      "coverage": 0.9285714285714286,
+      "calls": 4,
+      "judge": "10 ok, 2 review, 0 reject",
+      "rejected": [
+        {
+          "target": "Nie, dziękuję, bez cukru.",
+          "reason": "claims to use cukier but does not"
+        },
+        {
+          "target": "Dla mnie czarna herbata, proszę.",
+          "reason": "judge: natural: wrong, grammar claim: wrong"
+        },
+        {
+          "target": "Czy pani ma rogalik z cukrem?",
+          "reason": "claims to use cukier but does not"
+        }
+      ]
+    },
+    {
+      "setId": "set-pl-a1-cafe-counter",
+      "status": "translated",
+      "lang": "ru",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "4 ok, 8 review, 0 reject"
+    },
+    {
+      "setId": "set-pl-a1-restaurant-order",
+      "status": "needs-brief",
+      "phrases": 11,
+      "coverage": 0.9166666666666666,
+      "calls": 6,
+      "rejected": [
+        {
+          "target": "Poproszę jeszcze wodę niegazowaną.",
+          "reason": "judge: duplicate of 2"
+        },
+        {
+          "target": "Czy pani może zamówić szybko?",
+          "reason": "judge: natural: wrong, english: wrong"
+        },
+        {
+          "target": "Czy jest wolny stolik dla dwóch osób?",
+          "reason": "too close to «Czy jest wolny stolik dla dwóch osób?»"
+        },
+        {
+          "target": "Poproszę menu i zupę dnia.",
+          "reason": "judge: duplicate of 2"
+        },
+        {
+          "target": "Czy pan poleca zupę dnia?",
+          "reason": "too close to «Czy pan poleca zupę dnia?»"
+        },
+        {
+          "target": "Poproszę menu i wodę niegazowaną.",
+          "reason": "too close to «Poproszę menu i wodę niegazowaną.»"
+        },
+        {
+          "target": "Chcę zamówić pierogi bez mięsa.",
+          "reason": "judge: duplicate of 3"
+        }
+      ]
+    },
+    {
+      "setId": "set-pl-a1-paying",
+      "status": "written",
+      "phrases": 12,
+      "coverage": 0.9166666666666666,
+      "calls": 2,
+      "judge": "10 ok, 2 review, 0 reject",
+      "rejected": [
+        {
+          "target": "Czy mogę zapłacić kartą?",
+          "reason": "already in the course as pl-kawiarnia-04; too close to «Czy mogę zapłacić kartą?»"
+        }
+      ]
+    },
+    {
+      "setId": "set-pl-a1-paying",
+      "status": "translated",
+      "lang": "ru",
+      "phrases": 12,
+      "calls": 2,
+      "judge": "6 ok, 6 review, 0 reject"
+    }
+  ]
+}

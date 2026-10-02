@@ -33,6 +33,27 @@ describe('checks', () => {
   if (!slot) throw new Error('no slot')
   const context = loadContext('es-ES')
 
+  it('finds Polish lemmas through their case and verb endings', () => {
+    const pl = (text: string, lemma: string, pos?: string) =>
+      containsLemma(text, lemma, pos, 'pl-PL')
+    expect(pl('Poproszę kawę z mlekiem', 'kawa')).toBe(true)
+    expect(pl('Poproszę kawę z mlekiem', 'z mlekiem')).toBe(true)
+    expect(pl('Czy mogę prosić o rachunek?', 'rachunek')).toBe(true)
+    expect(pl('Proszę o rachunku nie mówić', 'rachunek')).toBe(true)
+    expect(pl('Zapłacę kartą', 'karta')).toBe(true)
+    expect(pl('Zapłacę kartą', 'zapłacić', 'verb')).toBe(true)
+    expect(pl('Ile to kosztuje?', 'kosztować', 'verb')).toBe(true)
+    expect(pl('Chcę wodę niegazowaną', 'woda niegazowana')).toBe(true)
+    expect(pl('Chcę herbatę', 'chcieć', 'verb')).toBe(true)
+    expect(pl('Chcę herbatę', 'chcieć')).toBe(true)
+    expect(pl('Proszę cukier', 'prosić', 'verb')).toBe(true)
+    expect(pl('Poproszę sok', 'kawa')).toBe(false)
+    expect(pl('Na miejscu', 'na wynos')).toBe(false)
+    expect(pl('Ty płacisz', 'płacić')).toBe(true)
+    expect(pl('Coś na kaszel? Syrop od kaszlu', 'kaszel')).toBe(true)
+    expect(pl('Czekam na dworcu', 'dworzec')).toBe(true)
+  })
+
   it('finds lemmas as words, prefixes of long words, and multi-word units', () => {
     expect(containsLemma('Una tostada con tomate', 'tostada')).toBe(true)
     expect(containsLemma('Dos tostadas, por favor', 'tostada')).toBe(true)
