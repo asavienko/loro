@@ -17,6 +17,7 @@
     "author:run": "tsx src/authoring/run.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.1145.0",
     "@loro/content": "workspace:*",
     "@loro/core": "workspace:*",
     "@loro/core-rs": "workspace:*",

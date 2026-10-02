@@ -172,4 +172,7 @@ domain of Loro's own (none is registered; the API's token issuer only defaults t
 and the switch to the no-cost S3-behind-CloudFront stack in `infra/landing/cloudfront.yaml`, which
 waits on AWS Support verifying the account for CloudFront. A custom domain on Amplify or CloudFront
 needs a certificate in `us-east-1` and a hosted zone, about $0.50 a month in Route 53 or none at
-another registrar; decide the domain before the switch so it is set up once.
+another registrar; decide the domain before the switch so it is set up once. The owner's
+`savienko.com` (registered 2026-10-02) already sends email sign-in codes from `loro.savienko.com`
+([ADR-0021](../architecture/adr/0021-email-codes-through-amazon-ses.md)); a subdomain of it is a
+candidate for the page.

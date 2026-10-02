@@ -17,6 +17,7 @@ actually considered, what we chose, and the consequences we accepted.
 | [0018](0018-public-source-available-repository.md) | A public, source-available repository   | Accepted | 2026-10-02 |
 | [0019](0019-transcribing-generated-songs.md)       | The server may transcribe its own songs | Accepted | 2026-10-01 |
 | [0020](0020-posthog-us-cloud.md)                   | Analytics go to PostHog US Cloud        | Accepted | 2026-10-02 |
+| [0021](0021-email-codes-through-amazon-ses.md)     | Email codes are sent through Amazon SES | Accepted | 2026-10-02 |
 
 The next new record is 0021; numbers are never reused.
 

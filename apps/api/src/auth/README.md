@@ -62,13 +62,18 @@ transport peer; with `TRUST_PROXY=1` (the EC2 host, behind the gateway's nginx) 
 
 ## Email delivery
 
-The API posts `{ "email": "...", "code": "123456", "expires_in": 600 }` to `AUTH_MAGIC_DELIVERY_URL`
-with `Authorization: Bearer <AUTH_MAGIC_DELIVERY_TOKEN>`, a five-second timeout and redirects
-refused; any 2xx is accepted, and the response body is never read or logged. The URL must be HTTPS,
-loopback HTTP outside production, or `inbox:local`, which writes the latest code to
-`/tmp/loro-magic-delivery.json` on the API's host (the EC2 development host uses it). Locally,
-`node scripts/local-magic-delivery.mjs` is a loopback receiver. The API never puts a code in a log
-or a response. Only the delivery service receives the email and code.
+With `AUTH_MAGIC_DELIVERY_URL=ses` the API emails the code itself through Amazon SES, from
+`AUTH_EMAIL_FROM`, with the host's AWS credentials and `AWS_REGION`
+([ADR-0021](../../../../docs/architecture/adr/0021-email-codes-through-amazon-ses.md)); a failed
+send is logged by its error name only. This is how deployed hosts send codes.
+
+Otherwise the API posts `{ "email": "...", "code": "123456", "expires_in": 600 }` to
+`AUTH_MAGIC_DELIVERY_URL` with `Authorization: Bearer <AUTH_MAGIC_DELIVERY_TOKEN>`, a five-second
+timeout and redirects refused; any 2xx is accepted, and the response body is never read or logged.
+The URL must be HTTPS, loopback HTTP outside production, or `inbox:local`, which writes the latest
+code to `/tmp/loro-magic-delivery.json` on the API's host (the EC2 host until SES is set up there).
+Locally, `node scripts/local-magic-delivery.mjs` is a loopback receiver. The API never puts a code
+in a log or a response. Only the delivery service receives the email and code.
 
 ## Configuration
 

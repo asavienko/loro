@@ -151,6 +151,7 @@ export const config = {
       emailHashKey: process.env['AUTH_EMAIL_HASH_KEY'],
       magicDeliveryUrl: process.env['AUTH_MAGIC_DELIVERY_URL'],
       magicDeliveryToken: process.env['AUTH_MAGIC_DELIVERY_TOKEN'],
+      emailFrom: process.env['AUTH_EMAIL_FROM'],
       googleClientIds: (process.env['GOOGLE_CLIENT_IDS'] ?? oauth.googleClientId ?? '')
         .split(',')
         .map((id) => id.trim())
@@ -206,6 +207,8 @@ export interface SessionAuthSettings {
   emailHashKey: string | undefined
   magicDeliveryUrl: string | undefined
   magicDeliveryToken: string | undefined
+  /** The sender of email codes when `magicDeliveryUrl` is `ses`, e.g. `Loro <codes@example.com>`. */
+  emailFrom: string | undefined
   googleClientIds: string[]
   appleClientIds: string[]
 }

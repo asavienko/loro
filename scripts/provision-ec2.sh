@@ -23,7 +23,7 @@ fi
 [[ $ami =~ ^ami-[0-9a-f]+$ ]] || { echo "No image to deploy: $ami" >&2; exit 1; }
 aws cloudformation deploy --region "$AWS_REGION" \
   --stack-name "$stack" --template-file infra/ec2/template.yaml \
-  --no-fail-on-empty-changeset ${NO_EXECUTE:+--no-execute-changeset} \
+  --no-fail-on-empty-changeset ${NO_EXECUTE:+--no-execute-changeset} --capabilities CAPABILITY_IAM \
   --parameter-overrides "VpcId=$VPC_ID" "SubnetId=$SUBNET_ID" \
   "KeyName=$KEY_NAME" "AdminCidr=$ADMIN_CIDR" "AmiId=$ami"
 aws cloudformation describe-stacks --region "$AWS_REGION" \

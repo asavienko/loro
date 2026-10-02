@@ -29,15 +29,41 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIp: !Ref AdminCidr
+  # The API container's AWS identity: it may only send email through SES (email sign-in codes).
+  ApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: send-email-codes
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ses:SendEmail
+                Resource: !Sub 'arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:identity/*'
+  ApiInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref ApiRole]
   Instance:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: !Ref AmiId
       InstanceType: t3.small
       KeyName: !Ref KeyName
+      IamInstanceProfile: !Ref ApiInstanceProfile
       MetadataOptions:
         HttpTokens: required
-        HttpPutResponseHopLimit: 1
+        # 2, not 1: the API runs in a container on a Docker network, one hop further from the
+        # metadata service, and reads the role's credentials there. The role can only send email.
+        HttpPutResponseHopLimit: 2
       NetworkInterfaces:
         - DeviceIndex: '0'
           AssociatePublicIpAddress: true

@@ -1,5 +1,5 @@
 import { randomBytes, randomInt } from 'node:crypto'
-import { Inject, Injectable, Optional } from '@nestjs/common'
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common'
 import type {
   ClaimRequest,
   ClaimResult,
@@ -17,7 +17,7 @@ import { RATE_LIMIT_STORE, type RateLimitStore } from '../common/rate-limit.js'
 import { PostgresRateLimitStore } from '../common/rate-limit.postgres.js'
 import { DATABASE, type SqlConnection, type SqlDatabase } from '../database/database.js'
 import { deliverMagicCode } from './delivery.js'
-import { isAllowedMagicDeliveryUrl } from './settings.js'
+import { isAllowedMagicDeliveryUrl, SES_DELIVERY } from './settings.js'
 import { verifyIdentityToken, type IdentityProvider } from './auth.providers.js'
 import { AUTH_STORE, PostgresAuthStore, type AuthStore } from './auth.store.js'
 import type { RefreshRegistration } from './auth.session.js'
@@ -39,6 +39,7 @@ export class AuthService {
   private readonly limits: RateLimitStore
   private readonly store: AuthStore
   private readonly issuedTokens: AccessTokens | undefined
+  private readonly logger = new Logger('auth')
 
   constructor(
     @Inject(DATABASE) database: SqlDatabase,
@@ -66,9 +67,12 @@ export class AuthService {
       google: canSign && settings.googleClientIds.length > 0,
       email:
         canSign &&
-        Boolean(settings.magicDeliveryToken) &&
         Boolean(settings.emailHashKey && settings.emailHashKey.length >= 32) &&
-        this.validDeliveryUrl(settings.magicDeliveryUrl),
+        this.validDeliveryUrl(settings.magicDeliveryUrl) &&
+        // SES needs a sender; the webhook and the local inbox need the bearer.
+        (settings.magicDeliveryUrl === SES_DELIVERY
+          ? Boolean(settings.emailFrom)
+          : Boolean(settings.magicDeliveryToken)),
     }
   }
 
@@ -93,7 +97,7 @@ export class AuthService {
 
   async requestCode(email: string, address: string): Promise<{ status: 'accepted' }> {
     const settings = config.sessionAuthSettings()
-    if (!this.capabilities().email || !settings.magicDeliveryUrl || !settings.magicDeliveryToken) {
+    if (!this.capabilities().email || !settings.magicDeliveryUrl) {
       throw new LoroError('PROVIDER_UNAVAILABLE')
     }
     this.tokens()
@@ -108,12 +112,19 @@ export class AuthService {
     const codeHash = keyedHash(secret, `code:${emailHash}:${nonce}:${code}`)
     await this.store.saveMagicCode(emailHash, codeHash, nonce, now + CODE_MILLISECONDS, now)
     try {
-      await deliverMagicCode(settings.magicDeliveryUrl, settings.magicDeliveryToken, {
-        email: normalized,
-        code,
-        expires_in: CODE_MILLISECONDS / 1_000,
-      })
-    } catch {
+      await deliverMagicCode(
+        {
+          url: settings.magicDeliveryUrl,
+          token: settings.magicDeliveryToken,
+          from: settings.emailFrom,
+        },
+        { email: normalized, code, expires_in: CODE_MILLISECONDS / 1_000 },
+      )
+    } catch (error) {
+      // The error's name only (e.g. SES MessageRejected): never the address or the code.
+      this.logger.warn(
+        `email code delivery failed: ${error instanceof Error ? error.name : 'unknown'}`,
+      )
       await this.store.deleteMagicCode(emailHash, codeHash)
       throw new LoroError('PROVIDER_UNAVAILABLE')
     }
