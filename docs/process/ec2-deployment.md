@@ -1,10 +1,11 @@
 # EC2 development host
 
 The API runs on one restricted Amazon Linux 2023 EC2 instance (`infra/ec2/template.yaml`): a
-t3.small with an encrypted 30 GiB disk, IMDSv2, Docker, and SSH open to one IPv4 address. The API
-binds to host loopback; the app reaches it through the [HTTPS gateway](#public-https-gateway) and
-administrators through an SSH tunnel. This is a development host, not production. Backups and
-recovery are in [the runbook](../runbooks/backend-testing.md).
+t3.small with an encrypted 30 GiB disk, IMDSv2, Docker, and SSH open to one IPv4 address and to the
+stack's EC2 Instance Connect Endpoint. The API binds to host loopback; the app reaches it through
+the [HTTPS gateway](#public-https-gateway) and administrators through an SSH tunnel. This is a
+development host, not production. Backups and recovery are in
+[the runbook](../runbooks/backend-testing.md).
 
 ## Current instance
 
@@ -14,6 +15,22 @@ recovery are in [the runbook](../runbooks/backend-testing.md).
   connecting. When your IP changes, re-run [provisioning](#provision) with the new `ADMIN_CIDR` (add
   `NO_EXECUTE=1` to see the change set first). The script keeps the image the instance runs: a
   different one would replace the instance, its disk and the database on it.
+- From a network that blocks port 22, SSH goes over HTTPS through the stack's EC2 Instance Connect
+  Endpoint (added 2026-10-05; no charge). Give it a host alias in `~/.ssh/config` and pass the alias
+  as `HOST` to every script here; it needs a live `loro` SSO session:
+
+  ```sshconfig
+  # HOST and INSTANCE_ID are the stack's outputs. HostKeyAlias checks the same known_hosts entry
+  # as a direct connection.
+  Host loro-api-tunnel
+    HostName HOST
+    HostKeyAlias HOST
+    User ec2-user
+    IdentityFile ~/.ssh/loro-ec2-dev
+    StrictHostKeyChecking yes
+    ProxyCommand aws ec2-instance-connect open-tunnel --instance-id INSTANCE_ID --profile loro --region eu-central-1
+  ```
+
 - Merging to `main` does not redeploy; the host runs whatever was last deployed.
 
 ## Provision

@@ -29,6 +29,29 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIp: !Ref AdminCidr
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          SourceSecurityGroupId: !Ref ConnectEndpointSecurityGroup
+  # SSH over HTTPS, for networks that block port 22: `aws ec2-instance-connect open-tunnel` reaches
+  # the instance's port 22 through this endpoint (no charge), still with the SSH key.
+  ConnectEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: EC2 Instance Connect Endpoint; SSH out only
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+  ConnectEndpoint:
+    Type: AWS::EC2::InstanceConnectEndpoint
+    Properties:
+      SubnetId: !Ref SubnetId
+      SecurityGroupIds: [!Ref ConnectEndpointSecurityGroup]
+      # The instance's group admits the endpoint's group, so connections must come from the endpoint.
+      PreserveClientIp: false
   # The API container's AWS identity: it may only send email through SES (email sign-in codes).
   ApiRole:
     Type: AWS::IAM::Role
