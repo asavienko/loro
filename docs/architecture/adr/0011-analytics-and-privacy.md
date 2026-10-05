@@ -52,7 +52,10 @@ The same PostHog project also receives what the app needs to be operated, under 
   launch), uncaught JavaScript exceptions and unhandled promise rejections, plus failures the app
   recovers from but must not hide (a save that didn't reach storage, an unreadable saved progress,
   storage or content that failed to open). Console errors are not captured as exceptions; replay
-  already holds the console.
+  already holds the console. A browser that refuses the page any storage (site data blocked, a
+  sandboxed frame; a `SecurityError`) is not a fault in the app and fails every save alike: the
+  learner is still told progress isn't kept, but it is one `warn` log line per session, not an
+  exception per save (amended 2026-10-05).
 - **Logs** go to PostHog's logs product as service `loro-mobile`: every failed API request (at
   `info` when the server couldn't be reached, `warn` when it refused, `error` for a 5xx or an
   unreadable reply) and the recovered failures above.

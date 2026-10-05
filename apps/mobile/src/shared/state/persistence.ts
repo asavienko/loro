@@ -17,7 +17,7 @@ import {
   sameLanguage,
   TARGET_LANGUAGES,
 } from '../content';
-import { log, reportError } from '../analytics/telemetry';
+import { describeError, log, reportError } from '../analytics/telemetry';
 import { OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { clock, isLocalDayOf } from './clock';
 // The same limits the forms apply, for data that arrives by sync or migration.
@@ -495,6 +495,9 @@ export const SAVE_FAILED_EVENT = 'loro:save-failed';
 
 let queue: Promise<unknown> = Promise.resolve();
 
+/** Whether this session has said that the browser refuses storage (said once: every save would). */
+let refusalLogged = false;
+
 /**
  * Saves the state, first merging in whatever another tab saved since, so two
  * open tabs never overwrite each other's progress. Saves run one at a time.
@@ -543,7 +546,15 @@ async function writeState(state: AppState): Promise<SaveResult> {
     return 'saved';
   } catch (error) {
     // The session still works; the shell tells the learner that progress isn't being kept.
-    const full = typeof DOMException !== 'undefined' && error instanceof DOMException && (error.name === 'QuotaExceededError' || error.code === 22);
+    const dom = typeof DOMException !== 'undefined' && error instanceof DOMException;
+    // The browser refuses this page any storage (site data blocked, a sandboxed frame): not a
+    // fault in the app, and every save this session fails the same way, so one warning says it.
+    if (dom && error.name === 'SecurityError') {
+      if (!refusalLogged) log.warn('save failed', { where: 'save', ...describeError(error), result: 'unavailable' });
+      refusalLogged = true;
+      return 'unavailable';
+    }
+    const full = dom && (error.name === 'QuotaExceededError' || error.code === 22);
     const result = full ? 'full' : 'unavailable';
     reportError('save', error, { result });
     return result;

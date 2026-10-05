@@ -5,7 +5,8 @@ import { derive, RATING_WINDOW_MS } from './memory';
 import { mergeLearner } from './merge';
 import { installLanguages } from '../content';
 import { installFixture } from '../content/fixture';
-import { loadState, parseState, sanitizeLearner, sanitizeState, serializeState, syncWithServer } from './persistence';
+import { setTelemetrySink } from '../analytics/telemetry';
+import { loadState, parseState, sanitizeLearner, sanitizeState, saveState, serializeState, syncWithServer } from './persistence';
 import { memoryOf, points } from './selectors';
 import { done, fresh, load, MINUTE, run, T0 } from './testing';
 import type { Device } from './types';
@@ -292,6 +293,34 @@ describe('loading', () => {
     const state = loadState({ saved: serializeState(indexedDb), pending: null, stray: serializeState(localOnly) }, () => fresh());
     assert.equal(state.learner.likes['set:set-taxi'].liked, true);
     assert.equal(state.learner.likes['set:set-cafe'].liked, true, 'the fallback session’s progress is not lost');
+  });
+});
+
+describe('saving', () => {
+  it('says once, as a warning and not an exception, that the browser refuses storage', async () => {
+    const seen: string[] = [];
+    setTelemetrySink({
+      log: (level, message, attributes) => seen.push(`${level}: ${message} (${attributes.error_name})`),
+      exception: () => seen.push('exception'),
+      metric: () => {},
+    });
+    // Site data blocked: reading `localStorage` itself throws (IndexedDB never opened in tests).
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      get: () => {
+        throw new DOMException("Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", 'SecurityError');
+      },
+    });
+    try {
+      assert.equal(await saveState(load(fresh())), 'unavailable');
+      assert.equal(await saveState(done(load(fresh()), T0 + 1)), 'unavailable', 'the learner is still told');
+      assert.deepEqual(seen, ['warn: save failed (SecurityError)']);
+    } finally {
+      if (original) Object.defineProperty(globalThis, 'localStorage', original);
+      else delete (globalThis as { localStorage?: Storage }).localStorage;
+      setTelemetrySink(null);
+    }
   });
 });
 
