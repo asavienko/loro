@@ -41,6 +41,13 @@ describe('email sign-in capability', () => {
     expect(emailOffered({ magicDeliveryUrl: 'ses' })).toBe(false)
   })
 
+  it('is offered through Resend only with both a sender and its key', () => {
+    const resend = { magicDeliveryUrl: 'resend', emailFrom: 'Loro <codes@example.test>' }
+    expect(emailOffered({ ...resend, magicDeliveryToken: 're_key' })).toBe(true)
+    expect(emailOffered(resend)).toBe(false)
+    expect(emailOffered({ magicDeliveryUrl: 'resend', magicDeliveryToken: 're_key' })).toBe(false)
+  })
+
   it('still needs the bearer for a webhook or the local inbox', () => {
     expect(emailOffered({ magicDeliveryUrl: 'https://delivery.example.test/send' })).toBe(false)
     expect(

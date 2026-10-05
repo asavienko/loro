@@ -27,6 +27,8 @@ describe('isAllowedAuthRedirect', () => {
     expect(isAllowedMagicDeliveryUrl(LOCAL_INBOX_DELIVERY)).toBe(true)
     expect(isAllowedMagicDeliveryUrl(LOCAL_INBOX_DELIVERY, true)).toBe(true)
     expect(isAllowedMagicDeliveryUrl('inbox:remote')).toBe(false)
+    expect(isAllowedMagicDeliveryUrl('ses', true)).toBe(true)
+    expect(isAllowedMagicDeliveryUrl('resend', true)).toBe(true)
   })
 
   it('allows loopback HTTP for local web sign-in', () => {
