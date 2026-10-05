@@ -188,12 +188,14 @@ part (the release sets it to `stub` for the older `/v1/ai` routes); the library 
 
 The API sends codes through Resend itself
 ([ADR-0022](../architecture/adr/0022-email-codes-through-resend.md)), from
-`codes@loro.savienko.com`. Set up once, by hand:
+`codes@loro.savienko.com`. The host has sent codes this way since 2026-10-05. It was set up once, by
+hand:
 
 1. **Verify the sending domain in Resend.** Domains → Add domain `loro.savienko.com`, region Ireland
    (eu-west-1). Add the records it lists at GoDaddy, in the `savienko.com` zone: a DKIM TXT on
-   `resend._domainkey.loro`, and an MX and an SPF TXT on `send.loro`. They sit beside the SES
-   records below under different names. Press Verify; it is usually done in minutes.
+   `resend._domainkey.loro` and a CNAME on `send.loro` (Resend's return path, which carries its own
+   MX and SPF). They sit beside the SES records below under different names. Press Verify; it took
+   minutes.
 2. **Create a key** with _Sending access_ for that domain only, and put it in
    `secrets/ec2-api.enc.env` with `AUTH_MAGIC_DELIVERY_URL=resend`,
    `AUTH_EMAIL_FROM=Loro <codes@loro.savienko.com>` and `AUTH_MAGIC_DELIVERY_TOKEN=re_…`. Without a
