@@ -62,18 +62,21 @@ transport peer; with `TRUST_PROXY=1` (the EC2 host, behind the gateway's nginx) 
 
 ## Email delivery
 
-With `AUTH_MAGIC_DELIVERY_URL=ses` the API emails the code itself through Amazon SES, from
-`AUTH_EMAIL_FROM`, with the host's AWS credentials and `AWS_REGION`
-([ADR-0021](../../../../docs/architecture/adr/0021-email-codes-through-amazon-ses.md)); a failed
-send is logged by its error name only. This is how deployed hosts send codes.
+With `AUTH_MAGIC_DELIVERY_URL=resend` the API emails the code itself through Resend, from
+`AUTH_EMAIL_FROM`, with Resend's API key in `AUTH_MAGIC_DELIVERY_TOKEN`
+([ADR-0022](../../../../docs/architecture/adr/0022-email-codes-through-resend.md)); a refused send
+is logged as `Resend<status>`, never with Resend's error text. This is how deployed hosts send
+codes. `ses` does the same through Amazon SES with the host's AWS credentials and `AWS_REGION`
+([ADR-0021](../../../../docs/architecture/adr/0021-email-codes-through-amazon-ses.md), superseded:
+the account was refused production access, so SES sends only to verified addresses).
 
 Otherwise the API posts `{ "email": "...", "code": "123456", "expires_in": 600 }` to
 `AUTH_MAGIC_DELIVERY_URL` with `Authorization: Bearer <AUTH_MAGIC_DELIVERY_TOKEN>`, a five-second
 timeout and redirects refused; any 2xx is accepted, and the response body is never read or logged.
 The URL must be HTTPS, loopback HTTP outside production, or `inbox:local`, which writes the latest
-code to `/tmp/loro-magic-delivery.json` on the API's host (the EC2 host until SES is set up there).
-Locally, `node scripts/local-magic-delivery.mjs` is a loopback receiver. The API never puts a code
-in a log or a response. Only the delivery service receives the email and code.
+code to `/tmp/loro-magic-delivery.json` on the API's host. Locally,
+`node scripts/local-magic-delivery.mjs` is a loopback receiver. The API never puts a code in a log
+or a response. Only the delivery service receives the email and code.
 
 ## Configuration
 

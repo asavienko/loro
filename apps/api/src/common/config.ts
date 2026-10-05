@@ -207,7 +207,7 @@ export interface SessionAuthSettings {
   emailHashKey: string | undefined
   magicDeliveryUrl: string | undefined
   magicDeliveryToken: string | undefined
-  /** The sender of email codes when `magicDeliveryUrl` is `ses`, e.g. `Loro <codes@example.com>`. */
+  /** The sender of email codes through `resend` or `ses`, e.g. `Loro <codes@example.com>`. */
   emailFrom: string | undefined
   googleClientIds: string[]
   appleClientIds: string[]

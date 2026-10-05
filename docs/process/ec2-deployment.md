@@ -1,10 +1,11 @@
 # EC2 development host
 
 The API runs on one restricted Amazon Linux 2023 EC2 instance (`infra/ec2/template.yaml`): a
-t3.small with an encrypted 30 GiB disk, IMDSv2, Docker, and SSH open to one IPv4 address. The API
-binds to host loopback; the app reaches it through the [HTTPS gateway](#public-https-gateway) and
-administrators through an SSH tunnel. This is a development host, not production. Backups and
-recovery are in [the runbook](../runbooks/backend-testing.md).
+t3.small with an encrypted 30 GiB disk, IMDSv2, Docker, and SSH open to one IPv4 address and to the
+stack's EC2 Instance Connect Endpoint. The API binds to host loopback; the app reaches it through
+the [HTTPS gateway](#public-https-gateway) and administrators through an SSH tunnel. This is a
+development host, not production. Backups and recovery are in
+[the runbook](../runbooks/backend-testing.md).
 
 ## Current instance
 
@@ -14,6 +15,22 @@ recovery are in [the runbook](../runbooks/backend-testing.md).
   connecting. When your IP changes, re-run [provisioning](#provision) with the new `ADMIN_CIDR` (add
   `NO_EXECUTE=1` to see the change set first). The script keeps the image the instance runs: a
   different one would replace the instance, its disk and the database on it.
+- From a network that blocks port 22, SSH goes over HTTPS through the stack's EC2 Instance Connect
+  Endpoint (added 2026-10-05; no charge). Give it a host alias in `~/.ssh/config` and pass the alias
+  as `HOST` to every script here; it needs a live `loro` SSO session:
+
+  ```sshconfig
+  # HOST and INSTANCE_ID are the stack's outputs. HostKeyAlias checks the same known_hosts entry
+  # as a direct connection.
+  Host loro-api-tunnel
+    HostName HOST
+    HostKeyAlias HOST
+    User ec2-user
+    IdentityFile ~/.ssh/loro-ec2-dev
+    StrictHostKeyChecking yes
+    ProxyCommand aws ec2-instance-connect open-tunnel --instance-id INSTANCE_ID --profile loro --region eu-central-1
+  ```
+
 - Merging to `main` does not redeploy; the host runs whatever was last deployed.
 
 ## Provision
@@ -96,9 +113,9 @@ writes.
 
 What each variable does is in [environments.md](environments.md). On this host:
 
-- `DATABASE_URL` and `AUTH_*` come from the durable account release. Email codes go through Amazon
-  SES with `AUTH_MAGIC_DELIVERY_URL=ses`, `AUTH_EMAIL_FROM` and `AWS_REGION`
-  ([below](#email-sign-in-codes)).
+- `DATABASE_URL` and `AUTH_*` come from the durable account release. Email codes go through Resend
+  with `AUTH_MAGIC_DELIVERY_URL=resend`, `AUTH_EMAIL_FROM` and the API key in
+  `AUTH_MAGIC_DELIVERY_TOKEN` ([below](#email-sign-in-codes)).
 - `LIBRARY_URL_SECRET` is set (32+ random characters). Without it every redeploy would invalidate
   the signed song links learners hold.
 - `TTS_PROVIDER=elevenlabs` with its key, model, format and the `TTS_VOICE_*` voices: the server's
@@ -169,40 +186,50 @@ part (the release sets it to `stub` for the older `/v1/ai` routes); the library 
 
 ### Email sign-in codes
 
-The API sends codes through Amazon SES itself
-([ADR-0021](../architecture/adr/0021-email-codes-through-amazon-ses.md)). The stack gives the
-instance a role that may only call `ses:SendEmail`, and a metadata hop limit of 2 so the container
-reaches its credentials; `scripts/provision-ec2.sh` applies both in place. SES itself was set up
-once, by hand, in the host's region; the host has sent codes this way since 2026-10-02:
+The API sends codes through Resend itself
+([ADR-0022](../architecture/adr/0022-email-codes-through-resend.md)), from
+`codes@loro.savienko.com`. Set up once, by hand:
 
-1. **Verify the sending domain.** Codes come from `codes@loro.savienko.com`. The SES identity is
-   `loro.savienko.com` (Easy DKIM, RSA 2048) with the custom MAIL FROM domain
-   `mail.loro.savienko.com`. Its DNS is at GoDaddy: the three DKIM CNAME records that
-   `aws sesv2 get-email-identity --email-identity loro.savienko.com` lists, an MX record for
-   `mail.loro.savienko.com` pointing at `feedback-smtp.eu-central-1.amazonses.com` (priority 10),
-   and a TXT record `v=spf1 include:amazonses.com ~all` on the same name. DMARC comes from the
-   registrar's default record on `savienko.com`.
-2. **Request production access** (requested 2026-10-02, under review). Until it is granted the
-   account is in the sandbox: it sends only to verified addresses, 200 a day. Check with
-   `aws sesv2 get-account --query ProductionAccessEnabled`; while it is `false`, add a tester with
-   `aws sesv2 create-email-identity --email-identity ADDRESS` and have them click AWS's link.
-3. **Switch the host** in `secrets/ec2-api.enc.env`: `AUTH_MAGIC_DELIVERY_URL=ses`,
-   `AUTH_EMAIL_FROM=Loro <codes@loro.savienko.com>` and `AWS_REGION=eu-central-1`;
-   `AUTH_MAGIC_DELIVERY_TOKEN` may stay. Then redeploy.
+1. **Verify the sending domain in Resend.** Domains → Add domain `loro.savienko.com`, region Ireland
+   (eu-west-1). Add the records it lists at GoDaddy, in the `savienko.com` zone: a DKIM TXT on
+   `resend._domainkey.loro`, and an MX and an SPF TXT on `send.loro`. They sit beside the SES
+   records below under different names. Press Verify; it is usually done in minutes.
+2. **Create a key** with _Sending access_ for that domain only, and put it in
+   `secrets/ec2-api.enc.env` with `AUTH_MAGIC_DELIVERY_URL=resend`,
+   `AUTH_EMAIL_FROM=Loro <codes@loro.savienko.com>` and `AUTH_MAGIC_DELIVERY_TOKEN=re_…`. Without a
+   text editor, from the clipboard (the key is never printed):
 
-A refused send answers `PROVIDER_UNAVAILABLE` and logs only the error's name:
+   ```bash
+   export SOPS_AGE_KEY_FILE=~/.config/sops/age/loro.txt
+   pbpaste | tr -d '\n' | jq -R . | sops set --input-type dotenv --output-type dotenv \
+     --value-stdin secrets/ec2-api.enc.env '["AUTH_MAGIC_DELIVERY_TOKEN"]'
+   ```
+
+3. Install the file on the host and redeploy
+   ([above](#turning-on-the-ai-writers-and-elevenlabs-music)).
+
+A refused send answers `PROVIDER_UNAVAILABLE` and logs only `Resend` and the HTTP status:
 
 ```bash
 ssh ec2-user@$HOST 'sudo docker logs --since 10m loro-api 2>&1 | grep "email code delivery failed"'
 ```
 
-`MessageRejected` means the sender's domain is not verified or, in the sandbox, the recipient isn't.
+`Resend403` means the domain is not verified (or the key is for another domain), `Resend401` a wrong
+key, `Resend429` the plan's rate or daily quota.
+
+**Amazon SES** is still set up and can take over with `AUTH_MAGIC_DELIVERY_URL=ses` (no token). The
+stack gives the instance a role that may only call `ses:SendEmail` and a metadata hop limit of 2 so
+the container reaches its credentials; the SES identity `loro.savienko.com` is verified (Easy DKIM
+on `_domainkey.loro`, MAIL FROM `mail.loro`). But Amazon refused the account production access on
+2026-10-03, so SES sends only to verified addresses
+(`aws sesv2 get-account --query ProductionAccessEnabled`); a send to anyone else fails with
+`MessageRejected`. That is why codes go through Resend.
 
 ### Reading an email sign-in code
 
-On a host set to `inbox:local` (the EC2 host before SES), the API writes the latest code request to
-`/tmp/loro-magic-delivery.json` inside the container (mode 600, `{email, code, expires_in}`). The
-image is distroless, so read it with the image's own node:
+On a host set to `inbox:local` (the EC2 host before 2026-10-02), the API writes the latest code
+request to `/tmp/loro-magic-delivery.json` inside the container (mode 600,
+`{email, code, expires_in}`). The image is distroless, so read it with the image's own node:
 
 ```bash
 ssh ec2-user@HOST 'sudo docker exec loro-api /nodejs/bin/node -p "require(\"fs\").readFileSync(\"/tmp/loro-magic-delivery.json\",\"utf8\")"'
@@ -224,8 +251,8 @@ Both layers allow explicit routes only. Health, the `/v1/content/v2` manifest, d
 `accounts` mode, sign-in, `/me`, `/v1/sync/*` and **the library** (`/v1/library/*`) open too: every
 route the app calls, each with its own methods (reads also answer `HEAD`; `OPTIONS` preflights reach
 the API's CORS). Any other path is `404 {"error":"not_available"}` at the Lambda. Google sign-in is
-in testing mode (project `loro-508020`); Apple is not configured; email codes go to the host-local
-inbox.
+in testing mode (project `loro-508020`); Apple is not configured; email codes are sent through
+Resend ([above](#email-sign-in-codes)).
 
 On library routes:
 

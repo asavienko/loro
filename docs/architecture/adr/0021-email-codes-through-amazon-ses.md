@@ -1,6 +1,6 @@
 # 0021 · Email sign-in codes are sent through Amazon SES
 
-- **Status:** Accepted
+- **Status:** Superseded by [0022](0022-email-codes-through-resend.md)
 - **Date:** 2026-10-02
 - **Deciders:** the owner (conversation of 2026-10-02)
 

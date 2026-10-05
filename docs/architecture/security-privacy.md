@@ -28,8 +28,8 @@ server does is of the songs it generated itself, in the API process, to show the
 | Rows from the earlier app's sync and music routes                   | PostgreSQL (`sync_*`, `music_*`)   |
 
 Email addresses are never stored in plaintext, and rate-limit buckets key on hashes, never raw
-addresses or emails. To send a sign-in code, the address and the code go to Amazon SES in the API's
-AWS region ([ADR-0021](adr/0021-email-codes-through-amazon-ses.md)); the API never logs either.
+addresses or emails. To send a sign-in code, the address and the code go to Resend
+([ADR-0022](adr/0022-email-codes-through-resend.md)); the API never logs either.
 
 Product analytics and session replay go to PostHog US Cloud
 ([ADR-0020](adr/0020-posthog-us-cloud.md)), on by default with an opt-out in Settings; replay is

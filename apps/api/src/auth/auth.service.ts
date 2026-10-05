@@ -17,7 +17,7 @@ import { RATE_LIMIT_STORE, type RateLimitStore } from '../common/rate-limit.js'
 import { PostgresRateLimitStore } from '../common/rate-limit.postgres.js'
 import { DATABASE, type SqlConnection, type SqlDatabase } from '../database/database.js'
 import { deliverMagicCode } from './delivery.js'
-import { isAllowedMagicDeliveryUrl, SES_DELIVERY } from './settings.js'
+import { isAllowedMagicDeliveryUrl, RESEND_DELIVERY, SES_DELIVERY } from './settings.js'
 import { verifyIdentityToken, type IdentityProvider } from './auth.providers.js'
 import { AUTH_STORE, PostgresAuthStore, type AuthStore } from './auth.store.js'
 import type { RefreshRegistration } from './auth.session.js'
@@ -69,10 +69,12 @@ export class AuthService {
         canSign &&
         Boolean(settings.emailHashKey && settings.emailHashKey.length >= 32) &&
         this.validDeliveryUrl(settings.magicDeliveryUrl) &&
-        // SES needs a sender; the webhook and the local inbox need the bearer.
+        // SES needs a sender, Resend a sender and its key; the webhook and the local inbox the bearer.
         (settings.magicDeliveryUrl === SES_DELIVERY
           ? Boolean(settings.emailFrom)
-          : Boolean(settings.magicDeliveryToken)),
+          : settings.magicDeliveryUrl === RESEND_DELIVERY
+            ? Boolean(settings.emailFrom && settings.magicDeliveryToken)
+            : Boolean(settings.magicDeliveryToken)),
     }
   }
 
