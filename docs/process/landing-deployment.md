@@ -55,9 +55,10 @@ is there, so the two records Amplify asks for are added by hand in GoDaddy's DNS
 | CNAME | `loro`                              | `d2jent0k7is1yl.cloudfront.net`                                    |
 
 The first proves the domain to the certificate authority and must stay for renewals; the second
-serves the page. The same name also carries the SES records for email sign-in codes
-(`_domainkey.loro`, `mail.loro`, [ec2-deployment.md](ec2-deployment.md#email-sign-in-codes)); they
-are different names and do not conflict. Check the association with:
+serves the page. The same name also carries the Resend and SES records for email sign-in codes
+(`resend._domainkey.loro`, `send.loro`, `_domainkey.loro`, `mail.loro`,
+[ec2-deployment.md](ec2-deployment.md#email-sign-in-codes)); they are different names and do not
+conflict. Check the association with:
 
 ```bash
 aws amplify get-domain-association --app-id d8avifn92wmt4 --domain-name savienko.com \
@@ -147,8 +148,8 @@ distribution's URLs, then close the bucket with `BlockPublicPolicy`.
   default domain, and a manual deployment is one archive upload with no build. It costs cents rather
   than nothing, which is why it is the interim and not the destination.
 - **The page's address is `loro.savienko.com`** (2026-10-02), a subdomain of the owner's domain, the
-  same name SES sends sign-in codes from
-  ([ADR-0021](../architecture/adr/0021-email-codes-through-amazon-ses.md)). Set aside: the root
+  same name sign-in codes are sent from
+  ([ADR-0022](../architecture/adr/0022-email-codes-through-resend.md)). Set aside: the root
   `savienko.com` (the owner's own name, kept free for other uses) and a domain of Loro's own (none
   is registered; the owner registered `savienko.com` for this). DNS stays at GoDaddy, the registrar:
   a Route 53 hosted zone would cost $0.50 a month for two records.
