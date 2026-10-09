@@ -9,12 +9,12 @@ refuse to run inside GitHub Actions.
 
 ## Gates
 
-| Command                | What it runs                                                                                                                                                                            |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm check`           | Fast gate: plan index, script tests, OpenAPI spec drift (`pnpm contracts:generate` fixes it), core-rs browser and UniFFI drift, then Turbo lint, typecheck, test and content validation |
-| `pnpm ci:local`        | Full gate (below)                                                                                                                                                                       |
-| `pnpm ci:local:native` | Release builds of the Rust core for two iOS targets, three Android ABIs and WASM, then the Rust/TypeScript parity test (macOS, Xcode, Android NDK, cargo-ndk)                           |
-| `pnpm ci:local:audit`  | `pnpm audit --audit-level=high` and `cargo audit` (needs network)                                                                                                                       |
+| Command                | What it runs                                                                                                                                                                                                        |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm check`           | Fast gate: plan index, script tests, OpenAPI spec drift (`pnpm contracts:generate` fixes it), core-rs browser and UniFFI drift, then Turbo lint, typecheck, test, the app's end-to-end flows and content validation |
+| `pnpm ci:local`        | Full gate (below)                                                                                                                                                                                                   |
+| `pnpm ci:local:native` | Release builds of the Rust core for two iOS targets, three Android ABIs and WASM, then the Rust/TypeScript parity test (macOS, Xcode, Android NDK, cargo-ndk)                                                       |
+| `pnpm ci:local:audit`  | `pnpm audit --audit-level=high` and `cargo audit` (needs network)                                                                                                                                                   |
 
 Setup for the full gate: Node 22, pnpm 9, Rust stable with rustfmt and clippy, the
 `wasm32-unknown-unknown` target, `wasm-pack`, and a running Docker engine. The script switches to
@@ -43,11 +43,20 @@ concurrency (both default 2). Logs and `summary.json` go to `.ci-local-reports/<
 
 Record the checked commit, commands and results in the pull request.
 
+## End-to-end flows
+
+`pnpm --filter @loro/mobile e2e` renders the whole app in Node and drives it as a learner does:
+every route, screen and sheet, the store and the Rust core (its WASM build), against an in-memory
+API and fake audio on fake time. No browser, simulator or device; it runs in `pnpm check`. How it
+works and how to write a flow: [`apps/mobile/e2e/README.md`](../../apps/mobile/e2e/README.md); why:
+[ADR-0023](../architecture/adr/0023-headless-end-to-end-tests.md).
+
 ## What a green gate doesn't prove
 
 Native audio, lifecycle, device persistence, offline resume and physical-device behaviour need a
-device. The parity test checks the Rust core against the fixtures in `packages/core/src/domain/`,
-not against Swift or Kotlin.
+device: the end-to-end flows fake everything under the app's platform modules. The parity test
+checks the Rust core against the fixtures in `packages/core/src/domain/`, not against Swift or
+Kotlin.
 
 ## Deployment and distribution
 

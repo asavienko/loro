@@ -45,6 +45,11 @@
       "dependsOn": ["^build", "core-rs:build"],
       "outputs": []
     },
+    // The app's headless end-to-end flows (apps/mobile/e2e, ADR-0023).
+    "e2e": {
+      "dependsOn": ["^build", "core-rs:build"],
+      "outputs": []
+    },
     "test:watch": {
       "cache": false,
       "persistent": true
