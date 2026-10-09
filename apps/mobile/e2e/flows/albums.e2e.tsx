@@ -825,9 +825,24 @@ describe('The song player', () => {
   });
 
   // The fake's seedSong with timing null still sends startMs/endMs on every line (library.ts:1792 finishSong times them).
-  it.todo('a song with no timing has lines that cannot be tapped to seek, and no times');
+  it('a song with no timing shows no times, and its lines do not seek', async () => {
+    const app = await openSung('Sin tiempo', { sound: { by: 'demo', timing: null } });
+    expect(app.sees('Me pone un cortado, por favor')).toBe(true);
+    expect(app.sees('0:08')).toBe(false);
+    expect(app.sees(/^0:\d\d (La cuenta|Me pone)/)).toBe(false);
+    await app.tap('La cuenta, por favor');
+    await app.advance(500);
+    expect(app.sees(/^0:0[0-3] \/ 0:28$/)).toBe(true);
+  });
 
-  it.todo('a line the singer skipped says "Not heard in the song" — the fake has no way to seed an untimed line in a heard-back song');
+  it('a line the heard-back song does not have says it was not heard, with no time', async () => {
+    const app = await openSung('Cantada', { sound: { by: 'elevenlabs' }, sungAs: { 1: null } });
+    expect(app.sees(app.c.music.skippedLine)).toBe(true);
+    expect(app.sees('0:04')).toBe(false);
+    expect(app.sees('—')).toBe(true);
+    // The lines either side keep their times.
+    expect(app.sees('0:08 La cuenta, por favor')).toBe(true);
+  });
 });
 
 describe('Liked songs', () => {
