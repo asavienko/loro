@@ -11,7 +11,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, fireEvent, render, screen, waitFor, within, type RenderResult } from '@testing-library/react-native';
 import path from 'node:path';
 import { GestureDetector, State } from 'react-native-gesture-handler';
-import { fireGestureHandler } from 'react-native-gesture-handler/jest-utils';
 import { ExpoRoot } from 'expo-router/build/ExpoRoot';
 import { store as routerStore } from 'expo-router/build/global-state/router-store';
 import { router } from 'expo-router/build/imperative-api';
@@ -31,6 +30,12 @@ export { act, fireEvent, screen, waitFor, within };
 
 /** One element of the rendered tree. */
 export type ReactTestInstance = ReturnType<typeof screen.getByText>;
+
+/** A pan gesture as the app builds it: its settings and the callbacks the finger runs. */
+interface Pan {
+  config: { enabled?: boolean };
+  handlers: Partial<Record<'onBegin' | 'onStart' | 'onUpdate' | 'onChange' | 'onEnd' | 'onFinalize', (event: object, success?: boolean) => void>>;
+}
 export { audio, device };
 
 /** 1 September 2026, 09:00 UTC: every launch's clock starts here unless told otherwise. */
@@ -305,24 +310,64 @@ export async function launch(options: LaunchOptions = {}): Promise<App> {
       await flush();
     },
     swipe: async (name, { dx = 0, dy = 0 }, opts = {}) => {
-      const target = findByName(name, opts.within, opts.index ?? 0);
-      let node: ReactTestInstance | null = target;
-      while (node && node.type !== GestureDetector) node = node.parent;
-      if (!node) throw new Error(`${String(name)} has no gesture around it`);
-      const gesture = node.props.gesture as { gestures?: unknown[] };
-      const pans = gesture.gestures ?? [gesture];
-      const pan = pans[opts.gesture ?? 0];
-      if (!pan) throw new Error(`${String(name)} has ${pans.length} gestures, not ${(opts.gesture ?? 0) + 1}`);
-      // Began, moving halfway then all the way, and let go there, as a finger does.
-      const at = (f: number) => ({ translationX: dx * f, translationY: dy * f, x: dx * f, y: dy * f, absoluteX: dx * f, absoluteY: dy * f, velocityX: dx, velocityY: dy });
-      await act(async () => {
-        fireGestureHandler(pan as never, [
-          { state: State.BEGAN, ...at(0) },
-          { state: State.ACTIVE, ...at(0.5) },
-          { state: State.ACTIVE, ...at(1) },
-          { state: State.END, ...at(1) },
-        ] as never);
+      // The pan as it is in the latest render: each render makes the gesture afresh with its
+      // callbacks' current values, as the detector hands them to the native side.
+      let last: Pan | null = null;
+      const current = (): Pan => {
+        const found = [...screen.queryAllByLabelText(name), ...screen.queryAllByText(name)];
+        const target = opts.within ? within(opts.within).queryAllByLabelText(name)[opts.index ?? 0] : found[opts.index ?? 0];
+        let node: ReactTestInstance | null = target ?? null;
+        while (node && node.type !== GestureDetector) node = node.parent;
+        if (!node) {
+          if (last) return last;
+          throw new Error(`${String(name)} has no gesture around it.\nOn screen: ${visibleText().slice(0, 1500)}`);
+        }
+        const gesture = node.props.gesture as Pan & { gestures?: Pan[] };
+        const pans = gesture.gestures ?? [gesture];
+        const pan = pans[opts.gesture ?? 0];
+        if (!pan) throw new Error(`${String(name)} has ${pans.length} gestures, not ${(opts.gesture ?? 0) + 1}`);
+        last = pan;
+        return pan;
+      };
+      if (current().config.enabled === false) return;
+      // A finger: down, then moving a quarter of the way at a time, one frame (16 ms) apart, each
+      // frame's work done before the next, and let go where it got to.
+      const at = (f: number, prev: number) => ({
+        translationX: dx * f,
+        translationY: dy * f,
+        changeX: dx * (f - prev),
+        changeY: dy * (f - prev),
+        x: dx * f,
+        y: dy * f,
+        absoluteX: dx * f,
+        absoluteY: dy * f,
+        velocityX: dx * 4,
+        velocityY: dy * 4,
+        numberOfPointers: 1,
+        state: State.ACTIVE,
       });
+      const frame = async (run: (pan: Pan) => void) => {
+        await act(async () => {
+          run(current());
+          jest.advanceTimersByTime(16);
+          for (let i = 0; i < 3; i++) await Promise.resolve();
+        });
+      };
+      await frame((pan) => pan.handlers.onBegin?.({ ...at(0, 0), state: State.BEGAN }));
+      await frame((pan) => pan.handlers.onStart?.(at(0.25, 0)));
+      for (const [f, prev] of [
+        [0.25, 0],
+        [0.5, 0.25],
+        [0.75, 0.5],
+        [1, 0.75],
+      ]) {
+        await frame((pan) => {
+          pan.handlers.onUpdate?.(at(f, prev));
+          pan.handlers.onChange?.(at(f, prev));
+        });
+      }
+      await frame((pan) => pan.handlers.onEnd?.({ ...at(1, 1), state: State.END }, true));
+      await frame((pan) => pan.handlers.onFinalize?.({ ...at(1, 1), state: State.END }, true));
       await flush();
     },
     type: async (field, text) => {

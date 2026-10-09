@@ -63,6 +63,8 @@ it('rates a phrase and can undo it', async () => {
   learner with languages, prefs and a saved-state `edit`; `signedIn: email`; `url`; `api` (a second
   device on the same server); `app.restart()` (the same device, relaunched).
 - **Gestures**: `app.swipe(name, { dx, dy })` pans the gesture around an element (a queue row's
-  swipe, its handle's drag, a sheet or the player pulled down) and lets go.
+  swipe, its handle's drag, the mini player swiped, a sheet or the player pulled down) and lets go:
+  its callbacks run frame by frame, each frame's renders and effects done before the next.
+  Activation offsets aren't simulated; where gestures race, `gesture` picks one.
 - Views that measure themselves get a phone-sized layout automatically (`layoutAll`): 390 points
   wide and 64 high unless their style sets a height.
