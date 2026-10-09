@@ -14,6 +14,7 @@
     "bundle": "expo export --platform ios --output-dir .expo-export --clear",
     "export:web": "expo export --platform web --output-dir dist-web",
     "icons": "node scripts/icons.mjs",
+    "screens": "node scripts/screens/capture.mjs",
     "clean": "rm -rf .expo .expo-export dist-web node_modules/.cache"
   },
   "dependencies": {
@@ -73,6 +74,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "fast-check": "^4.10.2",
     "globals": "^17.12.0",
+    "playwright": "^1.64.0",
     "tsx": "^4.21.0",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.65.0",
