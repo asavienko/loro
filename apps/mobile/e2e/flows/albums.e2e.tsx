@@ -527,8 +527,16 @@ describe('Album: its cover', () => {
     expect(chips()).toBe(2);
   });
 
-  // Reanimated's jest mock never runs useAnimatedReaction, so "mostly whole" never turns true.
-  it.todo('a second tap on the whole artwork puts it back to its small size');
+  it('a second tap on the whole artwork puts it back to its small size', async () => {
+    const { app } = await openAlbum();
+    const chips = () => screen.queryAllByLabelText(app.c.share.coverFor('Mis canciones')).length;
+    await tapArt(app, 0);
+    await app.advance(500);
+    expect(chips()).toBe(2);
+    await tapArt(app, 0);
+    await app.advance(500);
+    expect(chips()).toBe(1);
+  });
 
   it('pulling the artwork down shows it whole', async () => {
     const { app } = await openAlbum();

@@ -1072,7 +1072,6 @@ describe('gestures', () => {
       expect(app.sees(app.c.player.paused)).toBe(true);
     });
   });
-  it.todo('tapping the open picture again closes it (needs the scroll back to the top to finish, which Node does not run)');
 
   it('dragging the paused mini player down closes it', async () => {
     const app = await playSet();
@@ -1097,6 +1096,17 @@ describe('gestures', () => {
       await act(async () => fireEvent.press(press()));
       await app.settle();
       expect(opened()).toBe(true);
+    });
+
+    it('closes when tapped again, whole at the top of the page', async () => {
+      const app = await playerOpen();
+      const press = () => frame().findAll((n: ReactTestInstance) => typeof n.props.onPress === 'function')[0];
+      await act(async () => fireEvent.press(press()));
+      await app.settle();
+      expect(opened()).toBe(true);
+      await act(async () => fireEvent.press(press()));
+      await app.settle();
+      expect(opened()).toBe(false);
     });
 
     it('opens when pulled down', async () => {

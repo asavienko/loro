@@ -9,8 +9,25 @@ import { world } from './world';
 jest.mock('@react-native-async-storage/async-storage', () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'));
 jest.mock('react-native-keyboard-controller', () => require('react-native-keyboard-controller/jest'));
 jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
-// Reanimated's own mock, with reduced motion on: every animation lands at once.
-jest.mock('react-native-reanimated', () => ({ ...require('react-native-reanimated/mock'), useReducedMotion: () => true }));
+// Reanimated's own mock, with reduced motion on: every animation lands at once. Its reactions,
+// which the mock never runs, run after each render, called when what they watch has changed.
+jest.mock('react-native-reanimated', () => {
+  const { useEffect, useRef } = require('react') as typeof import('react');
+  return {
+    ...require('react-native-reanimated/mock'),
+    useReducedMotion: () => true,
+    useAnimatedReaction: <T,>(prepare: () => T, react: (now: T, before: T | null) => void) => {
+      const last = useRef<{ value: T } | null>(null);
+      useEffect(() => {
+        const now = prepare();
+        if (last.current !== null && Object.is(now, last.current.value)) return;
+        const before = last.current ? last.current.value : null;
+        last.current = { value: now };
+        react(now, before);
+      });
+    },
+  };
+});
 jest.mock('expo-audio', () => require('./fakes/audio'));
 
 jest.mock('expo-secure-store', () => {
