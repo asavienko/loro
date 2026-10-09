@@ -114,6 +114,26 @@ beforeAll(() => {
   });
 });
 
+// The lock-screen module (modules/loro-media), present when a file sets `device.lockScreen`.
+const loroMedia = {
+  show: (nowPlaying: never) => {
+    device.nowPlaying = nowPlaying;
+    device.lockScreenLog.push(nowPlaying);
+  },
+  hide: () => {
+    device.nowPlaying = null;
+    device.lockScreenLog.push('hidden');
+  },
+  wait: (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
+  addListener: (_event: string, listener: never) => {
+    device.mediaListeners.add(listener);
+    return { remove: () => device.mediaListeners.delete(listener) };
+  },
+};
+const expoGlobal = globalThis as unknown as { expo: { modules?: Record<string, unknown> } };
+expoGlobal.expo.modules ??= {};
+Object.defineProperty(expoGlobal.expo.modules, 'LoroMedia', { configurable: true, get: () => (device.lockScreen ? loroMedia : undefined) });
+
 // The fake API answers the app's requests (src/shared/api/client.ts and the native clip checks).
 globalThis.fetch = ((input: string, init: never) => world.api.fetch(input, init)) as unknown as typeof fetch;
 globalThis.XMLHttpRequest = require('./fakes/api').fakeXhr(() => world.api) as never;
