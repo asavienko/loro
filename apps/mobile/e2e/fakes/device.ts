@@ -30,6 +30,11 @@ export const device = {
   notificationListeners: new Set<(response: unknown) => void>(),
   /** The Keychain / Keystore. */
   secure: new Map<string, string>(),
+  /**
+   * The build's EAS project: with one the app asks for a push token (sent to the server), without
+   * one (a local build) it keeps to local notifications.
+   */
+  pushProject: null as string | null,
   /** What the provider's sign-in page does next: sign in as `email`, or be closed. */
   authSession: { email: 'learner@gmail.test' as string | null },
   /** The pages the auth session was opened on. */
@@ -40,6 +45,7 @@ export const device = {
     this.opened = [];
     this.notifications = [];
     this.notificationsAllowed = true;
+    this.pushProject = null;
     this.notificationListeners.clear();
     this.secure.clear();
     this.authSession = { email: 'learner@gmail.test' };
