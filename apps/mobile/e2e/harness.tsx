@@ -16,6 +16,7 @@ import { store as routerStore } from 'expo-router/build/global-state/router-stor
 import { router } from 'expo-router/build/imperative-api';
 import { getMockContext } from 'expo-router/build/testing-library/mock-config';
 import { copyForNative, type Copy } from '@shared/copy';
+import { signOut } from '@shared/api/session';
 import { resetContent, type LanguageCode } from '@shared/content';
 import { initialState } from '@shared/state/initial';
 import { parseState, serializeState } from '@shared/state/persistence';
@@ -262,6 +263,9 @@ export async function launch(options: LaunchOptions = {}): Promise<App> {
     device.secure.clear();
     // The device starts without any course: each launch downloads it as a phone's first start does.
     resetContent();
+    // Nor a session: the access token the last launch kept in memory goes (with no refresh token
+    // stored, signing out asks nothing of the server).
+    await signOut();
   }
   const learner = options.learner ?? {};
   if (!keep && learner !== 'new') await seedLearner(learner, now);
