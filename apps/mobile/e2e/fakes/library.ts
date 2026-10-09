@@ -108,6 +108,11 @@ export interface SongRec {
   sections: Wire[];
   lyricsBy: 'ai' | 'phrases';
   audio: boolean;
+  /**
+   * How it sounds once ready: the server's demo instrumental with its voice (no music provider), or
+   * sung by ElevenLabs and, where transcription is set up, heard back for its lines' timings.
+   */
+  sound: { by: 'elevenlabs' | 'demo'; voiced: boolean; timing: 'transcript' | 'demo' | null };
   options: SongOptions;
   error: string | null;
   createdAt: number;
@@ -543,9 +548,9 @@ function songWire(s: SongRec): Wire {
     sections: s.sections,
     lyricsBy: s.lyricsBy,
     audioUrl: s.audio ? `/library/songs/${s.id}/audio?exp=${now() + 12 * 3_600_000}&sig=e2e` : null,
-    audioBy: s.audio ? 'demo' : null,
-    voiced: s.audio,
-    timingBy: s.audio ? 'demo' : null,
+    audioBy: s.audio ? s.sound.by : null,
+    voiced: s.audio && s.sound.voiced,
+    timingBy: s.audio ? s.sound.timing : null,
     options: s.options,
     durationMs: songLength(s),
     error: s.error,
@@ -792,6 +797,7 @@ function newSong(api: FakeApi, l: Lib, input: { ownerId: string; albumId: string
     sections: input.approved ? timed(input.lyrics, false) : [],
     lyricsBy: input.lyricsBy,
     audio: false,
+    sound: { by: 'demo', voiced: true, timing: 'demo' },
     options: input.options,
     error: null,
     createdAt: now(),
@@ -1748,7 +1754,22 @@ function makerOf(api: FakeApi, displayName: string): User {
 }
 
 /** A song in an album, ready by default, sung from the set's phrases; returns its id. */
-export function seedSong(api: FakeApi, owner: User, input: { albumId: string; setId: string; title?: string; styleId?: string; status?: 'ready' | 'rendering' | 'failed'; error?: string }): { id: string } {
+export function seedSong(
+  api: FakeApi,
+  owner: User,
+  input: {
+    albumId: string;
+    setId: string;
+    title?: string;
+    styleId?: string;
+    status?: 'ready' | 'rendering' | 'failed';
+    error?: string;
+    /** Sung by ElevenLabs (heard back for its timings unless `timing` says otherwise), or the demo. */
+    sound?: { by: 'elevenlabs' | 'demo'; voiced?: boolean; timing?: 'transcript' | 'demo' | null };
+    /** Lines (counted through the song from 0) the singer sang differently: their sung words. */
+    sungAs?: Record<number, string>;
+  },
+): { id: string } {
   const l = lib(api);
   const set = findSet(l, input.setId);
   if (!set) throw new Error(`No set ${input.setId}`);
@@ -1764,8 +1785,23 @@ export function seedSong(api: FakeApi, owner: User, input: { albumId: string; se
     lyricsBy: 'phrases',
     approved: false,
   });
-  if ((input.status ?? 'ready') === 'ready') finishSong(api, l, song);
-  else if (input.status === 'failed') {
+  if (input.sound) {
+    const sung = input.sound.by === 'elevenlabs';
+    song.sound = { by: input.sound.by, voiced: input.sound.voiced ?? true, timing: input.sound.timing !== undefined ? input.sound.timing : sung ? 'transcript' : 'demo' };
+  }
+  if ((input.status ?? 'ready') === 'ready') {
+    finishSong(api, l, song);
+    // Heard back: a line sung differently shows as sung, with what was written beside it.
+    let at = 0;
+    for (const section of song.sections as { lines: { text: string; meaning: string; written?: unknown }[] }[])
+      for (const line of section.lines) {
+        const sungText = input.sungAs?.[at++];
+        if (sungText !== undefined) {
+          line.written = { text: line.text, meaning: line.meaning };
+          line.text = sungText;
+        }
+      }
+  } else if (input.status === 'failed') {
     song.status = 'failed';
     song.error = input.error ?? 'The music service failed';
   }
