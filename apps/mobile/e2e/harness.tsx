@@ -10,6 +10,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, fireEvent, render, screen, waitFor, within, type RenderResult } from '@testing-library/react-native';
 import path from 'node:path';
+import { GestureDetector, State } from 'react-native-gesture-handler';
+import { fireGestureHandler } from 'react-native-gesture-handler/jest-utils';
 import { ExpoRoot } from 'expo-router/build/ExpoRoot';
 import { store as routerStore } from 'expo-router/build/global-state/router-store';
 import { router } from 'expo-router/build/imperative-api';
@@ -79,12 +81,23 @@ export interface App {
   pathname(): string;
   /** Moves the fake clock on by `ms`, running every timer due and the work that follows. */
   advance(ms: number): Promise<void>;
+  /**
+   * Moves the clock on by `ms` in one jump: every timer due fires, but what they start runs only at
+   * the end (a playing loop stalls). For long waits while nothing plays — a day away — where
+   * `advance`, timer by timer, would be slow.
+   */
+  skip(ms: number): Promise<void>;
   /** Lets pending promises, renders and zero-delay timers run. */
   settle(): Promise<void>;
   /** Presses the control whose text or accessibility label is `name` (exact match, or a RegExp). */
   tap(name: string | RegExp, options?: { within?: ReactTestInstance; index?: number }): Promise<void>;
   /** Long-presses the control whose text or accessibility label is `name`. */
   longPress(name: string | RegExp, options?: { within?: ReactTestInstance }): Promise<void>;
+  /**
+   * Pans the gesture around the element whose text or label is `name` by `dx`/`dy` points and lets
+   * go: a swipe, a drag, a sheet pulled down. Where several gestures race, `gesture` picks one (0 first).
+   */
+  swipe(name: string | RegExp, move: { dx?: number; dy?: number }, options?: { within?: ReactTestInstance; index?: number; gesture?: number }): Promise<void>;
   /** Types into the text field found by placeholder or accessibility label. */
   type(field: string | RegExp, text: string): Promise<void>;
   /** Submits (the keyboard's return key) the field found by placeholder or accessibility label. */
@@ -248,16 +261,24 @@ export async function launch(options: LaunchOptions = {}): Promise<App> {
     result,
     pathname: () => routerStore.getRouteInfo().pathname,
     advance: async (ms) => {
-      // In steps, so promises a timer starts settle before the next timer is due.
-      let left = ms;
-      while (left > 0) {
-        const step = Math.min(left, 100);
+      // Timer by timer, each in its own act(), so the renders and effects one timer causes (the
+      // player's next phase) run before the next is due. A marker timer at the end stops it there.
+      const end = Date.now() + ms;
+      const marker = setTimeout(() => {}, ms);
+      for (let guard = 0; Date.now() < end && guard < 200_000; guard++) {
         await act(async () => {
-          jest.advanceTimersByTime(step);
+          jest.advanceTimersToNextTimer();
           for (let i = 0; i < 3; i++) await Promise.resolve();
         });
-        left -= step;
       }
+      clearTimeout(marker);
+      await flush();
+    },
+    skip: async (ms) => {
+      await act(async () => {
+        jest.advanceTimersByTime(ms);
+        for (let i = 0; i < 3; i++) await Promise.resolve();
+      });
       await flush();
     },
     settle: flush,
@@ -272,6 +293,27 @@ export async function launch(options: LaunchOptions = {}): Promise<App> {
       const target = findByName(name, opts.within);
       await act(async () => {
         fireEvent(target, 'longPress');
+      });
+      await flush();
+    },
+    swipe: async (name, { dx = 0, dy = 0 }, opts = {}) => {
+      const target = findByName(name, opts.within, opts.index ?? 0);
+      let node: ReactTestInstance | null = target;
+      while (node && node.type !== GestureDetector) node = node.parent;
+      if (!node) throw new Error(`${String(name)} has no gesture around it`);
+      const gesture = node.props.gesture as { gestures?: unknown[] };
+      const pans = gesture.gestures ?? [gesture];
+      const pan = pans[opts.gesture ?? 0];
+      if (!pan) throw new Error(`${String(name)} has ${pans.length} gestures, not ${(opts.gesture ?? 0) + 1}`);
+      // Began, moving halfway then all the way, and let go there, as a finger does.
+      const at = (f: number) => ({ translationX: dx * f, translationY: dy * f, x: dx * f, y: dy * f, absoluteX: dx * f, absoluteY: dy * f, velocityX: dx, velocityY: dy });
+      await act(async () => {
+        fireGestureHandler(pan as never, [
+          { state: State.BEGAN, ...at(0) },
+          { state: State.ACTIVE, ...at(0.5) },
+          { state: State.ACTIVE, ...at(1) },
+          { state: State.END, ...at(1) },
+        ] as never);
       });
       await flush();
     },
