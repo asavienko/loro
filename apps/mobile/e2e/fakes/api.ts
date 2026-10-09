@@ -18,6 +18,8 @@ export interface Recorded {
   body: unknown;
   /** The user the bearer token belongs to, if any. */
   userId: string | null;
+  /** Tried while the server was unreachable: it never arrived. */
+  offline?: true;
 }
 
 export interface Reply {
@@ -58,6 +60,9 @@ export interface Route {
 export const problem = (status: number, code: string, detail = code): Reply => ({ status, body: { type: 'about:blank', title: code, status, code, detail } });
 export const json = (body: unknown, status = 200): Reply => ({ status, body });
 export const noContent = (): Reply => ({ status: 204 });
+
+/** The largest progress the API keeps (apps/api/src/library/progress.ts). */
+const MAX_PROGRESS_BYTES = 3_800_000;
 
 /** How long the fake's access tokens live, in seconds. */
 const ACCESS_TTL_S = 900;
@@ -107,7 +112,7 @@ export class FakeApi {
   /** refresh token → user id */
   refresh = new Map<string, string>();
   /** user id → progress and its revision */
-  progress = new Map<string, { progress: Record<string, unknown> | null; revision: number }>();
+  progress = new Map<string, { progress: Record<string, unknown> | null; revision: number; updatedAt?: number | null }>();
   /** user id → kind → used today */
   usage = new Map<string, Partial<Record<keyof DailyLimits, number>>>();
   /** user id → the UTC day `usage` counts */
@@ -192,9 +197,14 @@ export class FakeApi {
     return true;
   }
 
-  /** Requests to one route ("METHOD /path" without the query). */
+  /** Requests to one route ("METHOD /path" without the query) that reached the server. */
   calls(route: string): Recorded[] {
-    return this.requests.filter((r) => `${r.method} ${r.path.split('?')[0]}` === route);
+    return this.requests.filter((r) => !r.offline && `${r.method} ${r.path.split('?')[0]}` === route);
+  }
+
+  /** Requests to one route the app tried while the server was unreachable. */
+  triedOffline(route: string): Recorded[] {
+    return this.requests.filter((r) => r.offline && `${r.method} ${r.path.split('?')[0]}` === route);
   }
 
   /** The course's pack as the server builds it for `user` (their own and saved sets with it). */
@@ -226,7 +236,6 @@ export class FakeApi {
 
   /** One request, answered. A thrown TypeError is the network failing, as `fetch` does. */
   async answer(method: string, url: string, headers: Record<string, string>, rawBody: string | undefined | null): Promise<Reply> {
-    if (this.offline) throw new TypeError('Network request failed');
     const at = url.indexOf('/v1/');
     const path = at >= 0 ? url.slice(at + 3) : url.replace(/^https?:\/\/[^/]+/, '');
     const [bare, search = ''] = path.split('?');
@@ -237,6 +246,11 @@ export class FakeApi {
       } catch {
         body = rawBody;
       }
+    }
+    // Tried with no network: recorded as tried, and failing as fetch does.
+    if (this.offline) {
+      this.requests.push({ method, path, body, userId: null, offline: true });
+      throw new TypeError('Network request failed');
     }
     const auth = headers.Authorization ?? headers.authorization;
     const userId = auth?.startsWith('Bearer ') ? (this.access.get(auth.slice(7)) ?? null) : null;
@@ -468,16 +482,27 @@ const coreRoutes: Route[] = [
   {
     method: 'GET',
     pattern: '/library/progress',
-    handler: (req, api) => (req.user ? json(api.progress.get(req.user.id) ?? { progress: null, revision: 0 }) : problem(401, 'UNAUTHENTICATED')),
+    handler: (req, api) => {
+      if (!req.user) return problem(401, 'UNAUTHENTICATED');
+      const stored = api.progress.get(req.user.id);
+      return json(stored ? { ...stored, updatedAt: stored.updatedAt ?? null } : { progress: null, revision: 0, updatedAt: null });
+    },
   },
   {
     method: 'POST',
     pattern: '/library/progress',
     handler: (req, api) => {
       if (!req.user) return problem(401, 'UNAUTHENTICATED');
-      const current = api.progress.get(req.user.id) ?? { progress: null, revision: 0 };
-      if (req.body?.baseRevision !== current.revision) return problem(409, 'CONFLICT', 'Progress changed meanwhile');
-      const next = { progress: req.body.progress as Record<string, unknown>, revision: current.revision + 1 };
+      // apps/api/src/library/progress.ts: a strict body, under 3.8 MB, merged onto the revision it read.
+      const body = req.body as { progress?: unknown; baseRevision?: unknown } | undefined;
+      const keys = Object.keys(body ?? {});
+      const isRecord = typeof body?.progress === 'object' && body.progress !== null && !Array.isArray(body.progress);
+      if (!isRecord || !Number.isInteger(body?.baseRevision) || (body!.baseRevision as number) < 0 || keys.some((k) => k !== 'progress' && k !== 'baseRevision'))
+        return problem(422, 'VALIDATION_FAILED', 'Invalid progress');
+      if (JSON.stringify(body!.progress).length > MAX_PROGRESS_BYTES) return problem(422, 'VALIDATION_FAILED', 'Progress is too large');
+      const current = api.progress.get(req.user.id) ?? { progress: null, revision: 0, updatedAt: null };
+      if (body!.baseRevision !== current.revision) return problem(409, 'CURSOR_EXPIRED', 'Progress changed on another device');
+      const next = { progress: body!.progress as Record<string, unknown>, revision: current.revision + 1, updatedAt: Date.now() };
       api.progress.set(req.user.id, next);
       return json({ revision: next.revision });
     },
