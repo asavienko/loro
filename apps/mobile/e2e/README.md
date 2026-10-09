@@ -53,11 +53,16 @@ it('rates a phrase and can undo it', async () => {
 - **Find things as the learner does**: by visible text or accessibility label (`app.tap`,
   `app.sees`, `app.waitFor`), using the copy (`app.c`, from `src/shared/copy/en.ts`) and the seeded
   content (`packages/content/v2`), never hard-coded English or test ids.
-- **Time is fake** and starts at `T0` (1 Sep 2026, 09:00 UTC). `app.advance(ms)` runs every timer due
-  and what follows; a phrase's loop, the rating window and a day passing take no real time.
+- **Time is fake** and starts at `T0` (1 Sep 2026, 09:00 UTC). `app.advance(ms)` runs the timers due
+  one by one, each with the renders and effects it causes, so a phrase's loop or the rating window
+  take no real time. For a long idle wait (days) use `app.skip(ms)`, one jump in which what the
+  timers start runs only at the end, or `app.restart({ now })`.
 - **Assert what the learner sees** first, and what the phone saved (`app.saved()`) or the server was
   sent (`app.api.calls('POST /library/sets')`) where that is the point. Never read React state.
 - **Launch options** (`LaunchOptions` in `harness.tsx`): `learner: 'new'` for onboarding, or a
   learner with languages, prefs and a saved-state `edit`; `signedIn: email`; `url`; `api` (a second
   device on the same server); `app.restart()` (the same device, relaunched).
-- Views that measure themselves get a phone-sized layout automatically (`layoutAll`).
+- **Gestures**: `app.swipe(name, { dx, dy })` pans the gesture around an element (a queue row's
+  swipe, its handle's drag, a sheet or the player pulled down) and lets go.
+- Views that measure themselves get a phone-sized layout automatically (`layoutAll`): 390 points
+  wide and 64 high unless their style sets a height.
