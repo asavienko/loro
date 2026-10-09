@@ -20,8 +20,9 @@ pnpm --filter @loro/mobile web        # Expo web: the Rust core runs as WASM
 pnpm --filter @loro/mobile android    # development build (JDK 17, Android SDK/NDK, cargo-ndk)
 pnpm --filter @loro/mobile ios        # development build (full Xcode)
 pnpm --filter @loro/mobile test       # unit tests (node:test via tsx)
+pnpm --filter @loro/mobile e2e        # end-to-end flows: the whole app headless in Node (e2e/README.md)
 pnpm --filter @loro/mobile lint       # ESLint with this app's own config
-pnpm --filter @loro/mobile typecheck  # tsc
+pnpm --filter @loro/mobile typecheck  # tsc, the app and the end-to-end suite
 pnpm --filter @loro/mobile bundle     # proves the iOS bundle compiles
 ```
 
@@ -33,6 +34,7 @@ One test file, from `apps/mobile` (the tests need the content fixture installed 
 
 ```bash
 pnpm exec tsx --import ./src/shared/content/fixture.install.ts --test src/shared/state/machine.test.ts
+pnpm exec jest -c e2e/jest.config.js e2e/flows/player.e2e.tsx
 ```
 
 Expo Go can't run the app: the Rust core comes from `modules/loro-core`, a local Expo module

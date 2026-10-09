@@ -3,7 +3,7 @@
 The whole app — expo-router and every route in `app/`, every screen and sheet, the store, the
 learner's state machine and the Rust core (its WASM build) — rendered in Node by React Native Testing
 Library and driven the way a learner drives it: by what is on screen. No browser, simulator or device;
-the suite runs in seconds.
+some 850 flows run in about half a minute (`pnpm check` runs them).
 
 ```bash
 pnpm --filter @loro/mobile e2e                     # every flow
