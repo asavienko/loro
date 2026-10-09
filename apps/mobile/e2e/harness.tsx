@@ -265,11 +265,19 @@ export async function launch(options: LaunchOptions = {}): Promise<App> {
       // player's next phase) run before the next is due. A marker timer at the end stops it there.
       const end = Date.now() + ms;
       const marker = setTimeout(() => {}, ms);
-      for (let guard = 0; Date.now() < end && guard < 200_000; guard++) {
+      // Timers that keep starting each other with no delay would hold the clock still for ever.
+      let still = 0;
+      while (Date.now() < end) {
+        const before = Date.now();
         await act(async () => {
           jest.advanceTimersToNextTimer();
           for (let i = 0; i < 3; i++) await Promise.resolve();
         });
+        still = Date.now() === before ? still + 1 : 0;
+        if (still > 1000) {
+          clearTimeout(marker);
+          throw new Error(`advance(${ms}) stalled at +${ms - (end - Date.now())} ms: timers keep starting each other without delay`);
+        }
       }
       clearTimeout(marker);
       await flush();
