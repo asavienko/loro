@@ -1,0 +1,63 @@
+# Headless end-to-end tests
+
+The whole app — expo-router and every route in `app/`, every screen and sheet, the store, the
+learner's state machine and the Rust core (its WASM build) — rendered in Node by React Native Testing
+Library and driven the way a learner drives it: by what is on screen. No browser, simulator or device;
+the suite runs in seconds.
+
+```bash
+pnpm --filter @loro/mobile e2e                     # every flow
+pnpm --filter @loro/mobile e2e -- player            # the files matching "player"
+pnpm --filter @loro/mobile e2e -- -t "undo"         # the tests whose name matches "undo"
+```
+
+## What is real and what is faked
+
+Real: everything in `app/` and `src/`, run through the same platform swaps Metro makes for iOS
+(`resolver.js` mirrors `metro.config.js`): `src/platform/storage.ts`, `kv.ts`, `secrets.ts`,
+`speech.ts`, `cues.ts`, `haptics.ts`, `oauth.ts` and `push.ts` all run. The one difference: the Rust
+core is the WASM build (as on the web), since the LoroCore native module can't load in Node, and
+Intl is Node's (as on the web) rather than Hermes's polyfills.
+
+Faked, below those modules (`setup.ts`, `fakes/`):
+
+| Fake                 | Stands in for                                       | A test reads or steers                                                               |
+| -------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `fakes/api.ts`       | The API (`fetch`, `XMLHttpRequest`)                 | `app.api.requests`, `calls(route)`, `mail`/`codeFor(email)`, `offline`, `failNext`   |
+| `fakes/library.ts`   | The API's library routes (sets, songs, sharing, …)  | `app.api.store`                                                                      |
+| `fakes/audio.ts`     | expo-audio: phrase clips, songs, cues               | `audio.heard`, `audio.clips()`, `audio.silent`, `audio.lengths`, `audio.songPlayer()` |
+| `fakes/device.ts`    | Alerts, Share, Linking, notifications, Keychain, provider sign-in page | `device.dialogs`/`answer(button)`, `shared`, `notifications`, `authSession` |
+| AsyncStorage         | The official in-memory mock                         | `app.saved()` reads what the phone saved                                             |
+
+A request the fake API doesn't answer fails the test (`setup.ts`): add the route to `fakes/`, as
+`apps/api` answers it, rather than letting the app see a 404 it never would.
+
+## Writing a flow
+
+One file per area in `flows/<area>.e2e.tsx`. Each test launches the app afresh:
+
+```tsx
+import { audio, device, launch, MINUTE } from '../harness';
+
+it('rates a phrase and can undo it', async () => {
+  const app = await launch({ url: '/set/set-cafe' }); // an onboarded learner, en-GB → es-ES
+  const { c } = app; // the learner's UI copy: find things by the words they see
+  await app.tap(c.set.playAll('Café & Mañanas'));
+  await app.advance(8_000); // fake time: no real waiting
+  await app.tap(c.player.rateAs(c.common.grade.easy));
+  await app.tap(c.player.undoGrade(c.common.grade.easy));
+  expect((await app.saved()).pending).toEqual([]);
+});
+```
+
+- **Find things as the learner does**: by visible text or accessibility label (`app.tap`,
+  `app.sees`, `app.waitFor`), using the copy (`app.c`, from `src/shared/copy/en.ts`) and the seeded
+  content (`packages/content/v2`), never hard-coded English or test ids.
+- **Time is fake** and starts at `T0` (1 Sep 2026, 09:00 UTC). `app.advance(ms)` runs every timer due
+  and what follows; a phrase's loop, the rating window and a day passing take no real time.
+- **Assert what the learner sees** first, and what the phone saved (`app.saved()`) or the server was
+  sent (`app.api.calls('POST /library/sets')`) where that is the point. Never read React state.
+- **Launch options** (`LaunchOptions` in `harness.tsx`): `learner: 'new'` for onboarding, or a
+  learner with languages, prefs and a saved-state `edit`; `signedIn: email`; `url`; `api` (a second
+  device on the same server); `app.restart()` (the same device, relaunched).
+- Views that measure themselves get a phone-sized layout automatically (`layoutAll`).
