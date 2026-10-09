@@ -2,7 +2,7 @@
 // empty states, the Progress figures that open their lists, liking a phrase or a set and finding it
 // in Library, the "Liked phrases" set page, playing from a list, and each row opening its page.
 // Albums: Your albums (Liked songs, Make a song), Loro's and the shared albums with search and order.
-// Phrases made before sign-in (the "On this device only" banner) are a todo: see the end of the file.
+// Phrases made before sign-in (the "On this device only" banner) are in sync.e2e.tsx.
 import { languageName } from '@shared/copy';
 import { problem } from '../fakes/api';
 import { audio, copy, DAY, launch, screen, SECOND } from '../harness';
@@ -310,10 +310,6 @@ describe('Library: phrases made on this device', () => {
     expect(app.api.calls('POST /library/phrases')).toEqual([]);
   });
 
-  // A phrase made before the learner signed in (plan 108) lives in the saved state as `ownPhrases`, but
-  // the app drops them at load (what is saved reads back as {}), so the "On this device only" banner
-  // can't be reached from a saved state here. Left open until that is checked on a phone.
-  it.todo('the "On this device only" banner offers to sign in when phrases were made before sign-in');
 });
 
 describe('Library: a rated phrase moves through the lists', () => {
