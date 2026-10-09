@@ -9,7 +9,7 @@
 // the app.
 import { fixturePack, FIXTURE } from '@shared/content/fixture';
 import type { ContentPack, LanguageCode, LanguageList } from '@shared/content';
-import { libraryRoutes } from './library';
+import { installLibrary, libraryRoutes } from './library';
 
 export interface Recorded {
   method: string;
@@ -70,15 +70,24 @@ export function newId(): string {
   return `0190a000-0000-7000-8000-${hex}`;
 }
 
+/** What a learner may have written for them in a day (the API's `libraryDailyLimit`). */
 export interface DailyLimits {
-  sets: number;
   phrases: number;
-  covers: number;
-  songs: number;
-  notes: number;
+  cover: number;
+  song: number;
+  lyrics: number;
 }
 
-export const DEFAULT_LIMITS: DailyLimits = { sets: 10, phrases: 200, covers: 10, songs: 3, notes: 50 };
+export const DEFAULT_LIMITS: DailyLimits = { phrases: 30, cover: 10, song: 5, lyrics: 20 };
+
+/** What a learner may keep (the API's `libraryStorageLimit`). */
+export interface KeptLimits {
+  sets: number;
+  albums: number;
+  songs: number;
+}
+
+export const DEFAULT_KEPT: KeptLimits = { sets: 100, albums: 30, songs: 120 };
 
 export class FakeApi {
   /** Every request the app made, in order. */
@@ -101,8 +110,11 @@ export class FakeApi {
   progress = new Map<string, { progress: Record<string, unknown> | null; revision: number }>();
   /** user id → kind → used today */
   usage = new Map<string, Partial<Record<keyof DailyLimits, number>>>();
+  /** user id → the UTC day `usage` counts */
+  private usageDays = new Map<string, string>();
   limits: DailyLimits = { ...DEFAULT_LIMITS };
-  /** Clip URL path → where it stands; a clip not listed is ready. */
+  kept: KeptLimits = { ...DEFAULT_KEPT };
+  /** A clip's file name ('es-ES-cafe-01.mp3') → where it stands; a clip not listed is ready. */
   clips = new Map<string, 'ready' | 'rendering' | 'failed' | 'missing'>();
   /** Answers queued for a route, used once each: `failNext('POST /library/sets', problem(…))`. */
   private queued = new Map<string, Reply[]>();
@@ -114,6 +126,7 @@ export class FakeApi {
 
   constructor() {
     this.routes = [...coreRoutes, ...libraryRoutes];
+    installLibrary(this);
   }
 
   /** Answers the next request to `route` ("METHOD /path", the path as the app sends it, no query) with `reply`. */
@@ -152,8 +165,23 @@ export class FakeApi {
     return found.code;
   }
 
+  /** The allowances count a UTC day: a new day starts them again. */
+  private today(userId: string): void {
+    const day = new Date(Date.now()).toISOString().slice(0, 10);
+    if (this.usageDays.get(userId) === day) return;
+    this.usage.delete(userId);
+    this.usageDays.set(userId, day);
+  }
+
   used(userId: string, kind: keyof DailyLimits): number {
+    this.today(userId);
     return this.usage.get(userId)?.[kind] ?? 0;
+  }
+
+  /** Gives back one use of today's allowance, when what it paid for failed. */
+  refund(userId: string, kind: keyof DailyLimits): void {
+    const now = this.used(userId, kind);
+    if (now > 0) this.usage.set(userId, { ...this.usage.get(userId), [kind]: now - 1 });
   }
 
   /** Counts one use of `kind`; false when the day's allowance is spent. */
@@ -181,6 +209,7 @@ export class FakeApi {
       sets: [...withClips.sets, ...(extra.sets ?? [])],
       phrases: [...withClips.phrases, ...(extra.phrases ?? [])],
       albums: [...withClips.albums, ...(extra.albums ?? [])],
+      ...(extra.covers ? { covers: extra.covers } : {}),
     };
   }
 
@@ -324,10 +353,6 @@ export function fakeXhr(api: () => FakeApi) {
 
 // ---------- the routes every test needs: languages, the pack, accounts, usage and progress ----------
 
-const usageOf = (api: FakeApi, userId: string) => ({
-  daily: Object.fromEntries((Object.keys(api.limits) as (keyof DailyLimits)[]).map((kind) => [kind, { used: api.used(userId, kind), limit: api.limits[kind] }])),
-});
-
 const signInReply = (api: FakeApi, user: User) => ({ ...api.issue(user), user: { id: user.id, provider: user.provider }, device_id: newId() });
 
 const coreRoutes: Route[] = [
@@ -439,11 +464,6 @@ const coreRoutes: Route[] = [
       req.user.displayName = name || null;
       return json({ displayName: req.user.displayName });
     },
-  },
-  {
-    method: 'GET',
-    pattern: '/library/usage',
-    handler: (req, api) => (req.user ? json(usageOf(api, req.user.id)) : problem(401, 'UNAUTHENTICATED')),
   },
   {
     method: 'GET',
