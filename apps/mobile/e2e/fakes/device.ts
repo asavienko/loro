@@ -2,6 +2,7 @@
 // the provider sign-in page. e2e/setup.ts installs these in place of the native modules; tests read
 // and steer them through `device`.
 import { act } from '@testing-library/react-native';
+import type { MediaCommand, NowPlaying } from '../../src/audio/media';
 
 export interface Dialog {
   title: string;
@@ -15,7 +16,20 @@ export interface Scheduled {
   data: Record<string, unknown>;
 }
 
+type MediaListener = (command: MediaCommand) => void;
+
 export const device = {
+  /**
+   * The build has the lock-screen module (modules/loro-media), as the store app does: the player
+   * shows on the lock screen and in the shade, and the loop plays on in the background. Read once,
+   * when the app's audio module loads: set it at the top of a file, before the first launch.
+   */
+  lockScreen: false,
+  /** What the lock screen shows now, or null when it shows nothing. */
+  nowPlaying: null as NowPlaying | null,
+  /** Each show and hide the app sent, in order. */
+  lockScreenLog: [] as (NowPlaying | 'hidden')[],
+  mediaListeners: new Set<MediaListener>(),
   /** Alerts the app showed, still open; answer one with `answer`. */
   dialogs: [] as Dialog[],
   /** What the share sheet was given. */
@@ -50,6 +64,14 @@ export const device = {
     this.secure.clear();
     this.authSession = { email: 'learner@gmail.test' };
     this.authPages = [];
+    this.nowPlaying = null;
+    this.lockScreenLog = [];
+  },
+  /** A press on the lock screen or in the notification shade (or a headset's button). */
+  press(command: MediaCommand): void {
+    act(() => {
+      for (const listener of this.mediaListeners) listener(command);
+    });
   },
   /** Presses `button` on the open dialog (the newest); throws when none is open or it has no such button. */
   answer(button: string): void {

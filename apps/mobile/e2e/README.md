@@ -26,7 +26,7 @@ Faked, below those modules (`setup.ts`, `fakes/`):
 | `fakes/api.ts`       | The API (`fetch`, `XMLHttpRequest`)                 | `app.api.requests`, `calls(route)`, `mail`/`codeFor(email)`, `offline`, `failNext`   |
 | `fakes/library.ts`   | The API's library routes (sets, songs, sharing, …)  | `app.api.store`                                                                      |
 | `fakes/audio.ts`     | expo-audio: phrase clips, songs, cues               | `audio.heard`, `audio.clips()`, `audio.silent`, `audio.lengths`, `audio.songPlayer()` |
-| `fakes/device.ts`    | Alerts, Share, Linking, notifications, Keychain, provider sign-in page | `device.dialogs`/`answer(button)`, `shared`, `notifications`, `authSession` |
+| `fakes/device.ts`    | Alerts, Share, Linking, notifications, Keychain, provider sign-in page, the lock screen | `device.dialogs`/`answer(button)`, `shared`, `notifications`, `authSession`, `pushProject`, `lockScreen`/`nowPlaying`/`press(command)` |
 | AsyncStorage         | The official in-memory mock                         | `app.saved()` reads what the phone saved                                             |
 
 A request the fake API doesn't answer fails the test (`setup.ts`): add the route to `fakes/`, as
@@ -66,5 +66,9 @@ it('rates a phrase and can undo it', async () => {
   swipe, its handle's drag, the mini player swiped, a sheet or the player pulled down) and lets go:
   its callbacks run frame by frame, each frame's renders and effects done before the next.
   Activation offsets aren't simulated; where gestures race, `gesture` picks one.
+- **The lock screen** (modules/loro-media) is there only in a file that sets `device.lockScreen =
+  true` at its top: as on the store app, the loop then plays on in the background, the player shows
+  on the lock screen (`device.nowPlaying`) and its presses come back (`device.press({ type: 'next' })`).
+  Without it, as in a build without the module, going to the background pauses.
 - Views that measure themselves get a phone-sized layout automatically (`layoutAll`): 390 points
   wide and 64 high unless their style sets a height.
