@@ -12,6 +12,7 @@ import { FIXTURE, fixturePack } from '@shared/content/fixture';
 import type { LanguageCode } from '@shared/content';
 import { DEFAULT_SONG_OPTIONS, SONG_LENGTH_LINES, SONG_LENGTHS, SONG_MOODS, SONG_STYLES, SONG_TEMPOS, SONG_VOICES, type SongOptions } from '@shared/api/library';
 import { clipsFor, json, newId, noContent, problem, type FakeApi, type Reply, type Request, type Route, type User } from './api';
+import { audio } from './audio';
 
 type Visibility = 'private' | 'link' | 'public';
 type CoverKind = 'set' | 'album' | 'song' | 'phrase';
@@ -538,6 +539,9 @@ function albumWire(api: FakeApi, l: Lib, row: AlbumRec, userId: string | null): 
 const songLength = (s: SongRec): number | null => (s.status === 'ready' ? Math.max(1, s.lyrics.flatMap((x) => x.lines).length) * LINE_MS : null);
 
 function songWire(s: SongRec): Wire {
+  // The player hears the song as long as the server says it is.
+  const length = songLength(s);
+  if (s.audio && length !== null) audio.lengths.set(`/library/songs/${s.id}/audio`, length);
   return {
     id: s.id,
     albumId: s.albumId,
@@ -777,7 +781,8 @@ function finishSong(api: FakeApi, l: Lib, s: SongRec): void {
   s.status = 'ready';
   s.audio = true;
   s.error = null;
-  s.sections = timed(s.lyrics, true);
+  // Timed by the demo's bars or by being heard back; with no timing the lines have no times.
+  s.sections = timed(s.lyrics, s.sound.timing !== null);
   const album = l.albums.get(s.albumId);
   if (album) album.updatedAt = now();
   s.rev = bump(api);
@@ -1766,8 +1771,11 @@ export function seedSong(
     error?: string;
     /** Sung by ElevenLabs (heard back for its timings unless `timing` says otherwise), or the demo. */
     sound?: { by: 'elevenlabs' | 'demo'; voiced?: boolean; timing?: 'transcript' | 'demo' | null };
-    /** Lines (counted through the song from 0) the singer sang differently: their sung words. */
-    sungAs?: Record<number, string>;
+    /**
+     * Lines (counted through the song from 0) the singer sang differently: their sung words, or null
+     * for a line the heard-back song doesn't have (no times).
+     */
+    sungAs?: Record<number, string | null>;
   },
 ): { id: string } {
   const l = lib(api);
@@ -1793,10 +1801,13 @@ export function seedSong(
     finishSong(api, l, song);
     // Heard back: a line sung differently shows as sung, with what was written beside it.
     let at = 0;
-    for (const section of song.sections as { lines: { text: string; meaning: string; written?: unknown }[] }[])
+    for (const section of song.sections as { lines: { text: string; meaning: string; written?: unknown; startMs: number | null; endMs: number | null }[] }[])
       for (const line of section.lines) {
         const sungText = input.sungAs?.[at++];
-        if (sungText !== undefined) {
+        if (sungText === null) {
+          line.startMs = null;
+          line.endMs = null;
+        } else if (sungText !== undefined) {
           line.written = { text: line.text, meaning: line.meaning };
           line.text = sungText;
         }
