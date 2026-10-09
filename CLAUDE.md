@@ -182,6 +182,7 @@ pnpm check                            # fast lint/type/test/content/drift gate
 pnpm --filter @loro/mobile web        # the app in a browser (Rust core as WASM)
 pnpm --filter @loro/mobile android    # Android development build (needs cargo-ndk)
 pnpm --filter @loro/mobile test       # the app's unit tests (node:test via tsx)
+pnpm --filter @loro/mobile e2e        # the whole app headless in Node: every flow (ADR-0023)
 pnpm --filter @loro/mobile bundle     # proves the iOS bundle compiles
 pnpm --filter @loro/api dev           # :3000; requires PostgreSQL/auth configuration
 pnpm --filter @loro/landing dev       # the landing page on :4173 (builds live from GitHub)
@@ -194,6 +195,10 @@ cd apps/mobile && pnpm exec tsx --import ./src/shared/content/fixture.install.ts
 pnpm --filter @loro/api exec vitest run src/library/covers.test.ts
 cd packages/core-rs && cargo test <name>
 ```
+
+- The end-to-end flows (`apps/mobile/e2e`, [README](apps/mobile/e2e/README.md)) render the real app
+  with Jest against an in-memory API (`e2e/fakes/`); a route the app calls that the fake doesn't
+  answer fails them, so a new API call needs its fake route in the same change.
 
 - API `*.postgres.test.ts` files skip unless `LORO_TEST_DATABASE_URL` is set; `pnpm ci:local` runs
   them against a disposable PostgreSQL container.

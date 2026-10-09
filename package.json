@@ -11,7 +11,7 @@
   },
   "scripts": {
     "bootstrap": "./scripts/bootstrap.sh",
-    "check": "pnpm check:plan-index && pnpm test:android-config && pnpm test:ios-config && pnpm test:deploy && pnpm test:ci-local && pnpm test:native:evidence && pnpm test:dsp:spike && pnpm test:core-rs-build && pnpm contracts:check && pnpm --filter @loro/core-rs check:browser && pnpm --filter @loro/core-rs check:uniffi && turbo run lint typecheck test content:validate",
+    "check": "pnpm check:plan-index && pnpm test:android-config && pnpm test:ios-config && pnpm test:deploy && pnpm test:ci-local && pnpm test:native:evidence && pnpm test:dsp:spike && pnpm test:core-rs-build && pnpm contracts:check && pnpm --filter @loro/core-rs check:browser && pnpm --filter @loro/core-rs check:uniffi && turbo run lint typecheck test e2e content:validate",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint -- --fix",
