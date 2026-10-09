@@ -65,7 +65,7 @@ jest.mock('expo-notifications', () => {
     setNotificationChannelAsync: async () => null,
     getPermissionsAsync: async () => granted(),
     requestPermissionsAsync: async () => granted(),
-    getExpoPushTokenAsync: async () => ({ data: 'ExponentPushToken[e2e]', type: 'expo' }),
+    getExpoPushTokenAsync: async () => ({ data: 'ExponentPushToken[e2e-device-0000000000]', type: 'expo' }),
     scheduleNotificationAsync: async ({ content }: { content: { title: string; body: string; data: Record<string, unknown> } }) => {
       d.notifications.push({ title: content.title, body: content.body, data: content.data });
       return `local-${d.notifications.length}`;
@@ -77,6 +77,20 @@ jest.mock('expo-notifications', () => {
     },
   };
 });
+
+// The app's config as a store build has it: its scheme, and the EAS project when a test gives one.
+jest.mock('expo-constants', () => {
+  const actual = jest.requireActual('expo-constants');
+  const { device: d } = require('./fakes/device');
+  const config = () => actual.default.expoConfig ?? {};
+  const constants = Object.create(actual.default, {
+    expoConfig: { get: () => ({ ...config(), scheme: 'loro', extra: { ...config().extra, eas: d.pushProject ? { projectId: d.pushProject } : undefined } }) },
+  });
+  return { ...actual, __esModule: true, default: constants };
+});
+
+// Links into the app use its scheme, as a store build's do.
+jest.mock('expo-linking', () => ({ ...jest.requireActual('expo-linking'), createURL: (path: string) => `loro:/${path.startsWith('/') ? path : `/${path}`}` }));
 
 // Fonts are bundled assets on a phone: here they are "loaded" at once.
 jest.mock('expo-font', () => ({

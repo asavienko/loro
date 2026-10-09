@@ -127,8 +127,20 @@ export interface App {
 
 let mounted: RenderResult | null = null;
 
-/** Finds a pressable by its visible text or accessibility label. */
-function findByName(name: string | RegExp, root?: ReactTestInstance, index = 0): ReactTestInstance {
+/** Whether pressing it does something: it, or a view around it, takes presses and isn't disabled. */
+function pressable(node: ReactTestInstance): boolean {
+  for (let at: ReactTestInstance | null = node; at; at = at.parent) {
+    if (typeof at.props.onPress === 'function') return at.props.disabled !== true && at.props.accessibilityState?.disabled !== true;
+  }
+  return false;
+}
+
+/**
+ * Finds what is called `name` by its visible text or accessibility label. With no `index`, a match a
+ * press would act on comes first (a button over a heading with the same words); with one, the
+ * index counts every match in order.
+ */
+function findByName(name: string | RegExp, root?: ReactTestInstance, index?: number): ReactTestInstance {
   const scope = root ? within(root) : screen;
   const byLabel = scope.queryAllByLabelText(name);
   const byText = scope.queryAllByText(name);
@@ -136,6 +148,7 @@ function findByName(name: string | RegExp, root?: ReactTestInstance, index = 0):
   if (all.length === 0) {
     throw new Error(`Nothing on screen is called ${String(name)}.\nOn screen: ${visibleText().slice(0, 1500)}`);
   }
+  if (index === undefined) return all.find(pressable) ?? all[0];
   if (index >= all.length) throw new Error(`Only ${all.length} matches for ${String(name)}, not ${index + 1}`);
   return all[index];
 }
@@ -296,7 +309,7 @@ export async function launch(options: LaunchOptions = {}): Promise<App> {
     },
     settle: flush,
     tap: async (name, opts = {}) => {
-      const target = findByName(name, opts.within, opts.index ?? 0);
+      const target = findByName(name, opts.within, opts.index);
       await act(async () => {
         fireEvent.press(target);
       });
