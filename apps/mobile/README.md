@@ -35,6 +35,19 @@ One test file, from `apps/mobile` (the tests need the content fixture installed 
 pnpm exec tsx --import ./src/shared/content/fixture.install.ts --test src/shared/state/machine.test.ts
 ```
 
+### Every screen as HTML
+
+`pnpm --filter @loro/mobile screens` exports the web build (once; `-- --rebuild` again), runs it in
+headless Chromium and writes every screen and sheet, in each state worth seeing, as a static HTML
+file in `.screens/out/` (gitignored), with `index.html` showing them side by side. Nothing reaches a
+server: the API answers come from the seeded content (`packages/content/v2`) and the learner states
+are built by the real state machine (`scripts/screens/seed.ts`), so every number shown is the app's
+own. The scenarios are in `scripts/screens/scenarios.mjs`, and they find controls by role and
+accessible name; `-- --list` names them, `-- --only home` runs some, `-- --probe NAME` prints what a
+scenario's page offers, `-- --png` adds a screenshot of each, and `-- --inline` makes each file
+self-contained (fonts and images as data URLs, about 4 MB each) instead of sharing `assets/`.
+Playwright's Chromium is needed once: `pnpm --filter @loro/mobile exec playwright install chromium`.
+
 Expo Go can't run the app: the Rust core comes from `modules/loro-core`, a local Expo module
 ([its README](modules/loro-core/README.md)), and the player on the lock screen from
 `modules/loro-media` ([its README](modules/loro-media/README.md)).
