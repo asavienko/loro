@@ -19,8 +19,9 @@ actually considered, what we chose, and the consequences we accepted.
 | [0020](0020-posthog-us-cloud.md)                   | Analytics go to PostHog US Cloud        | Accepted           | 2026-10-02 |
 | [0021](0021-email-codes-through-amazon-ses.md)     | Email codes are sent through Amazon SES | Superseded by 0022 | 2026-10-02 |
 | [0022](0022-email-codes-through-resend.md)         | Email codes are sent through Resend     | Accepted           | 2026-10-05 |
+| [0023](0023-headless-end-to-end-tests.md)          | End-to-end tests run headless in Node   | Accepted           | 2026-10-09 |
 
-The next new record is 0023; numbers are never reused.
+The next new record is 0024; numbers are never reused.
 
 ### Removed records
 

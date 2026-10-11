@@ -47,4 +47,11 @@ export default tseslint.config(
     files: ['src/shared/state/clock.ts', 'scripts/**'],
     rules: { 'no-restricted-syntax': 'off' },
   },
+  // The end-to-end suite runs the app on a fake clock it sets and reads, and fakes native modules
+  // with CommonJS mocks (jest.mock factories must require).
+  {
+    files: ['e2e/**'],
+    languageOptions: { globals: { ...globals.jest } },
+    rules: { 'no-restricted-syntax': 'off', '@typescript-eslint/no-require-imports': 'off', '@typescript-eslint/no-explicit-any': 'off' },
+  },
 );
