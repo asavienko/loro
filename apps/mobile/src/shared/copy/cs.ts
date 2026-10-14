@@ -297,6 +297,7 @@ export function makeCs(n: Plural): Copy {
         hintStart: 'Začíná takto',
         nextStep: 'Další krok',
         showAnswer: 'Ukázat odpověď',
+        backToListening: 'Zpět k poslechu',
         again: 'Znovu',
         gotIt: 'Umím',
         marked: { missed: 'Označeno: znovu', hard: 'Označeno: těžké', easy: 'Označeno: snadné' },
@@ -361,7 +362,7 @@ export function makeCs(n: Plural): Copy {
       repeats: {
         auto: 'Opakování: automaticky (3× u nových a nejistých, 1× u zapamatovaných)',
         one: 'Opakování: 1',
-        three: 'Opakování: 3',
+        times: (count) => `Opakování: ${count}`,
       },
       playMode: {
         repeat: 'Na konci: začít frontu znovu',
@@ -371,7 +372,7 @@ export function makeCs(n: Plural): Copy {
       repeatsToast: {
         auto: 'Každá fráze zazní 3×, dokud je nová, a 1×, až se zapamatuje',
         one: 'Každá fráze zazní jednou',
-        three: 'Každá fráze zazní 3×',
+        times: (count) => `Každá fráze zazní ${count}×`,
       },
       playModeToast: {
         repeat: 'Na konci začne fronta znovu',

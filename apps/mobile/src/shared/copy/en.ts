@@ -308,6 +308,7 @@ export function makeEn(n: Plural) {
         hintStart: 'It starts',
         nextStep: 'Next step',
         showAnswer: 'Show answer',
+        backToListening: 'Back to listening',
         again: 'Again',
         gotIt: 'Got it',
         marked: { missed: 'Marked again', hard: 'Marked hard', easy: 'Marked easy' } satisfies Record<Grade, string>,
@@ -381,7 +382,7 @@ export function makeEn(n: Plural) {
       repeats: {
         auto: 'Repetitions: automatic (3 while new or shaky, 1 once it sticks)',
         one: 'Repetitions: 1',
-        three: 'Repetitions: 3',
+        times: (count: number) => `Repetitions: ${count}`,
       },
       playMode: {
         repeat: 'At the end: play the queue again',
@@ -392,7 +393,7 @@ export function makeEn(n: Plural) {
       repeatsToast: {
         auto: 'Each phrase plays 3× while new, 1× once it sticks',
         one: 'Each phrase plays once',
-        three: 'Each phrase plays 3 times',
+        times: (count: number) => `Each phrase plays ${count} times`,
       },
       playModeToast: {
         repeat: 'At the end, the queue starts again',

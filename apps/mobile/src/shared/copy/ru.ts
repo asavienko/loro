@@ -288,6 +288,7 @@ export function makeRu(n: Plural): Copy {
         hintStart: 'Начинается так',
         nextStep: 'Дальше',
         showAnswer: 'Показать ответ',
+        backToListening: 'Вернуться к прослушиванию',
         again: 'Ещё раз',
         gotIt: 'Помню',
         marked: { missed: 'Отмечено: ещё раз', hard: 'Отмечено: трудно', easy: 'Отмечено: легко' },
@@ -352,7 +353,7 @@ export function makeRu(n: Plural): Copy {
       repeats: {
         auto: 'Повторы: авто (3 для новых или неуверенных, 1 для усвоенных)',
         one: 'Повторы: 1',
-        three: 'Повторы: 3',
+        times: (count) => `Повторы: ${count}`,
       },
       playMode: {
         repeat: 'В конце: начать очередь заново',
@@ -362,7 +363,7 @@ export function makeRu(n: Plural): Copy {
       repeatsToast: {
         auto: 'Каждая фраза звучит 3× пока новая, 1× когда запомнится',
         one: 'Каждая фраза звучит один раз',
-        three: 'Каждая фраза звучит 3 раза',
+        times: (count) => `Каждая фраза звучит ${count} ${count >= 5 ? 'раз' : 'раза'}`,
       },
       playModeToast: {
         repeat: 'В конце очередь начнётся заново',

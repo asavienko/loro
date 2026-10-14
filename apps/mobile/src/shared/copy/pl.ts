@@ -295,6 +295,7 @@ export function makePl(n: Plural): Copy {
         hintStart: 'Zaczyna się tak',
         nextStep: 'Dalej',
         showAnswer: 'Pokaż odpowiedź',
+        backToListening: 'Wróć do słuchania',
         again: 'Jeszcze raz',
         gotIt: 'Pamiętam',
         marked: { missed: 'Oznaczono: jeszcze raz', hard: 'Oznaczono: trudno', easy: 'Oznaczono: łatwo' },
@@ -359,7 +360,7 @@ export function makePl(n: Plural): Copy {
       repeats: {
         auto: 'Powtórzenia: auto (3 dla nowych lub niepewnych, 1 dla utrwalonych)',
         one: 'Powtórzenia: 1',
-        three: 'Powtórzenia: 3',
+        times: (count) => `Powtórzenia: ${count}`,
       },
       playMode: {
         repeat: 'Na końcu: zacznij kolejkę od nowa',
@@ -369,7 +370,7 @@ export function makePl(n: Plural): Copy {
       repeatsToast: {
         auto: 'Każda fraza gra 3×, gdy jest nowa, i 1×, gdy już ją znasz',
         one: 'Każda fraza gra raz',
-        three: 'Każda fraza gra 3 razy',
+        times: (count) => `Każda fraza gra ${count} razy`,
       },
       playModeToast: {
         repeat: 'Na końcu kolejka zacznie się od nowa',

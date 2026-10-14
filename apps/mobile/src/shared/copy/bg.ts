@@ -286,6 +286,7 @@ export function makeBg(n: Plural): Copy {
         hintStart: 'Започва така',
         nextStep: 'Напред',
         showAnswer: 'Покажи отговора',
+        backToListening: 'Обратно към слушането',
         again: 'Отново',
         gotIt: 'Знам го',
         marked: { missed: 'Отбелязано: отново', hard: 'Отбелязано: трудно', easy: 'Отбелязано: лесно' },
@@ -350,7 +351,7 @@ export function makeBg(n: Plural): Copy {
       repeats: {
         auto: 'Повторения: автоматично (3 за нови или несигурни, 1 за усвоени)',
         one: 'Повторения: 1',
-        three: 'Повторения: 3',
+        times: (count) => `Повторения: ${count}`,
       },
       playMode: {
         repeat: 'Накрая: пусни опашката отново',
@@ -360,7 +361,7 @@ export function makeBg(n: Plural): Copy {
       repeatsToast: {
         auto: 'Всяка фраза звучи 3× докато е нова, 1× щом я запомните',
         one: 'Всяка фраза звучи веднъж',
-        three: 'Всяка фраза звучи 3 пъти',
+        times: (count) => `Всяка фраза звучи ${count} пъти`,
       },
       playModeToast: {
         repeat: 'Накрая опашката започва отначало',

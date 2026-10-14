@@ -230,6 +230,26 @@ describe('moving the loop on', () => {
     expect(audio.clips().at(-1)).toBe('es-ES-cafe-01');
   });
 
+  it('shows the phrase\'s notes with the hint, and goes back to listening', async () => {
+    const app = await playerOpen();
+    const { c } = app;
+    await app.tap(c.player.round.hint);
+    // The loop waits while the hint is read.
+    expect(app.sees(c.player.paused)).toBe(true);
+    await app.advance(20 * SECOND);
+    expect(app.sees(hintOf(CAFE_1.target))).toBe(true);
+    expect(app.sees(c.phrase.notes.mnemonic)).toBe(true);
+    await app.tap(c.phrase.notes.grammar);
+    expect(app.sees(c.phrase.notes.pronunciation)).toBe(true);
+    await app.tap(c.player.round.backToListening);
+    expect(app.sees(hintOf(CAFE_1.target))).toBe(false);
+    expect(app.sees(c.player.round.hint)).toBe(true);
+    expect(app.sees(CAFE_1.prompt)).toBe(true);
+    // Playing again, from the prompt.
+    expect(app.sees(c.common.pause)).toBe(true);
+    expect(app.sees(c.player.instruction.native(language(app, 'en-GB')))).toBe(true);
+  });
+
   it('plays on from a paused loop when Next step is pressed', async () => {
     const app = await playerOpen();
     const { c } = app;
@@ -521,7 +541,7 @@ describe('the settings sheet', () => {
     const app = await playerOpen();
     const { c } = app;
     await openSettings(app);
-    await app.tap(c.player.repeats.three);
+    await app.tap(c.player.repeats.times(3));
     expect((await app.saved()).prefs.repeats).toBe(3);
     await app.tap(c.player.repeats.auto);
     expect((await app.saved()).prefs.repeats).toBe('auto');
@@ -548,11 +568,15 @@ describe('the settings sheet', () => {
     await app.tap(c.player.round.ask);
     expect((await app.saved()).prefs.askEasyOrHard).toBe(false);
     await app.tap(c.common.close);
-    // No grades beside the play button now.
+    // Again and Got it beside the play button while it plays, in place of Hard and Easy.
     expect(app.sees(gradeWord(app, 'hard'))).toBe(false);
     expect(app.sees(gradeWord(app, 'easy'))).toBe(false);
-    await app.tap(c.player.round.nextStep);
-    await app.tap(c.player.round.nextStep);
+    expect(app.sees(c.player.round.again)).toBe(true);
+    await app.tap(c.player.round.gotIt);
+    expect(await inWindow(app)).toEqual([['cafe-01', 'easy']]);
+    await app.tap(c.player.round.gotIt);
+    expect(await inWindow(app)).toEqual([]);
+    while (app.sees(c.player.round.nextStep)) await app.tap(c.player.round.nextStep);
     expect(app.sees(c.player.round.again)).toBe(true);
     await app.tap(c.player.round.gotIt);
     expect(await inWindow(app)).toEqual([['cafe-01', 'easy']]);
@@ -563,17 +587,22 @@ describe('the settings sheet', () => {
 });
 
 describe('the repetitions chip', () => {
-  it('steps the repetitions auto → 1 → 3 → auto, saying what each does', async () => {
+  it('steps the repetitions auto → 1 → 2 → 3 → 4 → 5 → auto, saying what each does', async () => {
     const app = await playerOpen();
     const { c } = app;
+    // Paused on the prompt, so the chip stays while it is stepped.
+    await app.tap(c.common.pause);
     await app.tap(c.player.repeats.auto);
     expect(app.sees(c.player.repeatsToast.one)).toBe(true);
     expect(app.sees(c.player.repeats.one)).toBe(true);
     expect((await app.saved()).prefs.repeats).toBe(1);
     await app.tap(c.player.repeats.one);
-    expect(app.sees(c.player.repeatsToast.three)).toBe(true);
-    expect((await app.saved()).prefs.repeats).toBe(3);
-    await app.tap(c.player.repeats.three);
+    for (const plays of [2, 3, 4, 5] as const) {
+      expect(app.sees(c.player.repeatsToast.times(plays))).toBe(true);
+      expect((await app.saved()).prefs.repeats).toBe(plays);
+      expect(app.sees(c.player.round.playOf(1, plays))).toBe(true);
+      await app.tap(c.player.repeats.times(plays));
+    }
     expect(app.sees(c.player.repeatsToast.auto)).toBe(true);
     expect((await app.saved()).prefs.repeats).toBe('auto');
   });

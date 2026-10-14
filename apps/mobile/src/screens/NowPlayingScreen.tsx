@@ -53,6 +53,8 @@ import { useRoom } from '../ui/useRoom';
 import { useRate } from './useRate';
 
 const STEPS: PlayerStep[] = ['listen', 'say', 'check'];
+type NoteKind = keyof Phrase['notes'];
+const NOTE_KINDS: NoteKind[] = ['mnemonic', 'grammar', 'pronunciation'];
 /** The page: at most this wide. */
 const MAX_WIDTH = 512;
 /** The picture behind the page: this share of the screen, fading into the night. */
@@ -212,6 +214,7 @@ export function NowPlayingScreen() {
                   {step === 'listen' ? prompt.text : c.player.round.sayIt(targetName)}
                 </Txt>
                 <HintCard phrase={phrase} tone={tone} />
+                <HintNotes phrase={phrase} />
               </>
             ) : step === 'listen' ? (
               <Txt weight={600} color="inverseOnSurface" lang={prompt.lang} style={{ fontSize: size.phrase, lineHeight: size.phraseLine }}>
@@ -232,18 +235,31 @@ export function NowPlayingScreen() {
             {endedOnce ? (
               <EndPanel onClose={close} />
             ) : hinted ? (
-              <Press accessibilityRole="button" onPress={() => skip(step === 'listen' ? 2 : 1)} style={({ pressed }) => [styles.showAnswer, { height: size.show }, pressed && styles.accentPressed]}>
-                <Icon name="visibility" size={36} color="onPrimaryFixed" />
-                <Txt weight={700} color="onPrimaryFixed" numberOfLines={1} adjustsFontSizeToFit style={styles.big}>
-                  {c.player.round.showAnswer}
-                </Txt>
-              </Press>
+              <>
+                <Press accessibilityRole="button" onPress={() => skip(step === 'listen' ? 2 : 1)} style={({ pressed }) => [styles.showAnswer, { height: size.show }, pressed && styles.accentPressed]}>
+                  <Icon name="visibility" size={36} color="onPrimaryFixed" />
+                  <Txt weight={700} color="onPrimaryFixed" numberOfLines={1} adjustsFontSizeToFit style={styles.big}>
+                    {c.player.round.showAnswer}
+                  </Txt>
+                </Press>
+                <Tool
+                  icon="hearing"
+                  label={c.player.round.backToListening}
+                  height={size.tool}
+                  onPress={() => {
+                    // From the prompt again, playing.
+                    setHintFor(null);
+                    actions.restart();
+                    actions.play();
+                  }}
+                />
+              </>
             ) : step === 'check' ? (
               <CheckControls size={size} ask={ask} phrase={phrase} onToggle={toggle} />
             ) : (
               <>
                 <View style={styles.playRow}>
-                  {ask && <Vote grade="hard" size={size} phrase={phrase} />}
+                  <Vote grade={ask ? 'hard' : 'missed'} label={ask ? c.common.grade.hard : c.player.round.again} size={size} phrase={phrase} />
                   <Press
                     accessibilityRole="button"
                     accessibilityLabel={playing ? c.common.pause : c.common.play}
@@ -252,11 +268,21 @@ export function NowPlayingScreen() {
                   >
                     <Icon name={playing ? 'pause' : 'play_arrow'} fill size={Math.round(size.play * 0.46)} color="inverseOnSurface" />
                   </Press>
-                  {ask && <Vote grade="easy" size={size} phrase={phrase} />}
+                  <Vote grade="easy" label={ask ? c.common.grade.easy : c.player.round.gotIt} size={size} phrase={phrase} />
                 </View>
                 <View style={styles.tools}>
                   <Tool icon="replay" label={c.player.round.replay} height={size.tool} onPress={actions.restart} />
-                  <Tool icon="lightbulb" accent label={c.player.round.hint} height={size.tool} onPress={() => setHintFor(hintKey)} />
+                  <Tool
+                    icon="lightbulb"
+                    accent
+                    label={c.player.round.hint}
+                    height={size.tool}
+                    onPress={() => {
+                      // The loop waits while the hint and its notes are read.
+                      if (playing) actions.pause();
+                      setHintFor(hintKey);
+                    }}
+                  />
                   <Tool icon="skip_next" fill label={c.player.round.nextStep} height={size.tool} onPress={() => skip(1)} />
                 </View>
               </>
@@ -346,7 +372,7 @@ function StepTrack({ step, label }: { step: PlayerStep; label: string | null }) 
   );
 }
 
-/** How many times the phrase plays, and which play this is; it steps the setting on (Auto, 1, 3). */
+/** How many times the phrase plays, and which play this is; it steps the setting on (Auto, 1 to 5). */
 function RepeatChip() {
   const c = useCopy();
   const { state, actions } = useStore();
@@ -362,7 +388,7 @@ function RepeatChip() {
       haptic="select"
       onPress={() => {
         actions.setPrefs({ repeats: next });
-        toast(next === 'auto' ? c.player.repeatsToast.auto : next === 1 ? c.player.repeatsToast.one : c.player.repeatsToast.three);
+        toast(next === 'auto' ? c.player.repeatsToast.auto : next === 1 ? c.player.repeatsToast.one : c.player.repeatsToast.times(next));
       }}
       style={({ pressed }) => [styles.chip, pressed && styles.glassPressed]}
     >
@@ -382,7 +408,7 @@ function RepeatChip() {
 }
 
 function repeatsLabel(c: ReturnType<typeof useCopy>, setting: RepeatsSetting): string {
-  return setting === 'auto' ? c.player.repeats.auto : setting === 1 ? c.player.repeats.one : c.player.repeats.three;
+  return setting === 'auto' ? c.player.repeats.auto : setting === 1 ? c.player.repeats.one : c.player.repeats.times(setting);
 }
 
 /** The learner's turn: how long until the answer plays, from the length the machine fixed for it. */
@@ -440,6 +466,48 @@ function HintCard({ phrase, tone }: { phrase: Phrase; tone: TopicTone }) {
   );
 }
 
+/**
+ * Under the hint, the phrase's notes as three tabs: its mnemonic, its rule and its sounds, in the
+ * learner's language where there is a version in it. The notes sheet (Settings) has the rest.
+ */
+function HintNotes({ phrase }: { phrase: Phrase }) {
+  const c = useCopy();
+  const { state } = useStore();
+  const [tab, setTab] = useState<NoteKind>('mnemonic');
+  const native = state.learner.profile.nativeLang;
+  const translated = native.startsWith('en-') ? undefined : phrase.noteTranslations[tab]?.[native];
+  const note = translated ?? phrase.notes[tab];
+  return (
+    <View style={[styles.glassStrong, styles.notesCard]}>
+      <View accessibilityRole="tablist" accessibilityLabel={c.phrase.notesTitle} style={styles.noteTabs}>
+        {NOTE_KINDS.map((k) => {
+          const on = k === tab;
+          return (
+            <Press
+              key={k}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: on }}
+              haptic="select"
+              onPress={() => setTab(k)}
+              style={[styles.noteTab, on && styles.accent]}
+            >
+              <Txt variant="label" weight={700} color={on ? 'onPrimaryFixed' : 'inverseOnSurface'} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+                {c.phrase.notes[k]}
+              </Txt>
+            </Press>
+          );
+        })}
+      </View>
+      <Txt weight={700} color="inverseOnSurface" lang={translated ? native : 'en'}>
+        {note.title}
+      </Txt>
+      <Txt color="outlineVariant" lang={translated ? native : 'en'}>
+        {note.text}
+      </Txt>
+    </View>
+  );
+}
+
 /** The current phrase's rating while it can still be changed, and a tap on it again takes it back. */
 function useVote(phraseId: string): { chosen: Grade | null; vote: (grade: Grade) => void } {
   const { state, actions } = useStore();
@@ -451,9 +519,8 @@ function useVote(phraseId: string): { chosen: Grade | null; vote: (grade: Grade)
   return { chosen, vote: (grade) => (grade === chosen ? actions.unrate() : rate(grade)) };
 }
 
-/** Hard or Easy beside the play button: given at once, and shown as given. */
-function Vote({ grade, size, phrase }: { grade: 'hard' | 'easy'; size: Sizes; phrase: Phrase }) {
-  const c = useCopy();
+/** A grade beside the play button (Hard / Easy, or Again / Got it): given at once, and shown as given. */
+function Vote({ grade, label, size, phrase }: { grade: Grade; label: string; size: Sizes; phrase: Phrase }) {
   const { chosen, vote } = useVote(phrase.id);
   const on = chosen === grade;
   return (
@@ -466,7 +533,7 @@ function Vote({ grade, size, phrase }: { grade: 'hard' | 'easy'; size: Sizes; ph
       style={({ pressed }) => [styles.glass, styles.circle, { width: size.vote, height: size.vote }, on && styles.accent, pressed && (on ? styles.accentPressed : styles.glassPressed)]}
     >
       <Txt weight={700} color={on ? 'onPrimaryFixed' : 'inverseOnSurface'} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={styles.voteText}>
-        {c.common.grade[grade]}
+        {label}
       </Txt>
     </Press>
   );
@@ -853,5 +920,8 @@ const styles = StyleSheet.create({
   segment: { flex: 1, minWidth: 0, height: 48, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
   actions: { flexDirection: 'row', gap: 6 },
   action: { flex: 1, minWidth: 0, minHeight: 72, alignItems: 'center', justifyContent: 'center', gap: 4, borderRadius: 20, paddingHorizontal: 4, backgroundColor: colors.nightGlassStrong },
+  notesCard: { gap: 8, padding: 12, borderRadius: radius['3xl'] },
+  noteTabs: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: radius.full, backgroundColor: colors.nightGlass },
+  noteTab: { flex: 1, minWidth: 0, minHeight: 36, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
   notes: { borderRadius: radius['3xl'], padding: 12, backgroundColor: colors.surface },
 });
