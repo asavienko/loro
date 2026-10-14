@@ -186,6 +186,8 @@ export interface Prefs {
   pauseLength: PauseLength;
   /** The queue's swipe-and-drag hint has done its job (a swipe or drag worked): it folds away. */
   queueHintDone: boolean;
+  /** The player asks "Was it easy or hard?" (Hard / Easy); off, it offers Again and Got it (Missed / Easy). */
+  askEasyOrHard: boolean;
   /** When each setting last changed, so tabs of this browser keep the newest value of each. */
   changedAt: Partial<Record<Exclude<keyof Prefs, 'changedAt'>, number>>;
 }

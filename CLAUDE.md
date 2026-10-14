@@ -17,7 +17,7 @@ E2E/storybook/workbench suites were removed; they remain in Git history (last pr
 Every screen and sheet of the web prototype is ported. Four tabs: Home, Explore, Create and Library
 (plan [107](plans/archive/2026-09-30/107-one-player.md)): songs live in their sets (a music-note
 icon tells them from phrases) and play in the one player, rated like phrases; albums are in Library;
-one light palette.
+one light palette, and a night phrase player.
 
 **The app is connected** (plan [106](plans/106-connected-app.md),
 [library.md](docs/architecture/library.md)): it ships no phrase content. It downloads each course's

@@ -314,6 +314,7 @@ function sanitizePrefs(value: unknown): Prefs {
     skippedDemo: value.skippedDemo === true,
     pauseLength: value.pauseLength === 'longer' ? 'longer' : 'standard',
     queueHintDone: value.queueHintDone === true,
+    askEasyOrHard: value.askEasyOrHard !== false,
     changedAt: Object.fromEntries(Object.entries(isObject(value.changedAt) ? value.changedAt : {}).filter(([k, at]) => k in fresh && num(at))) as Prefs['changedAt'],
   };
 }

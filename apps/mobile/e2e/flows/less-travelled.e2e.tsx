@@ -267,6 +267,8 @@ describe('Home and the Library', () => {
     expect(audio.clips().at(-1)).toBe('en-GB-cafe-01');
     // Rated already, it is not rated again: the player's Next takes it to the end of the list.
     await app.open('/player');
+    // The full player offers the next phrase in its Check step.
+    while (!app.sees(c.player.next)) await app.tap(c.player.round.nextStep);
     await app.tap(c.player.next);
     expect(app.sees(c.player.end.playAgain)).toBe(true);
     await app.tap(c.player.end.playAgain);
@@ -352,7 +354,11 @@ describe('the queue and the end of a pass', () => {
     const { c } = app;
     await app.tap(c.set.playAll(TITLE));
     await app.tap(new RegExp(`^${c.player.dialog}`));
-    for (let i = 0; i < 5; i++) await app.tap(c.player.next);
+    for (let i = 0; i < 5; i++) {
+      // The full player offers the next phrase in its Check step.
+      while (!app.sees(c.player.next)) await app.tap(c.player.round.nextStep);
+      await app.tap(c.player.next);
+    }
     await app.tap(c.player.summary);
     expect(app.sees(c.summary.title)).toBe(true);
     await app.tap(c.common.close);

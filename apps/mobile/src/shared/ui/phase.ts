@@ -91,3 +91,11 @@ export function phaseStepLabel(c: Copy, phase: Exclude<Phase, 'rate'>, promptLan
       return c.player.again;
   }
 }
+
+/** The player's three steps (v2-prototype-decisions.md, "Player"). */
+export type PlayerStep = 'listen' | 'say' | 'check';
+
+/** Listen is the prompt, Say it the learner's turn, Check the target, its echo and the rating hold. */
+export function playerStep(phase: Phase): PlayerStep {
+  return phase === 'native' ? 'listen' : phase === 'pause' ? 'say' : 'check';
+}

@@ -22,9 +22,10 @@ async function pausedQueue(): Promise<App> {
   return app;
 }
 
-/** Opens the queue from the mini player, through the full player's queue button. */
+/** Opens the queue from the mini player, through the full player's Settings and its queue button. */
 async function openQueue(app: App): Promise<void> {
   await app.tap(new RegExp(`^${app.c.player.dialog}: `));
+  await app.tap(app.c.player.round.settings);
   await app.tap(app.c.player.openQueue);
   await app.waitFor(app.c.queue.title);
 }
