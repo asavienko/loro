@@ -108,10 +108,10 @@ export function PullHandle({ children, style }: { children?: ReactNode; style?: 
 }
 
 /** The short bar that says a window can be pulled down. Decorative: Close does the same for everyone. */
-export function Grabber() {
+export function Grabber({ color }: { color?: string } = {}) {
   return (
     <View accessible={false} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={styles.grabberZone}>
-      <View style={styles.grabber} />
+      <View style={[styles.grabber, color !== undefined && { backgroundColor: color }]} />
     </View>
   );
 }

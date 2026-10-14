@@ -166,7 +166,9 @@ export interface PendingRating {
 }
 
 export type PlayMode = 'repeat' | 'continue';
-export type RepeatsSetting = 'auto' | 1 | 3;
+/** How many times each phrase plays: Auto (3 while new or shaky, 1 once it sticks), or 1 to 5. */
+export type Plays = 1 | 2 | 3 | 4 | 5;
+export type RepeatsSetting = 'auto' | Plays;
 export type Speed = 0.8 | 1 | 1.25;
 export type SortKey = 'set' | 'az' | 'due' | 'weakest';
 /** The learner's turn: the standard pause, or a longer one (about twice the phrase). */
@@ -186,6 +188,8 @@ export interface Prefs {
   pauseLength: PauseLength;
   /** The queue's swipe-and-drag hint has done its job (a swipe or drag worked): it folds away. */
   queueHintDone: boolean;
+  /** The player asks "Was it easy or hard?" (Hard / Easy); off, it offers Again and Got it (Missed / Easy). */
+  askEasyOrHard: boolean;
   /** When each setting last changed, so tabs of this browser keep the newest value of each. */
   changedAt: Partial<Record<Exclude<keyof Prefs, 'changedAt'>, number>>;
 }
@@ -226,7 +230,7 @@ export interface PlayerState {
   /** 1-based repetition of the current phrase. */
   repetition: number;
   /** Repetitions for the current phrase, from the setting (auto picks 3 or 1). */
-  repeats: 1 | 3;
+  repeats: Plays;
   shuffle: boolean;
   /** Set the queue was started from; null for mixed queues such as reviews. */
   setId: string | null;

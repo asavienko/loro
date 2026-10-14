@@ -3,28 +3,29 @@
 // Covers:
 //  - The loop of a phrase: prompt clip, the learner's turn, target clip, echo, three repetitions while
 //    new, the hold for a rating, then on; the target hidden until heard (full player and mini player);
-//    the steps, the repetition counter and the listened time.
-//  - Transport: play/pause/resume from the full player and the mini player; next, previous (restart
-//    after a few seconds, previous phrase before them); jumping to a phrase in the set's list; the
-//    queue button; closing the paused mini player; opening and closing the full player; the app going
-//    to the background pausing playback.
-//  - Settings in the transport: speed (clip rate), repetitions (auto/1/3) and their toasts, play mode
-//    (again/continue) and its toast; the action row: like, notes, add to set.
-//  - Ratings: each grade from the bar over the tabs and from the full player; Undo (bar and player);
-//    changing the grade after an undo; the five-minute window and the commit to the log; Missed and
-//    Hard bringing a phrase back at the end of the queue; a rated phrase skipping the hold; a rating
-//    in the hold moving on with an Undo for the previous phrase; one repetition for a phrase under
-//    review; numbers on screen changing only after real ratings.
+//    the three steps (Listen, Say it, Check), the repetition chip, the countdown to the answer.
+//  - Moving the loop on from the full player: Next step (Listen → Say it → Check), Hint (how the
+//    phrase starts) and Show answer, Replay.
+//  - Transport: play/pause/resume from the full player and the mini player; the next phrase from the
+//    Check step; jumping to a phrase in the set's list; the queue from Settings; closing the paused
+//    mini player; opening and closing the full player; the app going to the background pausing playback.
+//  - The repetitions chip (auto/1/3) and its toasts; the Settings sheet: asking easy or hard, speed
+//    (clip rate), repetitions, play mode (again/continue) and its toast; like, notes, add to set.
+//  - Ratings: each grade from the bar over the tabs; Hard and Easy beside the play button and in the
+//    Check step, or Again and Got it when the player doesn't ask; the toast saying when the phrase
+//    comes back, with Undo; tapping the grade given again to take it back; the five-minute window and
+//    the commit to the log; Hard bringing a phrase back at the end of the queue; a rated phrase
+//    skipping the hold; a rating in the hold moving on with Undo for it on the next phrase; one
+//    repetition for a phrase under review; numbers on screen changing only after real ratings.
 //  - Audio failures: a clip that never loads, a clip the server is making (then ready), a clip whose
 //    making failed, a missing clip (and "show the text anyway").
 //  - The end of the queue: one-pass queue (a review) and its panel (play again / next set / close),
 //    repeat mode (the pass notice and the next set it offers, its dismiss button), continue mode, the
 //    session summary sheet.
 import { languageName } from '@shared/copy';
+import { hintOf } from '@shared/ui/hint';
 import { phaseStepLabel } from '@shared/ui/phase';
-import { GestureDetector, State } from 'react-native-gesture-handler';
-import { fireGestureHandler } from 'react-native-gesture-handler/jest-utils';
-import { act, audio, DAY, fireEvent, launch, MINUTE, screen, SECOND, type App, type ReactTestInstance } from '../harness';
+import { audio, DAY, launch, MINUTE, screen, SECOND, type App } from '../harness';
 
 const SET = 'Café & Mañanas';
 const CAFE_1 = { prompt: 'A cortado, please', target: 'Me pone un cortado, por favor' };
@@ -55,11 +56,26 @@ async function until(app: App, name: string | RegExp, limitMs = 60 * SECOND): Pr
   }
 }
 
+/** The next phrase: in the full player, Next step on to Check, where Next phrase is; on the bar, its Next. */
+async function nextPhrase(app: App): Promise<void> {
+  for (let i = 0; i < 3 && !app.sees(app.c.player.next); i++) await app.tap(app.c.player.round.nextStep);
+  await app.tap(app.c.player.next);
+}
+
+/** Opens the player's Settings sheet. */
+const openSettings = (app: App) => app.tap(app.c.player.round.settings);
+
+const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const language = (app: App, code: 'en-GB' | 'es-ES') => languageName(code, app.c.locale);
 const gradeWord = (app: App, g: 'missed' | 'hard' | 'easy') => app.c.common.grade[g];
 /** The grade buttons over the tab bar. */
 const barRate = (app: App, g: 'missed' | 'hard' | 'easy') => app.c.player.rateAs(gradeWord(app, g));
-const undoRating = /^Undo rating/;
+/** Whether the grade labelled `word` shows as the one given. */
+const chosen = (word: string) =>
+  screen.getAllByText(word).some((t) => {
+    for (let n: typeof t | null = t; n; n = n.parent) if (n.props.accessibilityRole === 'radio') return n.props.accessibilityState?.checked === true;
+    return false;
+  });
 
 /** What the phone saved that is a committed rating, as [phrase, grade]. */
 async function committed(app: App): Promise<[string, string][]> {
@@ -89,7 +105,7 @@ describe('the loop of a phrase', () => {
     await until(app, c.player.instruction.echo(language(app, 'es-ES')));
     // Then the second repetition begins with the prompt again.
     await until(app, c.player.instruction.native(language(app, 'en-GB')));
-    expect(app.sees(c.player.repetition(2, 3))).toBe(true);
+    expect(app.sees(c.player.round.playOf(2, 3))).toBe(true);
     expect(audio.clips()).toEqual(['en-GB-cafe-01', 'es-ES-cafe-01', 'en-GB-cafe-01']);
   });
 
@@ -99,14 +115,13 @@ describe('the loop of a phrase', () => {
     // Mini player first: only the prompt.
     expect(app.sees(new RegExp(`^${c.player.dialog}: ${CAFE_1.prompt}`))).toBe(true);
     await openPlayer(app);
-    expect(app.sees(c.player.hidden(language(app, 'es-ES')))).toBe(true);
+    expect(app.sees(CAFE_1.prompt)).toBe(true);
     expect(app.sees(CAFE_1.target)).toBe(false);
     await until(app, c.player.instruction.pause(language(app, 'es-ES')));
     expect(app.sees(CAFE_1.target)).toBe(false);
     // The target plays and shows from there on.
     await until(app, c.player.instruction.target(language(app, 'es-ES')));
     expect(app.sees(CAFE_1.target)).toBe(true);
-    expect(app.sees(c.player.hidden(language(app, 'es-ES')))).toBe(false);
     // The mini player shows it too, once the full player is closed.
     await app.tap(c.player.close);
     expect(app.sees(new RegExp(`^${c.player.dialog}: ${CAFE_1.target}`))).toBe(true);
@@ -117,21 +132,35 @@ describe('the loop of a phrase', () => {
     const { c } = app;
     await until(app, c.player.instruction.target(language(app, 'es-ES')));
     await app.tap(c.player.next);
-    expect(app.sees(c.player.hidden(language(app, 'es-ES')))).toBe(true);
     expect(app.sees(CAFE_2.target)).toBe(false);
     expect(app.sees(CAFE_2.prompt)).toBe(true);
   });
 
-  it('shows the four steps, the repetition and the time listened', async () => {
+  it('shows the three steps and the repetition', async () => {
     const app = await playerOpen();
     const { c } = app;
     expect(app.sees(c.player.steps)).toBe(true);
-    expect(app.sees(c.player.repetition(1, 3))).toBe(true);
-    await app.advance(3_000);
-    // The time listened is real: it runs while the phrase plays.
-    expect(app.sees(/^0:0[2-3]/)).toBe(true);
-    await until(app, c.player.repetition(2, 3));
-    expect(app.sees(/^0:0[6-8]/)).toBe(true);
+    expect(app.sees(`1 ${c.player.round.steps.listen}`)).toBe(true);
+    expect(app.sees(`2 ${c.player.round.steps.say}`)).toBe(true);
+    expect(app.sees(`3 ${c.player.round.steps.check}`)).toBe(true);
+    expect(app.sees(c.player.round.playOf(1, 3))).toBe(true);
+    await until(app, c.player.round.playOf(2, 3));
+  });
+
+  it('counts down to the answer while it is the learner’s turn', async () => {
+    const app = await playerOpen();
+    const { c } = app;
+    await until(app, c.player.instruction.pause(language(app, 'es-ES')));
+    expect(app.sees(c.player.round.sayIt(language(app, 'es-ES')))).toBe(true);
+    const left = () => {
+      for (let n = 1; n <= 30; n++) if (app.sees(c.player.round.answerIn(n))) return n;
+      return null;
+    };
+    const first = left();
+    expect(first).not.toBeNull();
+    await app.advance(1_000);
+    const later = left();
+    if (later !== null) expect(later).toBeLessThan(first!);
   });
 
   it('guides a first-time learner with a line while it is their turn', async () => {
@@ -148,7 +177,6 @@ describe('the loop of a phrase', () => {
     const app = await playerOpen();
     const { c } = app;
     await until(app, c.player.instruction.rate);
-    expect(app.sees(c.player.repetition(3, 3))).toBe(true);
     expect(audio.clips()).toEqual(Array.from({ length: 3 }, () => ['en-GB-cafe-01', 'es-ES-cafe-01']).flat());
     expect(app.sees(c.player.howDidItGo)).toBe(true);
     // Nobody rated: the hold ends (4 s) and the next phrase starts.
@@ -166,6 +194,84 @@ describe('the loop of a phrase', () => {
     await app.tap(c.common.pause);
     expect(app.sees(c.player.paused)).toBe(true);
     expect(app.sees(c.player.instruction.rate)).toBe(false);
+  });
+});
+
+describe('moving the loop on', () => {
+  it('goes Listen → Say it → Check with Next step, and the target plays', async () => {
+    const app = await playerOpen();
+    const { c } = app;
+    await app.advance(500);
+    await app.tap(c.player.round.nextStep);
+    expect(app.sees(c.player.instruction.pause(language(app, 'es-ES')))).toBe(true);
+    expect(app.sees(c.player.round.sayIt(language(app, 'es-ES')))).toBe(true);
+    expect(app.sees(CAFE_1.target)).toBe(false);
+    await app.tap(c.player.round.nextStep);
+    expect(app.sees(c.player.instruction.target(language(app, 'es-ES')))).toBe(true);
+    expect(app.sees(CAFE_1.target)).toBe(true);
+    await app.advance(500);
+    expect(audio.clips()).toEqual(['en-GB-cafe-01', 'es-ES-cafe-01']);
+    // Check offers the next phrase in place of Next step.
+    expect(app.sees(c.player.round.nextStep)).toBe(false);
+    expect(app.sees(c.player.next)).toBe(true);
+  });
+
+  it('gives how the phrase starts as a hint, and Show answer plays the answer', async () => {
+    const app = await playerOpen();
+    const { c } = app;
+    await app.advance(500);
+    await app.tap(c.player.round.hint);
+    expect(app.sees(hintOf(CAFE_1.target))).toBe(true);
+    expect(app.sees(CAFE_1.target)).toBe(false);
+    await app.tap(c.player.round.showAnswer);
+    expect(app.sees(CAFE_1.target)).toBe(true);
+    expect(app.sees(hintOf(CAFE_1.target))).toBe(false);
+    await app.advance(500);
+    expect(audio.clips().at(-1)).toBe('es-ES-cafe-01');
+  });
+
+  it('shows the phrase\'s notes with the hint, and goes back to listening', async () => {
+    const app = await playerOpen();
+    const { c } = app;
+    await app.tap(c.player.round.hint);
+    // The loop waits while the hint is read.
+    expect(app.sees(c.player.paused)).toBe(true);
+    await app.advance(20 * SECOND);
+    expect(app.sees(hintOf(CAFE_1.target))).toBe(true);
+    expect(app.sees(c.phrase.notes.mnemonic)).toBe(true);
+    await app.tap(c.phrase.notes.grammar);
+    expect(app.sees(c.phrase.notes.pronunciation)).toBe(true);
+    await app.tap(c.player.round.backToListening);
+    expect(app.sees(hintOf(CAFE_1.target))).toBe(false);
+    expect(app.sees(c.player.round.hint)).toBe(true);
+    expect(app.sees(CAFE_1.prompt)).toBe(true);
+    // Playing again, from the prompt.
+    expect(app.sees(c.common.pause)).toBe(true);
+    expect(app.sees(c.player.instruction.native(language(app, 'en-GB')))).toBe(true);
+  });
+
+  it('plays on from a paused loop when Next step is pressed', async () => {
+    const app = await playerOpen();
+    const { c } = app;
+    await app.tap(c.common.pause);
+    await app.tap(c.player.round.nextStep);
+    expect(app.sees(c.player.instruction.pause(language(app, 'es-ES')))).toBe(true);
+    expect(app.sees(c.common.pause)).toBe(true);
+  });
+
+  it('replays the phrase from its prompt, the target hidden again', async () => {
+    const app = await playerOpen();
+    const { c } = app;
+    await until(app, c.player.instruction.target(language(app, 'es-ES')));
+    expect(app.sees(CAFE_1.target)).toBe(true);
+    const before = audio.clips().length;
+    await app.tap(c.player.round.replay);
+    expect(app.sees(c.player.position(1, 5))).toBe(true);
+    expect(app.sees(CAFE_1.target)).toBe(false);
+    expect(app.sees(c.player.round.playOf(1, 3))).toBe(true);
+    await app.advance(500);
+    expect(audio.clips().length).toBe(before + 1);
+    expect(audio.clips().at(-1)).toBe('en-GB-cafe-01');
   });
 });
 
@@ -287,56 +393,19 @@ describe('moving in the queue', () => {
     const app = await playerOpen();
     const { c } = app;
     await app.advance(500);
-    await app.tap(c.player.next);
+    await nextPhrase(app);
     expect(app.sees(c.player.position(2, 5))).toBe(true);
     expect(app.sees(CAFE_2.prompt)).toBe(true);
     await app.advance(500);
     expect(audio.clips().at(-1)).toBe('en-GB-cafe-02');
-    expect(app.sees(c.player.repetition(1, 3))).toBe(true);
-  });
-
-  it('goes to the previous phrase when pressed within three seconds of the start', async () => {
-    const app = await playerOpen();
-    const { c } = app;
-    await app.tap(c.player.next);
-    await app.advance(1_000);
-    expect(app.sees(c.player.position(2, 5))).toBe(true);
-    await app.tap(c.player.previous);
-    expect(app.sees(c.player.position(1, 5))).toBe(true);
-    await app.advance(500);
-    expect(audio.clips().at(-1)).toBe('en-GB-cafe-01');
-  });
-
-  it('restarts the phrase when pressed after three seconds of listening', async () => {
-    const app = await playerOpen();
-    const { c } = app;
-    await app.tap(c.player.next);
-    await until(app, c.player.instruction.target(language(app, 'es-ES')));
-    expect(app.sees(CAFE_2.target)).toBe(true);
-    const before = audio.clips().length;
-    await app.tap(c.player.previous);
-    // Still the second phrase, from its prompt: the target is hidden again.
-    expect(app.sees(c.player.position(2, 5))).toBe(true);
-    expect(app.sees(CAFE_2.target)).toBe(false);
-    expect(app.sees(c.player.repetition(1, 3))).toBe(true);
-    await app.advance(500);
-    expect(audio.clips().length).toBe(before + 1);
-    expect(audio.clips().at(-1)).toBe('en-GB-cafe-02');
-  });
-
-  it('restarts the first phrase from the top, wherever it is, rather than going before it', async () => {
-    const app = await playerOpen();
-    const { c } = app;
-    await app.advance(500);
-    await app.tap(c.player.previous);
-    expect(app.sees(c.player.position(1, 5))).toBe(true);
-    await app.advance(500);
-    expect(audio.clips()).toEqual(['en-GB-cafe-01', 'en-GB-cafe-01']);
+    expect(app.sees(c.player.round.playOf(1, 3))).toBe(true);
   });
 
   it('keeps pause when moving: next on a paused player stays paused', async () => {
     const app = await playerOpen();
     const { c } = app;
+    await app.tap(c.player.round.nextStep);
+    await app.tap(c.player.round.nextStep);
     await app.tap(c.common.pause);
     await app.tap(c.player.next);
     expect(app.sees(c.player.position(2, 5))).toBe(true);
@@ -358,9 +427,10 @@ describe('moving in the queue', () => {
     expect(app.sees(c.player.position(2, 5))).toBe(true);
   });
 
-  it('opens the queue from the player and plays a phrase from it', async () => {
+  it('opens the queue from the player’s settings and plays a phrase from it', async () => {
     const app = await playerOpen();
     const { c } = app;
+    await openSettings(app);
     await app.tap(c.player.openQueue);
     expect(app.pathname()).toBe('/queue');
     await app.tap(c.queue.playNow(CAFE_2.prompt));
@@ -398,25 +468,29 @@ describe('closing the player', () => {
   });
 });
 
-describe('the action row', () => {
-  it('steps the speed through its settings, and the clips play at that rate', async () => {
+describe('the settings sheet', () => {
+  it('sets the speed, and the clips play at that rate', async () => {
     const app = await playerOpen();
     const { c } = app;
-    expect(app.sees('1×')).toBe(true);
-    await app.tap(c.player.speedIs(1));
-    expect(app.sees('1.25×')).toBe(true);
-    expect((await app.saved()).prefs.speed).toBe(1.25);
+    await openSettings(app);
+    const on = (s: number) => Boolean(screen.getByLabelText(c.player.speedIs(s)).props.accessibilityState?.checked);
+    expect(on(1)).toBe(true);
     await app.tap(c.player.speedIs(1.25));
-    expect(app.sees('0.8×')).toBe(true);
+    expect(on(1.25)).toBe(true);
+    expect((await app.saved()).prefs.speed).toBe(1.25);
     await app.tap(c.player.speedIs(0.8));
-    expect(app.sees('1×')).toBe(true);
+    expect((await app.saved()).prefs.speed).toBe(0.8);
+    await app.tap(c.player.speedIs(1));
+    expect(on(1)).toBe(true);
   });
 
   it('plays the next clips at the chosen speed', async () => {
     const app = await playerOpen();
     const { c } = app;
-    await app.tap(c.player.speedIs(1));
-    await app.tap(c.player.next);
+    await openSettings(app);
+    await app.tap(c.player.speedIs(1.25));
+    await app.tap(c.common.close);
+    await nextPhrase(app);
     await app.advance(8 * SECOND);
     const rates = audio.heard.filter((h) => h.kind === 'clip').map((h) => h.rate);
     expect(rates[0]).toBe(1);
@@ -427,6 +501,7 @@ describe('the action row', () => {
   it('likes a phrase and takes the like back', async () => {
     const app = await playerOpen();
     const { c } = app;
+    await openSettings(app);
     const checked = () => Boolean(screen.getByLabelText(c.phrase.likeLabel).props.accessibilityState?.checked);
     const liked = async () => (await app.saved()).learner.likes['phrase:cafe-01']?.liked ?? false;
     expect(checked()).toBe(false);
@@ -438,45 +513,104 @@ describe('the action row', () => {
     expect(await liked()).toBe(false);
   });
 
-  it('opens the notes for the phrase and closes them', async () => {
+  it('opens the notes for the phrase in the sheet and closes them', async () => {
     const app = await playerOpen();
     const { c } = app;
-    // The button is only labelled; the sheet it opens has the title as text.
-    expect(screen.queryAllByText(c.phrase.notesTitle)).toHaveLength(0);
+    await openSettings(app);
+    expect(app.sees(c.phrase.notes.mnemonic)).toBe(false);
     await app.tap(c.phrase.notesTitle);
-    expect(screen.queryAllByText(c.phrase.notesTitle).length).toBeGreaterThan(0);
+    expect(app.sees(c.phrase.notes.mnemonic)).toBe(true);
+    expect(app.sees(c.player.round.ask)).toBe(false);
     await app.tap(c.common.close);
-    expect(screen.queryAllByText(c.phrase.notesTitle)).toHaveLength(0);
+    expect(app.sees(c.phrase.notes.mnemonic)).toBe(false);
+    // Opened again, the sheet starts on the settings.
+    await openSettings(app);
+    expect(app.sees(c.player.round.ask)).toBe(true);
   });
 
   it('opens the add-to-set sheet for the phrase', async () => {
     const app = await playerOpen();
     const { c } = app;
+    await openSettings(app);
     await app.tap(c.phrase.addToSet);
+    await app.advance(500);
     expect(app.sees(c.addToSet.title)).toBe(true);
+  });
+
+  it('sets the repetitions there too', async () => {
+    const app = await playerOpen();
+    const { c } = app;
+    await openSettings(app);
+    await app.tap(c.player.repeats.times(3));
+    expect((await app.saved()).prefs.repeats).toBe(3);
+    await app.tap(c.player.repeats.auto);
+    expect((await app.saved()).prefs.repeats).toBe('auto');
+  });
+
+  it('switches the play mode between again and continue, saying what each does', async () => {
+    const app = await playerOpen();
+    const { c } = app;
+    await openSettings(app);
+    // The default is to play the queue again.
+    expect(screen.getByLabelText(c.player.playMode.repeat).props.accessibilityState?.checked).toBe(true);
+    await app.tap(c.player.playMode.continue);
+    expect(app.sees(c.player.playModeToast.continue)).toBe(true);
+    expect((await app.saved()).prefs.playMode).toBe('continue');
+    await app.tap(c.player.playMode.repeat);
+    expect(app.sees(c.player.playModeToast.repeat)).toBe(true);
+    expect((await app.saved()).prefs.playMode).toBe('repeat');
+  });
+
+  it('asks Again or Got it instead of Hard or Easy when asking is off', async () => {
+    const app = await playerOpen();
+    const { c } = app;
+    await openSettings(app);
+    await app.tap(c.player.round.ask);
+    expect((await app.saved()).prefs.askEasyOrHard).toBe(false);
+    await app.tap(c.common.close);
+    // Again and Got it beside the play button while it plays, in place of Hard and Easy.
+    expect(app.sees(gradeWord(app, 'hard'))).toBe(false);
+    expect(app.sees(gradeWord(app, 'easy'))).toBe(false);
+    expect(app.sees(c.player.round.again)).toBe(true);
+    await app.tap(c.player.round.gotIt);
+    expect(await inWindow(app)).toEqual([['cafe-01', 'easy']]);
+    await app.tap(c.player.round.gotIt);
+    expect(await inWindow(app)).toEqual([]);
+    while (app.sees(c.player.round.nextStep)) await app.tap(c.player.round.nextStep);
+    expect(app.sees(c.player.round.again)).toBe(true);
+    await app.tap(c.player.round.gotIt);
+    expect(await inWindow(app)).toEqual([['cafe-01', 'easy']]);
+    expect(app.sees(new RegExp(`^${escape(c.player.round.gotIt)}\\. `))).toBe(true);
+    await app.tap(c.player.round.again);
+    expect(await inWindow(app)).toEqual([['cafe-01', 'missed']]);
   });
 });
 
-describe('the transport settings', () => {
-  it('steps the repetitions auto → 1 → 3 → auto, saying what each does', async () => {
+describe('the repetitions chip', () => {
+  it('steps the repetitions auto → 1 → 2 → 3 → 4 → 5 → auto, saying what each does', async () => {
     const app = await playerOpen();
     const { c } = app;
+    // Paused on the prompt, so the chip stays while it is stepped.
+    await app.tap(c.common.pause);
     await app.tap(c.player.repeats.auto);
     expect(app.sees(c.player.repeatsToast.one)).toBe(true);
     expect(app.sees(c.player.repeats.one)).toBe(true);
     expect((await app.saved()).prefs.repeats).toBe(1);
     await app.tap(c.player.repeats.one);
-    expect(app.sees(c.player.repeatsToast.three)).toBe(true);
-    expect((await app.saved()).prefs.repeats).toBe(3);
-    await app.tap(c.player.repeats.three);
+    for (const plays of [2, 3, 4, 5] as const) {
+      expect(app.sees(c.player.repeatsToast.times(plays))).toBe(true);
+      expect((await app.saved()).prefs.repeats).toBe(plays);
+      expect(app.sees(c.player.round.playOf(1, plays))).toBe(true);
+      await app.tap(c.player.repeats.times(plays));
+    }
     expect(app.sees(c.player.repeatsToast.auto)).toBe(true);
     expect((await app.saved()).prefs.repeats).toBe('auto');
   });
 
-  it('plays a phrase once when repetitions is 1, and the counter says so', async () => {
+  it('plays a phrase once when repetitions is 1, and the chip says so', async () => {
     const app = await playerOpen({ learner: { prefs: { repeats: 1 } } });
     const { c } = app;
-    expect(app.sees(c.player.repetition(1, 1))).toBe(true);
+    expect(app.sees(c.player.round.playsOnce)).toBe(true);
     await until(app, c.player.instruction.rate);
     expect(audio.clips()).toEqual(['en-GB-cafe-01', 'es-ES-cafe-01']);
   });
@@ -484,23 +618,9 @@ describe('the transport settings', () => {
   it('applies a new repetitions setting to the phrase playing now', async () => {
     const app = await playerOpen();
     const { c } = app;
-    expect(app.sees(c.player.repetition(1, 3))).toBe(true);
+    expect(app.sees(c.player.round.playOf(1, 3))).toBe(true);
     await app.tap(c.player.repeats.auto);
-    expect(app.sees(c.player.repetition(1, 1))).toBe(true);
-  });
-
-  it('toggles the play mode between again and continue, saying what each does', async () => {
-    const app = await playerOpen();
-    const { c } = app;
-    // The default is to play the queue again.
-    expect(app.sees(c.player.captions.again)).toBe(true);
-    await app.tap(c.player.playMode.repeat);
-    expect(app.sees(c.player.playModeToast.continue)).toBe(true);
-    expect(app.sees(c.player.captions.continue)).toBe(true);
-    expect((await app.saved()).prefs.playMode).toBe('continue');
-    await app.tap(c.player.playMode.continue);
-    expect(app.sees(c.player.playModeToast.repeat)).toBe(true);
-    expect((await app.saved()).prefs.playMode).toBe('repeat');
+    expect(app.sees(c.player.round.playsOnce)).toBe(true);
   });
 });
 
@@ -557,50 +677,64 @@ describe('rating from the bar over the tabs', () => {
 });
 
 describe('rating from the full player', () => {
-  it('shows the three grades with a line saying when to rate', async () => {
+  it('offers Hard and Easy beside the play button, and again in the Check step', async () => {
     const app = await playerOpen();
     const { c } = app;
-    for (const g of ['missed', 'hard', 'easy'] as const) expect(app.sees(gradeWord(app, g))).toBe(true);
-    expect(app.sees(c.player.rateAfterTurn)).toBe(true);
+    expect(app.sees(gradeWord(app, 'hard'))).toBe(true);
+    expect(app.sees(gradeWord(app, 'easy'))).toBe(true);
+    expect(app.sees(gradeWord(app, 'missed'))).toBe(false);
     await until(app, c.player.instruction.target(language(app, 'es-ES')));
     expect(app.sees(c.player.howDidItGo)).toBe(true);
+    expect(app.sees(gradeWord(app, 'hard'))).toBe(true);
+    expect(app.sees(gradeWord(app, 'easy'))).toBe(true);
   });
 
   it.each([
-    ['easy', 'scheduled'],
-    ['hard', 'backLater'],
-    ['missed', 'backLater'],
-  ] as const)('rates %s: shows the grade, what it did and Undo', async (grade, says) => {
+    ['easy', /Back /],
+    ['hard', /end of this queue/],
+  ] as const)('rates %s: marks the grade given, and says when the phrase comes back, with Undo', async (grade, back) => {
     const app = await playerOpen();
     const { c } = app;
     await app.advance(500);
     await app.tap(gradeWord(app, grade));
-    expect(app.sees(c.player.ratedAs(gradeWord(app, grade)))).toBe(true);
-    expect(app.sees(c.player[says])).toBe(true);
-    expect(app.sees(undoRating)).toBe(true);
-    expect(app.sees(gradeWord(app, 'easy'))).toBe(false);
+    expect(chosen(gradeWord(app, grade))).toBe(true);
+    const toast = new RegExp(`^${escape(c.player.round.marked[grade])}\\. .*${back.source}`);
+    expect(app.sees(toast)).toBe(true);
+    expect(app.sees(c.player.undoGrade(gradeWord(app, grade)))).toBe(true);
     expect(await inWindow(app)).toEqual([['cafe-01', grade]]);
   });
 
-  it('counts the window down on the Undo button', async () => {
-    const app = await playerOpen();
-    await app.advance(500);
-    await app.tap(gradeWord(app, 'easy'));
-    await app.advance(2_000);
-    expect(app.sees(/^Undo rating \(4:5\d left\)/)).toBe(true);
-    await app.skip(2 * MINUTE);
-    expect(app.sees(/^Undo rating \(2:5\d left\)/)).toBe(true);
-  });
-
-  it('undoes a rating, and the grades come back', async () => {
+  it('takes a rating back with the toast’s Undo', async () => {
     const app = await playerOpen();
     const { c } = app;
     await app.advance(500);
     await app.tap(gradeWord(app, 'easy'));
-    await app.tap(undoRating);
-    expect(app.sees(c.player.ratedAs(gradeWord(app, 'easy')))).toBe(false);
-    expect(app.sees(gradeWord(app, 'easy'))).toBe(true);
+    await app.tap(c.player.undoGrade(gradeWord(app, 'easy')));
     expect(await inWindow(app)).toEqual([]);
+    expect(chosen(gradeWord(app, 'easy'))).toBe(false);
+  });
+
+  it('takes a rating back when the grade given is tapped again, and changes it for the other', async () => {
+    const app = await playerOpen();
+    await app.advance(500);
+    await app.tap(gradeWord(app, 'easy'));
+    await app.tap(gradeWord(app, 'easy'));
+    expect(await inWindow(app)).toEqual([]);
+    await app.tap(gradeWord(app, 'easy'));
+    await app.tap(gradeWord(app, 'hard'));
+    expect(await inWindow(app)).toEqual([['cafe-01', 'hard']]);
+    expect(chosen(gradeWord(app, 'hard'))).toBe(true);
+    expect(chosen(gradeWord(app, 'easy'))).toBe(false);
+  });
+
+  it('lets the toast go after a few seconds; the rating stands', async () => {
+    const app = await playerOpen();
+    const { c } = app;
+    await app.advance(500);
+    await app.tap(gradeWord(app, 'easy'));
+    await app.advance(5 * SECOND);
+    expect(app.sees(c.player.undoGrade(gradeWord(app, 'easy')))).toBe(false);
+    expect(await inWindow(app)).toEqual([['cafe-01', 'easy']]);
   });
 
   it('commits the rating to the log once its five minutes are up', async () => {
@@ -615,14 +749,6 @@ describe('rating from the full player', () => {
     const saved = await app.saved();
     expect(saved.pending.filter((p) => p.phraseId === 'cafe-01')).toEqual([]);
     expect(await committed(app)).toEqual([['cafe-01', 'easy']]);
-  });
-
-  it('lets the rating stand once undo has run out: the panel goes when the window does', async () => {
-    const app = await playerOpen();
-    await app.advance(500);
-    await app.tap(gradeWord(app, 'easy'));
-    await app.skip(5 * MINUTE + SECOND);
-    expect(app.sees(undoRating)).toBe(false);
   });
 
   it('keeps playing the rest of the phrase after a rating, then skips the hold', async () => {
@@ -645,33 +771,30 @@ describe('rating from the full player', () => {
     await until(app, c.player.instruction.rate);
     await app.tap(gradeWord(app, 'easy'));
     expect(app.sees(c.player.position(2, 5))).toBe(true);
-    expect(app.sees(c.player.ratedPrevious(gradeWord(app, 'easy')))).toBe(true);
-    await app.tap(c.common.undo);
+    expect(app.sees(new RegExp(`^${escape(c.player.round.marked.easy)}\\. `))).toBe(true);
+    await app.tap(c.player.undoGrade(gradeWord(app, 'easy')));
     expect(await inWindow(app)).toEqual([]);
-    expect(app.sees(c.player.ratedPrevious(gradeWord(app, 'easy')))).toBe(false);
+    expect(app.sees(new RegExp(`^${escape(c.player.round.marked.easy)}\\. `))).toBe(false);
   });
 
-  it('brings a Missed phrase back at the end of the queue; an Easy one does not come back', async () => {
+  it('brings a Hard phrase back at the end of the queue', async () => {
     const app = await playerOpen();
     const { c } = app;
     await app.advance(500);
     expect(app.sees(c.player.position(1, 5))).toBe(true);
-    await app.tap(gradeWord(app, 'missed'));
-    expect(app.sees(c.player.position(1, 6))).toBe(true);
-    await app.tap(undoRating);
-    await app.tap(gradeWord(app, 'easy'));
+    await app.tap(gradeWord(app, 'hard'));
     expect(app.sees(c.player.position(1, 6))).toBe(true);
   });
 
-  it('does not bring the last phrase of the queue back when missed', async () => {
+  it('does not bring the last phrase of the queue back when hard', async () => {
     const app = await playerOpen();
     const { c } = app;
-    for (let i = 0; i < 4; i++) await app.tap(c.player.next);
+    for (let i = 0; i < 4; i++) await nextPhrase(app);
     expect(app.sees(c.player.position(5, 5))).toBe(true);
     await app.advance(500);
-    await app.tap(gradeWord(app, 'missed'));
+    await app.tap(gradeWord(app, 'hard'));
     expect(app.sees(c.player.position(5, 5))).toBe(true);
-    expect(app.sees(c.player.backLater)).toBe(false);
+    expect(app.sees(/end of this queue/)).toBe(false);
   });
 });
 
@@ -715,7 +838,7 @@ describe('a phrase under review', () => {
     // Play it again, a day on.
     await app.tap(c.set.playAll(SET));
     await openPlayer(app);
-    expect(app.sees(c.player.repetition(1, 1))).toBe(true);
+    expect(app.sees(c.player.round.playsOnce)).toBe(true);
   });
 
   it('plays three times again if the last rating was Missed', async () => {
@@ -728,7 +851,7 @@ describe('a phrase under review', () => {
     await app.skip(6 * MINUTE + DAY);
     await app.tap(c.set.playAll(SET));
     await openPlayer(app);
-    expect(app.sees(c.player.repetition(1, 3))).toBe(true);
+    expect(app.sees(c.player.round.playOf(1, 3))).toBe(true);
   });
 });
 
@@ -844,16 +967,16 @@ describe('when a recording cannot be played', () => {
 describe('the end of the queue: a set that plays again, or on', () => {
   /** Plays the five phrases through with Next, the player open. */
   async function toTheEnd(app: App) {
-    for (let i = 0; i < 5; i++) await app.tap(app.c.player.next);
+    for (let i = 0; i < 5; i++) await nextPhrase(app);
   }
 
   it('starts again from the first phrase in repeat mode and says the pass is over', async () => {
     const app = await playerOpen({ learner: { prefs: { repeats: 1 } } });
     const { c } = app;
-    for (let i = 0; i < 4; i++) await app.tap(c.player.next);
+    for (let i = 0; i < 4; i++) await nextPhrase(app);
     expect(app.sees(c.player.position(5, 5))).toBe(true);
     expect(app.sees(c.player.pass.title)).toBe(false);
-    await app.tap(c.player.next);
+    await nextPhrase(app);
     expect(app.sees(c.player.position(1, 5))).toBe(true);
     expect(app.sees(c.player.pass.title)).toBe(true);
     expect(app.sees(c.player.pass.again)).toBe(true);
@@ -921,6 +1044,7 @@ describe('the session summary', () => {
   it('says nothing was played when nothing has been heard yet', async () => {
     const app = await playerOpen();
     const { c } = app;
+    await openSettings(app);
     await app.tap(c.player.openQueue);
     await app.tap(c.summary.title);
     expect(app.sees(c.summary.none)).toBe(true);
@@ -932,6 +1056,7 @@ describe('the session summary', () => {
     const { c } = app;
     await until(app, c.player.instruction.echo(language(app, 'es-ES')));
     await app.tap(gradeWord(app, 'hard'));
+    await openSettings(app);
     await app.tap(c.player.openQueue);
     await app.tap(c.summary.title);
     expect(app.sees(c.summary.none)).toBe(false);
@@ -951,7 +1076,7 @@ describe('the end of a review', () => {
     const { c } = app;
     await app.advance(500);
     await app.tap(barRate(app, 'hard'));
-    await app.tap(c.player.next);
+    await nextPhrase(app);
     await app.tap(barRate(app, 'missed'));
     await app.tap(c.common.pause);
     await app.tap(c.player.close);
@@ -965,10 +1090,10 @@ describe('the end of a review', () => {
     const app = await review();
     const { c } = app;
     expect(app.sees(c.player.position(1, 2))).toBe(true);
-    await app.tap(c.player.next);
+    await nextPhrase(app);
     expect(app.sees(c.player.position(2, 2))).toBe(true);
     await app.tap(gradeWord(app, 'easy'));
-    await app.tap(c.player.next);
+    await nextPhrase(app);
     expect(app.sees(c.player.end.reviewTitle)).toBe(true);
     expect(app.sees(new RegExp(`^${c.player.end.rated(1)}`))).toBe(true);
     // The transport and the grades give way to the panel.
@@ -981,8 +1106,8 @@ describe('the end of a review', () => {
   it('says only "Played through" when nothing was rated', async () => {
     const app = await review();
     const { c } = app;
-    await app.tap(c.player.next);
-    await app.tap(c.player.next);
+    await nextPhrase(app);
+    await nextPhrase(app);
     expect(app.sees(c.player.end.playedThrough)).toBe(true);
     expect(app.sees(c.player.end.reviewTitle)).toBe(false);
   });
@@ -990,8 +1115,8 @@ describe('the end of a review', () => {
   it('closes the player from the panel', async () => {
     const app = await review();
     const { c } = app;
-    await app.tap(c.player.next);
-    await app.tap(c.player.next);
+    await nextPhrase(app);
+    await nextPhrase(app);
     await app.tap(c.common.close);
     expect(app.pathname()).not.toBe('/player');
   });
@@ -999,8 +1124,8 @@ describe('the end of a review', () => {
   it('goes on to the set that was being learned from the panel', async () => {
     const app = await review();
     const { c } = app;
-    await app.tap(c.player.next);
-    await app.tap(c.player.next);
+    await nextPhrase(app);
+    await nextPhrase(app);
     await app.tap(c.player.end.continueSet(SET));
     expect(app.sees(c.player.end.reviewTitle)).toBe(false);
     expect(app.sees(c.common.pause)).toBe(true);
@@ -1011,8 +1136,8 @@ describe('the end of a review', () => {
     const app = await review();
     const { c } = app;
     await app.tap(c.player.close);
-    await app.tap(c.player.next);
-    await app.tap(c.player.next);
+    await nextPhrase(app);
+    await nextPhrase(app);
     expect(app.sees(c.player.end.playedThrough)).toBe(true);
     await app.tap(c.common.play);
     expect(app.sees(c.common.pause)).toBe(true);
@@ -1079,58 +1204,5 @@ describe('gestures', () => {
     await app.tap(c.common.pause);
     await app.swipe(new RegExp(`^${c.player.dialog}`), { dy: 300 }, { gesture: 1 });
     expect(app.sees(new RegExp(`^${c.player.dialog}`))).toBe(false);
-  });
-
-  describe('the picture', () => {
-    /** The phrase picture's frame is the last gesture in the player; opened, the page keeps room for it. */
-    const frame = () => screen.UNSAFE_root.findAll((n: ReactTestInstance) => n.type === GestureDetector).at(-1)!;
-    const opened = () => {
-      const page = screen.UNSAFE_root.findAll((n: ReactTestInstance) => typeof n.props.onContentSizeChange === 'function')[0];
-      return Boolean(page.props.contentContainerStyle[2]);
-    };
-
-    it('opens full width when tapped', async () => {
-      const app = await playerOpen();
-      expect(opened()).toBe(false);
-      const press = () => frame().findAll((n: ReactTestInstance) => typeof n.props.onPress === 'function')[0];
-      await act(async () => fireEvent.press(press()));
-      await app.settle();
-      expect(opened()).toBe(true);
-    });
-
-    it('closes when tapped again, whole at the top of the page', async () => {
-      const app = await playerOpen();
-      const press = () => frame().findAll((n: ReactTestInstance) => typeof n.props.onPress === 'function')[0];
-      await act(async () => fireEvent.press(press()));
-      await app.settle();
-      expect(opened()).toBe(true);
-      await act(async () => fireEvent.press(press()));
-      await app.settle();
-      expect(opened()).toBe(false);
-    });
-
-    it('opens when pulled down', async () => {
-      const app = await playerOpen();
-      const at = (f: number) => ({
-        translationX: 0,
-        translationY: 300 * f,
-        x: 0,
-        y: 300 * f,
-        absoluteX: 0,
-        absoluteY: 300 * f,
-        velocityX: 0,
-        velocityY: 300,
-      });
-      await act(async () => {
-        fireGestureHandler(frame().props.gesture, [
-          { state: State.BEGAN, ...at(0) },
-          { state: State.ACTIVE, ...at(0.5) },
-          { state: State.ACTIVE, ...at(1) },
-          { state: State.END, ...at(1) },
-        ] as never);
-      });
-      await app.settle();
-      expect(opened()).toBe(true);
-    });
   });
 });

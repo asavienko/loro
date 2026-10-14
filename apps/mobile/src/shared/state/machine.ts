@@ -38,7 +38,7 @@ import type {
 export type { AppState } from './types';
 
 export const SPEEDS: Speed[] = [0.8, 1, 1.25];
-export const REPEAT_SETTINGS: RepeatsSetting[] = ['auto', 1, 3];
+export const REPEAT_SETTINGS: RepeatsSetting[] = ['auto', 1, 2, 3, 4, 5];
 /** Pressing Previous later than this restarts the phrase instead. */
 export const RESTART_THRESHOLD_MS = 3000;
 

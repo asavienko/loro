@@ -28,6 +28,7 @@ import type {
   PendingRating,
   PhraseMemory,
   PlayerState,
+  Plays,
   Prefs,
 } from './types';
 
@@ -324,7 +325,7 @@ export function continuation(
 // ---------- the player ----------
 
 /** Auto repetitions: three while a phrase is new or shaky, one once it is under review. */
-export function repeatsFor(state: AppState, phraseId: string): 1 | 3 {
+export function repeatsFor(state: AppState, phraseId: string): Plays {
   if (state.prefs.repeats !== 'auto') return state.prefs.repeats;
   // With a pending rating applied, as every other figure: a play's length doesn't change when its window commits.
   const memory = displayMemory(state, phraseId);

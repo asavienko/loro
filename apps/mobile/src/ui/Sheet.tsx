@@ -20,7 +20,22 @@ import { Txt } from './Txt';
 import { colors, radius, shadow, TARGET } from './theme';
 import { useRoom } from './useRoom';
 
-export function Sheet({ open, title, onClose, children, scroll = true }: { open: boolean; title: string; onClose: () => void; children: ReactNode; scroll?: boolean }) {
+export function Sheet({
+  open,
+  title,
+  onClose,
+  children,
+  scroll = true,
+  night = false,
+}: {
+  open: boolean;
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+  scroll?: boolean;
+  /** Over the player's night (v2-prototype-decisions.md, "Player"): a dark panel and light ink. */
+  night?: boolean;
+}) {
   const c = useCopy();
   const insets = useSafeAreaInsets();
   const toast = useToastLayer(open);
@@ -62,16 +77,16 @@ export function Sheet({ open, title, onClose, children, scroll = true }: { open:
           <Animated.View style={[styles.backdrop, backdropShown]}>
             <Press accessible={false} importantForAccessibility="no" haptic="none" style={styles.fill} onPress={onClose} />
           </Animated.View>
-          <Animated.View accessibilityViewIsModal onLayout={pull.onLayout} style={[styles.panel, panelMoved]}>
+          <Animated.View accessibilityViewIsModal onLayout={pull.onLayout} style={[styles.panel, night && styles.nightPanel, panelMoved]}>
             <GestureDetector gesture={pull.gesture}>
               <View>
-                <Grabber />
-                <View style={styles.header}>
-                  <Txt variant="title" face="serif" weight={600} numberOfLines={1} accessibilityRole="header" style={styles.title}>
+                <Grabber color={night ? colors.outline : undefined} />
+                <View style={[styles.header, night && styles.nightHeader]}>
+                  <Txt variant="title" face="serif" weight={600} numberOfLines={1} accessibilityRole="header" color={night ? 'inverseOnSurface' : 'onSurface'} style={styles.title}>
                     {title}
                   </Txt>
-                  <Press accessibilityRole="button" onPress={onClose} style={({ pressed }) => [styles.close, pressed && styles.pressed]}>
-                    <Txt variant="body" weight={600} color="primaryContainer">
+                  <Press accessibilityRole="button" onPress={onClose} style={({ pressed }) => [styles.close, pressed && (night ? styles.nightPressed : styles.pressed)]}>
+                    <Txt variant="body" weight={600} color={night ? 'primaryFixedDim' : 'primaryContainer'}>
                       {c.common.close}
                     </Txt>
                   </Press>
@@ -195,6 +210,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.surfaceContainerHigh,
   },
+  nightPanel: { backgroundColor: colors.nightSheet, borderTopWidth: 1, borderColor: colors.nightLine },
+  nightHeader: { borderBottomColor: colors.nightLine },
+  nightPressed: { backgroundColor: colors.nightWash },
   title: { flex: 1 },
   close: { minHeight: TARGET, minWidth: TARGET, paddingHorizontal: 12, marginRight: -8, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   pressed: { backgroundColor: colors.surfaceContainer },

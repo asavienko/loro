@@ -103,11 +103,12 @@ describe('the phrase loop on the lock screen', () => {
 
   it('follows the app’s next and previous', async () => {
     const app = await playSet();
-    await app.tap(new RegExp(`^${app.c.player.dialog}`));
+    // The bar's Next, and its swipe back to the previous phrase.
     await app.tap(app.c.player.next);
     expect(shown()).toMatchObject({ id: 'cafe-02', title: CAFE_2.prompt, canPrevious: true });
     await app.advance(500);
-    await app.tap(app.c.player.previous);
+    await app.swipe(new RegExp(`^${app.c.player.dialog}`), { dx: 300 }, { gesture: 0 });
+    await app.advance(500);
     expect(shown()).toMatchObject({ id: 'cafe-01', canPrevious: false });
   });
 

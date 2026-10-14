@@ -35,6 +35,16 @@ export const colors = {
   errorContainer: '#ffdad6',
   /** The sheet and dialog backdrop: on-surface at 40%. */
   scrim: 'rgba(28,28,25,0.4)',
+  // The phrase player's night (v2-prototype-decisions.md, "Player"): on-surface as a ground, glass
+  // over the phrase's picture, and the light inks above (inverseOnSurface, primaryFixedDim) on it.
+  night: '#1c1c19',
+  nightGlass: 'rgba(28,28,25,0.5)',
+  nightGlassStrong: 'rgba(28,28,25,0.62)',
+  nightGlassPressed: 'rgba(57,56,52,0.75)',
+  nightSheet: '#282825',
+  nightLine: 'rgba(243,240,235,0.14)',
+  nightTrack: 'rgba(243,240,235,0.25)',
+  nightWash: 'rgba(243,240,235,0.08)',
 } as const;
 
 export type ColorName = keyof typeof colors;

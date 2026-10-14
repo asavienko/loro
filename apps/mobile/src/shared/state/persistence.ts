@@ -54,6 +54,7 @@ import {
   OwnSet,
   PendingRating,
   PlayerState,
+  Plays,
   Prefs,
   Profile,
   QueueSource,
@@ -296,6 +297,8 @@ function sanitizePending(value: unknown, learner: LearnerState): PendingRating[]
   });
 }
 
+const isPlays = (value: unknown): value is Plays => value === 1 || value === 2 || value === 3 || value === 4 || value === 5;
+
 function sanitizePrefs(value: unknown): Prefs {
   const fresh = initialPrefs();
   if (!isObject(value)) return fresh;
@@ -307,13 +310,14 @@ function sanitizePrefs(value: unknown): Prefs {
   }
   return {
     playMode: value.playMode === 'continue' ? 'continue' : 'repeat',
-    repeats: value.repeats === 1 || value.repeats === 3 ? value.repeats : 'auto',
+    repeats: isPlays(value.repeats) ? value.repeats : 'auto',
     speed: value.speed === 0.8 || value.speed === 1.25 ? value.speed : 1,
     announceEveryStep: value.announceEveryStep === true,
     sortBySet,
     skippedDemo: value.skippedDemo === true,
     pauseLength: value.pauseLength === 'longer' ? 'longer' : 'standard',
     queueHintDone: value.queueHintDone === true,
+    askEasyOrHard: value.askEasyOrHard !== false,
     changedAt: Object.fromEntries(Object.entries(isObject(value.changedAt) ? value.changedAt : {}).filter(([k, at]) => k in fresh && num(at))) as Prefs['changedAt'],
   };
 }
@@ -343,7 +347,7 @@ function sanitizePlayer(value: unknown, learner: LearnerState): PlayerState {
   return {
     ...fresh,
     status: order.length > 0 ? 'paused' : 'idle',
-    repeats: value.repeats === 1 ? 1 : 3,
+    repeats: isPlays(value.repeats) ? value.repeats : 3,
     shuffle: value.shuffle === true,
     setId,
     order,
